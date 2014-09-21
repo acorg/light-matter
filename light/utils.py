@@ -1,5 +1,5 @@
 class Statistic(object):
-    
+
     def evaluate(self, sequence):
         """
         @param sequence: a dark.Read object
@@ -34,6 +34,3 @@ class HasAllBases(Statistic):
     def _evaluate(self, sequence):
         seq = sequence.sequence
         return 'A' in seq and 'C' in seq and 'T' in seq and 'G' in seq
-
-
-

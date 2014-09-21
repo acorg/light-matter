@@ -3,6 +3,7 @@ from unittest import TestCase
 from light import utils
 from dark.reads import Read
 
+
 class TestStatistic(TestCase):
     """
     Tests for the Statistics class.
@@ -14,7 +15,8 @@ class TestStatistic(TestCase):
         """
         sequence = Read('id', 'ACGT')
         statistic = utils.Statistic()
-        self.assertRaisesRegexp(Exception, 'Has no attribute SUPPORTED_TYPES', statistic.evaluate, sequence)
+        self.assertRaisesRegexp(Exception, 'Has no attribute SUPPORTED_TYPES',
+                                statistic.evaluate, sequence)
 
     def testMinLength(self):
         """
@@ -23,9 +25,11 @@ class TestStatistic(TestCase):
         """
         sequence = Read('id', 'ACGT')
         statistic = utils.Statistic()
-        # adding a SUPPORTED_TYPES attribute, to allow test for MIN_LENGTH to run
+        # adding a SUPPORTED_TYPES attribute, to allow test for MIN_LENGTH
+        # to run.
         statistic.SUPPORTED_TYPES = True
-        self.assertRaisesRegexp(Exception, 'Has no attribute MIN_LENGTH', statistic.evaluate, sequence)
+        self.assertRaisesRegexp(Exception, 'Has no attribute MIN_LENGTH',
+                                statistic.evaluate, sequence)
 
 
 class TestHasAllBases(TestCase):
@@ -74,5 +78,3 @@ class TestHasAllBases(TestCase):
         """
         statistic = utils.HasAllBases()
         self.assertEqual('hasAllBases', statistic.NAME)
-
-

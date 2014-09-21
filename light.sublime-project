@@ -5,11 +5,5 @@
 			"follow_symlinks": true,
 			"path": "."
 		}
-	],
-
-	// SublimeLinter-flake8
-    "SublimeLinter":
-    {
-        "@python": 2.7
-    },
+    ]
 }

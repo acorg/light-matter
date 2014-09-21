@@ -1,4 +1,16 @@
 {
+	"SublimeLinter":
+	{
+		"@python": 2.7
+	},
+	"build_systems":
+	[
+		{
+			"name": "Anaconda Python Builder",
+			"selector": "source.python",
+			"shell_cmd": "$VIRTUAL_ENV/bin/python -u \"$file\""
+		}
+	],
 	"folders":
 	[
 		{
@@ -6,13 +18,8 @@
 			"path": "."
 		}
 	],
-
-	// SublimeLinter-flake8
-    "SublimeLinter":
-    {
-        "@python": 2.7
-    },
-    "settings": {
-        "python_interpreter": "$VIRTUAL_ENV/bin/python"
-    }
+	"settings":
+	{
+		"python_interpreter": "$VIRTUAL_ENV/bin/python"
+	}
 }

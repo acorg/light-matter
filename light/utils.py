@@ -49,4 +49,3 @@ def runStatistic(statistic, fastaReads):
         if result:
             count += 1
     return statistic.NAME, count
-    

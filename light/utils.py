@@ -34,3 +34,18 @@ class HasAllBases(Statistic):
     def _evaluate(self, sequence):
         seq = sequence.sequence
         return 'A' in seq and 'C' in seq and 'T' in seq and 'G' in seq
+
+
+def runStatistic(statistic, fastaReads):
+    """
+    Function that runs the statistic on a set of reads.
+
+    @param statistic: the name of a statistic class to be calculated.
+    @param fastaReads: a dark.Reads object.
+    """
+    count = 0
+    for read in fastaReads:
+        result = statistic.evaluate(read)
+        if result:
+            count += 1
+    return statistic.NAME, count

@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from light import utils
-from dark.reads import Read
+from dark.reads import Read, Reads
 
 
 class TestStatistic(TestCase):
@@ -78,3 +78,24 @@ class TestHasAllBases(TestCase):
         """
         statistic = utils.HasAllBases()
         self.assertEqual('hasAllBases', statistic.NAME)
+
+
+class TestRunStatistic(TestCase):
+    """
+    Tests for the runStastic function.
+    """
+    def testFunctionCall(self):
+        statistic = utils.HasAllBases()
+        read1 = Read('id1', 'ATGC')
+        read2 = Read('id2', 'AC')
+
+        class FastaReads(Reads):
+            def iter(self):
+                yield read1
+                yield read2
+
+        fastaReads = FastaReads()
+
+        name, count = utils.runStatistic(statistic, fastaReads)
+        self.assertEqual('hasAllBases', name)
+        self.assertEqual(1, count)

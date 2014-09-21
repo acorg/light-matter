@@ -49,6 +49,5 @@ class TestRunStatistic(TestCase):
 
         fastaReads = FastaReads()
 
-        name, count = runStatistic(statistic, fastaReads)
-        self.assertEqual('hasAllBases', name)
+        count = runStatistic(statistic, fastaReads)
         self.assertEqual(1, count)

@@ -35,7 +35,7 @@ def runStatistic(statistic, fastaReads):
         result = statistic.evaluate(read)
         if result:
             count += 1
-    return statistic.NAME, count
+    return count
 
 
 # Default exports for 'from light.statistics import *'

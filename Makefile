@@ -20,4 +20,3 @@ wc:
 clean:
 	find . \( -name '*.pyc' -o -name '*~' \) -print0 | xargs -0 rm
 	rm -fr _trial_temp
-

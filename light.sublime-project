@@ -12,4 +12,7 @@
     {
         "@python": 2.7
     },
+    "settings": {
+        "python_interpreter": "$VIRTUAL_ENV/bin/python"
+    }
 }

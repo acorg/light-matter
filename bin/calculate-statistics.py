@@ -2,10 +2,10 @@
 
 import sys
 
-from light.utils import HasAllBases, runStatistic
+from light.utils import Statistic, runStatistic
 from dark.fasta import FastaReads
 
-statistics = [HasAllBases()]
+statistics = Statistic.__subclasses__()
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:

@@ -23,19 +23,6 @@ class Statistic(object):
         return self._evaluate(sequence)
 
 
-class HasAllBases(Statistic):
-    """
-    Test that DNA sequences contain all four nucleotides.
-    """
-    NAME = 'hasAllBases'
-    SUPPORTED_TYPES = ['dna']
-    MIN_LENGTH = 4
-
-    def _evaluate(self, sequence):
-        seq = sequence.sequence
-        return 'A' in seq and 'C' in seq and 'T' in seq and 'G' in seq
-
-
 def runStatistic(statistic, fastaReads):
     """
     Function that runs the statistic on a set of reads.
@@ -48,4 +35,8 @@ def runStatistic(statistic, fastaReads):
         result = statistic.evaluate(read)
         if result:
             count += 1
-    return statistic.NAME, count
+    return count
+
+
+# Default exports for 'from light.statistics import *'
+__all__ = ['Statistic', 'runStatistic']

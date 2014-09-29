@@ -13,7 +13,7 @@ if __name__ == '__main__':
     else:
         fastaFile = sys.argv[1]
         fastaReads = FastaReads(fastaFile)
-        statistics = find.find('all')
+        statistics = find()
         for statistic in statistics:
             count = runStatistic(statistic, fastaReads)
             print '%s: %d' % (statistic.NAME, count)

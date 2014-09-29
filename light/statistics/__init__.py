@@ -43,10 +43,9 @@ def find(worksOn='all'):
     A function to find all subclasses that should be executed. To be used to
     find the statistics to be run.
 
-    TODO: Needs to be updated with more specific filtering methods.
-          Expand globals!
+    TODO: Expand globals!
 
-    @param worksOn: The type of class that should be found. Can eigher be
+    @param worksOn: The type of class that should be found. Can either be
     'all', 'dna', 'protein'.
     """
     from light.statistics.all_bases import HasAllBases

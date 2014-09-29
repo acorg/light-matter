@@ -53,18 +53,9 @@ def find(worksOn='all'):
 
     if worksOn == 'all':
         return ALL_STATISTICS
-    elif worksOn == 'dna':
-        dnaStatistics = []
-        for statistic in ALL_STATISTICS:
-            if statistic.SUPPORTED_TYPES == 'dna':
-                dnaStatistics.append(statistic)
-        return dnaStatistics
-    elif worksOn == 'protein':
-        proteinStatistics = []
-        for statistic in ALL_STATISTICS:
-            if statistic.SUPPORTED_TYPES == 'protein':
-                dnaStatistics.append(statistic)
-        return proteinStatistics
+    else:
+        return (statistic for statistic in ALL_STATISTICS if
+                statistic.SUPPORTED_TYPES == worksOn)
 
 
 # Default exports for 'from light.statistics import *'

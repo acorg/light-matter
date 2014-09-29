@@ -62,14 +62,14 @@ class TestFind(TestCase):
         Function should return all statistics, if asked for all statistics.
         """
         result = find()
-        self.assertEqual([HasAllBases], result)
+        self.assertEqual([HasAllBases], list(result))
 
     def testFindDNA(self):
         """
         Function should return statistics for dna, if asked for dna statistics.
         """
         result = find(worksOn='dna')
-        self.assertEqual([HasAllBases], result)
+        self.assertEqual([HasAllBases], list(result))
 
     def testFindProtein(self):
         """
@@ -77,4 +77,4 @@ class TestFind(TestCase):
         statistics.
         """
         result = find(worksOn='protein')
-        self.assertEqual([], result)
+        self.assertEqual([], list(result))

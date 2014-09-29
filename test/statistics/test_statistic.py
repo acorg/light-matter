@@ -58,13 +58,23 @@ class TestFind(TestCase):
     Tests for the light.statistics.find function.
     """
     def testFindAll(self):
+        """
+        Function should return all statistics, if asked for all statistics.
+        """
         result = find()
         self.assertEqual([HasAllBases], result)
 
     def testFindDNA(self):
+        """
+        Function should return statistics for dna, if asked for dna statistics.
+        """
         result = find(worksOn='dna')
         self.assertEqual([HasAllBases], result)
 
     def testFindProtein(self):
+        """
+        Function should return statistics for proteins, if asked for protein
+        statistics.
+        """
         result = find(worksOn='protein')
         self.assertEqual([], result)

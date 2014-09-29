@@ -1,8 +1,3 @@
-from light.statistics import HasAllBases
-
-ALL_STATISTICS = [HasAllBases]
-
-
 class Statistic(object):
 
     def evaluate(self, sequence):
@@ -54,6 +49,9 @@ def find(worksOn='all'):
     @param worksOn: The type of class that should be found. Can eigher be
     'all', 'dna', 'protein'.
     """
+    from light.statistics.all_bases import HasAllBases
+    ALL_STATISTICS = [HasAllBases]
+
     if worksOn == 'all':
         return ALL_STATISTICS
     elif worksOn == 'dna':
@@ -65,10 +63,10 @@ def find(worksOn='all'):
     elif worksOn == 'protein':
         proteinStatistics = []
         for statistic in ALL_STATISTICS:
-            if statistic.wSUPPORTED_TYPES == 'protein':
+            if statistic.SUPPORTED_TYPES == 'protein':
                 dnaStatistics.append(statistic)
         return proteinStatistics
 
 
 # Default exports for 'from light.statistics import *'
-__all__ = ['Statistic', 'runStatistic']
+__all__ = ['Statistic', 'runStatistic', 'find']

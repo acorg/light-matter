@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from light.statistics import Statistic, runStatistic
+from light.statistics import Statistic, runStatistic, find
 from light.statistics.all_bases import HasAllBases
 from dark.reads import Read, Reads
 
@@ -37,7 +37,7 @@ class TestRunStatistic(TestCase):
     """
     Tests for the light.statistics.runStatistic function.
     """
-    def testFunctionCall(self):
+    def testRunStatisticFunctionCall(self):
         statistic = HasAllBases()
         read1 = Read('id1', 'ATGC')
         read2 = Read('id2', 'AC')
@@ -51,3 +51,20 @@ class TestRunStatistic(TestCase):
 
         count = runStatistic(statistic, fastaReads)
         self.assertEqual(1, count)
+
+
+class TestFind(TestCase):
+    """
+    Tests for the light.statistics.find function.
+    """
+    def testFindAll(self):
+        result = find()
+        self.assertEqual([HasAllBases], result)
+
+    def testFindDNA(self):
+        result = find(worksOn='dna')
+        self.assertEqual([HasAllBases], result)
+
+    def testFindProtein(self):
+        result = find(worksOn='protein')
+        self.assertEqual([], result)

@@ -1,3 +1,8 @@
+from light.statistics import HasAllBases
+
+ALL_STATISTICS = [HasAllBases]
+
+
 class Statistic(object):
 
     def evaluate(self, sequence):
@@ -36,6 +41,33 @@ def runStatistic(statistic, fastaReads):
         if result:
             count += 1
     return count
+
+
+def find(worksOn='all'):
+    """
+    A function to find all subclasses that should be executed. To be used to
+    find the statistics to be run.
+
+    TODO: Needs to be updated with more specific filtering methods.
+          Expand globals!
+
+    @param worksOn: The type of class that should be found. Can eigher be
+    'all', 'dna', 'protein'.
+    """
+    if worksOn == 'all':
+        return ALL_STATISTICS
+    elif worksOn == 'dna':
+        dnaStatistics = []
+        for statistic in ALL_STATISTICS:
+            if statistic.SUPPORTED_TYPES == 'dna':
+                dnaStatistics.append(statistic)
+        return dnaStatistics
+    elif worksOn == 'protein':
+        proteinStatistics = []
+        for statistic in ALL_STATISTICS:
+            if statistic.wSUPPORTED_TYPES == 'protein':
+                dnaStatistics.append(statistic)
+        return proteinStatistics
 
 
 # Default exports for 'from light.statistics import *'

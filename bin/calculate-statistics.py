@@ -2,8 +2,7 @@
 
 import sys
 
-from light.statistics import runStatistic
-from light import find
+from light.statistics import runStatistic, find
 
 from dark.fasta import FastaReads
 

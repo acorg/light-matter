@@ -38,5 +38,25 @@ def runStatistic(statistic, fastaReads):
     return count
 
 
+def find(worksOn='all'):
+    """
+    A function to find all subclasses that should be executed. To be used to
+    find the statistics to be run.
+
+    TODO: Expand globals!
+
+    @param worksOn: The type of class that should be found. Can either be
+    'all', 'dna', 'protein'.
+    """
+    from light.statistics.all_bases import HasAllBases
+    ALL_STATISTICS = [HasAllBases]
+
+    if worksOn == 'all':
+        return ALL_STATISTICS
+    else:
+        return (statistic for statistic in ALL_STATISTICS if
+                statistic.SUPPORTED_TYPES == worksOn)
+
+
 # Default exports for 'from light.statistics import *'
-__all__ = ['Statistic', 'runStatistic']
+__all__ = ['Statistic', 'runStatistic', 'find']

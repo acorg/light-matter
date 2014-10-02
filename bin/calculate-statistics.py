@@ -2,12 +2,9 @@
 
 import sys
 
-from light.statistics import runStatistic
-from light.statistics.all_bases import HasAllBases
+from light.statistics import runStatistic, find
 
 from dark.fasta import FastaReads
-
-statistics = [HasAllBases()]
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:
@@ -16,6 +13,7 @@ if __name__ == '__main__':
     else:
         fastaFile = sys.argv[1]
         fastaReads = FastaReads(fastaFile)
+        statistics = find()
         for statistic in statistics:
             count = runStatistic(statistic, fastaReads)
             print '%s: %d' % (statistic.NAME, count)

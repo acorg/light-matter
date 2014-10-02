@@ -6,7 +6,7 @@ class HasAllBases(Statistic):
     Test that DNA sequences contain all four nucleotides.
     """
     NAME = 'hasAllBases'
-    SUPPORTED_TYPES = ['dna']
+    SUPPORTED_TYPES = 'dna'
     MIN_LENGTH = 4
 
     def _evaluate(self, sequence):

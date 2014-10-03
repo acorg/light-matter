@@ -18,7 +18,7 @@ class AlphaHelix(Statistic):
     SUPPORTED_TYPES = 'protein'
     MIN_LENGTH = 9
 
-    def convertAAToHydrophobicHydrophilic(sequence):
+    def convertAAToHydrophobicHydrophilic(self, sequence):
         """
         Takes an amino acid sequence, converts it to a sequence of hydrophobic
         / hydrophilic.
@@ -27,14 +27,13 @@ class AlphaHelix(Statistic):
         """
         return ''.join(PROPERTIES[aa] for aa in sequence)
 
-    def find(hhProperties):
+    def find(self, hhProperties):
         """
         A function that checks if and where an alpha helix in a sequence
         occurs.
-
         """
         positions = []
-        for index in range(len(hhProperties) - 9):
+        for index in range(len(hhProperties) - 8):
             toEvaluate = hhProperties[index:index + 9]
             if toEvaluate == ALPHAHELIX:
                 positions.append(index)

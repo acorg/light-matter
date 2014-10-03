@@ -13,9 +13,25 @@ class TestAlphaHelix(TestCase):
         The amino acid sequence must be converted to the right properties
         string.
         """
-        sequence = 'ASDGEBHSDTDSCV'
-        result = AlphaHelix.convertAAToHydrophobicHydrophilic(sequence)
-        self.assertEqual('IOOIOIOOIOOII', result)
+        sequence = 'ASDGEAHSDTDSCV'
+        statistic = AlphaHelix()
+        result = statistic.convertAAToHydrophobicHydrophilic(sequence)
+        self.assertEqual(result, 'OIIOIOOIIOIIOO')
+
+    def testFindWithHelix(self):
+        """
+        The find method must return the right position of the helix.
+        """
+        sequence = 'OIIIOIIIOIOIOIOIOIOIOIOIOIOIOIOOIIIOIIIO'
+        statistic = AlphaHelix()
+        result = statistic.find(sequence)
+        self.assertEqual(result, [0, 31])
+
+    def testFindWithoutHelix(self):
+        """
+        The find method must return false when no helix is there.
+        """
+        pass
 
     def test_evaluateNoHelix(self):
         """
@@ -32,7 +48,7 @@ class TestAlphaHelix(TestCase):
         The AlphaHelix._evaluate method should return True when an alpha helix
         is present.
         """
-        sequence = Read('id', 'FFFRFFFRFFFRFFFR')
+        sequence = Read('id', 'RRRFRRRFRRRFRRRFFFFFFF')
         statistic = AlphaHelix()
         result = statistic.evaluate(sequence)
         self.assertTrue(result)

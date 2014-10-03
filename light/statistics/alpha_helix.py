@@ -1,6 +1,9 @@
 from light.statistics import Statistic
-from light.utils import convertAAToAAProperties, HYDROPHOBIC, HYDROPHILIC
 
+PROPERTIES = {'F': 'O', 'Y': 'O', 'W': 'O', 'H': 'O', 'K': 'O', 'T': 'O',
+              'C': 'O', 'G': 'O', 'A': 'O', 'V': 'O', 'I': 'O', 'L': 'O',
+              'M': 'O', 'P': 'I', 'S': 'I', 'N': 'I', 'D': 'I', 'Q': 'I',
+              'E': 'I', 'R': 'I'}
 
 ALPHAHELIX = 'OIIIOIIIO'
 
@@ -9,7 +12,7 @@ class AlphaHelix(Statistic):
     """
     A class for computing statistics based on alpha helices.
     Based around the assumption that an alpha helix is composed of three times
-    one hydrophobic and 3 hydriphilic amino acids.
+    one hydrophobic and 3 hydrophilic amino acids.
     """
     NAME = 'AlphaHelix'
     SUPPORTED_TYPES = 'protein'
@@ -22,9 +25,7 @@ class AlphaHelix(Statistic):
 
         @param sequence: an amino acid sequence.
         """
-        hhProperties = convertAAToAAProperties(sequence,
-                                               [HYDROPHOBIC, HYDROPHILIC])
-        return str(hhProperties)
+        return ''.join(PROPERTIES[aa] for aa in sequence)
 
     def find(hhProperties):
         """
@@ -46,7 +47,6 @@ class AlphaHelix(Statistic):
         @param read: the sequence that should be checked.
         """
         readHHProperties = AlphaHelix.convertAAToHydrophobicHydrophilic(read)
-        print readHHProperties
         result = AlphaHelix.find(readHHProperties)
         if len(result) > 0:
             return True

@@ -16,7 +16,7 @@ class TestAlphaHelix(TestCase):
         sequence = 'ASDGEAHSDTDSCV'
         statistic = AlphaHelix()
         result = statistic.convertAAToHydrophobicHydrophilic(sequence)
-        self.assertEqual(result, 'OIIOIOOIIOIIOO')
+        self.assertEqual('OIIOIOOIIOIIOO', result)
 
     def testFindWithHelix(self):
         """
@@ -25,30 +25,33 @@ class TestAlphaHelix(TestCase):
         sequence = 'OIIIOIIIOIOIOIOIOIOIOIOIOIOIOIOOIIIOIIIO'
         statistic = AlphaHelix()
         result = statistic.find(sequence)
-        self.assertEqual(result, [0, 31])
+        self.assertEqual([0, 31], result)
 
     def testFindWithoutHelix(self):
         """
         The find method must return false when no helix is there.
         """
-        pass
+        sequence = 'OIOIOIOIOIOIOIOIOIOO'
+        statistic = AlphaHelix()
+        result = statistic.find(sequence)
+        self.assertEqual([], result)
 
     def test_evaluateNoHelix(self):
         """
         The AlphaHelix._evaluate method should return False when no alpha helix
         is present.
         """
-        sequence = Read('id', 'ASDGEBHSDTDSCV')
+        sequence = Read('id', 'ASDGEAHSDTDSCV', type='aa')
         statistic = AlphaHelix()
         result = statistic.evaluate(sequence)
-        self.assertFalse(result)
+        self.assertEqual(False, result)
 
     def test_evaluateHelix(self):
         """
         The AlphaHelix._evaluate method should return True when an alpha helix
         is present.
         """
-        sequence = Read('id', 'RRRFRRRFRRRFRRRFFFFFFF')
+        sequence = Read('id', 'RRRFRRRFRRRFRRRFFFFFFF', type='aa')
         statistic = AlphaHelix()
-        result = statistic.evaluate(sequence)
-        self.assertTrue(result)
+        result = statistic._evaluate(sequence)
+        self.assertEqual(1, result)

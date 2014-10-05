@@ -15,7 +15,7 @@ class AlphaHelix(Statistic):
     one hydrophobic and 3 hydrophilic amino acids.
     """
     NAME = 'AlphaHelix'
-    SUPPORTED_TYPES = 'protein'
+    SUPPORTED_TYPES = 'aa'
     MIN_LENGTH = 9
 
     def convertAAToHydrophobicHydrophilic(self, sequence):
@@ -39,13 +39,13 @@ class AlphaHelix(Statistic):
                 positions.append(index)
         return positions
 
-    def _evaluate(read):
+    def _evaluate(self, read):
         """
         Test if a sequence has an alpha helix.
 
         @param read: the sequence that should be checked.
         """
-        readHHProperties = AlphaHelix.convertAAToHydrophobicHydrophilic(read)
-        result = AlphaHelix.find(readHHProperties)
-        if len(result) > 0:
-            return True
+        ah = AlphaHelix()
+        readHHProperties = ah.convertAAToHydrophobicHydrophilic(read.sequence)
+        result = ah.find(readHHProperties)
+        return len(result) > 0

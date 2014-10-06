@@ -1,8 +1,6 @@
 from unittest import TestCase
 
 from light import database
-from light.statistics.alpha_helix import AlphaHelix
-from dark.reads import Read
 
 
 class FakeCursor(object):

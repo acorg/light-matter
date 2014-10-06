@@ -53,7 +53,7 @@ class TestAlphaHelix(TestCase):
         """
         sequence = Read('id', 'RRRFRRRFRRRFRRRFFFFFFF', type='aa')
         statistic = AlphaHelix()
-        result = statistic._evaluate(sequence, distances=False)
+        result = statistic._evaluate(sequence)
         self.assertEqual(1, result)
 
     def test_evaluateHelixDistanceThreeHelices(self):

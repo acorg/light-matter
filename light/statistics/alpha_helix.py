@@ -45,7 +45,7 @@ class AlphaHelix(Statistic):
 
         @param read: the sequence that should be checked.
         """
-        ah = AlphaHelix()
-        readHHProperties = ah.convertAAToHydrophobicHydrophilic(read.sequence)
-        result = ah.find(readHHProperties)
+        readHHProperties = self.convertAAToHydrophobicHydrophilic(
+            read.sequence)
+        result = self.find(readHHProperties)
         return len(result) > 0

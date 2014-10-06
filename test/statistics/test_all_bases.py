@@ -15,7 +15,7 @@ class TestHasAllBases(TestCase):
         sequence = Read('id', 'ACGT')
         statistic = HasAllBases()
         result = statistic.evaluate(sequence)
-        self.assertEqual(True, result)
+        self.assertTrue(result)
 
     def testMinLength(self):
         """

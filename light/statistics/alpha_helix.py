@@ -39,7 +39,24 @@ class AlphaHelix(Statistic):
                 positions.append(index)
         return positions
 
-    def _evaluate(self, read):
+    def calculateDistance(self, positions):
+        """
+        A function that takes a list of positions and calculates a list of
+        distances between those positions. These are stored in a database to
+        look up.
+
+        @param positions: a C{List} of positions, as returned by find.
+        """
+        if len(positions) == 1:
+            return False
+        else:
+            distances = []
+            for i in range(len(positions) - 1):
+                distance = positions[i + 1] - positions[i]
+                distances.append(distance)
+            return distances
+
+    def _evaluate(self, read, distances=False):
         """
         Test if a sequence has an alpha helix.
 
@@ -48,4 +65,7 @@ class AlphaHelix(Statistic):
         readHHProperties = self.convertAAToHydrophobicHydrophilic(
             read.sequence)
         result = self.find(readHHProperties)
+        if distances:
+            result = self.calculateDistance(result)
+            return result
         return len(result) > 0

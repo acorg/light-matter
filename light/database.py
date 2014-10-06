@@ -1,9 +1,11 @@
 from light.statistics.alpha_helix import AlphaHelix
 from light import mysql
-from dark.reads import Reads
+from dark.fasta import FastaReads
+
+import md5
 
 
-def addToDatabase(fastaFile, statistic=AlphaHelix, db=None):
+def addToDatabase(fastaFile, statistic=AlphaHelix, name='AlphaHelix', db=None):
     """
     A script that adds calculated statistics to database.
 
@@ -19,19 +21,24 @@ def addToDatabase(fastaFile, statistic=AlphaHelix, db=None):
     else:
         openedDb = False
     cursor = db.cursor()
-    createTable = 'CREATE TABLE %s (virus VARCHAR(300), '
-    'AlphaHelix VARCHAR(300));' % str(statistic)
+    createTable = 'CREATE TABLE %s (virus VARCHAR(300), %s CHAR(32));' % (
+                  name, name)
     cursor.execute(createTable)
 
     # calculate statistic, add to table.
     stat = statistic()
 
-    viruses = Reads(fastaFile)
+    viruses = FastaReads(fastaFile)
 
     for virus in viruses:
         dist = stat._evaluate(virus, distances=True)
-        query = 'INSERT INTO %s (virus, AlphaHelix) '
-        'VALUES (%s, %s)' % (str(statistic), str(virus.id), str(dist))
+        virusGi = virus.id.split('|')[1]
+        # distances = ''.join(map(str, dist))
+        distances = str(md5.new(str(dist)).digest())
+        # mySQL doesn't like this syntax...
+        query = 'INSERT INTO %s (virus, %s) VALUES (%s, %s);' % (name, name,
+                                                                 virusGi,
+                                                                 distances)
         cursor.execute(query)
 
     if openedDb:
@@ -55,9 +62,9 @@ def compare(readStat, statistic=AlphaHelix, db=None):
     cursor = db.cursor()
 
     # look in database for helix motif.
-    query = 'SELECT virus FROM %s WHERE %s = %s' % (str(statistic),
-                                                    str(statistic),
-                                                    str(readStat))
+    query = 'SELECT virus FROM %s WHERE %s = %s;' % (str(statistic),
+                                                     str(statistic),
+                                                     str(readStat))
     cursor.execute(query)
     presentVirus = cursor.fetchone()
 

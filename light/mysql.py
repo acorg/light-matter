@@ -6,5 +6,5 @@ def getDatabaseConnection():
     db = MySQLdb.connect(host='localhost',
                          user=environ.get('DBI_USER', environ['USER']),
                          passwd=environ['DBI_PASSWORD'],
-                         db='light')
+                         db='lightmatter')
     return db

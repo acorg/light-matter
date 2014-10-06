@@ -41,7 +41,7 @@ class TestDatabase(TestCase):
         returned correctly.
         """
         db = FakeDbConnection([('Luckyvirus'), ('[0, 14]')])
-        result = database.compare([0, 14], db=db)
+        result = database.compare('0|14', db=db)
         self.assertEqual('Luckyvirus', result)
 
     def testCompareVirusNotPresent(self):

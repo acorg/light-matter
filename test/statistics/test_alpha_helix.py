@@ -56,7 +56,7 @@ class TestAlphaHelix(TestCase):
         result = statistic._evaluate(sequence)
         self.assertEqual(1, result)
 
-    def test_evaluateHelixDistance(self):
+    def test_evaluateHelixDistanceThreeHelices(self):
         """
         The calculateDistance function needs to return the right distance
         between alpha helices.
@@ -66,3 +66,14 @@ class TestAlphaHelix(TestCase):
         statistic = AlphaHelix()
         result = statistic._evaluate(sequence, distances=True)
         self.assertEqual([4, 14, 4], result)
+
+    def test_evaluateHelixDistanceOneHelix(self):
+        """
+        The calculateDistance function needs to return the right distance
+        between alpha helices.
+        """
+        sequence = Read('id', 'RRRFRRRFRRRF',
+                        type='aa')
+        statistic = AlphaHelix()
+        result = statistic._evaluate(sequence, distances=True)
+        self.assertFalse(result)

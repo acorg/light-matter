@@ -2,6 +2,8 @@ from unittest import TestCase
 
 from light.statistics import Statistic, runStatistic, find
 from light.statistics.all_bases import HasAllBases
+from light.statistics.bunyaviridae import Bunyaviridae
+from light.statistics.alpha_helix import AlphaHelix
 from dark.reads import Read, Reads
 
 
@@ -62,14 +64,14 @@ class TestFind(TestCase):
         Function should return all statistics, if asked for all statistics.
         """
         result = find()
-        self.assertEqual([HasAllBases], list(result))
+        self.assertEqual([HasAllBases, AlphaHelix, Bunyaviridae], list(result))
 
     def testFindDNA(self):
         """
         Function should return statistics for dna, if asked for dna statistics.
         """
         result = find(worksOn='dna')
-        self.assertEqual([HasAllBases], list(result))
+        self.assertEqual([HasAllBases, Bunyaviridae], list(result))
 
     def testFindProtein(self):
         """

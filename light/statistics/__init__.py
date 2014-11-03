@@ -49,7 +49,10 @@ def find(worksOn='all'):
     'all', 'dna', 'protein'.
     """
     from light.statistics.all_bases import HasAllBases
-    ALL_STATISTICS = [HasAllBases]
+    from light.statistics.alpha_helix import AlphaHelix
+    from light.statistics.bunyaviridae import Bunyaviridae
+
+    ALL_STATISTICS = [HasAllBases, AlphaHelix, Bunyaviridae]
 
     if worksOn == 'all':
         return ALL_STATISTICS

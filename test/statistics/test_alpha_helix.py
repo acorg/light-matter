@@ -41,7 +41,7 @@ class TestAlphaHelix(TestCase):
         The AlphaHelix._evaluate method should return False when no alpha helix
         is present.
         """
-        sequence = Read('id', 'ASDGEAHSDTDSCV', type='aa')
+        sequence = Read('id', 'ASDGEAHSDTDSCV')
         statistic = AlphaHelix()
         result = statistic.evaluate(sequence)
         self.assertEqual(False, result)

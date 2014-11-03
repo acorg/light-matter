@@ -14,9 +14,6 @@ class Statistic(object):
         except AttributeError:
             raise Exception('Has no attribute MIN_LENGTH')
 
-        if sequence.type not in self.SUPPORTED_TYPES:
-            return False
-
         if len(sequence) < self.MIN_LENGTH:
             return False
 

@@ -1,5 +1,11 @@
 class Landmark(object):
     """
+    Hold information about a landmark found in a sequence.
+
+    @param symbol: The C{str} symbol for this landmark feature.
+    @param offset: The C{int} offset of the landmark in the sequence.
+    @param repeatCount: The C{int} number of times the landmark pattern was
+        found in the sequence at this offset.
     """
 
     def __init__(self, symbol, offset, repeatCount=1):

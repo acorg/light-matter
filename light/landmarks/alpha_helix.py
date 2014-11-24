@@ -35,6 +35,8 @@ class AlphaHelix(object):
         """
         A function that checks if and where an alpha helix in a sequence
         occurs.
+
+        @param read: An instance of C{dark.reads.AARead}.
         """
         hhProperties = self.convertAAToHydrophobicHydrophilic(read.sequence)
         for match in ALPHAHELIX.finditer(hhProperties):

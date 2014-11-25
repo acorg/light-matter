@@ -3,17 +3,17 @@ import re
 from dark.aa import PROPERTIES, HYDROPHOBIC
 from light.landmark import Landmark
 
-ALPHAHELIX = re.compile('OIIIO(?:IIIO)+')
+ALPHA_HELIX_PI = re.compile('OIIIIO(?:IIIIO)+')
 
 
-class AlphaHelix(object):
+class AlphaHelix_pi(object):
     """
-    A class for computing statistics based on alpha helices.  Based
-    around the assumption that an alpha helix is composed of three times
-    one hydrophobic and 3 hydrophilic amino acids.
+    A class for computing statistics based on Pi alpha helices.  Based
+    around the assumption that a pi alpha helix is composed of at least two
+    repeats of one hydrophobic and then 4 hydrophilic amino acids.
 
     """
-    SYMBOL = 'A'
+    SYMBOL = 'C'
 
     def convertAAToHydrophobicHydrophilic(self, sequence):
         """
@@ -39,8 +39,8 @@ class AlphaHelix(object):
         @param read: An instance of C{dark.reads.AARead}.
         """
         hhProperties = self.convertAAToHydrophobicHydrophilic(read.sequence)
-        for match in ALPHAHELIX.finditer(hhProperties):
+        for match in ALPHA_HELIX_PI.finditer(hhProperties):
             start = match.start()
             end = match.end()
-            repeatCount = (end - start - 1) >> 2
+            repeatCount = (end - start - 1) / 5
             yield Landmark(self.SYMBOL, start, end - start, repeatCount)

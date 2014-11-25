@@ -1,7 +1,9 @@
 from unittest import TestCase
 
-from light.landmarks import find, ALL_LANDSCAPE_FINDER_CLASSES
+from light.landmarks import find, ALL_LANDMARK_FINDER_CLASSES
 from light.landmarks.alpha_helix import AlphaHelix
+from light.landmarks.alpha_helix_3_10 import AlphaHelix_3_10
+from light.landmarks.alpha_helix_pi import AlphaHelix_pi
 
 
 class TestFind(TestCase):
@@ -25,11 +27,25 @@ class TestFind(TestCase):
 
 class TestAllClasses(TestCase):
     """
-    Trivial tests for the ALL_LANDSCAPE_FINDER_CLASSES set.
+    Trivial tests for the ALL_LANDMARK_FINDER_CLASSES set.
     """
 
     def testAllClassesContainsAlphaHelix(self):
         """
-        The ALL_LANDSCAPE_FINDER_CLASSES set must contain the AlphaHelix class.
+        The ALL_LANDMARK_FINDER_CLASSES set must contain the AlphaHelix class.
         """
-        self.assertIn(AlphaHelix, ALL_LANDSCAPE_FINDER_CLASSES)
+        self.assertIn(AlphaHelix, ALL_LANDMARK_FINDER_CLASSES)
+
+    def testAllClassesContainsAlphaHelix_3_10(self):
+        """
+        The ALL_LANDMARK_FINDER_CLASSES set must contain the AlphaHelix_3_10
+        class.
+        """
+        self.assertIn(AlphaHelix_3_10, ALL_LANDMARK_FINDER_CLASSES)
+
+    def testAllClassesContainsAlphaHelix_pi(self):
+        """
+        The ALL_LANDMARK_FINDER_CLASSES set must contain the AlphaHelix_pi
+        class.
+        """
+        self.assertIn(AlphaHelix_pi, ALL_LANDMARK_FINDER_CLASSES)

@@ -7,7 +7,7 @@ from os.path import basename
 from dark.reads import AARead
 from dark.fasta import FastaReads
 
-from light.landmarks import find, ALL_LANDSCAPE_FINDER_CLASSES
+from light.landmarks import find, ALL_LANDMARK_FINDER_CLASSES
 
 
 if __name__ == '__main__':
@@ -20,7 +20,7 @@ if __name__ == '__main__':
 
     parser.add_argument(
         '--landmark', required=True, action='append', type=str,
-        choices=sorted(c.__name__ for c in ALL_LANDSCAPE_FINDER_CLASSES),
+        choices=sorted(c.__name__ for c in ALL_LANDMARK_FINDER_CLASSES),
         help='The name of the landmark finder to use. May be specified '
         'multiple times.')
 

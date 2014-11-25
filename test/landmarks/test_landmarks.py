@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from light.landmarks import find
+from light.landmarks import find, ALL_LANDSCAPE_FINDER_CLASSES
 from light.landmarks.alpha_helix import AlphaHelix
 
 
@@ -21,3 +21,15 @@ class TestFind(TestCase):
         The find function should be able to find the AlphaHelix class by name.
         """
         self.assertIs(AlphaHelix, find('AlphaHelix'))
+
+
+class TestAllClasses(TestCase):
+    """
+    Trivial tests for the ALL_LANDSCAPE_FINDER_CLASSES set.
+    """
+
+    def testAllClassesContainsAlphaHelix(self):
+        """
+        The ALL_LANDSCAPE_FINDER_CLASSES set must contain the AlphaHelix class.
+        """
+        self.assertIn(AlphaHelix, ALL_LANDSCAPE_FINDER_CLASSES)

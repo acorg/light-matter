@@ -3,7 +3,7 @@ from light.statistics import Statistic
 PROPERTIES = {'F': 'O', 'Y': 'O', 'W': 'O', 'H': 'O', 'K': 'O', 'T': 'O',
               'C': 'O', 'G': 'O', 'A': 'O', 'V': 'O', 'I': 'O', 'L': 'O',
               'M': 'O', 'P': 'I', 'S': 'I', 'N': 'I', 'D': 'I', 'Q': 'I',
-              'E': 'I', 'R': 'I'}
+              'E': 'I', 'R': 'I', 'X': 'O'}
 
 ALPHAHELIX = 'OIIIOIIIO'
 

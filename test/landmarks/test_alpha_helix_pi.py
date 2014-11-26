@@ -3,19 +3,19 @@ from unittest import TestCase
 from dark.reads import AARead
 
 from light.landmark import Landmark
-from light.landmarks.alpha_helix import AlphaHelix
+from light.landmarks.alpha_helix_pi import AlphaHelix_pi
 
 
-class TestAlphaHelix(TestCase):
+class TestAlphaHelix_pi(TestCase):
     """
-    Tests for the Landmark.AlphaHelix class.
+    Tests for the Landmark.AlphaHelix_pi class.
     """
     def testConversion(self):
         """
         The amino acid sequence must be converted to the right properties
         string.
         """
-        landmark = AlphaHelix()
+        landmark = AlphaHelix_pi()
         result = landmark.convertAAToHydrophobicHydrophilic('ASDGEAHSDTDSCV')
         self.assertEqual('OIIIIOOIIOIIOO', result)
 
@@ -25,17 +25,17 @@ class TestAlphaHelix(TestCase):
         present.
         """
         read = AARead('id', 'FRFRFRFRFRFRFRFRFRFF')
-        landmark = AlphaHelix()
+        landmark = AlphaHelix_pi()
         result = list(landmark.find(read))
         self.assertEqual([], result)
 
     def testFindWithOneRepeat(self):
         """
         The find method must return an empty generator if there is only one
-        instance of the OIII pattern
+        instance of the OII pattern
         """
-        read = AARead('id', 'FRRR')
-        landmark = AlphaHelix()
+        read = AARead('id', 'FRRRR')
+        landmark = AlphaHelix_pi()
         result = list(landmark.find(read))
         self.assertEqual([], result)
 
@@ -43,20 +43,20 @@ class TestAlphaHelix(TestCase):
         """
         The find method must find a helix with a repeat count of two.
         """
-        read = AARead('id', 'FRRRFRRRF')
-        landmark = AlphaHelix()
+        read = AARead('id', 'FRRRRFRRRRF')
+        landmark = AlphaHelix_pi()
         result = list(landmark.find(read))
-        self.assertEqual([Landmark('A', 0, 9, 2)], result)
+        self.assertEqual([Landmark('C', 0, 11, 2)], result)
 
     def testHelixTwoRepeatsWithNonZeroOffset(self):
         """
         The find method must find a helix with a repeat count of two when it
         is not at the start of the sequence.
         """
-        read = AARead('id', 'AAAFRRRFRRRF')
-        landmark = AlphaHelix()
+        read = AARead('id', 'AAAFRRRRFRRRRF')
+        landmark = AlphaHelix_pi()
         result = list(landmark.find(read))
-        self.assertEqual([Landmark('A', 3, 9, 2)], result)
+        self.assertEqual([Landmark('C', 3, 11, 2)], result)
 
     def testHelixTwoRepeatsWithNonZeroOffsetWithSuffix(self):
         """
@@ -64,26 +64,26 @@ class TestAlphaHelix(TestCase):
         is not at the start of the sequence and there is also a non-matching
         suffix.
         """
-        read = AARead('id', 'AAAFRRRFRRRFAAA')
-        landmark = AlphaHelix()
+        read = AARead('id', 'AAAFRRRRFRRRRFAAA')
+        landmark = AlphaHelix_pi()
         result = list(landmark.find(read))
-        self.assertEqual([Landmark('A', 3, 9, 2)], result)
+        self.assertEqual([Landmark('C', 3, 11, 2)], result)
 
     def testHelixThreeRepeats(self):
         """
         The find method must find a helix with a repeat count of three.
         """
-        read = AARead('id', 'FRRRFRRRFRRRF')
-        landmark = AlphaHelix()
+        read = AARead('id', 'FRRRRFRRRRFRRRRF')
+        landmark = AlphaHelix_pi()
         result = list(landmark.find(read))
-        self.assertEqual([Landmark('A', 0, 13, 3)], result)
+        self.assertEqual([Landmark('C', 0, 16, 3)], result)
 
     def testTwoHelices(self):
         """
         The find method must find more than one helix.
         """
-        read = AARead('id', 'FRRRFRRRFRFRFRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF')
-        landmark = AlphaHelix()
+        read = AARead('id', 'FRRRRFRRRRFRFRFRFRFRFRFRFRFRFRFFRRRRFRRRRFRRRRF')
+        landmark = AlphaHelix_pi()
         result = list(landmark.find(read))
         self.assertEqual(
-            [Landmark('A', 0, 9, 2), Landmark('A', 31, 13, 3)], result)
+            [Landmark('C', 0, 11, 2), Landmark('C', 31, 16, 3)], result)

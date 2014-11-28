@@ -56,8 +56,7 @@ class TrigPoint(_Feature):
         _Feature.__init__(self, name, symbol, offset, 1)
 
     def __str__(self):
-        return '%s symbol=%s offset=%d' % (
-            self.name, self.symbol, self.offset)
+        return '%s symbol=%s offset=%d' % (self.name, self.symbol, self.offset)
 
     def __eq__(self, other):
         return (self.name == other.name and

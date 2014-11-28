@@ -25,7 +25,7 @@ class TestTroughs(TestCase):
                          0.003636363636359996, -0.17713381906999998,
                          -0.2761322022899999, -1.9545882971], result)
 
-    def testFindWithoutPeak(self):
+    def testFindWithoutTrough(self):
         """
         The find method must return an empty generator when no trough is
         present.
@@ -35,7 +35,7 @@ class TestTroughs(TestCase):
         result = list(trigPoint.find(read))
         self.assertEqual([], result)
 
-    def testTwoPeaks(self):
+    def testTwoTroughs(self):
         """
         The find method must find two troughs.
         """
@@ -45,7 +45,7 @@ class TestTroughs(TestCase):
         self.assertEqual([TrigPoint('Troughs', 'T', 1),
                           TrigPoint('Troughs', 'T', 7)], result)
 
-    def testNoPeakAtBeginning(self):
+    def testNoTroughAtBeginning(self):
         """
         The find method must not find a troughs at the beginning of the
         sequence.
@@ -55,7 +55,7 @@ class TestTroughs(TestCase):
         result = list(trigPoint.find(read))
         self.assertEqual([], result)
 
-    def testNoPeakAtEnd(self):
+    def testNoTroughAtEnd(self):
         """
         The find method must not find a trough at the end of the sequence.
         """

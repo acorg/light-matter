@@ -44,4 +44,5 @@ class AlphaHelix_pi(object):
             start = match.start()
             end = match.end()
             repeatCount = (end - start - 1) / 5
-            yield Landmark(self.SYMBOL, start, end - start, repeatCount)
+            yield Landmark(self.NAME, self.SYMBOL, start, end - start,
+                           repeatCount)

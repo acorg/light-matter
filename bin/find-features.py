@@ -37,14 +37,17 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    if len(args.landmark) + len(args.trig) == 0:
+    landmarks = args.landmark or []
+    trigs = args.trig or []
+
+    if len(landmarks) + len(trigs) == 0:
         print >>sys.stderr, ('You must specify either landmarks or trig '
                              'points to find.\n%s') % args.format_usage()
         sys.exit(1)
 
     # Make sure all landmark finders requested exist.
     landmarkFinders = []
-    for landmarkFinderName in args.landmark:
+    for landmarkFinderName in landmarks:
         landmarkFinderClass = findLandmark(landmarkFinderName)
         if landmarkFinderClass:
             landmarkFinders.append(landmarkFinderClass().find)
@@ -55,7 +58,7 @@ if __name__ == '__main__':
 
     # Make sure all trig point finders requested exist.
     trigFinders = []
-    for trigFinderName in args.trig:
+    for trigFinderName in trigs:
         trigFinderClass = findTrigPoint(trigFinderName)
         if trigFinderClass:
             trigFinders.append(trigFinderClass().find)
@@ -77,11 +80,11 @@ if __name__ == '__main__':
             for trigPoint in trigFinder(read):
                 scannedRead.trigPoints.append(trigPoint)
 
-        print 'Read %s %d landmarks, %d trig points' % (
-            read.id, len(scannedRead.landmarks), len(scannedRead.trigPoints))
-
         if scannedRead.landmarks or scannedRead.trigPoints:
-            coveredIndices = len(read.coveredIndices())
+            print 'Read %s %d landmarks, %d trig points' % (
+                read.id, len(scannedRead.landmarks),
+                len(scannedRead.trigPoints))
+            coveredIndices = len(scannedRead.coveredIndices())
             readLen = len(read)
             print '\tCoverage %d residues of %d (%.2f%%)' % (
                 coveredIndices, readLen,

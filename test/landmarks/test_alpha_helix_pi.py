@@ -46,7 +46,7 @@ class TestAlphaHelix_pi(TestCase):
         read = AARead('id', 'FRRRRFRRRRF')
         landmark = AlphaHelix_pi()
         result = list(landmark.find(read))
-        self.assertEqual([Landmark('C', 0, 11, 2)], result)
+        self.assertEqual([Landmark('AlphaHelix_pi', 'C', 0, 11, 2)], result)
 
     def testHelixTwoRepeatsWithNonZeroOffset(self):
         """
@@ -56,7 +56,7 @@ class TestAlphaHelix_pi(TestCase):
         read = AARead('id', 'AAAFRRRRFRRRRF')
         landmark = AlphaHelix_pi()
         result = list(landmark.find(read))
-        self.assertEqual([Landmark('C', 3, 11, 2)], result)
+        self.assertEqual([Landmark('AlphaHelix_pi', 'C', 3, 11, 2)], result)
 
     def testHelixTwoRepeatsWithNonZeroOffsetWithSuffix(self):
         """
@@ -67,7 +67,7 @@ class TestAlphaHelix_pi(TestCase):
         read = AARead('id', 'AAAFRRRRFRRRRFAAA')
         landmark = AlphaHelix_pi()
         result = list(landmark.find(read))
-        self.assertEqual([Landmark('C', 3, 11, 2)], result)
+        self.assertEqual([Landmark('AlphaHelix_pi', 'C', 3, 11, 2)], result)
 
     def testHelixThreeRepeats(self):
         """
@@ -76,7 +76,7 @@ class TestAlphaHelix_pi(TestCase):
         read = AARead('id', 'FRRRRFRRRRFRRRRF')
         landmark = AlphaHelix_pi()
         result = list(landmark.find(read))
-        self.assertEqual([Landmark('C', 0, 16, 3)], result)
+        self.assertEqual([Landmark('AlphaHelix_pi', 'C', 0, 16, 3)], result)
 
     def testTwoHelices(self):
         """
@@ -85,5 +85,6 @@ class TestAlphaHelix_pi(TestCase):
         read = AARead('id', 'FRRRRFRRRRFRFRFRFRFRFRFRFRFRFRFFRRRRFRRRRFRRRRF')
         landmark = AlphaHelix_pi()
         result = list(landmark.find(read))
-        self.assertEqual(
-            [Landmark('C', 0, 11, 2), Landmark('C', 31, 16, 3)], result)
+        self.assertEqual([Landmark('AlphaHelix_pi', 'C', 0, 11, 2),
+                          Landmark('AlphaHelix_pi', 'C', 31, 16, 3)],
+                         result)

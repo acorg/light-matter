@@ -20,9 +20,10 @@ class Peaks(object):
         result = []
 
         for aa in sequence:
-            aaProperties = sum(PROPERTY_DETAILS[aa][prop] for prop in
-                               properties)
-            result.append(aaProperties)
+            if aa in PROPERTY_DETAILS:
+                aaProperties = sum(PROPERTY_DETAILS[aa][prop] for prop in
+                                   properties)
+                result.append(aaProperties)
         return result
 
     def find(self, read, properties=None):
@@ -36,7 +37,7 @@ class Peaks(object):
         properties = properties or ['composition', 'iep', 'polarity']
         propertySequence = self.convertAAToProperties(read.sequence,
                                                       properties)
-        for i in range(1, len(read.sequence) - 1):
+        for i in range(1, len(propertySequence) - 1):
             before = propertySequence[i - 1]
             middle = propertySequence[i]
             after = propertySequence[i + 1]

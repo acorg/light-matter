@@ -27,7 +27,7 @@ class TestTroughs(TestCase):
 
     def testFindWithoutPeak(self):
         """
-        The find method must return an empty generator when no peak is
+        The find method must return an empty generator when no trough is
         present.
         """
         read = AARead('id', 'RRRRRRRRRRRRRRR')
@@ -37,7 +37,7 @@ class TestTroughs(TestCase):
 
     def testTwoPeaks(self):
         """
-        The find method must find two peaks.
+        The find method must find two troughs.
         """
         read = AARead('id', 'AVAAAAAVAAA')
         trigPoint = Troughs()
@@ -47,7 +47,8 @@ class TestTroughs(TestCase):
 
     def testNoPeakAtBeginning(self):
         """
-        The find method must not find a peak at the beginning of the sequence.
+        The find method must not find a troughs at the beginning of the
+        sequence.
         """
         read = AARead('id', 'VAAAAAAAAA')
         trigPoint = Troughs()
@@ -56,7 +57,7 @@ class TestTroughs(TestCase):
 
     def testNoPeakAtEnd(self):
         """
-        The find method must not find a peak at the end of the sequence.
+        The find method must not find a trough at the end of the sequence.
         """
         read = AARead('id', 'AAAAAAV')
         trigPoint = Troughs()

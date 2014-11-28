@@ -1,7 +1,7 @@
 import re
 
 from dark.aa import PROPERTIES, HYDROPHOBIC
-from light.landmark import Landmark
+from light.features import Landmark
 
 ALPHA_HELIX_3_10 = re.compile('OIIO(?:IIO)+')
 
@@ -13,6 +13,7 @@ class AlphaHelix_3_10(object):
     repeats of one hydrophobic and then 2 hydrophilic amino acids.
 
     """
+    NAME = 'AlphaHelix_3_10'
     SYMBOL = 'B'
 
     def convertAAToHydrophobicHydrophilic(self, sequence):

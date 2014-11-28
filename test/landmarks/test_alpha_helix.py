@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from dark.reads import AARead
 
-from light.landmark import Landmark
+from light.features import Landmark
 from light.landmarks.alpha_helix import AlphaHelix
 
 

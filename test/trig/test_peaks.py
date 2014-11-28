@@ -15,8 +15,8 @@ class TestPeaks(TestCase):
         The amino acid sequence must be converted to the right properties
         string.
         """
-        trigPoint = Peaks()
-        result = trigPoint.convertAAToProperties('ASDGEAHSDTDSCV')
+        peaks = Peaks()
+        result = peaks.convertAAToProperties('ASDGEAHSDTDSCV')
         self.assertEqual([-1.401365904912, -0.17713381906999998,
                          0.003636363636359996, -0.6484712512417,
                          -0.391107796081, -1.401365904912,
@@ -31,8 +31,8 @@ class TestPeaks(TestCase):
         present.
         """
         read = AARead('id', 'RRRRRRRRRRRRRRR')
-        trigPoint = Peaks()
-        result = list(trigPoint.find(read))
+        peaks = Peaks()
+        result = list(peaks.find(read))
         self.assertEqual([], result)
 
     def testTwoPeaks(self):
@@ -40,8 +40,8 @@ class TestPeaks(TestCase):
         The find method must find two peaks.
         """
         read = AARead('id', 'ASAAAAASAAA')
-        trigPoint = Peaks()
-        result = list(trigPoint.find(read))
+        peaks = Peaks()
+        result = list(peaks.find(read))
         self.assertEqual([TrigPoint('Peaks', 'P', 1),
                           TrigPoint('Peaks', 'P', 7)], result)
 
@@ -50,8 +50,8 @@ class TestPeaks(TestCase):
         The find method must not find a peak at the beginning of the sequence.
         """
         read = AARead('id', 'SAAAAAAAAA')
-        trigPoint = Peaks()
-        result = list(trigPoint.find(read))
+        peaks = Peaks()
+        result = list(peaks.find(read))
         self.assertEqual([], result)
 
     def testNoPeakAtEnd(self):
@@ -59,6 +59,6 @@ class TestPeaks(TestCase):
         The find method must not find a peak at the end of the sequence.
         """
         read = AARead('id', 'AAAAAAS')
-        trigPoint = Peaks()
-        result = list(trigPoint.find(read))
+        peaks = Peaks()
+        result = list(peaks.find(read))
         self.assertEqual([], result)

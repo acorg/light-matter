@@ -15,8 +15,8 @@ class TestTroughs(TestCase):
         The amino acid sequence must be converted to the right properties
         string.
         """
-        trigPoint = Troughs()
-        result = trigPoint.convertAAToProperties('ASDGEAHSDTDSCV')
+        troughs = Troughs()
+        result = troughs.convertAAToProperties('ASDGEAHSDTDSCV')
         self.assertEqual([-1.401365904912, -0.17713381906999998,
                          0.003636363636359996, -0.6484712512417,
                          -0.391107796081, -1.401365904912,
@@ -31,8 +31,8 @@ class TestTroughs(TestCase):
         present.
         """
         read = AARead('id', 'RRRRRRRRRRRRRRR')
-        trigPoint = Troughs()
-        result = list(trigPoint.find(read))
+        troughs = Troughs()
+        result = list(troughs.find(read))
         self.assertEqual([], result)
 
     def testTwoTroughs(self):
@@ -40,8 +40,8 @@ class TestTroughs(TestCase):
         The find method must find two troughs.
         """
         read = AARead('id', 'AVAAAAAVAAA')
-        trigPoint = Troughs()
-        result = list(trigPoint.find(read))
+        troughs = Troughs()
+        result = list(troughs.find(read))
         self.assertEqual([TrigPoint('Troughs', 'T', 1),
                           TrigPoint('Troughs', 'T', 7)], result)
 
@@ -51,8 +51,8 @@ class TestTroughs(TestCase):
         sequence.
         """
         read = AARead('id', 'VAAAAAAAAA')
-        trigPoint = Troughs()
-        result = list(trigPoint.find(read))
+        troughs = Troughs()
+        result = list(troughs.find(read))
         self.assertEqual([], result)
 
     def testNoTroughAtEnd(self):
@@ -60,6 +60,6 @@ class TestTroughs(TestCase):
         The find method must not find a trough at the end of the sequence.
         """
         read = AARead('id', 'AAAAAAV')
-        trigPoint = Troughs()
-        result = list(trigPoint.find(read))
+        troughs = Troughs()
+        result = list(troughs.find(read))
         self.assertEqual([], result)

@@ -4,40 +4,37 @@ from light.features import TrigPoint
 
 class Troughs(object):
     """
-    A class for computing statistics based on alpha helices.  Based
-    around the assumption that an alpha helix is composed of three times
-    one hydrophobic and 3 hydrophilic amino acids.
-
+    A class for computing statistics based on amino acid property troughs.
     """
     NAME = 'Troughs'
     SYMBOL = 'T'
 
-    def convertAAToProperties(self, sequence, properties=['composition', 'iep',
-                                                          'polarity']):
+    def convertAAToProperties(self, sequence, properties=None):
         """
         Takes an amino acid sequence, converts it to a sequence of properties.
 
         @param sequence: an amino acid sequence.
         @param properties: a list of properties that should be included.
         """
+        properties = properties or ['composition', 'iep', 'polarity']
         result = []
 
         for aa in sequence:
-            aaProperties = sum([PROPERTY_DETAILS[aa][prop] for prop in
-                                properties])
+            aaProperties = sum(PROPERTY_DETAILS[aa][prop] for prop in
+                               properties)
             result.append(aaProperties)
         return result
 
-    def find(self, read, properties=['composition', 'iep', 'polarity']):
+    def find(self, read, properties=None):
         """
-        A function that checks if and where an alpha helix in a sequence
-        occurs.
+        A function that checks if and where a trough in a sequence occurs.
 
         @param read: An instance of C{dark.reads.AARead}.
         @param properties: a list of properties that should be included.
         """
+        properties = properties or ['composition', 'iep', 'polarity']
         propertySequence = self.convertAAToProperties(read.sequence,
-                                                      properties=properties)
+                                                      properties)
         for i in range(1, len(read.sequence) - 1):
             before = propertySequence[i - 1]
             middle = propertySequence[i]

@@ -13,7 +13,7 @@ def find(name):
     """
 
     for klass in ALL_LANDMARK_FINDER_CLASSES:
-        if name == klass.__name__:
+        if name == klass.NAME:
             return klass
 
 

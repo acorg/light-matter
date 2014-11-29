@@ -55,6 +55,13 @@ class TestLandmarks(TestCase):
         landmark2 = Landmark('name', 'symbol2', 0, 1, 1)
         self.assertNotEqual(landmark1, landmark2)
 
+    def testLandmarkHashkey(self):
+        """
+        The hashkey function must return as expected.
+        """
+        landmark = Landmark('name', 'symbol', 0, 1, 2)
+        self.assertEqual('symbol2', landmark.hashkey())
+
 
 class TestTrigPoints(TestCase):
     """
@@ -99,3 +106,10 @@ class TestTrigPoints(TestCase):
         landmark1 = TrigPoint('name', 'symbol1', 0)
         landmark2 = TrigPoint('name', 'symbol2', 0)
         self.assertNotEqual(landmark1, landmark2)
+
+    def testTrigPointHashkey(self):
+        """
+        The hashkey function must return as expected.
+        """
+        landmark = TrigPoint('name', 'symbol', 0)
+        self.assertEqual('symbol', landmark.hashkey())

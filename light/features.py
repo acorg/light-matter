@@ -42,6 +42,12 @@ class Landmark(_Feature):
                 self.length == other.length and
                 self.repeatCount == other.repeatCount)
 
+    def hashkey(self):
+        """
+        Return information to be included in the hashkey.
+        """
+        return '%s%d' % (self.symbol, self.repeatCount)
+
 
 class TrigPoint(_Feature):
     """
@@ -62,3 +68,9 @@ class TrigPoint(_Feature):
         return (self.name == other.name and
                 self.symbol == other.symbol and
                 self.offset == other.offset)
+
+    def hashkey(self):
+        """
+        Return information to be included in the hashkey.
+        """
+        return self.symbol

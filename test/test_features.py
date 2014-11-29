@@ -7,7 +7,6 @@ class TestLandmarks(TestCase):
     """
     Tests for the light.features.Landmark class
     """
-
     def testEqual(self):
         """
         Identical landmarks must compare equal.
@@ -61,7 +60,6 @@ class TestTrigPoints(TestCase):
     """
     Tests for the light.features.TrigPoint class
     """
-
     def testEqual(self):
         """
         Identical landmarks must compare equal.

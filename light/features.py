@@ -44,7 +44,9 @@ class Landmark(_Feature):
 
     def hashkey(self):
         """
-        Return information to be included in the hashkey.
+        Return a string suitable for use as a hash key for this landmark.
+
+        @return: a C{str} of the symbol of the respective landmark.
         """
         return '%s%d' % (self.symbol, self.repeatCount)
 
@@ -71,6 +73,8 @@ class TrigPoint(_Feature):
 
     def hashkey(self):
         """
-        Return information to be included in the hashkey.
+        Return a string suitable for use as a hash key for this trig point.
+
+        @return: a C{str} of the symbol of the respective trig point.
         """
         return self.symbol

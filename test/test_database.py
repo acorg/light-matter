@@ -105,6 +105,16 @@ class TestScannedReadDatabase(TestCase):
         self.assertEqual(72, db.totalResidues)
         self.assertEqual(44, db.totalCoveredResidues)
 
+    def testTwoReadsTwoLandmarksLimitZeroPairsPerLandmark(self):
+        """
+        If two identical reads are added, both with two landmarks, no keys
+        will be added to the dictionary if limitPerLandmark is zero.
+        """
+        db = ScannedReadDatabase([AlphaHelix], [], limitPerLandmark=0)
+        db.addRead(AARead('id1', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
+        db.addRead(AARead('id2', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
+        self.assertEqual({}, db.d)
+
     def testTwoReadsTwoLandmarksDifferentOffsets(self):
         """
         If two reads are added, both with two landmarks separated by the same
@@ -142,3 +152,70 @@ class TestScannedReadDatabase(TestCase):
         db = ScannedReadDatabase([AlphaHelix], [])
         db.addRead(AARead('id', 'FRRRFRRRFASA'))
         self.assertEqual({}, db.d)
+
+    def testOneReadOneLandmarkTwoPeaks(self):
+        """
+        If one read is added and it has one landmark and two peaks, two pairs
+        are added to the database.
+        """
+        db = ScannedReadDatabase([AlphaHelix], [Peaks])
+        db.addRead(AARead('id', 'FRRRFRRRFASAASA'))
+        self.assertEqual(
+            {
+                'A2:P:-10': set([('id', 0)]),
+                'A2:P:-13': set([('id', 0)]),
+            },
+            db.d)
+
+    def testOneReadOneLandmarkTwoPeaksLimitOnePairPerLandmark(self):
+        """
+        If one read is added and it has one landmark and two peaks, but a
+        limit of one pair per landmarks is imposed, only one key is added to
+        the database.
+        """
+        db = ScannedReadDatabase([AlphaHelix], [Peaks], limitPerLandmark=1)
+        db.addRead(AARead('id', 'FRRRFRRRFASAASA'))
+        self.assertEqual(
+            {
+                'A2:P:-10': set([('id', 0)]),
+            },
+            db.d)
+
+    def testOneReadOneLandmarkTwoPeaksSevereMaxDistance(self):
+        """
+        If one read is added and it has one landmark and two peaks, but a
+        severe maximum distance is imposed, no keys are added to
+        the database.
+        """
+        db = ScannedReadDatabase([AlphaHelix], [Peaks], maxDistance=1)
+        db.addRead(AARead('id', 'FRRRFRRRFASAASA'))
+        self.assertEqual({}, db.d)
+
+    def testOneReadOneLandmarkTwoPeaksIntermediateMaxDistance(self):
+        """
+        If one read is added and it has one landmark and two peaks, but a
+        maximum distance is imposed that makes one of the peaks too far
+        away, only one key is added to the database.
+        """
+        db = ScannedReadDatabase([AlphaHelix], [Peaks], maxDistance=11)
+        db.addRead(AARead('id', 'FRRRFRRRFASAASA'))
+        self.assertEqual(
+            {
+                'A2:P:-10': set([('id', 0)]),
+            },
+            db.d)
+
+    def testOneReadOneLandmarkTwoPeaksLargeMaxDistance(self):
+        """
+        If one read is added and it has one landmark and two peaks, and a
+        maximum distance is imposed that is greater than the distance to the
+        peaks, two keys are added to the database.
+        """
+        db = ScannedReadDatabase([AlphaHelix], [Peaks], maxDistance=15)
+        db.addRead(AARead('id', 'FRRRFRRRFASAASA'))
+        self.assertEqual(
+            {
+                'A2:P:-10': set([('id', 0)]),
+                'A2:P:-13': set([('id', 0)]),
+            },
+            db.d)

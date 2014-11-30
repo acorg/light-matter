@@ -38,6 +38,14 @@ if __name__ == '__main__':
         help='The name of a trig point finder to use. May be specified '
         'multiple times.')
 
+    parser.add_argument(
+        '--limitPerLandmark', type=int, default=None,
+        help='A limit on the number of pairs to yield per landmark per read.')
+
+    parser.add_argument(
+        '--maxDistance', type=int, default=None,
+        help='The maximum distance permitted between yielded pairs.')
+
     args = parser.parse_args()
 
     if len(args.landmarkFinderNames) + len(args.trigFinderNames) == 0:
@@ -68,7 +76,8 @@ if __name__ == '__main__':
             sys.exit(1)
 
     # Create the database, add reads to it, and print statistics.
-    database = ScannedReadDatabase(landmarkFinderClasses, trigFinderClasses)
+    database = ScannedReadDatabase(landmarkFinderClasses, trigFinderClasses,
+                                   args.limitPerLandmark, args.maxDistance)
     reads = FastaReads(args.fastaFile)
     for read in reads:
         database.addRead(read)

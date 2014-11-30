@@ -10,10 +10,17 @@ class ScannedReadDatabase(object):
 
     @param landmarkFinderClasses: A C{list} of landmark classes.
     @param trigPointFinderClasses: A C{list} of trig point classes.
+    @param limitPerLandmark: An C{int} limit on the number of pairs to
+        yield per landmark.
+    @param maxDistance: The C{int} maximum distance permitted between
+        yielded pairs.
     """
-    def __init__(self, landmarkFinderClasses, trigPointFinderClasses):
+    def __init__(self, landmarkFinderClasses, trigPointFinderClasses,
+                 limitPerLandmark=None, maxDistance=None):
         self.landmarkFinderClasses = landmarkFinderClasses
         self.trigPointFinderClasses = trigPointFinderClasses
+        self.limitPerLandmark = limitPerLandmark
+        self.maxDistance = maxDistance
         self.d = defaultdict(set)
         self.readCount = 0
         self.totalResidues = 0
@@ -48,7 +55,9 @@ class ScannedReadDatabase(object):
 
         self.totalCoveredResidues += len(scannedRead.coveredIndices())
 
-        for landmark, trigPoint in scannedRead.getPairs():
+        for landmark, trigPoint in scannedRead.getPairs(
+                limitPerLandmark=self.limitPerLandmark,
+                maxDistance=self.maxDistance):
             key = '%s:%s:%s' % (landmark.hashkey(), trigPoint.hashkey(),
                                 landmark.offset - trigPoint.offset)
             self.d[key].add((read.id, landmark.offset))

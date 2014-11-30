@@ -1,8 +1,6 @@
 from collections import defaultdict
 
 from light.reads import ScannedRead
-from light.landmarks import find as findLandmark
-from light.trig import find as findTrigPoint
 
 
 class ScannedReadDatabase(object):
@@ -19,22 +17,16 @@ class ScannedReadDatabase(object):
         self.d = defaultdict(set)
 
         self.landmarkFinders = []
-        for landmarkFinder in self.landmarkFinderClasses:
-            landmarkFinderClass = findLandmark(landmarkFinder)
+        for landmarkFinderClass in self.landmarkFinderClasses:
             self.landmarkFinders.append(landmarkFinderClass().find)
 
         self.trigPointFinders = []
-        for trigPointFinder in self.trigPointFinderClasses:
-            trigPointFinderClass = findTrigPoint(trigPointFinder)
+        for trigPointFinderClass in self.trigPointFinderClasses:
             self.trigPointFinders.append(trigPointFinderClass().find)
 
-        # add params to d
-        self.d['params'] = {'trigPointFinders': self.trigPointFinderClasses,
-                            'landmarkFinders': self.landmarkFinderClasses}
-
-    def makeSearchDictionary(self, read):
+    def addRead(self, read):
         """
-        Add landmark, trigpoint pairs to the search dictionary.
+        Add (landmark, trig point) pairs to the search dictionary.
 
         @param read: a C{dark.read.AARead} instance.
         """
@@ -51,4 +43,4 @@ class ScannedReadDatabase(object):
         for landmark, trigPoint in scannedRead.getPairs():
             key = '%s:%s:%s' % (landmark.hashkey(), trigPoint.hashkey(),
                                 landmark.offset - trigPoint.offset)
-            self.d[key].add([read.id, landmark.offset])
+            self.d[key].add((read.id, landmark.offset))

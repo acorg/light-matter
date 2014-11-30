@@ -1,3 +1,8 @@
+from operator import attrgetter
+
+from light.sortedCollection import SortedCollection
+
+
 class _Feature(object):
     """
     Hold information about a landmark or trig point found in a sequence.
@@ -5,11 +10,9 @@ class _Feature(object):
     @param name: The C{str} name of this feature.
     @param symbol: The C{str} symbol for this feature.
     @param offset: The C{int} offset of the feature in the sequence.
-    @param repeatCount: The C{int} number of times the feature's pattern was
-        found in the sequence at this offset.
     """
 
-    def __init__(self, name, symbol, offset, length, repeatCount=1):
+    def __init__(self, name, symbol, offset, length):
         self.name = name
         self.symbol = symbol
         self.offset = offset
@@ -78,3 +81,87 @@ class TrigPoint(_Feature):
         @return: a C{str} of the symbol of the respective trig point.
         """
         return self.symbol
+
+
+class CombinedFeatureList(object):
+    """
+    Hold a sorted (by offset) collection of _Feature instances (landmarks
+    and trig points), and provide a method for finding nearby features.
+
+    @param landmarks: An iterable of L{Landmark} instances.
+    @param trigPoints: An iterable of L{TrigPoint} instances.
+    """
+    def __init__(self, landmarks, trigPoints):
+        self._features = SortedCollection(landmarks + trigPoints,
+                                          key=attrgetter('offset'))
+
+    def nearest(self, offset, maxDistance=None):
+        """
+        Find the features nearest to the given offset.
+
+        @param offset: The C{int} offset whose nearest features are wanted.
+        @param maxDistance: The C{int} maximum distance a feature may be from
+            the given offset to be considered.
+        @return: A generator that yields nearby features.
+        """
+
+        nFeatures = len(self._features)
+
+        # Set right to be the index of the first feature with offset
+        # greater than or equal to the wanted offset.
+        try:
+            rightFeature = self._features.find_ge(offset)
+        except ValueError:
+            right = nFeatures
+        else:
+            right = self._features.index(rightFeature)
+
+        left = right - 1
+
+        while True:
+            if left >= 0:
+                leftDelta = abs(self._features[left].offset - offset)
+            else:
+                leftDelta = None
+            if right < nFeatures:
+                rightDelta = abs(self._features[right].offset - offset)
+            else:
+                rightDelta = None
+
+            if leftDelta is None:
+                if rightDelta is None:
+                    # We ran out of neighboring features on left and right.
+                    return
+                else:
+                    # We only have a right neighboring feature.
+                    if maxDistance is None or rightDelta <= maxDistance:
+                        yield self._features[right]
+                        right += 1
+                    else:
+                        # The next delta is too large. We're done.
+                        return
+            else:
+                if rightDelta is None:
+                    # We only have a left neighboring feature.
+                    if maxDistance is None or leftDelta <= maxDistance:
+                        yield self._features[left]
+                        left -= 1
+                    else:
+                        # The next delta is too large. We're done.
+                        return
+                else:
+                    # Deltas on both left and right are available.
+                    if leftDelta < rightDelta:
+                        if maxDistance is None or leftDelta <= maxDistance:
+                            yield self._features[left]
+                            left -= 1
+                        else:
+                            # The smallest available delta is too large.
+                            return
+                    else:
+                        if maxDistance is None or rightDelta <= maxDistance:
+                            yield self._features[right]
+                            right += 1
+                        else:
+                            # The smallest available delta is too large.
+                            return

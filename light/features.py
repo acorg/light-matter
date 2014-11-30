@@ -10,11 +10,9 @@ class _Feature(object):
     @param name: The C{str} name of this feature.
     @param symbol: The C{str} symbol for this feature.
     @param offset: The C{int} offset of the feature in the sequence.
-    @param repeatCount: The C{int} number of times the feature's pattern was
-        found in the sequence at this offset.
     """
 
-    def __init__(self, name, symbol, offset, length, repeatCount=1):
+    def __init__(self, name, symbol, offset, length):
         self.name = name
         self.symbol = symbol
         self.offset = offset
@@ -47,6 +45,14 @@ class Landmark(_Feature):
                 self.length == other.length and
                 self.repeatCount == other.repeatCount)
 
+    def hashkey(self):
+        """
+        Return a string suitable for use as a hash key for this landmark.
+
+        @return: a C{str} of the symbol of the respective landmark.
+        """
+        return '%s%d' % (self.symbol, self.repeatCount)
+
 
 class TrigPoint(_Feature):
     """
@@ -67,6 +73,14 @@ class TrigPoint(_Feature):
         return (self.name == other.name and
                 self.symbol == other.symbol and
                 self.offset == other.offset)
+
+    def hashkey(self):
+        """
+        Return a string suitable for use as a hash key for this trig point.
+
+        @return: a C{str} of the symbol of the respective trig point.
+        """
+        return self.symbol
 
 
 class CombinedFeatureList(object):

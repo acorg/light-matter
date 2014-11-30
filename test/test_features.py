@@ -55,6 +55,13 @@ class TestLandmarks(TestCase):
         landmark2 = Landmark('name', 'L', 0, 1, 1)
         self.assertNotEqual(landmark1, landmark2)
 
+    def testLandmarkHashkey(self):
+        """
+        The hashkey function must return as expected.
+        """
+        landmark = Landmark('name', 'L', 0, 1, 2)
+        self.assertEqual('L2', landmark.hashkey())
+
 
 class TestTrigPoints(TestCase):
     """
@@ -91,6 +98,13 @@ class TestTrigPoints(TestCase):
         trigPoint1 = TrigPoint('name', 'T', 0)
         trigPoint2 = TrigPoint('name', 'T', 1)
         self.assertNotEqual(trigPoint1, trigPoint2)
+
+    def testTrigPointHashkey(self):
+        """
+        The hashkey function must return as expected.
+        """
+        landmark = TrigPoint('name', 'L', 0)
+        self.assertEqual('L', landmark.hashkey())
 
 
 class TestCombinedFeatureList(TestCase):

@@ -18,6 +18,15 @@ class TestScannedReadDatabase(TestCase):
         self.assertEqual([AlphaHelix], db.landmarkFinderClasses)
         self.assertEqual([Peaks], db.trigPointFinderClasses)
 
+    def testInitialStatistics(self):
+        """
+        The database statistics must be initially correct.
+        """
+        db = ScannedReadDatabase([], [])
+        self.assertEqual(0, db.readCount)
+        self.assertEqual(0, db.totalResidues)
+        self.assertEqual(0, db.totalCoveredResidues)
+
     def testInitialDatabaseIsEmpty(self):
         """
         The database must be empty if no reads have been added.
@@ -34,6 +43,16 @@ class TestScannedReadDatabase(TestCase):
         db.addRead(AARead('id', 'FRRRFRRRF'))
         self.assertEqual({}, db.d)
 
+    def testOneReadOneLandmarkStatistics(self):
+        """
+        If one read is added the database statistics must be correct.
+        """
+        db = ScannedReadDatabase([], [])
+        db.addRead(AARead('id', 'FRRRFRRRF'))
+        self.assertEqual(1, db.readCount)
+        self.assertEqual(9, db.totalResidues)
+        self.assertEqual(0, db.totalCoveredResidues)
+
     def testOneReadTwoLandmarks(self):
         """
         If one read is added and it has two landmarks, two keys are added
@@ -47,6 +66,16 @@ class TestScannedReadDatabase(TestCase):
                 'A3:A2:23': set([('id', 23)]),
             },
             db.d)
+
+    def testOneReadTwoLandmarksStatistics(self):
+        """
+        If one read is added, the database statistics must be correct.
+        """
+        db = ScannedReadDatabase([AlphaHelix], [])
+        db.addRead(AARead('id', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
+        self.assertEqual(1, db.readCount)
+        self.assertEqual(36, db.totalResidues)
+        self.assertEqual(22, db.totalCoveredResidues)
 
     def testTwoReadsTwoLandmarks(self):
         """
@@ -63,6 +92,18 @@ class TestScannedReadDatabase(TestCase):
                 'A3:A2:23': set([('id2', 23), ('id1', 23)]),
             },
             db.d)
+
+    def testTwoReadsTwoLandmarksStatistics(self):
+        """
+        If two identical reads are added, the database statistics must be
+        correct.
+        """
+        db = ScannedReadDatabase([AlphaHelix], [])
+        db.addRead(AARead('id1', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
+        db.addRead(AARead('id2', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
+        self.assertEqual(2, db.readCount)
+        self.assertEqual(72, db.totalResidues)
+        self.assertEqual(44, db.totalCoveredResidues)
 
     def testTwoReadsTwoLandmarksDifferentOffsets(self):
         """

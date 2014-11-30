@@ -20,13 +20,13 @@ if __name__ == '__main__':
         help='The name of the FASTA file to read.')
 
     parser.add_argument(
-        '--landmark', action='append', type=str,
+        '--landmark', action='append', type=str, dest='landmarks',
         choices=sorted(c.__name__ for c in ALL_LANDMARK_FINDER_CLASSES),
         help='The name of the landmark finder to use. May be specified '
         'multiple times.')
 
     parser.add_argument(
-        '--trig', action='append', type=str,
+        '--trig', action='append', type=str, dest='trigs',
         choices=sorted(c.__name__ for c in ALL_TRIG_FINDER_CLASSES),
         help='The name of the trig point finder to use. May be specified '
         'multiple times.')
@@ -37,8 +37,8 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    landmarks = args.landmark or []
-    trigs = args.trig or []
+    landmarks = args.landmarks or []
+    trigs = args.trigs or []
 
     if len(landmarks) + len(trigs) == 0:
         print >>sys.stderr, ('You must specify either landmarks or trig '

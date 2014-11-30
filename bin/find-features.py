@@ -21,14 +21,14 @@ if __name__ == '__main__':
 
     parser.add_argument(
         '--landmark', action='append', type=str,
-        choices=sorted(c.__name__ for c in ALL_LANDMARK_FINDER_CLASSES),
-        help='The name of the landmark finder to use. May be specified '
+        choices=sorted(klass.NAME for klass in ALL_LANDMARK_FINDER_CLASSES),
+        help='The name of a landmark finder to use. May be specified '
         'multiple times.')
 
     parser.add_argument(
         '--trig', action='append', type=str,
-        choices=sorted(c.__name__ for c in ALL_TRIG_FINDER_CLASSES),
-        help='The name of the trig point finder to use. May be specified '
+        choices=sorted(klass.NAME for klass in ALL_TRIG_FINDER_CLASSES),
+        help='The name of a trig point finder to use. May be specified '
         'multiple times.')
 
     parser.add_argument(
@@ -42,7 +42,7 @@ if __name__ == '__main__':
 
     if len(landmarks) + len(trigs) == 0:
         print >>sys.stderr, ('You must specify either landmarks or trig '
-                             'points to find.\n%s') % args.format_usage()
+                             'points to find.\n%s') % parser.format_usage(),
         sys.exit(1)
 
     # Make sure all landmark finders requested exist.

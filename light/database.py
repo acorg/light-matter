@@ -67,3 +67,17 @@ class ScannedReadDatabase(object):
             self.__class__.__name__, self.readCount, self.totalResidues,
             len(self.d),
             float(self.totalCoveredResidues) / self.totalResidues * 100.0)
+
+    def find(self, read, db):
+        """
+        A function which takes a read, computes all hashes for it, looks up
+        matching hashes and checks which database sequence it matches.
+
+        MAYBE THIS SHOULD BE ITS OWN FUNCTION AND NOT PART OF THIS CLASS...
+
+        @param read: a C{dark.read.AARead} instance.
+        @param db: a L{light.database.ScannedRead} database in which we want to
+            look up the read.
+        """
+
+

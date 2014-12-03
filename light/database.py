@@ -78,7 +78,8 @@ class ScannedReadDatabase(object):
         """
         dump(self, fp, protocol=HIGHEST_PROTOCOL)
 
-    def load(self, fp=sys.stdin):
+    @staticmethod
+    def load(fp=sys.stdin):
         """
         Load a database from a file.
 

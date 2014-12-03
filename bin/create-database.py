@@ -75,11 +75,13 @@ if __name__ == '__main__':
                 basename(sys.argv[0]), landmarkFinderName)
             sys.exit(1)
 
-    # Create the database, add reads to it, and print statistics.
+    # Create the database, add reads to it, print statistics, save to stdout.
     database = ScannedReadDatabase(landmarkFinderClasses, trigFinderClasses,
                                    args.limitPerLandmark, args.maxDistance)
     reads = FastaReads(args.fastaFile)
     for read in reads:
         database.addRead(read)
-    print database
-    print 'Database built in %.2f seconds.' % (time() - startTime)
+    print >>sys.stderr, database
+    print >>sys.stderr, 'Database built in %.2f seconds. Saving.' % (
+        time() - startTime)
+    database.save()

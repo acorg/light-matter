@@ -1,4 +1,6 @@
+import sys
 from collections import defaultdict
+from cPickle import dump, load, HIGHEST_PROTOCOL
 
 from light.reads import ScannedRead
 
@@ -28,11 +30,11 @@ class ScannedReadDatabase(object):
 
         self.landmarkFinders = []
         for landmarkFinderClass in self.landmarkFinderClasses:
-            self.landmarkFinders.append(landmarkFinderClass().find)
+            self.landmarkFinders.append(landmarkFinderClass())
 
         self.trigPointFinders = []
         for trigPointFinderClass in self.trigPointFinderClasses:
-            self.trigPointFinders.append(trigPointFinderClass().find)
+            self.trigPointFinders.append(trigPointFinderClass())
 
     def addRead(self, read):
         """
@@ -46,11 +48,11 @@ class ScannedReadDatabase(object):
         self.totalResidues += len(read)
 
         for landmarkFinder in self.landmarkFinders:
-            for landmark in landmarkFinder(read):
+            for landmark in landmarkFinder.find(read):
                 scannedRead.landmarks.append(landmark)
 
         for trigFinder in self.trigPointFinders:
-            for trigPoint in trigFinder(read):
+            for trigPoint in trigFinder.find(read):
                 scannedRead.trigPoints.append(trigPoint)
 
         self.totalCoveredResidues += len(scannedRead.coveredIndices())
@@ -67,3 +69,28 @@ class ScannedReadDatabase(object):
             self.__class__.__name__, self.readCount, self.totalResidues,
             len(self.d),
             float(self.totalCoveredResidues) / self.totalResidues * 100.0)
+
+    def save(self, fp=sys.stdout):
+        """
+        Save the database to a file.
+
+        @param fp: A file pointer.
+        """
+        dump(self, fp, protocol=HIGHEST_PROTOCOL)
+
+    def load(self, fp=sys.stdin):
+        """
+        Load a database from a file.
+
+        @param fp: A file pointer.
+        @return: An instance of L{ScannedReadDatabase}.
+        """
+        # NOTE: We're using pickle, which isn't considered secure. But running
+        # other people's Python code in general shouldn't be considered
+        # secure, either. Make sure you don't load saved databases from
+        # untrusted sources. We could write this using JSON, but the set
+        # objects in self.d are not serializable and I don't want to convert
+        # each to a tuple due to concerns about memory usage when databases
+        # grow large. Anyway, for now let's proceed with pickle and caution.
+        # See google for more on Python and pickle security.
+        return load(fp)

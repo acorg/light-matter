@@ -1,4 +1,5 @@
 from unittest import TestCase
+from cStringIO import StringIO
 
 from light.landmarks.alpha_helix import AlphaHelix
 from light.trig.peaks import Peaks
@@ -219,3 +220,44 @@ class TestScannedReadDatabase(TestCase):
                 'A2:P:-13': set([('id', 0)]),
             },
             db.d)
+
+    def testSaveLoadEmpty(self):
+        """
+        When asked to save and then load an empty database, the correct
+        database must result.
+        """
+        db = ScannedReadDatabase([], [])
+        fp = StringIO()
+        db.save(fp)
+        fp.seek(0)
+        result = db.load(fp)
+        self.assertEqual(0, result.readCount)
+        self.assertEqual(0, result.totalCoveredResidues)
+        self.assertEqual({}, result.d)
+        self.assertEqual([], result.landmarkFinderClasses)
+        self.assertEqual(None, result.limitPerLandmark)
+        self.assertEqual(None, result.maxDistance)
+        self.assertEqual([], result.trigPointFinderClasses)
+        self.assertEqual(0, result.totalResidues)
+
+    def testSaveLoadNonEmpty(self):
+        """
+        When asked to save and then load a non-empty empty database, the
+        correct database must result.
+        """
+        db = ScannedReadDatabase([AlphaHelix], [Peaks])
+        db.addRead(AARead('id', 'FRRRFRRRFASAASA'))
+        fp = StringIO()
+        db.save(fp)
+        fp.seek(0)
+        result = db.load(fp)
+        self.assertEqual(db.readCount, result.readCount)
+        self.assertEqual(db.totalCoveredResidues, result.totalCoveredResidues)
+        self.assertEqual(db.d, result.d)
+        self.assertEqual(db.landmarkFinderClasses,
+                         result.landmarkFinderClasses)
+        self.assertEqual(db.limitPerLandmark, result.limitPerLandmark)
+        self.assertEqual(db.maxDistance, result.maxDistance)
+        self.assertEqual(db.trigPointFinderClasses,
+                         result.trigPointFinderClasses)
+        self.assertEqual(db.totalResidues, result.totalResidues)

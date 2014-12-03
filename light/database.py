@@ -3,6 +3,7 @@ import numpy as np
 from scipy import stats
 
 from light.reads import ScannedRead
+from light.result import ScannedReadDatabaseResult
 
 
 class ScannedReadDatabase(object):
@@ -70,7 +71,7 @@ class ScannedReadDatabase(object):
             len(self.d),
             float(self.totalCoveredResidues) / self.totalResidues * 100.0)
 
-    def find(self, db):
+    def find(self, read):
         """
         A function which takes a read, computes all hashes for it, looks up
         matching hashes and checks which database sequence it matches.
@@ -78,28 +79,37 @@ class ScannedReadDatabase(object):
         @param db: a L{light.database.ScannedRead} database in which we want to
             look up the read.
         """
-        found = defaultdict(defaultdict(list))
-        notFound = {}
-        for key in self.d:
+        scannedRead = ScannedRead(read)
+
+        for landmarkFinder in self.landmarkFinders:
+            for landmark in landmarkFinder(read):
+                scannedRead.landmarks.append(landmark)
+
+        for trigFinder in self.trigPointFinders:
+            for trigPoint in trigFinder(read):
+                scannedRead.trigPoints.append(trigPoint)
+
+        for landmark, trigPoint in scannedRead.getPairs(
+                limitPerLandmark=self.limitPerLandmark,
+                maxDistance=self.maxDistance):
+            key = '%s:%s:%s' % (landmark.hashkey(), trigPoint.hashkey(),
+                                landmark.offset - trigPoint.offset)
             try:
-                matchingKey = db[key]
-                for subject in matchingKey:
-                    for query in self.d[key]:
-                        found[subject[0]][query[0]].append(subject[1] -
-                                                           query[1])
-
+                matchingKey = self.d[key]
             except KeyError:
-                notFound[key] = self.d[key]
-
-        return found, notFound
+                return
+            else:
+                for subjectId, subjectOffset in matchingKey.items():
+                    offset = subjectOffset - landmark.offset
+                    yield ScannedReadDatabaseResult(subjectId, read.id, offset)
 
 
 def evaluate(found):
     """
     Evaluates whether a subject is matched significantly by a read.
 
-    @param found: a C{dict} with matches as returned by
-        L{ScannedReadDatabase.find}.
+    @param found: a C{list} with L{light.result.ScannedReadDatabaseResult} as
+        returned by L{ScannedReadDatabase.find}.
     """
     significant = []
     for subject in found:

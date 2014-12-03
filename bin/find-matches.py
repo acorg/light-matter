@@ -30,7 +30,7 @@ if __name__ == '__main__':
 
     # read out trigpoints, landmarks, maxDistance, limitperlandmark out of
     # database file.
-    #database = ScannedReadDatabase.read(args.databaseFile)
+    #database = ScannedReadDatabase().read(args.databaseFile)
     #--> function that terry is writing now.
     #landmarkFinderNames =
     #trigFinderNames =
@@ -38,42 +38,15 @@ if __name__ == '__main__':
     #maxDistance =
     #database=
 
-    # find all the trigpoint and landmarkfinders
-    landmarkFinderClasses = []
-    for landmarkFinderName in landmarkFinderNames:
-        landmarkFinderClass = findLandmark(landmarkFinderName)
-        if landmarkFinderClass:
-            landmarkFinderClasses.append(landmarkFinderClass)
-        else:
-            print >>sys.stderr, '%s: Could not find landmark finder %r.' % (
-                basename(sys.argv[0]), landmarkFinderName)
-            sys.exit(1)
-
-    # Make sure all trig point finders requested exist.
-    trigFinderClasses = []
-    for trigFinderName in args.trigFinderNames:
-        trigFinderClass = findTrigPoint(trigFinderName)
-        if trigFinderClass:
-            trigFinderClasses.append(trigFinderClass)
-        else:
-            print >>sys.stderr, '%s: Could not find trig point finder %r.' % (
-                basename(sys.argv[0]), landmarkFinderName)
-            sys.exit(1)
-
     # make a database for look up:
     readsDatabase = ScannedReadDatabase(landmarkFinderClasses,
                                         trigFinderClasses, limitPerLandmark,
                                         maxDistance)
     reads = FastaReads(args.fastaFile)
+    found = defaultdict(defaultdict(list))
     for read in reads:
-        readsDatabase.addRead(read)
-    print '%d hashes for look up built in %.2f seconds.' % (len(readsDatabase),
-                                                            (time() - startTime))
-
-    # look up the readsDatabase hashes in the database
-    found, notFound = readsDatabase.find(database)
-    print '%d out of %d hashes match' % (len(found),
-                                         (len(found) + len(notFound)))
+        for result in readsDatabase.find(read):
+            found[result.subjectId][result.queryId].append(result.offset)
 
     # evaluate the significance of the found matches.
     significant = evaluate(found)

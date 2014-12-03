@@ -1,4 +1,6 @@
 from collections import defaultdict
+import numpy as np
+from scipy import stats
 
 from light.reads import ScannedRead
 
@@ -68,16 +70,45 @@ class ScannedReadDatabase(object):
             len(self.d),
             float(self.totalCoveredResidues) / self.totalResidues * 100.0)
 
-    def find(self, read, db):
+    def find(self, db):
         """
         A function which takes a read, computes all hashes for it, looks up
         matching hashes and checks which database sequence it matches.
 
-        MAYBE THIS SHOULD BE ITS OWN FUNCTION AND NOT PART OF THIS CLASS...
-
-        @param read: a C{dark.read.AARead} instance.
         @param db: a L{light.database.ScannedRead} database in which we want to
             look up the read.
         """
+        found = defaultdict(defaultdict(list))
+        notFound = {}
+        for key in self.d:
+            try:
+                matchingKey = db[key]
+                for subject in matchingKey:
+                    for query in self.d[key]:
+                        found[subject[0]][query[0]].append(subject[1] -
+                                                           query[1])
+
+            except KeyError:
+                notFound[key] = self.d[key]
+
+        return found, notFound
 
 
+def evaluate(found):
+    """
+    Evaluates whether a subject is matched significantly by a read.
+
+    @param found: a C{dict} with matches as returned by
+        L{ScannedReadDatabase.find}.
+    """
+    significant = []
+    for subject in found:
+        for query, offsets in subject.items():
+            # test significance
+            # bin offsets
+            hist, edges = np.histogram(offsets, bins=10)
+            match = max(hist)
+            t, p = stats.ttest_1samp(offsets, match)
+            if p < 0.05:
+                significant.append((subject, query, match))
+    return significant

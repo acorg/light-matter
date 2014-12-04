@@ -104,7 +104,8 @@ class ScannedReadDatabase(object):
             else:
                 for subjectId, subjectOffset in matchingKey.items():
                     offset = subjectOffset - landmark.offset
-                    yield ScannedReadDatabaseResult(subjectId, read.id, offset)
+                    yield ScannedReadDatabaseResult(subjectId, read.id, offset,
+                                                    key)
 
     def save(self, fp=sys.stdout):
         """
@@ -141,7 +142,7 @@ def evaluate(found):
     """
     significant = []
     for subject in found:
-        for query, offsets in subject.items():
+        for query, offsets in found[subject].items():
             # test significance
             # bin offsets
             hist, edges = np.histogram(offsets, bins=10)

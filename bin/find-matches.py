@@ -1,14 +1,11 @@
 #!/usr/bin/env python
 
-import sys
 import argparse
 from time import time
-from os.path import basename
+from collections import defaultdict
 
 from dark.fasta import FastaReads
 
-from light.landmarks import find as findLandmark, ALL_LANDMARK_FINDER_CLASSES
-from light.trig import find as findTrigPoint, ALL_TRIG_FINDER_CLASSES
 from light.database import ScannedReadDatabase, evaluate
 
 if __name__ == '__main__':
@@ -28,20 +25,14 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    # read out trigpoints, landmarks, maxDistance, limitperlandmark out of
-    # database file.
-    #database = ScannedReadDatabase().read(args.databaseFile)
-    #--> function that terry is writing now.
-    #landmarkFinderNames =
-    #trigFinderNames =
-    #limitPerLandmark =
-    #maxDistance =
-    #database=
+    # read database from file.
+    database = ScannedReadDatabase().load(args.databaseFile)
 
     # make a database for look up:
-    readsDatabase = ScannedReadDatabase(landmarkFinderClasses,
-                                        trigFinderClasses, limitPerLandmark,
-                                        maxDistance)
+    readsDatabase = ScannedReadDatabase(database.landmarkFinderClasses,
+                                        database.trigFinderClasses,
+                                        database.limitPerLandmark,
+                                        database.maxDistance)
     reads = FastaReads(args.fastaFile)
     found = defaultdict(defaultdict(list))
     for read in reads:

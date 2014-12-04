@@ -3,7 +3,7 @@ from cStringIO import StringIO
 
 from light.landmarks.alpha_helix import AlphaHelix
 from light.trig.peaks import Peaks
-from light.database import ScannedReadDatabase
+from light.database import ScannedReadDatabase, evaluate
 from dark.reads import AARead
 
 
@@ -261,3 +261,52 @@ class TestScannedReadDatabase(TestCase):
         self.assertEqual(db.trigPointFinderClasses,
                          result.trigPointFinderClasses)
         self.assertEqual(db.totalResidues, result.totalResidues)
+
+    def testEvaluateNotSignificant(self):
+        """
+        A not significant result must not be returned.
+        """
+        found = {'subject1': {'query1': [1, 2]}}
+        result = evaluate(found)
+        self.assertEqual([], result)
+
+    def testEvaluateOneSignificant(self):
+        """
+        One significant result must be returned.
+        """
+        found = {'subject1': {'query1': [1, 1, 1, 1, 2]}}
+        result = evaluate(found)
+        self.assertEqual([('subject1', 'query1', 4)], result)
+
+    def testEvaluateTwoSignificant(self):
+        """
+        Two significant result must be returned.
+        """
+        found = {'subject1': {'query1': [1, 1, 1, 1, 1, 2],
+                              'query2': [1, 1, 1, 1, 1, 1, 1, 1, 1, 5]}}
+        result = evaluate(found)
+        self.assertEqual([('subject1', 'query2', 9),
+                          ('subject1', 'query1', 5)], result)
+
+    def testEvaluateTwoSignificantOneNotSignificant(self):
+        """
+        Two significant result must be returned, when one non-significant
+        result is present.
+        """
+        found = {'subject1': {'query1': [1, 1, 1, 1, 1, 2],
+                              'query2': [1, 1, 1, 1, 1, 1, 1, 1, 1, 5],
+                              'query3': [1, 2]}}
+        result = evaluate(found)
+        self.assertEqual([('subject1', 'query2', 9),
+                          ('subject1', 'query1', 5)], result)
+
+    def testEvaluateTwoSignificantDifferentSubjects(self):
+        """
+        Two significant result must be returned, when they are from different
+        subjects.
+        """
+        found = {'subject1': {'query1': [1, 1, 1, 1, 1, 2]},
+                 'subject2': {'query2': [1, 1, 1, 1, 1, 1, 1, 1, 1, 5]}}
+        result = evaluate(found)
+        self.assertEqual([('subject1', 'query1', 5),
+                          ('subject2', 'query2', 9)], result)

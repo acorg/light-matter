@@ -4,6 +4,7 @@ from cStringIO import StringIO
 from light.landmarks.alpha_helix import AlphaHelix
 from light.trig.peaks import Peaks
 from light.database import ScannedReadDatabase, evaluate
+from light.result import ScannedReadDatabaseResult
 from dark.reads import AARead
 
 
@@ -310,3 +311,40 @@ class TestScannedReadDatabase(TestCase):
         result = evaluate(found)
         self.assertEqual([('subject1', 'query1', 5),
                           ('subject2', 'query2', 9)], result)
+
+    def testFindNotMatching(self):
+        """
+        A non-matching key must not be found.
+        """
+        subject = AARead('subject', 'FRRRFRRRFASAASA')
+        query = AARead('query', 'FRRR')
+        db = ScannedReadDatabase([AlphaHelix], [Peaks])
+        db.addRead(subject)
+        result = db.find(query)
+        self.assertEqual([], list(result))
+
+    def testFindOneMatching(self):
+        """
+        One matching key must be found.
+        """
+        subject = AARead('subject', 'FRRRFRRRFASAASA')
+        query = AARead('query', 'FRRRFRRRFASAASA')
+        db = ScannedReadDatabase([AlphaHelix], [Peaks], maxDistance=11)
+        db.addRead(subject)
+        result = db.find(query)
+        self.assertEqual([ScannedReadDatabaseResult('subject', 'query', 0,
+                                                    'A2:P:-10')], list(result))
+
+    def testFindTwoMatchingInSameSubject(self):
+        """
+        Two matching keys in the same subject must be found.
+        """
+        subject = AARead('subject', 'FRRRFRRRFASAASA')
+        query = AARead('query', 'FRRRFRRRFASAASA')
+        db = ScannedReadDatabase([AlphaHelix], [Peaks])
+        db.addRead(subject)
+        result = db.find(query)
+        self.assertEqual([ScannedReadDatabaseResult('subject', 'query', 0,
+                                                    'A2:P:-10'),
+                          ScannedReadDatabaseResult('subject', 'query', 0,
+                                                    'A2:P:-13')], list(result))

@@ -85,11 +85,11 @@ class ScannedReadDatabase(object):
         scannedRead = ScannedRead(read)
 
         for landmarkFinder in self.landmarkFinders:
-            for landmark in landmarkFinder(read):
+            for landmark in landmarkFinder.find(read):
                 scannedRead.landmarks.append(landmark)
 
         for trigFinder in self.trigPointFinders:
-            for trigPoint in trigFinder(read):
+            for trigPoint in trigFinder.find(read):
                 scannedRead.trigPoints.append(trigPoint)
 
         for landmark, trigPoint in scannedRead.getPairs(
@@ -102,9 +102,9 @@ class ScannedReadDatabase(object):
             except KeyError:
                 return
             else:
-                for subjectId, subjectOffset in matchingKey.items():
-                    offset = subjectOffset - landmark.offset
-                    yield ScannedReadDatabaseResult(subjectId, read.id, offset,
+                for s in matchingKey:
+                    offset = s[1] - landmark.offset
+                    yield ScannedReadDatabaseResult(s[0], read.id, offset,
                                                     key)
 
     def save(self, fp=sys.stdout):

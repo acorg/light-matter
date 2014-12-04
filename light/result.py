@@ -14,7 +14,7 @@ class ScannedReadDatabaseResult(object):
         self.key = key
 
     def __str__(self):
-        return 'subject=%s, query=%s, offset=%d, key=%s' & (
+        return 'subject=%s, query=%s, offset=%d, key=%s' % (
             self.subjectId, self.queryId, self.offset, self.key)
 
     def __eq__(self, other):

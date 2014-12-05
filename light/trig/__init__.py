@@ -1,7 +1,8 @@
 from light.trig.peaks import Peaks
 from light.trig.troughs import Troughs
+from light.trig.amino_acids import AminoAcids
 
-ALL_TRIG_FINDER_CLASSES = {Peaks, Troughs}
+ALL_TRIG_FINDER_CLASSES = {Peaks, Troughs, AminoAcids}
 
 
 def find(name):

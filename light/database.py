@@ -77,8 +77,7 @@ class ScannedReadDatabase(object):
         A function which takes a read, computes all hashes for it, looks up
         matching hashes and checks which database sequence it matches.
 
-        @param db: a L{light.database.ScannedRead} database in which we want to
-            look up the read.
+        @param read: a C{dark.read.AARead} instance.
         """
         scannedRead = ScannedRead(read)
 
@@ -99,7 +98,7 @@ class ScannedReadDatabase(object):
             try:
                 matchingKey = self.d[key]
             except KeyError:
-                result.addMatch('No match', read.id, 0)
+                pass
             else:
                 for subjectId, subjectOffset in matchingKey:
                     offset = subjectOffset - landmark.offset

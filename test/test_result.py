@@ -15,7 +15,7 @@ class TestResult(TestCase):
         result.addMatch('subject', 'query1', 1)
         result.addMatch('subject', 'query2', 2)
         result.finalize()
-        self.assertEqual([], result.significant)
+        self.assertEqual([], result._significant)
 
     def testEvaluateNotSignificantIdenticalReads(self):
         """
@@ -25,7 +25,7 @@ class TestResult(TestCase):
         result.addMatch('subject', 'query', 1)
         result.addMatch('subject', 'query', 2)
         result.finalize()
-        self.assertEqual([], result.significant)
+        self.assertEqual([], result._significant)
 
     def testEvaluateOneSignificant(self):
         """
@@ -39,7 +39,7 @@ class TestResult(TestCase):
         result.addMatch('subject', 'query', 1)
         result.addMatch('subject', 'query', 7)
         result.finalize()
-        self.assertEqual([('subject', 'query', 5)], result.significant)
+        self.assertEqual([('subject', 'query', 5)], result._significant)
 
     def testEvaluateTwoSignificant(self):
         """
@@ -60,7 +60,7 @@ class TestResult(TestCase):
         result.addMatch('subject', 'query2', 2)
         result.finalize()
         self.assertEqual([('subject', 'query2', 5), ('subject', 'query1', 5)],
-                         result.significant)
+                         result._significant)
 
     def testEvaluateTwoSignificantOneNotSignificant(self):
         """
@@ -84,7 +84,7 @@ class TestResult(TestCase):
         result.addMatch('subject', 'query3', 2)
         result.finalize()
         self.assertEqual([('subject', 'query2', 5), ('subject', 'query1', 5)],
-                         result.significant)
+                         result._significant)
 
     def testEvaluateTwoSignificantDifferentSubjects(self):
         """
@@ -106,4 +106,4 @@ class TestResult(TestCase):
         result.addMatch('subject2', 'query2', 2)
         result.finalize()
         self.assertEqual([('subject1', 'query1', 5),
-                          ('subject2', 'query2', 5)], result.significant)
+                          ('subject2', 'query2', 5)], result._significant)

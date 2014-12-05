@@ -1,3 +1,4 @@
+discover
 biopython
 twisted
 numpy

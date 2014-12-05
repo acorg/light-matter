@@ -1,14 +1,12 @@
 #!/usr/bin/env python
 
 import argparse
-from time import time
 
 from dark.fasta import FastaReads
 
 from light.database import ScannedReadDatabase
 
 if __name__ == '__main__':
-    startTime = time()
 
     parser = argparse.ArgumentParser(
         description='Look up reads in a database.')

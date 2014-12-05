@@ -271,7 +271,7 @@ class TestScannedReadDatabase(TestCase):
         db = ScannedReadDatabase([AlphaHelix], [Peaks])
         db.addRead(subject)
         result = db.find(query)
-        self.assertEqual({}, result._matches)
+        self.assertEqual({}, result.matches)
 
     def testFindOneMatching(self):
         """
@@ -282,7 +282,7 @@ class TestScannedReadDatabase(TestCase):
         db = ScannedReadDatabase([AlphaHelix], [Peaks], maxDistance=11)
         db.addRead(subject)
         result = db.find(query)
-        self.assertEqual([0], result._matches['subject']['query'])
+        self.assertEqual([0], result.matches['subject']['query'])
 
     def testFindNoneMatchingTooSmallDistance(self):
         """
@@ -293,7 +293,7 @@ class TestScannedReadDatabase(TestCase):
         db = ScannedReadDatabase([AlphaHelix], [Peaks], maxDistance=1)
         db.addRead(subject)
         result = db.find(query)
-        self.assertEqual([], result._matches['subject']['query'])
+        self.assertEqual([], result.matches['subject']['query'])
 
     def testFindNoneMatchingNoTrigPoint(self):
         """
@@ -304,7 +304,7 @@ class TestScannedReadDatabase(TestCase):
         db = ScannedReadDatabase([AlphaHelix], [])
         db.addRead(subject)
         result = db.find(query)
-        self.assertEqual([], result._matches['subject']['query'])
+        self.assertEqual([], result.matches['subject']['query'])
 
     def testFindTwoMatchingInSameSubject(self):
         """
@@ -315,4 +315,4 @@ class TestScannedReadDatabase(TestCase):
         db = ScannedReadDatabase([AlphaHelix], [Peaks])
         db.addRead(subject)
         result = db.find(query)
-        self.assertEqual([0, 0], result._matches['subject']['query'])
+        self.assertEqual([0, 0], result.matches['subject']['query'])

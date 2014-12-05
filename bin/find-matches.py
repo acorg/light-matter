@@ -22,9 +22,11 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    # read database from file.
+    # Read database from file.
     with open(args.databaseFile) as fp:
         database = ScannedReadDatabase.load(fp)
+
+    database.saveParamsAsJSON()
 
     reads = FastaReads(args.fastaFile)
     for read in reads:

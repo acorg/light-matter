@@ -1,4 +1,5 @@
 from unittest import TestCase
+from json import loads
 from cStringIO import StringIO
 
 from light.landmarks.alpha_helix import AlphaHelix
@@ -316,3 +317,23 @@ class TestScannedReadDatabase(TestCase):
         db.addRead(subject)
         result = db.find(query)
         self.assertEqual([0, 0], result.matches['subject']['query'])
+
+    def testSaveParamsAsJSON(self):
+        """
+        Saving parameters as JSON must work correctly.
+        """
+        db = ScannedReadDatabase([AlphaHelix], [Peaks], limitPerLandmark=3,
+                                 maxDistance=10)
+        db.addRead(AARead('id', 'FRRRFRRRFASAASA'))
+        out = StringIO()
+        db.saveParamsAsJSON(out)
+        expected = {
+            'landmarkFinderClasses': ['AlphaHelix'],
+            'trigPointFinderClasses': ['Peaks'],
+            'limitPerLandmark': 3,
+            'maxDistance': 10,
+            'readCount': 1,
+            'totalResidues': 15,
+            'totalCoveredResidues': 11,
+        }
+        self.assertEqual(expected, loads(out.getvalue()))

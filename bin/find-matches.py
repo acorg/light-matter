@@ -29,9 +29,6 @@ if __name__ == '__main__':
         database = ScannedReadDatabase.load(fp)
 
     reads = FastaReads(args.fastaFile)
-    #found = defaultdict(defaultdict(list))
     for read in reads:
         result = database.find(read)
         result.save()
-
-# output file -> header

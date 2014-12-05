@@ -53,4 +53,4 @@ class ScannedReadDatabaseResult(object):
         """
         Print output.
         """
-        print >>fp, self
+        print >>fp, self.significant

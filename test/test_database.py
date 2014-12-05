@@ -35,6 +35,14 @@ class TestScannedReadDatabase(TestCase):
         db = ScannedReadDatabase([AlphaHelix], [Peaks])
         self.assertEqual({}, db.d)
 
+    def testInitialDatabaseHasNoReadInfo(self):
+        """
+        The database must not have any stored read information if no reads have
+        been added.
+        """
+        db = ScannedReadDatabase([], [])
+        self.assertEqual([], db.readInfo)
+
     def testOneReadOneLandmark(self):
         """
         If one read is added but it only has one landmark, nothing is added
@@ -43,6 +51,14 @@ class TestScannedReadDatabase(TestCase):
         db = ScannedReadDatabase([AlphaHelix], [])
         db.addRead(AARead('id', 'FRRRFRRRF'))
         self.assertEqual({}, db.d)
+
+    def testOneReadOneLandmarkReadInfo(self):
+        """
+        If one read is added an entry is appended to the read info.
+        """
+        db = ScannedReadDatabase([AlphaHelix], [])
+        db.addRead(AARead('id', 'FRRRFRRRF'))
+        self.assertEqual([('id', 9)], db.readInfo)
 
     def testOneReadOneLandmarkStatistics(self):
         """
@@ -63,8 +79,8 @@ class TestScannedReadDatabase(TestCase):
         db.addRead(AARead('id', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
         self.assertEqual(
             {
-                'A2:A3:-23': set([('id', 0)]),
-                'A3:A2:23': set([('id', 23)]),
+                'A2:A3:-23': set([(0, 0)]),
+                'A3:A2:23': set([(0, 23)]),
             },
             db.d)
 
@@ -89,8 +105,8 @@ class TestScannedReadDatabase(TestCase):
         db.addRead(AARead('id2', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
         self.assertEqual(
             {
-                'A2:A3:-23': set([('id1', 0), ('id2', 0)]),
-                'A3:A2:23': set([('id2', 23), ('id1', 23)]),
+                'A2:A3:-23': set([(0, 0), (1, 0)]),
+                'A3:A2:23': set([(1, 23), (0, 23)]),
             },
             db.d)
 
@@ -127,8 +143,8 @@ class TestScannedReadDatabase(TestCase):
         db.addRead(AARead('id2', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
         self.assertEqual(
             {
-                'A2:A3:-23': set([('id1', 1), ('id2', 0)]),
-                'A3:A2:23': set([('id2', 23), ('id1', 24)]),
+                'A2:A3:-23': set([(0, 1), (1, 0)]),
+                'A3:A2:23': set([(1, 23), (0, 24)]),
             },
             db.d)
 
@@ -141,7 +157,7 @@ class TestScannedReadDatabase(TestCase):
         db.addRead(AARead('id', 'FRRRFRRRFASA'))
         self.assertEqual(
             {
-                'A2:P:-10': set([('id', 0)]),
+                'A2:P:-10': set([(0, 0)]),
             },
             db.d)
 
@@ -163,8 +179,8 @@ class TestScannedReadDatabase(TestCase):
         db.addRead(AARead('id', 'FRRRFRRRFASAASA'))
         self.assertEqual(
             {
-                'A2:P:-10': set([('id', 0)]),
-                'A2:P:-13': set([('id', 0)]),
+                'A2:P:-10': set([(0, 0)]),
+                'A2:P:-13': set([(0, 0)]),
             },
             db.d)
 
@@ -178,7 +194,7 @@ class TestScannedReadDatabase(TestCase):
         db.addRead(AARead('id', 'FRRRFRRRFASAASA'))
         self.assertEqual(
             {
-                'A2:P:-10': set([('id', 0)]),
+                'A2:P:-10': set([(0, 0)]),
             },
             db.d)
 
@@ -202,7 +218,7 @@ class TestScannedReadDatabase(TestCase):
         db.addRead(AARead('id', 'FRRRFRRRFASAASA'))
         self.assertEqual(
             {
-                'A2:P:-10': set([('id', 0)]),
+                'A2:P:-10': set([(0, 0)]),
             },
             db.d)
 
@@ -216,8 +232,8 @@ class TestScannedReadDatabase(TestCase):
         db.addRead(AARead('id', 'FRRRFRRRFASAASA'))
         self.assertEqual(
             {
-                'A2:P:-10': set([('id', 0)]),
-                'A2:P:-13': set([('id', 0)]),
+                'A2:P:-10': set([(0, 0)]),
+                'A2:P:-13': set([(0, 0)]),
             },
             db.d)
 
@@ -282,7 +298,7 @@ class TestScannedReadDatabase(TestCase):
         db = ScannedReadDatabase([AlphaHelix], [Peaks], maxDistance=11)
         db.addRead(subject)
         result = db.find(query)
-        self.assertEqual([0], result.matches['subject']['query'])
+        self.assertEqual([0], result.matches[0]['query'])
 
     def testFindNoneMatchingTooSmallDistance(self):
         """
@@ -293,7 +309,7 @@ class TestScannedReadDatabase(TestCase):
         db = ScannedReadDatabase([AlphaHelix], [Peaks], maxDistance=1)
         db.addRead(subject)
         result = db.find(query)
-        self.assertEqual([], result.matches['subject']['query'])
+        self.assertEqual([], result.matches[0]['query'])
 
     def testFindNoneMatchingNoTrigPoint(self):
         """
@@ -304,7 +320,7 @@ class TestScannedReadDatabase(TestCase):
         db = ScannedReadDatabase([AlphaHelix], [])
         db.addRead(subject)
         result = db.find(query)
-        self.assertEqual([], result.matches['subject']['query'])
+        self.assertEqual([], result.matches[0]['query'])
 
     def testFindTwoMatchingInSameSubject(self):
         """
@@ -315,4 +331,4 @@ class TestScannedReadDatabase(TestCase):
         db = ScannedReadDatabase([AlphaHelix], [Peaks])
         db.addRead(subject)
         result = db.find(query)
-        self.assertEqual([0, 0], result.matches['subject']['query'])
+        self.assertEqual([0, 0], result.matches[0]['query'])

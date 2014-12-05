@@ -29,6 +29,7 @@ class ScannedReadDatabase(object):
         self.readCount = 0
         self.totalResidues = 0
         self.totalCoveredResidues = 0
+        self.readInfo = []
 
         self.landmarkFinders = []
         for landmarkFinderClass in self.landmarkFinderClasses:
@@ -46,8 +47,10 @@ class ScannedReadDatabase(object):
         @param read: a C{dark.read.AARead} instance.
         """
         scannedRead = ScannedRead(read)
+        readIndex = self.readCount
         self.readCount += 1
         self.totalResidues += len(read)
+        self.readInfo.append((read.id, len(read)))
 
         for landmarkFinder in self.landmarkFinders:
             for landmark in landmarkFinder.find(read):
@@ -64,7 +67,7 @@ class ScannedReadDatabase(object):
                 maxDistance=self.maxDistance):
             key = '%s:%s:%s' % (landmark.hashkey(), trigPoint.hashkey(),
                                 landmark.offset - trigPoint.offset)
-            self.d[key].add((read.id, landmark.offset))
+            self.d[key].add((readIndex, landmark.offset))
 
     def __str__(self):
         return '%s: %d sequences, %d residues, %d hashes, %.2f%% coverage' % (
@@ -100,9 +103,9 @@ class ScannedReadDatabase(object):
             except KeyError:
                 pass
             else:
-                for subjectId, subjectOffset in matchingKey:
+                for subjectIndex, subjectOffset in matchingKey:
                     offset = subjectOffset - landmark.offset
-                    result.addMatch(subjectId, read.id, offset)
+                    result.addMatch(subjectIndex, read.id, offset)
         result.finalize()
         return result
 

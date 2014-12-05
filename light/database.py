@@ -2,7 +2,9 @@ import sys
 from collections import defaultdict
 from cPickle import dump, load, HIGHEST_PROTOCOL
 
+
 from light.reads import ScannedRead
+from light.result import ScannedReadDatabaseResult
 
 
 class ScannedReadDatabase(object):
@@ -69,6 +71,40 @@ class ScannedReadDatabase(object):
             self.__class__.__name__, self.readCount, self.totalResidues,
             len(self.d),
             float(self.totalCoveredResidues) / self.totalResidues * 100.0)
+
+    def find(self, read):
+        """
+        A function which takes a read, computes all hashes for it, looks up
+        matching hashes and checks which database sequence it matches.
+
+        @param read: a C{dark.read.AARead} instance.
+        """
+        scannedRead = ScannedRead(read)
+
+        for landmarkFinder in self.landmarkFinders:
+            for landmark in landmarkFinder.find(read):
+                scannedRead.landmarks.append(landmark)
+
+        for trigFinder in self.trigPointFinders:
+            for trigPoint in trigFinder.find(read):
+                scannedRead.trigPoints.append(trigPoint)
+
+        result = ScannedReadDatabaseResult()
+        for landmark, trigPoint in scannedRead.getPairs(
+                limitPerLandmark=self.limitPerLandmark,
+                maxDistance=self.maxDistance):
+            key = '%s:%s:%s' % (landmark.hashkey(), trigPoint.hashkey(),
+                                landmark.offset - trigPoint.offset)
+            try:
+                matchingKey = self.d[key]
+            except KeyError:
+                pass
+            else:
+                for subjectId, subjectOffset in matchingKey:
+                    offset = subjectOffset - landmark.offset
+                    result.addMatch(subjectId, read.id, offset)
+        result.finalize()
+        return result
 
     def save(self, fp=sys.stdout):
         """

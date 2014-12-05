@@ -261,3 +261,58 @@ class TestScannedReadDatabase(TestCase):
         self.assertEqual(db.trigPointFinderClasses,
                          result.trigPointFinderClasses)
         self.assertEqual(db.totalResidues, result.totalResidues)
+
+    def testFindNotMatching(self):
+        """
+        A non-matching key must not be found.
+        """
+        subject = AARead('subject', 'FRRRFRRRFASAASA')
+        query = AARead('query', 'FRRR')
+        db = ScannedReadDatabase([AlphaHelix], [Peaks])
+        db.addRead(subject)
+        result = db.find(query)
+        self.assertEqual({}, result.matches)
+
+    def testFindOneMatching(self):
+        """
+        One matching key must be found.
+        """
+        subject = AARead('subject', 'FRRRFRRRFASAASA')
+        query = AARead('query', 'FRRRFRRRFASAASA')
+        db = ScannedReadDatabase([AlphaHelix], [Peaks], maxDistance=11)
+        db.addRead(subject)
+        result = db.find(query)
+        self.assertEqual([0], result.matches['subject']['query'])
+
+    def testFindNoneMatchingTooSmallDistance(self):
+        """
+        One matching key must be found.
+        """
+        subject = AARead('subject', 'FRRRFRRRFASAASA')
+        query = AARead('query', 'FRRRFRRRFASAASA')
+        db = ScannedReadDatabase([AlphaHelix], [Peaks], maxDistance=1)
+        db.addRead(subject)
+        result = db.find(query)
+        self.assertEqual([], result.matches['subject']['query'])
+
+    def testFindNoneMatchingNoTrigPoint(self):
+        """
+        One matching key must be found.
+        """
+        subject = AARead('subject', 'FRRRFRRRFASAASA')
+        query = AARead('query', 'FRRRFRRRFASAASA')
+        db = ScannedReadDatabase([AlphaHelix], [])
+        db.addRead(subject)
+        result = db.find(query)
+        self.assertEqual([], result.matches['subject']['query'])
+
+    def testFindTwoMatchingInSameSubject(self):
+        """
+        Two matching keys in the same subject must be found.
+        """
+        subject = AARead('subject', 'FRRRFRRRFASAASA')
+        query = AARead('query', 'FRRRFRRRFASAASA')
+        db = ScannedReadDatabase([AlphaHelix], [Peaks])
+        db.addRead(subject)
+        result = db.find(query)
+        self.assertEqual([0, 0], result.matches['subject']['query'])

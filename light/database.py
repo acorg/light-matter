@@ -1,6 +1,7 @@
 import sys
 from collections import defaultdict
 from cPickle import dump, load, HIGHEST_PROTOCOL
+from json import dumps
 
 
 from light.reads import ScannedRead
@@ -74,6 +75,24 @@ class ScannedReadDatabase(object):
             self.__class__.__name__, self.readCount, self.totalResidues,
             len(self.d),
             float(self.totalCoveredResidues) / self.totalResidues * 100.0)
+
+    def saveParamsAsJSON(self, fp=sys.stdout):
+        """
+        Save the database parameters to a file in JSON format.
+
+        @param fp: A file pointer.
+        """
+        print >>fp, dumps({
+            'landmarkFinderClasses': [
+                klass.NAME for klass in self.landmarkFinderClasses],
+            'trigPointFinderClasses': [
+                klass.NAME for klass in self.trigPointFinderClasses],
+            'limitPerLandmark': self.limitPerLandmark,
+            'maxDistance': self.maxDistance,
+            'readCount': self.readCount,
+            'totalResidues': self.totalResidues,
+            'totalCoveredResidues': self.totalCoveredResidues,
+        })
 
     def find(self, read):
         """

@@ -65,7 +65,10 @@ class ScannedReadDatabase(object):
                 maxDistance=self.maxDistance):
             key = '%s:%s:%s' % (landmark.hashkey(), trigPoint.hashkey(),
                                 landmark.offset - trigPoint.offset)
-            self.d[key].add((read.id, landmark.offset))
+            self.d[key].add({"readId": read.id,
+                             "offset": landmark.offset,
+                             "length": len(read.sequence)
+                             })
 
     def __str__(self):
         return '%s: %d sequences, %d residues, %d hashes, %.2f%% coverage' % (
@@ -119,9 +122,14 @@ class ScannedReadDatabase(object):
             except KeyError:
                 pass
             else:
-                for subjectId, subjectOffset in matchingKey:
-                    offset = subjectOffset - landmark.offset
-                    result.addMatch(subjectId, read.id, offset)
+                for subjectDict in matchingKey:
+                    offset = subjectDict['offset'] - landmark.offset
+                    result.addMatch({'subjectId': subjectDict['readId'],
+                                     'readId': read.id,
+                                     'combinedOffset': offset,
+                                     'subjectOffset': subjectDict['offset'],
+                                     'queryOffset': landmark.offset,
+                                     })
         result.finalize()
         return result
 

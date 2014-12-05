@@ -2,6 +2,7 @@ import sys
 from collections import defaultdict
 import numpy as np
 from scipy import stats
+from json import dumps
 
 
 class ScannedReadDatabaseResult(object):
@@ -10,6 +11,7 @@ class ScannedReadDatabaseResult(object):
     """
     def __init__(self):
         self.matches = defaultdict(lambda: defaultdict(list))
+        self.matchInfo = defaultdict(lambda: defaultdict(list))
         self._finalized = False
 
     def __str__(self):
@@ -18,16 +20,17 @@ class ScannedReadDatabaseResult(object):
         else:
             raise RuntimeError('You must call finalize() before printing.')
 
-    def addMatch(self, subjectId, queryId, offset):
+    def addMatch(self, result):
         """
         Add a match.
 
-        @param subjectId: a C{str} name of the subject that was matched.
-        @param queryId: a C{str} name of the query that was matched.
-        @param offset: the difference in the offset of the feature in the
-            subject minus the difference in the offset of the query.
+        @param result: a C{dict} with information about the match.
         """
-        self.matches[subjectId][queryId].append(offset)
+        self.matches[result['subjectId']][result['queryId']].append(result['subjectId']['queryId']['combinedOffset'])
+        self.matchInfo[result['subjectId']][result['queryId']].append({'queryOffset': result['queryOffset'],
+                                                                       'subjectOffset': result['subjectOffset'],
+                                                                       'subjectLength': result['length'],
+                                                                       })
 
     def finalize(self):
         """
@@ -45,6 +48,23 @@ class ScannedReadDatabaseResult(object):
 
     def save(self, fp=sys.stdout):
         """
-        Print output.
+        Print one line of JSON output.
+
+        @param fp: a file pointer
         """
-        print >>fp, self.significant
+        alignments = []
+        for subject in self.matchInfo:
+            hsps = []
+            query = self.matchInfo[subject]
+            for hsp in self.matchInfo[subject][query]:
+                hsps.append({
+                    "queryOffset": hsp['queryOffset'],
+                    "subjectOffset": hsp['subjectOffset'],
+                })
+            alignments.append({
+                "hsps": hsps,
+                "length": self.matchInfo[subject][query]['subjectLength'],
+                "title": subject,
+            })
+        print >>fp, dumps({"query": query, "alignments": alignments},
+                          separators=(',', ':'))

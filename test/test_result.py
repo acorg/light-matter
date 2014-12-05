@@ -13,8 +13,8 @@ class TestResult(TestCase):
         two different reads.
         """
         result = ScannedReadDatabaseResult()
-        result.addMatch('subject', 'query1', 1)
-        result.addMatch('subject', 'query2', 2)
+        result.addMatch(0, 'query1', 1)
+        result.addMatch(0, 'query2', 2)
         result.finalize()
         self.assertEqual([], result.significant)
 
@@ -24,8 +24,8 @@ class TestResult(TestCase):
         the same reads.
         """
         result = ScannedReadDatabaseResult()
-        result.addMatch('subject', 'query', 1)
-        result.addMatch('subject', 'query', 2)
+        result.addMatch(0, 'query', 1)
+        result.addMatch(0, 'query', 2)
         result.finalize()
         self.assertEqual([], result.significant)
 
@@ -34,34 +34,34 @@ class TestResult(TestCase):
         One significant result must be returned.
         """
         result = ScannedReadDatabaseResult()
-        result.addMatch('subject', 'query', 1)
-        result.addMatch('subject', 'query', 1)
-        result.addMatch('subject', 'query', 1)
-        result.addMatch('subject', 'query', 1)
-        result.addMatch('subject', 'query', 1)
-        result.addMatch('subject', 'query', 7)
+        result.addMatch(0, 'query', 1)
+        result.addMatch(0, 'query', 1)
+        result.addMatch(0, 'query', 1)
+        result.addMatch(0, 'query', 1)
+        result.addMatch(0, 'query', 1)
+        result.addMatch(0, 'query', 7)
         result.finalize()
-        self.assertEqual([('subject', 'query', 5)], result.significant)
+        self.assertEqual([(0, 'query', 5)], result.significant)
 
     def testEvaluateTwoSignificant(self):
         """
         Two significant result must be returned.
         """
         result = ScannedReadDatabaseResult()
-        result.addMatch('subject', 'query1', 1)
-        result.addMatch('subject', 'query1', 1)
-        result.addMatch('subject', 'query1', 1)
-        result.addMatch('subject', 'query1', 1)
-        result.addMatch('subject', 'query1', 1)
-        result.addMatch('subject', 'query1', 2)
-        result.addMatch('subject', 'query2', 1)
-        result.addMatch('subject', 'query2', 1)
-        result.addMatch('subject', 'query2', 1)
-        result.addMatch('subject', 'query2', 1)
-        result.addMatch('subject', 'query2', 1)
-        result.addMatch('subject', 'query2', 2)
+        result.addMatch(0, 'query1', 1)
+        result.addMatch(0, 'query1', 1)
+        result.addMatch(0, 'query1', 1)
+        result.addMatch(0, 'query1', 1)
+        result.addMatch(0, 'query1', 1)
+        result.addMatch(0, 'query1', 2)
+        result.addMatch(0, 'query2', 1)
+        result.addMatch(0, 'query2', 1)
+        result.addMatch(0, 'query2', 1)
+        result.addMatch(0, 'query2', 1)
+        result.addMatch(0, 'query2', 1)
+        result.addMatch(0, 'query2', 2)
         result.finalize()
-        self.assertEqual([('subject', 'query2', 5), ('subject', 'query1', 5)],
+        self.assertEqual([(0, 'query2', 5), (0, 'query1', 5)],
                          result.significant)
 
     def testEvaluateTwoSignificantOneNotSignificant(self):
@@ -70,22 +70,22 @@ class TestResult(TestCase):
         result is present.
         """
         result = ScannedReadDatabaseResult()
-        result.addMatch('subject', 'query1', 1)
-        result.addMatch('subject', 'query1', 1)
-        result.addMatch('subject', 'query1', 1)
-        result.addMatch('subject', 'query1', 1)
-        result.addMatch('subject', 'query1', 1)
-        result.addMatch('subject', 'query1', 2)
-        result.addMatch('subject', 'query2', 1)
-        result.addMatch('subject', 'query2', 1)
-        result.addMatch('subject', 'query2', 1)
-        result.addMatch('subject', 'query2', 1)
-        result.addMatch('subject', 'query2', 1)
-        result.addMatch('subject', 'query2', 2)
-        result.addMatch('subject', 'query3', 1)
-        result.addMatch('subject', 'query3', 2)
+        result.addMatch(0, 'query1', 1)
+        result.addMatch(0, 'query1', 1)
+        result.addMatch(0, 'query1', 1)
+        result.addMatch(0, 'query1', 1)
+        result.addMatch(0, 'query1', 1)
+        result.addMatch(0, 'query1', 2)
+        result.addMatch(0, 'query2', 1)
+        result.addMatch(0, 'query2', 1)
+        result.addMatch(0, 'query2', 1)
+        result.addMatch(0, 'query2', 1)
+        result.addMatch(0, 'query2', 1)
+        result.addMatch(0, 'query2', 2)
+        result.addMatch(0, 'query3', 1)
+        result.addMatch(0, 'query3', 2)
         result.finalize()
-        self.assertEqual([('subject', 'query2', 5), ('subject', 'query1', 5)],
+        self.assertEqual([(0, 'query2', 5), (0, 'query1', 5)],
                          result.significant)
 
     def testEvaluateTwoSignificantDifferentSubjects(self):
@@ -94,18 +94,18 @@ class TestResult(TestCase):
         subjects.
         """
         result = ScannedReadDatabaseResult()
-        result.addMatch('subject1', 'query1', 1)
-        result.addMatch('subject1', 'query1', 1)
-        result.addMatch('subject1', 'query1', 1)
-        result.addMatch('subject1', 'query1', 1)
-        result.addMatch('subject1', 'query1', 1)
-        result.addMatch('subject1', 'query1', 2)
-        result.addMatch('subject2', 'query2', 1)
-        result.addMatch('subject2', 'query2', 1)
-        result.addMatch('subject2', 'query2', 1)
-        result.addMatch('subject2', 'query2', 1)
-        result.addMatch('subject2', 'query2', 1)
-        result.addMatch('subject2', 'query2', 2)
+        result.addMatch(0, 'query1', 1)
+        result.addMatch(0, 'query1', 1)
+        result.addMatch(0, 'query1', 1)
+        result.addMatch(0, 'query1', 1)
+        result.addMatch(0, 'query1', 1)
+        result.addMatch(0, 'query1', 2)
+        result.addMatch(1, 'query2', 1)
+        result.addMatch(1, 'query2', 1)
+        result.addMatch(1, 'query2', 1)
+        result.addMatch(1, 'query2', 1)
+        result.addMatch(1, 'query2', 1)
+        result.addMatch(1, 'query2', 2)
         result.finalize()
-        self.assertEqual([('subject1', 'query1', 5),
-                          ('subject2', 'query2', 5)], result.significant)
+        self.assertEqual([(0, 'query1', 5), (1, 'query2', 5)],
+                         result.significant)

@@ -30,6 +30,7 @@ class ScannedReadDatabase(object):
         self.readCount = 0
         self.totalResidues = 0
         self.totalCoveredResidues = 0
+        self.readInfo = []
 
         self.landmarkFinders = []
         for landmarkFinderClass in self.landmarkFinderClasses:
@@ -47,8 +48,10 @@ class ScannedReadDatabase(object):
         @param read: a C{dark.read.AARead} instance.
         """
         scannedRead = ScannedRead(read)
+        readIndex = self.readCount
         self.readCount += 1
         self.totalResidues += len(read)
+        self.readInfo.append((read.id, len(read)))
 
         for landmarkFinder in self.landmarkFinders:
             for landmark in landmarkFinder.find(read):
@@ -65,7 +68,7 @@ class ScannedReadDatabase(object):
                 maxDistance=self.maxDistance):
             key = '%s:%s:%s' % (landmark.hashkey(), trigPoint.hashkey(),
                                 landmark.offset - trigPoint.offset)
-            self.d[key].add({"readId": read.id,
+            self.d[key].add({"subjectIndex": readIndex,
                              "offset": landmark.offset,
                              "length": len(read.sequence)
                              })
@@ -124,12 +127,13 @@ class ScannedReadDatabase(object):
             else:
                 for subjectDict in matchingKey:
                     offset = subjectDict['offset'] - landmark.offset
-                    result.addMatch({'subjectId': subjectDict['readId'],
-                                     'readId': read.id,
-                                     'combinedOffset': offset,
-                                     'subjectOffset': subjectDict['offset'],
-                                     'queryOffset': landmark.offset,
-                                     })
+                    result.addMatch({
+                        'subjectIndex': subjectDict['subjectIndex'],
+                        'readId': read.id,
+                        'combinedOffset': offset,
+                        'subjectOffset': subjectDict['offset'],
+                        'queryOffset': landmark.offset,
+                    })
         result.finalize()
         return result
 

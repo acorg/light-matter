@@ -26,8 +26,8 @@ class ScannedReadDatabaseResult(object):
 
         @param result: a C{dict} with information about the match.
         """
-        self.matches[result['subjectId']][result['queryId']].append(result['subjectId']['queryId']['combinedOffset'])
-        self.matchInfo[result['subjectId']][result['queryId']].append({'queryOffset': result['queryOffset'],
+        self.matches[result['subjectIndex']][result['queryId']].append(result['combinedOffset'])
+        self.matchInfo[result['subjectIndex']][result['queryId']].append({'queryOffset': result['queryOffset'],
                                                                        'subjectOffset': result['subjectOffset'],
                                                                        'subjectLength': result['length'],
                                                                        })
@@ -37,13 +37,13 @@ class ScannedReadDatabaseResult(object):
         Evaluates whether a subject is matched significantly by a read.
         """
         self.significant = []
-        for subject in self.matches:
-            for query, offsets in self.matches[subject].iteritems():
+        for subjectIndex in self.matches:
+            for query, offsets in self.matches[subjectIndex].iteritems():
                 hist, edges = np.histogram(offsets, bins=10)
                 match = max(hist)
                 t, p = stats.ttest_1samp(offsets, match)
                 if p < 0.05:
-                    self.significant.append((subject, query, match))
+                    self.significant.append((subjectIndex, query, match))
         self._finalized = True
 
     def save(self, fp=sys.stdout):

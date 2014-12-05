@@ -99,12 +99,11 @@ class ScannedReadDatabase(object):
             try:
                 matchingKey = self.d[key]
             except KeyError:
-                result.addMatch('No match', read.id, 0, key)
+                result.addMatch('No match', read.id, 0)
             else:
                 for subjectId, subjectOffset in matchingKey:
                     offset = subjectOffset - landmark.offset
                     result.addMatch(subjectId, read.id, offset)
-
         result.finalize()
         return result
 

@@ -7,42 +7,103 @@ class TestResult(TestCase):
     """
     Tests for the light.result.ScannedReadDatabaseResult class.
     """
-    def testResultEqual(self):
+    def testEvaluateNotSignificantDifferentReads(self):
         """
-        Identical results must compare equal.
+        A not significant result must not be returned.
         """
-        result1 = ScannedReadDatabaseResult('subject', 'query', 0, 'A3:A2:23')
-        result2 = ScannedReadDatabaseResult('subject', 'query', 0, 'A3:A2:23')
-        self.assertEqual(result1, result2)
+        result = ScannedReadDatabaseResult()
+        result.addMatch('subject', 'query1', 1)
+        result.addMatch('subject', 'query2', 2)
+        result.finalize()
+        self.assertEqual([], result.significant)
 
-    def testResultsDifferingSubjectsNonEqual(self):
+    def testEvaluateNotSignificantIdenticalReads(self):
         """
-        Results with different subjects must not compare equal.
+        A not significant result must not be returned.
         """
-        result1 = ScannedReadDatabaseResult('subject2', 'query', 0, 'A3:A2:23')
-        result2 = ScannedReadDatabaseResult('subject2', 'query', 0, 'A3:A2:23')
-        self.assertNotEqual(result1, result2)
+        result = ScannedReadDatabaseResult()
+        result.addMatch('subject', 'query', 1)
+        result.addMatch('subject', 'query', 2)
+        result.finalize()
+        self.assertEqual([], result.significant)
 
-    def testResultsDifferingQueriesNonEqual(self):
+    def testEvaluateOneSignificant(self):
         """
-        Results with different queries must not compare equal.
+        One significant result must be returned.
         """
-        result1 = ScannedReadDatabaseResult('subject', 'query1', 0, 'A3:A2:23')
-        result2 = ScannedReadDatabaseResult('subject', 'query2', 0, 'A3:A2:23')
-        self.assertNotEqual(result1, result2)
+        result = ScannedReadDatabaseResult()
+        result.addMatch('subject', 'query', 1)
+        result.addMatch('subject', 'query', 1)
+        result.addMatch('subject', 'query', 1)
+        result.addMatch('subject', 'query', 1)
+        result.addMatch('subject', 'query', 1)
+        result.addMatch('subject', 'query', 7)
+        result.finalize()
+        self.assertEqual([('subject', 'query', 5)], result.significant)
 
-    def testResultsDifferingOffsetsNonEqual(self):
+    def testEvaluateTwoSignificant(self):
         """
-        Results with different offsets must not compare equal.
+        Two significant result must be returned.
         """
-        result1 = ScannedReadDatabaseResult('subject', 'query', 0, 'A3:A2:23')
-        result2 = ScannedReadDatabaseResult('subject', 'query', 1, 'A3:A2:23')
-        self.assertNotEqual(result1, result2)
+        result = ScannedReadDatabaseResult()
+        result.addMatch('subject', 'query1', 1)
+        result.addMatch('subject', 'query1', 1)
+        result.addMatch('subject', 'query1', 1)
+        result.addMatch('subject', 'query1', 1)
+        result.addMatch('subject', 'query1', 1)
+        result.addMatch('subject', 'query1', 2)
+        result.addMatch('subject', 'query2', 1)
+        result.addMatch('subject', 'query2', 1)
+        result.addMatch('subject', 'query2', 1)
+        result.addMatch('subject', 'query2', 1)
+        result.addMatch('subject', 'query2', 1)
+        result.addMatch('subject', 'query2', 2)
+        result.finalize()
+        self.assertEqual([('subject', 'query2', 5), ('subject', 'query1', 5)],
+                         result.significant)
 
-    def testResultsDifferingKeysNonEqual(self):
+    def testEvaluateTwoSignificantOneNotSignificant(self):
         """
-        Results with different keys must not compare equal.
+        Two significant result must be returned, when one non-significant
+        result is present.
         """
-        result1 = ScannedReadDatabaseResult('subject', 'query', 0, 'A3:A2:23')
-        result2 = ScannedReadDatabaseResult('subject', 'query', 0, 'A3:A2:2')
-        self.assertNotEqual(result1, result2)
+        result = ScannedReadDatabaseResult()
+        result.addMatch('subject', 'query1', 1)
+        result.addMatch('subject', 'query1', 1)
+        result.addMatch('subject', 'query1', 1)
+        result.addMatch('subject', 'query1', 1)
+        result.addMatch('subject', 'query1', 1)
+        result.addMatch('subject', 'query1', 2)
+        result.addMatch('subject', 'query2', 1)
+        result.addMatch('subject', 'query2', 1)
+        result.addMatch('subject', 'query2', 1)
+        result.addMatch('subject', 'query2', 1)
+        result.addMatch('subject', 'query2', 1)
+        result.addMatch('subject', 'query2', 2)
+        result.addMatch('subject', 'query3', 1)
+        result.addMatch('subject', 'query3', 2)
+        result.finalize()
+        self.assertEqual([('subject', 'query2', 5), ('subject', 'query1', 5)],
+                         result.significant)
+
+    def testEvaluateTwoSignificantDifferentSubjects(self):
+        """
+        Two significant result must be returned, when they are from different
+        subjects.
+        """
+        result = ScannedReadDatabaseResult()
+        result.addMatch('subject1', 'query1', 1)
+        result.addMatch('subject1', 'query1', 1)
+        result.addMatch('subject1', 'query1', 1)
+        result.addMatch('subject1', 'query1', 1)
+        result.addMatch('subject1', 'query1', 1)
+        result.addMatch('subject1', 'query1', 2)
+        result.addMatch('subject2', 'query2', 1)
+        result.addMatch('subject2', 'query2', 1)
+        result.addMatch('subject2', 'query2', 1)
+        result.addMatch('subject2', 'query2', 1)
+        result.addMatch('subject2', 'query2', 1)
+        result.addMatch('subject2', 'query2', 2)
+        result.finalize()
+        self.assertEqual([('subject1', 'query1', 5),
+                          ('subject2', 'query2', 5)], result.significant)

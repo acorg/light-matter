@@ -1,7 +1,5 @@
 import sys
 from collections import defaultdict
-import numpy as np
-from scipy import stats
 from cPickle import dump, load, HIGHEST_PROTOCOL
 
 
@@ -92,6 +90,7 @@ class ScannedReadDatabase(object):
             for trigPoint in trigFinder.find(read):
                 scannedRead.trigPoints.append(trigPoint)
 
+        result = ScannedReadDatabaseResult()
         for landmark, trigPoint in scannedRead.getPairs(
                 limitPerLandmark=self.limitPerLandmark,
                 maxDistance=self.maxDistance):
@@ -100,12 +99,14 @@ class ScannedReadDatabase(object):
             try:
                 matchingKey = self.d[key]
             except KeyError:
-                return
+                result.addMatch('No match', read.id, 0, key)
             else:
-                for s in matchingKey:
-                    offset = s[1] - landmark.offset
-                    yield ScannedReadDatabaseResult(s[0], read.id, offset,
-                                                    key)
+                for subjectId, subjectOffset in matchingKey:
+                    offset = subjectOffset - landmark.offset
+                    result.addMatch(subjectId, read.id, offset)
+
+        result.finalize()
+        return result
 
     def save(self, fp=sys.stdout):
         """
@@ -132,23 +133,3 @@ class ScannedReadDatabase(object):
         # grow large. Anyway, for now let's proceed with pickle and caution.
         # See google for more on Python and pickle security.
         return load(fp)
-
-
-def evaluate(found):
-    """
-    Evaluates whether a subject is matched significantly by a read.
-
-    @param found: a C{list} with L{light.result.ScannedReadDatabaseResult} as
-        returned by L{ScannedReadDatabase.find}.
-    """
-    significant = []
-    for subject in found:
-        for query, offsets in found[subject].items():
-            # test significance
-            # bin offsets
-            hist, edges = np.histogram(offsets, bins=10)
-            match = max(hist)
-            t, p = stats.ttest_1samp(offsets, match)
-            if p < 0.05:
-                significant.append((subject, query, match))
-    return significant

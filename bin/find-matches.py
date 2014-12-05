@@ -2,11 +2,10 @@
 
 import argparse
 from time import time
-from collections import defaultdict
 
 from dark.fasta import FastaReads
 
-from light.database import ScannedReadDatabase, evaluate
+from light.database import ScannedReadDatabase
 
 if __name__ == '__main__':
     startTime = time()
@@ -26,23 +25,13 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # read database from file.
-    database = ScannedReadDatabase().load(args.databaseFile)
+    with open(args.databaseFile) as fp:
+        database = ScannedReadDatabase.load(fp)
 
-    # make a database for look up:
-    readsDatabase = ScannedReadDatabase(database.landmarkFinderClasses,
-                                        database.trigFinderClasses,
-                                        database.limitPerLandmark,
-                                        database.maxDistance)
     reads = FastaReads(args.fastaFile)
-    found = defaultdict(defaultdict(list))
+    #found = defaultdict(defaultdict(list))
     for read in reads:
-        for result in readsDatabase.find(read):
-            found[result.subjectId][result.queryId].append(result.offset)
+        result = database.find(read)
+        result.save()
 
-    # evaluate the significance of the found matches.
-    significant = evaluate(found)
-
-    print 'Significant matches found:'
-    for match in significant:
-        print 'Subject: %s, Query: %s, count: %d' % (match[0], match[1],
-                                                     match[2])
+# output file -> header

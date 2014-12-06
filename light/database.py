@@ -26,7 +26,7 @@ class ScannedReadDatabase(object):
         self.trigPointFinderClasses = trigPointFinderClasses
         self.limitPerLandmark = limitPerLandmark
         self.maxDistance = maxDistance
-        self.d = defaultdict(set)
+        self.d = defaultdict(list)
         self.readCount = 0
         self.totalResidues = 0
         self.totalCoveredResidues = 0
@@ -68,10 +68,10 @@ class ScannedReadDatabase(object):
                 maxDistance=self.maxDistance):
             key = '%s:%s:%s' % (landmark.hashkey(), trigPoint.hashkey(),
                                 landmark.offset - trigPoint.offset)
-            self.d[key].add({"subjectIndex": readIndex,
-                             "offset": landmark.offset,
-                             "length": len(read.sequence)
-                             })
+            self.d[key].append({"subjectIndex": readIndex,
+                                "offset": landmark.offset,
+                                "length": len(read),
+                                })
 
     def __str__(self):
         return '%s: %d sequences, %d residues, %d hashes, %.2f%% coverage' % (
@@ -114,7 +114,7 @@ class ScannedReadDatabase(object):
             for trigPoint in trigFinder.find(read):
                 scannedRead.trigPoints.append(trigPoint)
 
-        result = ScannedReadDatabaseResult()
+        result = ScannedReadDatabaseResult(read)
         for landmark, trigPoint in scannedRead.getPairs(
                 limitPerLandmark=self.limitPerLandmark,
                 maxDistance=self.maxDistance):
@@ -126,14 +126,10 @@ class ScannedReadDatabase(object):
                 pass
             else:
                 for subjectDict in matchingKey:
-                    offset = subjectDict['offset'] - landmark.offset
                     result.addMatch({
-                        'subjectIndex': subjectDict['subjectIndex'],
-                        'readId': read.id,
-                        'combinedOffset': offset,
                         'subjectOffset': subjectDict['offset'],
-                        'queryOffset': landmark.offset,
-                    })
+                        'readOffset': landmark.offset,
+                    }, subjectDict['subjectIndex'], subjectDict['length'])
         result.finalize()
         return result
 

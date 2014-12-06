@@ -1,5 +1,4 @@
 import sys
-from collections import defaultdict
 import numpy as np
 from scipy import stats
 from json import dumps
@@ -8,10 +7,12 @@ from json import dumps
 class ScannedReadDatabaseResult(object):
     """
     A class that holds the results from a database lookup.
+
+    @param read: a C{dark.read.AARead} instance.
     """
-    def __init__(self):
-        self.matches = defaultdict(lambda: defaultdict(list))
-        self.matchInfo = defaultdict(lambda: defaultdict(list))
+    def __init__(self, read):
+        self.matches = {}
+        self.read = read
         self._finalized = False
 
     def __str__(self):
@@ -20,17 +21,23 @@ class ScannedReadDatabaseResult(object):
         else:
             raise RuntimeError('You must call finalize() before printing.')
 
-    def addMatch(self, result):
+    def addMatch(self, offsets, subjectIndex, subjectLength):
         """
         Add a match.
 
-        @param result: a C{dict} with information about the match.
+        @param offsets: a C{dict} with information about the match.
+        @param subjectIndex: a C{int} index of the subject in the database.
+        @param subjectLength: a C{int} length of the subject.
         """
-        self.matches[result['subjectIndex']][result['queryId']].append(result['combinedOffset'])
-        self.matchInfo[result['subjectIndex']][result['queryId']].append({'queryOffset': result['queryOffset'],
-                                                                       'subjectOffset': result['subjectOffset'],
-                                                                       'subjectLength': result['length'],
-                                                                       })
+        if subjectIndex in self.matches:
+            off = offsets['subjectOffset'] - offsets['readOffset']
+            self.matches[subjectIndex]['offsets'].append(off)
+        else:
+            off = offsets['subjectOffset'] - offsets['readOffset']
+            self.matches[subjectIndex] = {
+                'subjectLength': subjectLength,
+                'offsets': [off],
+            }
 
     def finalize(self):
         """
@@ -38,33 +45,32 @@ class ScannedReadDatabaseResult(object):
         """
         self.significant = []
         for subjectIndex in self.matches:
-            for query, offsets in self.matches[subjectIndex].iteritems():
-                hist, edges = np.histogram(offsets, bins=10)
-                match = max(hist)
-                t, p = stats.ttest_1samp(offsets, match)
-                if p < 0.05:
-                    self.significant.append((subjectIndex, query, match))
+            offsets = self.matches[subjectIndex]['offsets']
+            hist, edges = np.histogram(offsets, bins=10)
+            match = max(hist)
+            t, p = stats.ttest_1samp(offsets, match)
+            if p < 0.05:
+                self.significant.append((subjectIndex, self.read.id, match))
         self._finalized = True
 
     def save(self, fp=sys.stdout):
         """
         Print one line of JSON output.
 
-        @param fp: a file pointer
+        @param fp: a file pointer.
         """
         alignments = []
-        for subject in self.matchInfo:
+        for subjectIndex in self.matches:
             hsps = []
-            query = self.matchInfo[subject]
-            for hsp in self.matchInfo[subject][query]:
+            for offsets in self.matches[subjectIndex]['offsets']:
                 hsps.append({
-                    "queryOffset": hsp['queryOffset'],
-                    "subjectOffset": hsp['subjectOffset'],
+                    "readOffset": offsets['readOffset'],
+                    "subjectOffset": offsets['subjectOffset'],
                 })
             alignments.append({
                 "hsps": hsps,
-                "length": self.matchInfo[subject][query]['subjectLength'],
-                "title": subject,
+                "subjectLength": self.matches[subjectIndex]['subjectLength'],
+                "subjectIndex": subjectIndex,
             })
-        print >>fp, dumps({"query": query, "alignments": alignments},
+        print >>fp, dumps({"query": self.read.id, "alignments": alignments},
                           separators=(',', ':'))

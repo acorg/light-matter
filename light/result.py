@@ -1,15 +1,18 @@
 import sys
-from collections import defaultdict
 import numpy as np
 from scipy import stats
+from json import dumps
 
 
 class ScannedReadDatabaseResult(object):
     """
     A class that holds the results from a database lookup.
+
+    @param read: a C{dark.read.AARead} instance.
     """
-    def __init__(self):
-        self.matches = defaultdict(lambda: defaultdict(list))
+    def __init__(self, read):
+        self.matches = {}
+        self.read = read
         self._finalized = False
 
     def __str__(self):
@@ -18,17 +21,21 @@ class ScannedReadDatabaseResult(object):
         else:
             raise RuntimeError('You must call finalize() before printing.')
 
-    def addMatch(self, subjectIndex, queryId, offset):
+    def addMatch(self, offsets, subjectIndex, subjectLength):
         """
         Add a match.
 
-        @param subjectIndex: The C{int} database index of the subject that was
-            matched.
-        @param queryId: The C{str} name of the query that was matched.
-        @param offset: the difference in the offset of the feature in the
-            subject minus the difference in the offset of the query.
+        @param offsets: a C{dict} with information about the match.
+        @param subjectIndex: a C{int} index of the subject in the database.
+        @param subjectLength: a C{int} length of the subject.
         """
-        self.matches[subjectIndex][queryId].append(offset)
+        if subjectIndex in self.matches:
+            self.matches[subjectIndex]['offsets'].append(offsets)
+        else:
+            self.matches[subjectIndex] = {
+                'subjectLength': subjectLength,
+                'offsets': [offsets],
+            }
 
     def finalize(self):
         """
@@ -36,16 +43,28 @@ class ScannedReadDatabaseResult(object):
         """
         self.significant = []
         for subjectIndex in self.matches:
-            for query, offsets in self.matches[subjectIndex].iteritems():
-                hist, edges = np.histogram(offsets, bins=10)
-                match = max(hist)
-                t, p = stats.ttest_1samp(offsets, match)
-                if p < 0.05:
-                    self.significant.append((subjectIndex, query, match))
+            offsets = [offsets['subjectOffset'] - offsets['readOffset']
+                       for offsets in self.matches[subjectIndex]['offsets']]
+            hist, edges = np.histogram(offsets, bins=10)
+            match = max(hist)
+            t, p = stats.ttest_1samp(offsets, match)
+            if p < 0.05:
+                self.significant.append((subjectIndex, self.read.id, match))
         self._finalized = True
 
     def save(self, fp=sys.stdout):
         """
-        Print output.
+        Print one line of JSON output.
+
+        @param fp: a file pointer.
         """
-        print >>fp, self.significant
+        alignments = []
+        for subjectIndex in self.matches:
+            hsps = self.matches[subjectIndex]['offsets']
+            alignments.append({
+                'hsps': hsps,
+                'subjectLength': self.matches[subjectIndex]['subjectLength'],
+                'subjectIndex': subjectIndex,
+            })
+        print >>fp, dumps({'query': self.read.id, 'alignments': alignments},
+                          separators=(',', ':'))

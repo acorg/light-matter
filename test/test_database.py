@@ -78,10 +78,12 @@ class TestScannedReadDatabase(TestCase):
         """
         db = ScannedReadDatabase([AlphaHelix], [])
         db.addRead(AARead('id', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
-        self.assertEqual({'A3:A2:23':
-                         [{'subjectIndex': 0, 'length': 36, 'offset': 23}],
-                         'A2:A3:-23':
-                         [{'subjectIndex': 0, 'length': 36, 'offset': 0}]},
+        self.assertEqual({'A3:A2:23': [{'subjectIndex': 0,
+                                        'length': 36,
+                                        'offset': 23}],
+                         'A2:A3:-23': [{'subjectIndex': 0,
+                                        'length': 36,
+                                        'offset': 0}]},
                          db.d)
 
     def testOneReadTwoLandmarksStatistics(self):
@@ -103,12 +105,18 @@ class TestScannedReadDatabase(TestCase):
         db = ScannedReadDatabase([AlphaHelix], [])
         db.addRead(AARead('id1', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
         db.addRead(AARead('id2', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
-        self.assertEqual({'A3:A2:23':
-                         [{'subjectIndex': 0, 'length': 36, 'offset': 23},
-                          {'subjectIndex': 1, 'length': 36, 'offset': 23}],
-                         'A2:A3:-23':
-                         [{'subjectIndex': 0, 'length': 36, 'offset': 0},
-                          {'subjectIndex': 1, 'length': 36, 'offset': 0}]},
+        self.assertEqual({'A3:A2:23': [{'subjectIndex': 0,
+                                        'length': 36,
+                                        'offset': 23},
+                                       {'subjectIndex': 1,
+                                        'length': 36,
+                                        'offset': 23}],
+                         'A2:A3:-23': [{'subjectIndex': 0,
+                                        'length': 36,
+                                        'offset': 0},
+                                       {'subjectIndex': 1,
+                                        'length': 36,
+                                        'offset': 0}]},
                          db.d)
 
     def testTwoReadsTwoLandmarksStatistics(self):
@@ -142,12 +150,18 @@ class TestScannedReadDatabase(TestCase):
         db = ScannedReadDatabase([AlphaHelix], [])
         db.addRead(AARead('id1', 'AFRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
         db.addRead(AARead('id2', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
-        self.assertEqual({'A3:A2:23':
-                         [{'subjectIndex': 0, 'length': 37, 'offset': 24},
-                          {'subjectIndex': 1, 'length': 36, 'offset': 23}],
-                         'A2:A3:-23':
-                         [{'subjectIndex': 0, 'length': 37, 'offset': 1},
-                          {'subjectIndex': 1, 'length': 36, 'offset': 0}]},
+        self.assertEqual({'A3:A2:23': [{'subjectIndex': 0,
+                                        'length': 37,
+                                        'offset': 24},
+                                       {'subjectIndex': 1,
+                                        'length': 36,
+                                        'offset': 23}],
+                          'A2:A3:-23': [{'subjectIndex': 0,
+                                         'length': 37,
+                                         'offset': 1},
+                                        {'subjectIndex': 1,
+                                         'length': 36,
+                                         'offset': 0}]},
                          db.d)
 
     def testOneReadOneLandmarkOnePeak(self):
@@ -157,8 +171,9 @@ class TestScannedReadDatabase(TestCase):
         """
         db = ScannedReadDatabase([AlphaHelix], [Peaks])
         db.addRead(AARead('id', 'FRRRFRRRFASA'))
-        self.assertEqual({'A2:P:-10':
-                         [{'subjectIndex': 0, 'length': 12, 'offset': 0}]},
+        self.assertEqual({'A2:P:-10': [{'subjectIndex': 0,
+                                        'length': 12,
+                                        'offset': 0}]},
                          db.d)
 
     def testOneReadOneLandmarkOnePeakNoTrigFinders(self):
@@ -177,10 +192,12 @@ class TestScannedReadDatabase(TestCase):
         """
         db = ScannedReadDatabase([AlphaHelix], [Peaks])
         db.addRead(AARead('id', 'FRRRFRRRFASAASA'))
-        self.assertEqual({'A2:P:-13':
-                         [{'subjectIndex': 0, 'length': 15, 'offset': 0}],
-                         'A2:P:-10':
-                         [{'subjectIndex': 0, 'length': 15, 'offset': 0}]},
+        self.assertEqual({'A2:P:-13': [{'subjectIndex': 0,
+                                        'length': 15,
+                                        'offset': 0}],
+                          'A2:P:-10': [{'subjectIndex': 0,
+                                        'length': 15,
+                                        'offset': 0}]},
                          db.d)
 
     def testOneReadOneLandmarkTwoPeaksLimitOnePairPerLandmark(self):
@@ -191,8 +208,9 @@ class TestScannedReadDatabase(TestCase):
         """
         db = ScannedReadDatabase([AlphaHelix], [Peaks], limitPerLandmark=1)
         db.addRead(AARead('id', 'FRRRFRRRFASAASA'))
-        self.assertEqual({'A2:P:-10':
-                         [{'subjectIndex': 0, 'length': 15, 'offset': 0}]},
+        self.assertEqual({'A2:P:-10': [{'subjectIndex': 0,
+                                        'length': 15,
+                                        'offset': 0}]},
                          db.d)
 
     def testOneReadOneLandmarkTwoPeaksSevereMaxDistance(self):
@@ -213,8 +231,9 @@ class TestScannedReadDatabase(TestCase):
         """
         db = ScannedReadDatabase([AlphaHelix], [Peaks], maxDistance=11)
         db.addRead(AARead('id', 'FRRRFRRRFASAASA'))
-        self.assertEqual({'A2:P:-10':
-                         [{'subjectIndex': 0, 'length': 15, 'offset': 0}]},
+        self.assertEqual({'A2:P:-10': [{'subjectIndex': 0,
+                                        'length': 15,
+                                        'offset': 0}]},
                          db.d)
 
     def testOneReadOneLandmarkTwoPeaksLargeMaxDistance(self):
@@ -225,10 +244,12 @@ class TestScannedReadDatabase(TestCase):
         """
         db = ScannedReadDatabase([AlphaHelix], [Peaks], maxDistance=15)
         db.addRead(AARead('id', 'FRRRFRRRFASAASA'))
-        self.assertEqual({'A2:P:-13':
-                         [{'subjectIndex': 0, 'length': 15, 'offset': 0}],
-                         'A2:P:-10':
-                         [{'subjectIndex': 0, 'length': 15, 'offset': 0}]},
+        self.assertEqual({'A2:P:-13': [{'subjectIndex': 0,
+                                        'length': 15,
+                                        'offset': 0}],
+                         'A2:P:-10': [{'subjectIndex': 0,
+                                       'length': 15,
+                                       'offset': 0}]},
                          db.d)
 
     def testSaveLoadEmpty(self):
@@ -292,9 +313,9 @@ class TestScannedReadDatabase(TestCase):
         db = ScannedReadDatabase([AlphaHelix], [Peaks], maxDistance=11)
         db.addRead(subject)
         result = db.find(query)
-        self.assertEqual({0: {'absoluteOffsets':
+        self.assertEqual({0: {'offsets':
                               [{'readOffset': 0, 'subjectOffset': 0}],
-                              'offsets': [0], 'subjectLength': 15}},
+                              'subjectLength': 15}},
                          result.matches)
 
     def testFindNoneMatchingTooSmallDistance(self):
@@ -328,10 +349,10 @@ class TestScannedReadDatabase(TestCase):
         db = ScannedReadDatabase([AlphaHelix], [Peaks])
         db.addRead(subject)
         result = db.find(query)
-        self.assertEqual({0: {'absoluteOffsets':
-                         [{'readOffset': 0, 'subjectOffset': 0},
-                          {'readOffset': 0, 'subjectOffset': 0}],
-                         'offsets': [0, 0], 'subjectLength': 15}},
+        self.assertEqual({0: {'offsets':
+                              [{'readOffset': 0, 'subjectOffset': 0},
+                               {'readOffset': 0, 'subjectOffset': 0}],
+                         'subjectLength': 15}},
                          result.matches)
 
     def testSaveParamsAsJSON(self):

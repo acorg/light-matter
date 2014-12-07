@@ -30,15 +30,11 @@ class ScannedReadDatabaseResult(object):
         @param subjectLength: a C{int} length of the subject.
         """
         if subjectIndex in self.matches:
-            off = offsets['subjectOffset'] - offsets['readOffset']
-            self.matches[subjectIndex]['offsets'].append(off)
-            self.matches[subjectIndex]['absoluteOffsets'].append(offsets)
+            self.matches[subjectIndex]['offsets'].append(offsets)
         else:
-            off = offsets['subjectOffset'] - offsets['readOffset']
             self.matches[subjectIndex] = {
                 'subjectLength': subjectLength,
-                'offsets': [off],
-                'absoluteOffsets': [offsets],
+                'offsets': [offsets],
             }
 
     def finalize(self):
@@ -47,7 +43,8 @@ class ScannedReadDatabaseResult(object):
         """
         self.significant = []
         for subjectIndex in self.matches:
-            offsets = self.matches[subjectIndex]['offsets']
+            offsets = [offsets['subjectOffset'] - offsets['readOffset']
+                       for offsets in self.matches[subjectIndex]['offsets']]
             hist, edges = np.histogram(offsets, bins=10)
             match = max(hist)
             t, p = stats.ttest_1samp(offsets, match)
@@ -63,16 +60,11 @@ class ScannedReadDatabaseResult(object):
         """
         alignments = []
         for subjectIndex in self.matches:
-            hsps = []
-            for absoluteOffsets in self.matches[subjectIndex]['absoluteOffsets']:
-                hsps.append({
-                    "readOffset": absoluteOffsets['readOffset'],
-                    "subjectOffset": absoluteOffsets['subjectOffset'],
-                })
+            hsps = self.matches[subjectIndex]['offsets']
             alignments.append({
-                "hsps": hsps,
-                "subjectLength": self.matches[subjectIndex]['subjectLength'],
-                "subjectIndex": subjectIndex,
+                'hsps': hsps,
+                'subjectLength': self.matches[subjectIndex]['subjectLength'],
+                'subjectIndex': subjectIndex,
             })
-        print >>fp, dumps({"query": self.read.id, "alignments": alignments},
+        print >>fp, dumps({'query': self.read.id, 'alignments': alignments},
                           separators=(',', ':'))

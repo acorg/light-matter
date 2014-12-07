@@ -1,4 +1,5 @@
 from unittest import TestCase
+from cStringIO import StringIO
 
 from light.result import ScannedReadDatabaseResult
 from dark.reads import AARead
@@ -57,3 +58,33 @@ class TestResult(TestCase):
         result.finalize()
         self.assertEqual([(0, 'read', 5), (1, 'read', 5)],
                          result.significant)
+
+    def testSaveEmpty(self):
+        """
+        If self.matches is empty, return an empty output.
+        """
+        read = AARead('read', 'AGTARFSDDD')
+        toJson = ScannedReadDatabaseResult(read)
+        toJson.matches = {}
+        fp = StringIO()
+        toJson.save(fp=fp)
+        result = fp.getvalue()
+        self.assertEqual('{"query":"read","alignments":[]}\n', result)
+
+    def testSave(self):
+        """
+        Save must produce the right JSON format.
+        """
+        read = AARead('read', 'AGTARFSDDD')
+        toJson = ScannedReadDatabaseResult(read)
+        toJson.matches = {0: {'absoluteOffsets':
+                              [{'readOffset': 0, 'subjectOffset': 0},
+                               {'readOffset': 0, 'subjectOffset': 0}],
+                              'offsets': [0, 0], 'subjectLength': 15}}
+        fp = StringIO()
+        toJson.save(fp=fp)
+        result = fp.getvalue()
+        self.assertEqual('{"query":"read","alignments":[{"subjectIndex":0,'
+                         '"subjectLength":15,"hsps":[{"subjectOffset":0,'
+                         '"readOffset":0},{"subjectOffset":0,"readOffset":0'
+                         '}]}]}\n', result)

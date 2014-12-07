@@ -32,11 +32,13 @@ class ScannedReadDatabaseResult(object):
         if subjectIndex in self.matches:
             off = offsets['subjectOffset'] - offsets['readOffset']
             self.matches[subjectIndex]['offsets'].append(off)
+            self.matches[subjectIndex]['absoluteOffsets'].append(offsets)
         else:
             off = offsets['subjectOffset'] - offsets['readOffset']
             self.matches[subjectIndex] = {
                 'subjectLength': subjectLength,
                 'offsets': [off],
+                'absoluteOffsets': [offsets],
             }
 
     def finalize(self):
@@ -62,10 +64,10 @@ class ScannedReadDatabaseResult(object):
         alignments = []
         for subjectIndex in self.matches:
             hsps = []
-            for offsets in self.matches[subjectIndex]['offsets']:
+            for absoluteOffsets in self.matches[subjectIndex]['absoluteOffsets']:
                 hsps.append({
-                    "readOffset": offsets['readOffset'],
-                    "subjectOffset": offsets['subjectOffset'],
+                    "readOffset": absoluteOffsets['readOffset'],
+                    "subjectOffset": absoluteOffsets['subjectOffset'],
                 })
             alignments.append({
                 "hsps": hsps,

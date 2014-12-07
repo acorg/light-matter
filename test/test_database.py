@@ -292,7 +292,9 @@ class TestScannedReadDatabase(TestCase):
         db = ScannedReadDatabase([AlphaHelix], [Peaks], maxDistance=11)
         db.addRead(subject)
         result = db.find(query)
-        self.assertEqual({0: {'subjectLength': 15, 'offsets': [0]}},
+        self.assertEqual({0: {'absoluteOffsets':
+                              [{'readOffset': 0, 'subjectOffset': 0}],
+                              'offsets': [0], 'subjectLength': 15}},
                          result.matches)
 
     def testFindNoneMatchingTooSmallDistance(self):
@@ -326,7 +328,10 @@ class TestScannedReadDatabase(TestCase):
         db = ScannedReadDatabase([AlphaHelix], [Peaks])
         db.addRead(subject)
         result = db.find(query)
-        self.assertEqual({0: {'subjectLength': 15, 'offsets': [0, 0]}},
+        self.assertEqual({0: {'absoluteOffsets':
+                         [{'readOffset': 0, 'subjectOffset': 0},
+                          {'readOffset': 0, 'subjectOffset': 0}],
+                         'offsets': [0, 0], 'subjectLength': 15}},
                          result.matches)
 
     def testSaveParamsAsJSON(self):

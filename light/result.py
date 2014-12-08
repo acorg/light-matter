@@ -14,6 +14,7 @@ class ScannedReadDatabaseResult(object):
         self.matches = {}
         self.read = read
         self._finalized = False
+        self.significant = {}
 
     def __str__(self):
         if self._finalized:
@@ -41,7 +42,6 @@ class ScannedReadDatabaseResult(object):
         """
         Evaluates whether a subject is matched significantly by a read.
         """
-        self.significant = []
         for subjectIndex in self.matches:
             offsets = [offsets['subjectOffset'] - offsets['readOffset']
                        for offsets in self.matches[subjectIndex]['offsets']]
@@ -49,7 +49,7 @@ class ScannedReadDatabaseResult(object):
             match = max(hist)
             t, p = stats.ttest_1samp(offsets, match)
             if p < 0.05:
-                self.significant.append((subjectIndex, self.read.id, match))
+                self.significant[subjectIndex] = self.matches[subjectIndex]
         self._finalized = True
 
     def save(self, fp=sys.stdout):
@@ -59,11 +59,11 @@ class ScannedReadDatabaseResult(object):
         @param fp: a file pointer.
         """
         alignments = []
-        for subjectIndex in self.matches:
-            hsps = self.matches[subjectIndex]['offsets']
+        for subjectIndex in self.significant:
+            hsps = self.significant[subjectIndex]['offsets']
             alignments.append({
                 'hsps': hsps,
-                'subjectLength': self.matches[subjectIndex]['subjectLength'],
+                'subjectLength': self.significant[subjectIndex]['subjectLength'],
                 'subjectIndex': subjectIndex,
             })
         print >>fp, dumps({'query': self.read.id, 'alignments': alignments},

@@ -20,7 +20,7 @@ class TestResult(TestCase):
         result.addMatch({'subjectOffset': 3, 'readOffset': 1}, 0, 300)
         result.addMatch({'subjectOffset': 2, 'readOffset': 1}, 0, 300)
         result.finalize()
-        self.assertEqual([], result.significant)
+        self.assertEqual({}, result.significant)
 
     def testEvaluateOneSignificant(self):
         """
@@ -35,7 +35,7 @@ class TestResult(TestCase):
         result.addMatch({'subjectOffset': 2, 'readOffset': 1}, 0, 300)
         result.addMatch({'subjectOffset': 8, 'readOffset': 1}, 0, 300)
         result.finalize()
-        self.assertEqual([(0, 'read', 5)], result.significant)
+        self.assertEqual(6, len(result.significant[0]['offsets']))
 
     def testEvaluateTwoSignificantDifferentSubjects(self):
         """
@@ -55,10 +55,9 @@ class TestResult(TestCase):
         result.addMatch({'subjectOffset': 2, 'readOffset': 1}, 1, 300)
         result.addMatch({'subjectOffset': 2, 'readOffset': 1}, 1, 300)
         result.addMatch({'subjectOffset': 2, 'readOffset': 1}, 1, 300)
-        result.addMatch({'subjectOffset': 3, 'readOffset': 1}, 1, 300)
         result.finalize()
-        self.assertEqual([(0, 'read', 5), (1, 'read', 5)],
-                         result.significant)
+        self.assertEqual(6, len(result.significant[0]['offsets']))
+        self.assertEqual(5, len(result.significant[1]['offsets']))
 
     def testSaveEmpty(self):
         """
@@ -78,10 +77,10 @@ class TestResult(TestCase):
         """
         read = AARead('read', 'AGTARFSDDD')
         result = ScannedReadDatabaseResult(read)
-        result.matches = {0: {'offsets':
-                              [{'readOffset': 0, 'subjectOffset': 0},
-                               {'readOffset': 0, 'subjectOffset': 0}],
-                              'subjectLength': 15}}
+        result.significant = {0: {'offsets':
+                                  [{'readOffset': 0, 'subjectOffset': 0},
+                                   {'readOffset': 0, 'subjectOffset': 0}],
+                                  'subjectLength': 15}}
         fp = StringIO()
         result.save(fp=fp)
         result = loads(fp.getvalue())

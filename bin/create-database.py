@@ -26,14 +26,12 @@ if __name__ == '__main__':
 
     parser.add_argument(
         '--landmark', action='append', type=str, dest='landmarkFinderNames',
-        default=[klass.NAME for klass in ALL_LANDMARK_FINDER_CLASSES],
         choices=sorted(klass.NAME for klass in ALL_LANDMARK_FINDER_CLASSES),
         help='The name of a landmark finder to use. May be specified '
         'multiple times.')
 
     parser.add_argument(
         '--trig', action='append', type=str, dest='trigFinderNames',
-        default=[klass.NAME for klass in ALL_TRIG_FINDER_CLASSES],
         choices=sorted(klass.NAME for klass in ALL_TRIG_FINDER_CLASSES),
         help='The name of a trig point finder to use. May be specified '
         'multiple times.')
@@ -48,14 +46,20 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    if len(args.landmarkFinderNames) + len(args.trigFinderNames) == 0:
+    landmarkFinderNames = (args.landmarkFinderNames or
+                           [klass.NAME for klass in
+                            ALL_LANDMARK_FINDER_CLASSES])
+    trigFinderNames = (args.trigFinderNames or
+                       [klass.NAME for klass in ALL_TRIG_FINDER_CLASSES])
+
+    if len(landmarkFinderNames) + len(trigFinderNames) == 0:
         print >>sys.stderr, ('You must specify either landmark or trig point '
                              'finders to find.\n%s') % parser.format_usage()
         sys.exit(1)
 
     # Make sure all landmark finders requested exist.
     landmarkFinderClasses = []
-    for landmarkFinderName in args.landmarkFinderNames:
+    for landmarkFinderName in landmarkFinderNames:
         landmarkFinderClass = findLandmark(landmarkFinderName)
         if landmarkFinderClass:
             landmarkFinderClasses.append(landmarkFinderClass)
@@ -66,7 +70,7 @@ if __name__ == '__main__':
 
     # Make sure all trig point finders requested exist.
     trigFinderClasses = []
-    for trigFinderName in args.trigFinderNames:
+    for trigFinderName in trigFinderNames:
         trigFinderClass = findTrigPoint(trigFinderName)
         if trigFinderClass:
             trigFinderClasses.append(trigFinderClass)

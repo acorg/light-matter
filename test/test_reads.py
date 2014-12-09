@@ -114,6 +114,30 @@ class TestScannedRead(TestCase):
         read.landmarks.append(landmark)
         self.assertEqual({0, 1, 3, 4}, read.coveredIndices())
 
+    def testCoverageOfTwoDifferentNotOverlappingLandmarkPoints(self):
+        """
+        If a scanned read has two landmarks, its coveredIndices method must
+        return the indices of those two landmarks.
+        """
+        read = ScannedRead(AARead('id', 'AAAAA'))
+        landmark = Landmark('name', 'symbol1', 0, 2)
+        read.landmarks.append(landmark)
+        landmark = Landmark('name', 'symbol2', 4, 2)
+        read.landmarks.append(landmark)
+        self.assertEqual({0, 1, 4, 5}, read.coveredIndices())
+
+    def testCoverageOfTwoDifferentOverlappingLandmarkPoints(self):
+        """
+        If a scanned read has two landmarks, its coveredIndices method must
+        return the indices of those two landmarks.
+        """
+        read = ScannedRead(AARead('id', 'AAAAA'))
+        landmark = Landmark('name', 'symbol1', 0, 5)
+        read.landmarks.append(landmark)
+        landmark = Landmark('name', 'symbol2', 4, 2)
+        read.landmarks.append(landmark)
+        self.assertEqual({0, 1, 2, 3, 4, 5}, read.coveredIndices())
+
     def testGetPairsNoLandmarksNoTrigPoints(self):
         """
         If a scanned read has no landmarks or trig points, its getPairs

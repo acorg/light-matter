@@ -28,14 +28,29 @@ class TestResult(TestCase):
         """
         read = AARead('read', 'AGTARFSDDD')
         result = ScannedReadDatabaseResult(read)
-        result.addMatch({'subjectOffset': 2, 'readOffset': 1}, 0, 300)
-        result.addMatch({'subjectOffset': 2, 'readOffset': 1}, 0, 300)
-        result.addMatch({'subjectOffset': 2, 'readOffset': 1}, 0, 300)
-        result.addMatch({'subjectOffset': 2, 'readOffset': 1}, 0, 300)
-        result.addMatch({'subjectOffset': 2, 'readOffset': 1}, 0, 300)
-        result.addMatch({'subjectOffset': 8, 'readOffset': 1}, 0, 300)
+        offsets = [{'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 3, 'readOffset': 1}]
+        result.matches = {0: {'subjectLength': 300,
+                          'offsets': offsets}}
         result.finalize()
-        self.assertEqual(6, len(result.significant[0]['offsets']))
+        self.assertEqual(19, len(result.significant[0]['offsets']))
 
     def testEvaluateTwoSignificantDifferentSubjects(self):
         """
@@ -44,20 +59,32 @@ class TestResult(TestCase):
         """
         read = AARead('read', 'AGTARFSDDD')
         result = ScannedReadDatabaseResult(read)
-        result.addMatch({'subjectOffset': 2, 'readOffset': 1}, 0, 300)
-        result.addMatch({'subjectOffset': 2, 'readOffset': 1}, 0, 300)
-        result.addMatch({'subjectOffset': 2, 'readOffset': 1}, 0, 300)
-        result.addMatch({'subjectOffset': 2, 'readOffset': 1}, 0, 300)
-        result.addMatch({'subjectOffset': 2, 'readOffset': 1}, 0, 300)
-        result.addMatch({'subjectOffset': 3, 'readOffset': 1}, 0, 300)
-        result.addMatch({'subjectOffset': 2, 'readOffset': 1}, 1, 300)
-        result.addMatch({'subjectOffset': 2, 'readOffset': 1}, 1, 300)
-        result.addMatch({'subjectOffset': 2, 'readOffset': 1}, 1, 300)
-        result.addMatch({'subjectOffset': 2, 'readOffset': 1}, 1, 300)
-        result.addMatch({'subjectOffset': 2, 'readOffset': 1}, 1, 300)
+        offsets = [{'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 3, 'readOffset': 1}]
+        result.matches = {0: {'subjectLength': 300,
+                          'offsets': offsets},
+                          1: {'subjectLength': 350,
+                              'offsets': offsets}}
         result.finalize()
-        self.assertEqual(6, len(result.significant[0]['offsets']))
-        self.assertEqual(5, len(result.significant[1]['offsets']))
+        self.assertEqual(19, len(result.significant[0]['offsets']))
+        self.assertEqual(19, len(result.significant[1]['offsets']))
 
     def testSaveEmpty(self):
         """
@@ -80,12 +107,13 @@ class TestResult(TestCase):
         result.significant = {0: {'offsets':
                                   [{'readOffset': 0, 'subjectOffset': 0},
                                    {'readOffset': 0, 'subjectOffset': 0}],
-                                  'subjectLength': 15}}
+                                  'subjectLength': 15, 'matchScore': 15}}
         fp = StringIO()
         result.save(fp=fp)
         result = loads(fp.getvalue())
         self.assertEqual('read', result['query'])
         self.assertEqual([{'subjectIndex': 0, 'subjectLength': 15,
                          'hsps': [{'subjectOffset': 0, 'readOffset': 0},
-                                  {'subjectOffset': 0, 'readOffset': 0}]}],
+                                  {'subjectOffset': 0, 'readOffset': 0}],
+                          'matchScore': 15}],
                          result['alignments'])

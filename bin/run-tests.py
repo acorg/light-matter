@@ -75,7 +75,7 @@ if __name__ == '__main__':
         if trigFinderClass:
             trigFinderClasses.append(trigFinderClass)
         else:
-            print >>sys.stderr, '%s: Could not find trig point finder %r.' % (
+            print '%s: Could not find trig point finder %r.' % (
                 basename(sys.argv[0]), landmarkFinderName)
             sys.exit(1)
 
@@ -88,10 +88,8 @@ if __name__ == '__main__':
 
     buildDbTime = time()
 
-    print >>sys.stderr, 'Database built in %.2f seconds.' % (
-        buildDbTime - startTime)
-    print >>sys.stderr, 'Parameters:'
-    database.saveParamsAsJSON()
+    print 'Database built in %.2f seconds.' % (buildDbTime - startTime)
+    print 'Parameters:', database.saveParamsAsJSON()
 
     lookupStartTime = time()
 
@@ -104,16 +102,16 @@ if __name__ == '__main__':
             readMatch += 1
             for subjectIndex in result.significant:
                 matches += 1
-                offsets = len(result.significant[subjectIndex]['offsets'])
-                print >>sys.stderr, 'Query: %s, Subject %s, offset: %d' % (
-                    read.id, database.readInfo[subjectIndex][0], offsets)
+                score = result.significant[subjectIndex]['matchScore']
+                print 'Query: %s, Subject %s, score: %d' % (
+                    read.id, database.readInfo[subjectIndex][0], score)
         else:
-            print >>sys.stderr, read.id, 'Read not found'
+            print read.id, 'Read not found'
 
     finishedTime = time()
 
-    print >>sys.stderr, 'Look up done in %.2f seconds' % (
-        finishedTime - lookupStartTime)
-    print >>sys.stderr, ('Run performance test in %.2f seconds. %d out of '
-                         '%d reads match. Found %d significant matches.') % (
-        (finishedTime - lookupStartTime), readMatch, len(lookupReads), matches)
+    print 'Look up done in %.2f seconds' % (finishedTime - lookupStartTime)
+    print ('Run performance test in %.2f seconds. %d out of %d reads match. '
+           'Found %d significant matches.') % (
+          (finishedTime - lookupStartTime), readMatch, len(lookupReads),
+        matches)

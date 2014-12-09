@@ -1,6 +1,5 @@
 import sys
 import numpy as np
-from scipy import stats
 from json import dumps
 
 
@@ -45,10 +44,11 @@ class ScannedReadDatabaseResult(object):
         for subjectIndex in self.matches:
             offsets = [offsets['subjectOffset'] - offsets['readOffset']
                        for offsets in self.matches[subjectIndex]['offsets']]
-            hist, edges = np.histogram(offsets, bins=10)
+            hist, edges = np.histogram(offsets)
+            mean = np.mean(hist)
             match = max(hist)
-            t, p = stats.ttest_1samp(offsets, match)
-            if p < 0.05:
+            if mean + 15 < match:
+                self.matches[subjectIndex]['matchScore'] = match
                 self.significant[subjectIndex] = self.matches[subjectIndex]
         self._finalized = True
 
@@ -61,10 +61,13 @@ class ScannedReadDatabaseResult(object):
         alignments = []
         for subjectIndex in self.significant:
             hsps = self.significant[subjectIndex]['offsets']
+            subjectLength = self.significant[subjectIndex]['subjectLength']
+            matchScore = self.significant[subjectIndex]['matchScore']
             alignments.append({
                 'hsps': hsps,
-                'subjectLength': self.significant[subjectIndex]['subjectLength'],
+                'subjectLength': subjectLength,
                 'subjectIndex': subjectIndex,
+                'matchScore': matchScore
             })
         print >>fp, dumps({'query': self.read.id, 'alignments': alignments},
                           separators=(',', ':'))

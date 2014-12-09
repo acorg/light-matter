@@ -104,9 +104,9 @@ if __name__ == '__main__':
             readMatch += 1
             for subjectIndex in result.significant:
                 matches += 1
-                offsets = len(result.significant[subjectIndex]['offsets'])
-                print >>sys.stderr, 'Query: %s, Subject %s, offset: %d' % (
-                    read.id, database.readInfo[subjectIndex][0], offsets)
+                score = result.significant[subjectIndex]['matchScore']
+                print >>sys.stderr, 'Query: %s, Subject %s, score: %d' % (
+                    read.id, database.readInfo[subjectIndex][0], score)
         else:
             print >>sys.stderr, read.id, 'Read not found'
 

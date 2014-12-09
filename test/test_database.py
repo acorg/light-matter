@@ -308,14 +308,14 @@ class TestScannedReadDatabase(TestCase):
         """
         One matching key must be found.
         """
-        subject = AARead('subject', 'FRRRFRRRFASAASA')
+        subject = AARead('subject', 'AFRRRFRRRFASAASA')
         query = AARead('query', 'FRRRFRRRFASAASA')
         db = ScannedReadDatabase([AlphaHelix], [Peaks], maxDistance=11)
         db.addRead(subject)
         result = db.find(query)
         self.assertEqual({0: {'offsets':
-                              [{'readOffset': 0, 'subjectOffset': 0}],
-                              'subjectLength': 15}},
+                              [{'readOffset': 0, 'subjectOffset': 1}],
+                              'subjectLength': 16}},
                          result.matches)
 
     def testFindNoneMatchingTooSmallDistance(self):

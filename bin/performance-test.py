@@ -3,6 +3,7 @@
 import sys
 import argparse
 from time import time
+from scipy import stats
 from os.path import basename
 import matplotlib.pyplot as plt
 from collections import defaultdict
@@ -162,7 +163,6 @@ BITSCORES = {'2J7W': [1328.15, 899.427, 46.2098, 0, 21.9422, 0, 0, 0, 0, 0,
              }
 
 
-# run tests function
 def _runTest(databaseFile, sequenceFile, landmarkFinders, trigFinders,
              limitPerLandmark, maxDistance):
     """
@@ -200,21 +200,28 @@ def plot(x, y, read, scoreType, outputFile):
     """
     Make a scatterplot of the test results.
 
-    TODO: plot regression line!!!
-
     @param x: a C{list} of the x coordinates (light matter score).
     @param y: a C{list} of the y coordinates (either z-score or bit score).
     @param filename: the C{str} filename where the image should be saved to.
     """
     plt.rcParams['font.family'] = 'Helvetica'
-    fig = plt.figure(figsize=(12, 8))
+    fig = plt.figure(figsize=(7, 5))
     ax = fig.add_subplot(111)
+
+    slope, intercept, rValue, pValue, se = stats.linregress(x, y)
 
     # plot
     plt.plot(x, y, 'o', markerfacecolor='blue', markeredgecolor='blue')
+    if slope >= 0:
+        col = 'green'
+    else:
+        col = 'red'
+    plt.plot([0, max(x)], [intercept, slope * max(x) + intercept], '-',
+             color=col)
 
     # labels
-    ax.set_title('Read: %s' % read)
+    ax.set_title('Read: %s, R^2: %.2f, SE: %.2f, slope: %.2f' % (read, rValue,
+                 se, slope))
     ax.set_ylabel(scoreType)
     ax.set_xlabel('Light matter score')
 
@@ -232,12 +239,13 @@ def plot(x, y, read, scoreType, outputFile):
 
 class WriteMarkdownFile(object):
     """
-    A class that runs all tests and writes results to a file.
+    A class that writes results of tests to a file.
 
     @param outputFile: a C{str} filename where the output will be written to.
     """
-    def __init__(self, outputFile):
+    def __init__(self, outputFile, verbose):
         self.outputFile = outputFile
+        self.verbose = verbose
 
     def open(self):
         self.openedFile = open(self.outputFile, 'w')
@@ -249,7 +257,8 @@ class WriteMarkdownFile(object):
                               '#####Database arguments:</b> Landmarks: %s, '
                               'trig points: %s, maxDistance: %s, '
                               'limitPerLandmark: %s \n\n' %
-                              (landmarkFinderClasses, trigFinderClasses,
+                              ([i.NAME for i in landmarkFinderClasses],
+                               [i.NAME for i in trigFinderClasses],
                                args.maxDistance, args.limitPerLandmark))
 
     def writeTest(self, testName, testResult, time, readNr):
@@ -263,10 +272,12 @@ class WriteMarkdownFile(object):
         self.openedFile.write('####%s\n\nRun in %.2f seconds.\n%d reads out '
                               'of %d matched.\n\n' % (testName, time,
                                                       len(testResult), readNr))
-        for read in testResult:
-            for match in testResult[read]:
-                self.openedFile.write('Query: %s, Subject: %s, Score: %d \n\n'
-                                      % (read, match, testResult[read][match]))
+        if self.verbose:
+            for read in testResult:
+                for match in testResult[read]:
+                    self.openedFile.write('Query: %s, Subject: %s, Score: %d '
+                                          '\n\n' % (read, match,
+                                                    testResult[read][match]))
         if testName[0] == '5':
             for readName in ORDER:
                 self.openedFile.write('![readName](images/%s-z.png)\n\n' % (
@@ -279,7 +290,6 @@ class WriteMarkdownFile(object):
     def close(self):
         self.openedFile.close()
 
-# argparse for outputdir, landmarks, trigpoints
 if __name__ == '__main__':
     startTime = time()
 
@@ -310,6 +320,11 @@ if __name__ == '__main__':
     parser.add_argument(
         '--maxDistance', type=int, default=None,
         help='The maximum distance permitted between yielded pairs.')
+
+    parser.add_argument(
+        '--verbose', default=False, action='store_true',
+        help='If True, information about each matching read will be written '
+        'out.')
 
     args = parser.parse_args()
 
@@ -347,12 +362,12 @@ if __name__ == '__main__':
             sys.exit(1)
 
     # start writing to file
-    writer = WriteMarkdownFile(args.outputFile)
+    writer = WriteMarkdownFile(args.outputFile, args.verbose)
     writer.open()
     writer.writeHeader(landmarkFinderNames, trigFinderNames,
                        args.maxDistance, args.limitPerLandmark)
 
-    # run / collect results
+    # run tests
     # 1) A complete sequence must match itself:
     oneStart = time()
     print >>sys.stderr, '1) A complete sequence must find itself.'
@@ -410,6 +425,7 @@ if __name__ == '__main__':
                      fiveSixResult, fiveSixTime, 20)
     writer.writeTest(sTitle, fiveSixResult, fiveSixTime, 20)
 
+    # prepare results for plotting, plot
     fiveSixList = defaultdict(list)
     for read in fiveSixResult:
         for subjectName in ORDER:
@@ -422,7 +438,8 @@ if __name__ == '__main__':
     for read in fiveSixList:
         plot(fiveSixList[read], ZSCORES[read], read, 'Z-score',
              args.outputFile)
-        plot(fiveSixList[read], BITSCORES[read], read, 'Bit score',
+        plot(fiveSixList[read], BITSCORES[read], read, 'Bit-score',
              args.outputFile)
 
+    # close file
     writer.close()

@@ -184,7 +184,7 @@ def _runTest(databaseFile, sequenceFile, landmarkFinders, trigFinders,
     for read in databaseReads:
         database.addRead(read)
 
-    resultDict = {}
+    resultDict = defaultdict(dict)
     lookupReads = FastaReads(sequenceFile)
     for read in lookupReads:
         result = database.find(read)
@@ -192,12 +192,7 @@ def _runTest(databaseFile, sequenceFile, landmarkFinders, trigFinders,
             for subjectIndex in result.significant:
                 subject = database.readInfo[subjectIndex][0]
                 score = result.significant[subjectIndex]['matchScore']
-                if resultDict[read.id]:
-                    resultDict[read.id].append({'score': score,
-                                                'subject': subject})
-                else:
-                    resultDict[read.id] = [{'score': score,
-                                            'subject': subject}]
+                resultDict[read.id][subject] = score
     return resultDict
 
 
@@ -219,13 +214,13 @@ def plot(x, y, read, scoreType, outputFile):
     plt.plot(x, y, 'o', markerfacecolor='blue', markeredgecolor='blue')
 
     # labels
-    ax.set_title(read)
+    ax.set_title('Read: %s' % read)
     ax.set_ylabel(scoreType)
     ax.set_xlabel('Light matter score')
 
     # axes
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_linewidth(0.5)
+    ax.spines['right'].set_linewidth(0.5)
     ax.spines['bottom'].set_linewidth(0.5)
     ax.spines['left'].set_linewidth(0.5)
 
@@ -250,10 +245,10 @@ class WriteMarkdownFile(object):
     def writeHeader(self, landmark, trig, maxDistance, limitPerLandmark):
         self.openedFile.write('Title:\nDate:\nCategory: light-matter\nTags: '
                               'light-matter, benchmarking\nSummary: '
-                              'Performance and sensitivity testing\n'
+                              'Performance and sensitivity testing\n\n'
                               '#####Database arguments:</b> Landmarks: %s, '
                               'trig points: %s, maxDistance: %s, '
-                              'limitPerLandmark: %s ' %
+                              'limitPerLandmark: %s \n\n' %
                               (landmarkFinderClasses, trigFinderClasses,
                                args.maxDistance, args.limitPerLandmark))
 
@@ -265,26 +260,20 @@ class WriteMarkdownFile(object):
         @param testResult: a C{dict} of test results.
         @param time: the C{float} time it took to run the test.
         """
-        self.openedFile.write('%s run in %.2f seconds\n%d reads out of %d '
-                              'matched' % (testName, time, len(testResult),
-                                           readNr))
+        self.openedFile.write('####%s\n\nRun in %.2f seconds.\n%d reads out '
+                              'of %d matched.\n\n' % (testName, time,
+                                                      len(testResult), readNr))
         for read in testResult:
             for match in testResult[read]:
-                self.openedFile.write('Query: %s, Subject: %s, Score: %d' %
-                                      (read, match['subject'], match['score']))
-        if testName[0] == 5:
-            outputDir = '/'.join(self.outputFile.split('/')[0:-1])
-            if len(outputDir) == 0:
-                outputDir = '.'
+                self.openedFile.write('Query: %s, Subject: %s, Score: %d \n\n'
+                                      % (read, match, testResult[read][match]))
+        if testName[0] == '5':
             for readName in ORDER:
-                self.openedFile.write('[readName](%s/%d-z.png)' % (outputDir,
+                self.openedFile.write('![readName](images/%s-z.png)\n\n' % (
                                       readName))
-        elif testName[0] == 6:
-            outputDir = '/'.join(self.outputFile.split('/')[0:-1])
-            if len(outputDir) == 0:
-                outputDir = '.'
+        elif testName[0] == '6':
             for readName in ORDER:
-                self.openedFile.write('[readName](%s/%d-bit.png)' % (outputDir,
+                self.openedFile.write('![readName](images/%s-bit.png)\n\n' % (
                                       readName))
 
     def close(self):
@@ -337,7 +326,7 @@ if __name__ == '__main__':
 
     # Make sure all landmark finders requested exist.
     landmarkFinderClasses = []
-    for landmarkFinderName in args.landmarkFinderNames:
+    for landmarkFinderName in landmarkFinderNames:
         landmarkFinderClass = findLandmark(landmarkFinderName)
         if landmarkFinderClass:
             landmarkFinderClasses.append(landmarkFinderClass)
@@ -348,7 +337,7 @@ if __name__ == '__main__':
 
     # Make sure all trig point finders requested exist.
     trigFinderClasses = []
-    for trigFinderName in args.trigFinderNames:
+    for trigFinderName in trigFinderNames:
         trigFinderClass = findTrigPoint(trigFinderName)
         if trigFinderClass:
             trigFinderClasses.append(trigFinderClass)
@@ -360,7 +349,7 @@ if __name__ == '__main__':
     # start writing to file
     writer = WriteMarkdownFile(args.outputFile)
     writer.open()
-    writer.writeHeader(landmarkFinderClasses, trigFinderClasses,
+    writer.writeHeader(landmarkFinderNames, trigFinderNames,
                        args.maxDistance, args.limitPerLandmark)
 
     # run / collect results
@@ -371,7 +360,7 @@ if __name__ == '__main__':
                          trigFinderClasses, args.limitPerLandmark,
                          args.maxDistance)
     oneTime = time() - oneStart
-    writer.writeTest('1) A complete sequence must match iself', oneResult,
+    writer.writeTest('1) A complete sequence must match itself', oneResult,
                      oneTime, 1)
 
     # 2) Reads made from a sequence must match itself:
@@ -424,14 +413,16 @@ if __name__ == '__main__':
     fiveSixList = defaultdict(list)
     for read in fiveSixResult:
         for subjectName in ORDER:
-            for subjectScore in fiveSixResult[read]:
-                if subjectScore['subject'] == subjectName:
-                    fiveSixList[read].append(subjectScore['score'])
+            try:
+                score = fiveSixResult[read][subjectName]
+            except KeyError:
+                score = 0
+            fiveSixList[read].append(score)
 
     for read in fiveSixList:
-        plot(fiveSixList[read], ZSCORES[read], read, 'z-score',
+        plot(fiveSixList[read], ZSCORES[read], read, 'Z-score',
              args.outputFile)
-        plot(fiveSixList[read], BITSCORES[read], read, 'bit score',
+        plot(fiveSixList[read], BITSCORES[read], read, 'Bit score',
              args.outputFile)
 
     writer.close()

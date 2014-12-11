@@ -5,3 +5,4 @@ numpy
 scipy
 pep8
 pyflakes
+matplotlib

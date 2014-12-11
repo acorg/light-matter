@@ -1,4 +1,4 @@
->1HI0:P|PDBID|CHAIN|SEQUENCE
+>1HI0
 PRRAPAFPLSDIKAQMLFANNIKAQQASKRSFKEGAIETYEGLLSVDPRFLSFKNELSRYLTDHFPANVDEYGRVYGNGV
 RTNFFGMRHMNGFPMIPATWPLASNLKKRADADLADGPVSERDNLLFRAAVRLMFSDLEPVPLKIRKGSSTCIPYFSNDM
 GTKIEIAERALEKAEEAGNLMLQGKFDDAYQLHQMGGAYYVVYRAQSTDAITLDPKTGKFVSKDRMVADFEYAVTGGEQG
@@ -8,7 +8,7 @@ MGTLLMSITYLVMQLDHTAPHLNSRIKDMPSACRFLDSYWQGHEEIRQISKSDDAMLGWTKGRALVGGHRLFEMLKEGKV
 NPSPYMKISYEHGGAFLGDILLYDSRREPGSAIFVGNINSMLNNQFSPEYGVQSGVRDRSKRKRPFPGLAWASMKDTYGA
 CPIYSDVLEAIERCWWNAFGESYRAYREDMLKRDTLELSRYVASMARQAGLAELTPIDLEVLADPNKLQYKWTEADVSAN
 IHEVLMHGVSVEKTERFLRSVMPR
->1KHV:B|PDBID|CHAIN|SEQUENCE
+>1KHV
 TSNFFCGEPIDYRGITAHRLVGAEPRPPVSGTRYAKVPGVPDEYKTGYRPANLGRSDPDSDKSLMNIAVKNLQVYQQEPK
 LDKVDEFIERAAADVLGYLRFLTKGERQANLNFKAAFNTLDLSTSCGPFVPGKKIDHVKDGVMDQVLAKHLYKCWSVANS
 GKALHHIYACGLKDELRPLDKVKEGKKRLLWGCDVGVAVCAAAVFHNICYKLKMVARFGPIAVGVDMTSRDVDVIINNLT
@@ -16,7 +16,7 @@ SKASDFLCLDYSKWDSTMSPCVVRLAIDILADCCEQTELTKSVVLTLKSHPMTILDAMIVQTKRGLPSGMPFTSVINSIC
 HWLLWSAAVYKSCAEIGLHCSNLYEDAPFYTYGDDGVYAMTPMMVSLLPAIIENLRDYGLSPTAADKTEFIDVCPLNKIS
 FLKRTFELTDIGWVSKLDKSSILRQLEWSKTTSRHMVIEETYDLAKEERGVQLEELQVAAAAHGQEFFNFVCRELERQQA
 YTQFSVYSYDAARKILADRKRVVSVVPDDEFVNVME
->1MU2:A|PDBID|CHAIN|SEQUENCE
+>1MU2
 PVAKVEPIKIMLKPGKDGPKLRQWPLTKEKIEALKEICEKMEKEGQLEEAPPTNPYNTPTFAIKKKDKNKWRMLIDFREL
 NKVTQDFTEIQLGIPHPAGLAKKRRITVLDVGDAYFSIPLHEDFRPYTAFTLPSVNNAEPGKRYIYKVLPQGWKGSPAIF
 QHTMRQVLEPFRKANKDVIIIQYMDDILIASDRTDLEHDRVVLQLKELLNGLGFSTPDEKFQKDPPYHWMGYELWPTKWK
@@ -24,7 +24,7 @@ LQKIQLPQKEIWTVNDIQKLVGVLNWAAQLYPGIKTKHLCRLISGKMTLTEEVQWTELAEAELEENRIILSQEQEGHYYQ
 EEKELEATVQKDQDNQWTYKIHQEEKILKVGKYAKVKNTHTNGIRLLAQVVQKIGKEALVIWGRIPKFHLPVEREIWEQW
 WDNYWQVTWIPDWDFVSTPPLVRLAFNLVGDPIPGAETFYTDGSCNRQSKEGKAGYVTDRGKDKVKKLEQTTNQQAELEA
 FAMALTDSGPKVNIIVDSQYVMGIVASQPTESESKIVNQIIEEMIKKEAIYVAWVPAHKGIGGNQEVDHLVSQGI
->1N35:A|PDBID|CHAIN|SEQUENCE
+>1N35
 MSSMILTQFGPFIESISGITDQSNDVFEDAAKAFSMFTRSDVYKALDEIPFSDDAMLPIPPTIYTKPSHDSYYYIDALNR
 VRRKTYQGPDDVYVPNCSIVELLEPHETLTSYGRLSEAIENRAKDGDSQARIATTYGRIAESQARQIKAPLEKFVLALLV
 AEAGGSLYDPVLQKYDEIPDLSHNCPLWCFREICRHISGPLPDRAPYLYLSAGVFWLMSPRMTSAIPPLLSDLVNLAILQ
@@ -41,7 +41,7 @@ AASREVREQFTQALSDYLMQNPELKSRVLRGRSEWEKYGAGIIHNPPSLFDVPHKWYQGAQEAAIATREELAEMDETLMR
 ARRHSYSSFSKLLEAYLLVKWRMCEAREPSVDLRLPLCAGIDPLNSDPFLKMVSVGPMLQSTRKYFAQTLFMAKTVSGLD
 VNAIDSALLRLRTLGADKKALTAQLLMVGLQESEADALAGKIMLQDVNTVQLARVVNLAVPDTWMSLDFDSMFKHHVKLL
 PKDGRHLNTDIPPRMGWLRAILRFLGAGMVMTATGVAVDIYLEDIHGGGRSLGQRFMTWMRQEGRSA
->1NB6:A|PDBID|CHAIN|SEQUENCE
+>1NB6
 SMSYTWTGALITPCAAEESKLPINPLSNSLLRHHNMVYATTSRSASLRQKKVTFDRLQVLDDHYRDVLKEMKAKASTVKA
 KLLSIEEACKLTPPHSAKSKFGYGAKDVRNLSSRAVNHIRSVWEDLLEDTETPIDTTIMAKSEVFCVQPEKGGRKPARLI
 VFPDLGVRVCEKMALYDVVSTLPQAVMGSSYGFQYSPKQRVEFLVNTWKSKKCPMGFSYDTRCFDSTVTESDIRVEESIY
@@ -50,7 +50,7 @@ VVICESAGTQEDAAALRAFTEAMTRYSAPPGDPPQPEYDLELITSCSSNVSVAHDASGKRVYYLTRDPTTPLARAAWETA
 RHTPINSWLGNIIMYAPTLWARMILMTHFFSILLAQEQLEKALDCQIYGACYSIEPLDLPQIIERLHGLSAFTLHSYSPG
 EINRVASCLRKLGVPPLRTWRHRARSVRAKLLSQGGRAATCGRYLFNWAVRTKLKLTPIPAASQLDLSGWFVAGYSGGDI
 YHSLSRARPR
->1S49:A|PDBID|CHAIN|SEQUENCE
+>1S49
 AYLKLKDFIEEEEKKPRVKDTVIREHNKWILKKIRFQGNLNTKKMLNPGKLSEQLDREGRKRNIYNHQIGTIMSSAGIRL
 EKLPIVRAQTDTKTFHEAIRDKIDKSENRQNPELHNKLLEIFHTIAQPTLKHTYGEVTWEQLEAGVNRKGAAGFLEKKNI
 GEVLDSEKHLVEQLVRDLKAGRKIKYYETAIPKNEKRDVSDDWQAGDLVVEKRPRVIQYPEAKTRLAITKVMYNWVKQQP
@@ -59,28 +59,28 @@ TADGEVYIRNGQRGSGQPDTSAGNSMLNVLTMMYAFCESTGVPYKSFNRVARIHVCGDDGFLITEKGLGLKFANKGMQIL
 HEAGKPQKITEGEKMKVAYRFEDIEFCSHTPVPVRWSDNTSSHMAGRDTAVILSKMATRLDSSGERGTTAYEKAVAFSFL
 LMYSWNPLVRRICLLVLSQQPETDPSKHATYYYKGDPIGAYKDVIGRNLSELKRTGFEKLANLNLSLSTLGVWTKHTSKR
 IIQDCVAIGKEEGNWLVKPDRLISSKTGHLYIPDKGFTLQGKHYEQLQL
->1XR6:A|PDBID|CHAIN|SEQUENCE
+>1XR6
 GQIKISKHANECGLPTIHTPSKTKLQPSVFYDVFPGSKEPAVLTDNDPRLKVNFKEALFSKYKGNTECSLNQHMEIAIAH
 YSAQLITLDIDSKPIALEDSVFGIEGLEALDLNTSAGFPYVTMGIKKRDLINNKTKDISRLKEALDKYGVDLPMITFLKD
 ELRKKEKISAGKTRVIEASSINDTILFRTTFGNLFSKFHLNPGVVTGSAVGCDPETFWSKIPVMLDGDCIMAFDYTNYDG
 SIHPVWFQALKKVLENLSFQSNLIDRLCYSKHLFKSTYYEVAGGVPSGCSGTSIFNTMINNIIIRTLVLDAYKNIDLDKL
 KIIAYGDDVIFSYKYTLDMEAIANEGKKYGLTITPADKSTEFKKLDYNNVTFLKRGFKQDEKHTFLIHPTFPVEEIYESI
 RWTKKPSQMQEHVLSLCHLMWHNGRKVYEDFSSKIRSVSAGRALYIPPYDLLKHEWYEKF
->1XR7:A|PDBID|CHAIN|SEQUENCE
+>1XR7
 GQIQISKHVKDVGLPSIHTPTKTKLQPSVFYDIFPGSKEPAVLTEKDPRLKVDFDSALFSKYKGNTECSLNEHIQVAVAH
 YSAQLATLDIDPQPIAMEDSVFGMDGLEALDLNTSAGYPYVTLGIKKKDLINNKTKDISKLKLALDKYGVDLPMITFLKD
 ELRKKDKIAAGKTRVIEASSINDTILFRTVYGNLFSKFHLNPGVVTGCAVGCDPETFWSKIPLMLDGDCIMAFDYTNYDG
 SIHPIWFKALGMVLDNLSFNPTLINRLCNSKHIFKSTYYEVEGGVPSGCSGTSIFNSMINNIIIRTLVLDAYKHIDLDKL
 KIIAYGDDVIFSYKYKLDMEAIAKEGQKYGLTITPADKSSEFKELDYGNVTFLKRGFRQDDKYKFLIHPTFPVEEIYESI
 RWTKKPSQMQEHVLSLCHLMWHNGPEIYKDFETKIRSVSAGRALYIPPYELLRHEWYEKF
->2E9Z:A|PDBID|CHAIN|SEQUENCE
+>2E9Z
 GLIVDTRDVEERVHVMRKTKLAPTVAHGVFNPEFGPAALSNKDPRLNEGVVLDEVIFSKHKGDTKMSAEDKALFRRCAAD
 YASRLHSVLGTANAPLSIYEAIKGVDGLDAMEPDTAPGLPWALQGKRRGALIDFENGTVGPEVEAALKLMEKREYKFACQ
 TFLKDEIRPMEKVRAGKTRIVDVLPVEHILYTRMMIGRFCAQMHSNNGPQIGSAVGCNPDVDWQRFGTHFAQYRNVWDVD
 YSAFDANHCSDAMNIMFEEVFRTEFGFHPNAEWILKTLVNTEHAYENKRITVEGGMPSGCSATSIINTILNNIYVLYALR
 RHYEGVELDTYTMISYGDDIVVASDYDLDFEALKPHFKSLGQTITPADKSDKGFVLGHSITDVTFLKRHFHMDYGTGFYK
 PVMASKTLEAILSFARRGTIQEKLISVAGLAVHSGPDEYRRLFEPFQGLFEIPSYRSLYLRWVNAVCGDAAALEHH
->2J7W:A|PDBID|CHAIN|SEQUENCE
+>2J7W
 GSHMLDNMDVIGERIKRIKEEHNSTWHYDDENPYKTWAYHGSYEVKATGSASSMINGVVKLLTKPWDVVPMVTQMAMTDT
 TPFGQQRVFKEKVDTRTPRPLPGTRKVMEITAEWLWRTLGRNKRPRLCTREEFTKKVRTNAAMGAVFTEENQWDSAKAAV
 EDEEFWKLVDRERELHKLGKCGSCVYNMMGKREKKLGEFGKAKGSRAIWYMWLGARYLEFEALGFLNEDHWFSRENSYSG
@@ -89,7 +89,7 @@ GTVMDIISRKDQRGSGQVGTYGLNTFTNMEAQLVRQMEGEGVLTKADLENPHLLEKKITQWLETKGVERLKRMAISGDDC
 VVKPIDDRFANALLALNDMGKVRKDIPQWQPSKGWHDWQQVPFCSHHFHELIMKDGRKLVVPCRPQDELIGRARISQGAG
 WSLRETACLGKAYAQMWSLMYFHRRDLRLASNAICSAVPVHWVPTSRTTWSIHAHHQWMTTEDMLTVWNRVWIEENPWME
 DKTPVTTWENVPYLGKREDQWCGSLIGLTSRATWAQNIPTAIQQVRSLIGNEEFLDYMPSMKRFRKEEESEGAIW
->2PUS:A|PDBID|CHAIN|SEQUENCE
+>2PUS
 GSRSTVSMSDVFNSPQARSTISAAFGIKPTAGQDVEELLIPKVWVPPEDPLASPSRLAKFLRENGYKVLQPRSLPENEEY
 ETDQILPDLAWMRQIEGAVLKPTLSLPIGDQEYFPKYYPTHRPSKEKPNAYPPDIALLKQMIYLFLQVPEANEGLKDEVT
 LLTQNIRDKAYGSGTYMGQANRLVAMKEVATGRNPNKDPLKLGYTFESIAQLLDITLPVGPPGEDDKPWVPLTRVPSRML
@@ -101,7 +101,7 @@ SGGVEPEQSSPTVELDLLGWSATYSKDLGIYVPVLDKERLFCSAAYPKGVENKSLKSKVGIEQAYKVVRYEALRLVGGWN
 YPLLNKACKNNAGAARRHLEAKGFPLDEFLAEWSELSEFGEAFEGFNIKLTVTSESLAELNKPVPPKPPNVNRPVNTGGL
 KAVSNALKTGRYRNEAGLSGLVLLATARSRLQDAVKAKAEAEKLHKSKPDDPDADWFERSETLSDLLEKADIASKVAHSA
 LVETSDALEAVQSTSVYTPKYPEVKNPQTASNPVVGLHLPAKRATGVQAALL
->2R7W:A|PDBID|CHAIN|SEQUENCE
+>2R7W
 MGKYNLILSEYLSFIYNSQSAVQIPIYYSSNSELENRCIEFHSKCLENSKNGLSLRKLFVEYNDVIENATLLSILSYSYD
 KYNAVERKLVKYAKGKPLEADLTVNELDYENNKMTSELFPTAEEYTDSLMDPAILTSLSSNLNAVMFWLEKHENDVAEKL
 KVYKRRLDLFTIVASTINKYGVPRHNAKYRYEYDVMKDKPYYLVTWANSSIEMLMSVFSHDDYLIAKELIVLSYSNRSTL
@@ -116,7 +116,7 @@ EIAASSTFKNYVTRLSEQLLFSKNNIVSRGIALTEKAKLNSYAPISLEKRRAQISALLTMLQKPVTFKSSKITINDILRD
 IKPFFTVSDAHLPIQYQKFMPTLPDNVQYIIQCIGSRTYQIEDDGSKSAISRLISKYSVYKPSIEELYKVISLHENEIQL
 YLISLGIPKIDADTYVGSKIYSRDKYRILESYVYNLLSINYGCYQLFDFNSPDLEKLIRIPFKGKIPAVTFILHLYAKLE
 VINYAIKNGSWISLFCNYPKSEMIKLWKKMWNITSLRSPYTNANFFQEPHHHHHH
->2YI9:A|PDBID|CHAIN|SEQUENCE
+>2YI9
 MSDIFNSPQNKASILTALMKSTTGDVEDVLIPKRFRPAKDPLDSPQAAAQFLKDNKYRILRPRAIPTMVELETDAALPRL
 RQMVEDGKLKDTVSVPEGTTAFYPKYYPFHKPDHDEVGTFGAPDITLLKQLTFFLLENDFPTGPETLRQVREAIATLQYG
 SGSYSGQLNRLLAMKGVATGRNPNKTPKTVGYTNEQLAKLLEQTLPINTPKHEDPDLRWAPSWLINYTGDLSTDKSYLPH
@@ -127,7 +127,7 @@ HLMSTIVVAEWVKAGKPNPMTKEFMDLEEKTGINFKIERELKNLRETIVEAVETAPQDGYLADGSDLPPIRPGKAVELDL
 LGWSAIYSRQMEMFVPVLENERLIASAAYPKGLENKALARKPGAEIAYQIVRYEAIRLVGGWNNPLLETAAKHMSLDKRK
 RLEVKGIDVTGFLDDWNNMSEFGGDLEGITLSEPLTNQTLVDINTPLDSFDPKARPQTPRSPKKTLDEVTTAITSGTYKD
 PKSAVWRLLDQRTKLRVSTLRDQALALKPASSSVDNWAEATEELAQQQQLLMKANNLLKSSLTETREALEKTGHHHHHH
->3AVX:A|PDBID|CHAIN|SEQUENCE
+>3AVX
 MAEITASLVKELRERTGAGMMDCKKALTEANGDIELAIENMRKSGAIKAAKKAGNVAADGVIKTKIDGNYGIILEVNCQT
 DFVAKDAGFQAFADKVLDAAVAGKITDVEVLKAQFEEERVALVAKIGENINIRRVAALEGDVLGSYQHGARIGVLVAAKG
 ADEELVKHIAMHVAASKPEFIKPEDVSAEVVEKEYQVQLDIAMQSGKPKEIAEKMVEGRMKKFTGEVSLTGQPFVMEPSK
@@ -145,7 +145,7 @@ LDLDSSEVTVYGDDIILPSCAVPALREVFKYVGFTTNTKKTFSEGPFRESCGKHYYSGVDVTPFYIRHRIVSPADLILVL
 NNLYRWATIDGVWDPRAHSVYLKYRKLLPKQLQRNTIPDGYGDGALVGSVLINPFAKNRGWIRYVPVITDHTRDRERAEL
 GSYLYDLFSRCLSESNDGLPLRGPSGCDSADLFAIDQLICRSNPTKISRSTGKFDIQYIACSSRVLAPYGVFQGTKVASL
 HEAHHHHHH
->3BSO:A|PDBID|CHAIN|SEQUENCE
+>3BSO
 GSDSKGTYCGAPILGPGSAPKLSTKTKFWRSSTAPLPPGTYEPAYLGGKDPRVKGGPSLQQVMRDQLKPFTEPRGKPPKP
 SVLEAAKKTIINVLEQTIDPPDKWSFAQACASLDKTTSSGHPHHMRKNDCWNGESFTGKLADQASKANLMFEEGKNMTPV
 YTGALKDELVKTDKIYGKIKKRLLWGSDLATMIRCARAFGGLMDELKTHCVTLPIRVGMNMNEDGPIIFERHSRYRYHYD
@@ -153,21 +153,21 @@ ADYSRWDSTQQRAVLAAALEIMVKFSSEPHLAQVVAEDLLSPSVVDVGDFTISINEGLPSGVPCTSQWNSIAHWLLTLCA
 LSEVTNLSPDIIQANSLFSFYGDDEIVSTDIKLDPEKLTAKLKEYGLKPTRPDKTEGPLVISEDLNGLTFLRRTVTRDPA
 GWFGKLEQSSILRQMYWTRGPNHEDPSETMIPHSQRPIQLMSLLGEAALHGPAFYSKISKLVIAELKEGGMDFYVPRQEP
 MFRWMRFSDLSTWEGDRNLAPSFVNEDGVE
->3CDW:A|PDBID|CHAIN|SEQUENCE
+>3CDW
 GEIEFIESSKDAGFPVINTPSKTKLEPSVFHQVFEGNKEPAVLRSGDPRLKANFEEAIFSKYIGNVNTHVDEYMLEAVDH
 YAGQLATLDISTEPMKLEDAVYGTEGLEALDLTTSAGYPYVALGIKKRDILSKKTKDLTKLKECMDKYGLNLPMVTYVKD
 ELRSIEKVAKGKSRLIEASSLNDSVAMRQTFGNLYKTFHLNPGVVTGSAVGCDPDLFWSKIPVMLDGHLIAFDYSGYDAS
 LSPVWFACLKMLLEKLGYTHKETNYIDYLCNSHHLYRDKHYFVRGGMPSGCSGTSIFNSMINNIIIRTLMLKVYKGIDLD
 QFRMIAYGDDVIASYPWPIDASLLAEAGKGYGLIMTPADKGECFNEVTWTNATFLKRYFRADEQYPFLVHPVMPMKDIHE
 SIRWTKDPKNTQDHVRSLCLLAWHNGEHEYEEFIRKIRSVPVGRCLTLPAFSTLRRKWLDSFHHHHHH
->3OLB:A|PDBID|CHAIN|SEQUENCE
+>3OLB
 GEIQWMRPSKEVGYPIINAPSKTKLEPSAFHYVFEGVKEPAVLTKNDPRLKTDFEEAIFSKYVGNKITEVDEYMKEAVDH
 YAGQLMSLDINTEQMCLEDAMYGTDGLEALDLSTSAGYPYVAMGKKKRDILNKQTRDTKEMQKLLDTYGINLPLVTYVKD
 ELRSKTKVEQGKSRLIEASSLNDSVAMRMAFGNLYAAFHKNPGVITGSAVGCDPDLFWSKIPVLMEEKLFAFDYTGYDAS
 LSPAWFEALKMVLEKIGFGDRVDYIDYLNHSHHLYKNKTYCVKGGMPSGCSGTSIFNSMINNLIIRTLLLKTYKGIDLDH
 LKMIAYGDDVIASYPHEVDASLLAQSGKDYGLTMTPADKSATFETVTWENVTFLKRFFRADEKYPFLIHPVMPMKEIHES
 IRWTKDPRNTQDHVRSLCLLAWHNGEEEYNKFLAKIRSVPIGRALDLPEYSTLYRRWLDSFGSSSHHHHHH
->3UQS:A|PDBID|CHAIN|SEQUENCE
+>3UQS
 MLPRPSGTYAGLPIADYGDAPPLSTKTMFWRTSPEKLPPGAWEPAYLGSKDERVDGPSLQQVMRDQLKPYSEPRGLLPPQ
 EILDAVCDAIENRLENTLEPQKPWTFKKACESLDKNTSSGYPYHKQKSKDWTGSAFIGDLGDQATHANNMYEMGKSMRPI
 YTAALKDELVKPDKIYGKIKKRLLWGSDLGTMIRAARAFGPFCDALKETCIFNPIRVGMSMNEDGPFIFARHANFRYHMD
@@ -175,7 +175,7 @@ ADYTRWDSTQQRAILKRAGDIMVRLSPEPDLARVVMDDLLAPSLLDVGDYKIVVEEGLPSGCPCTTQLNSLAHWILTLCA
 MVEVTRVDPDIVMQESEFSFYGDDEVVSTNLELDMVKYTMALRRYGLLPTRADKEEGPLERRQTLQGISFLRRAIVGDQF
 GWYGRLDRASIDRQLLWTKGPNHQNPFETLPGHAQRPSQLMALLGEAAMHGEKYYRTVASRVSKEAAQSGIEMVVPRHRS
 VLRWVRFGTMDAETPQERSAVFVNEDELEHHHHHH
->3V81:C|PDBID|CHAIN|SEQUENCE
+>3V81
 MVPISPIETVPVKLKPGMDGPKVKQWPLTEEKIKALVEICTEMEKEGKISKIGPENPYNTPVFAIKKKDSTKWRKLVDFR
 ELNKRTQDFWEVQLGIPHPAGLKKKKSVTVLDVGDAYFSVPLDEDFRKYTAFTIPSINNETPGIRYQYNVLPQGWKGSPA
 IFQSSMTKILEPFKKQNPDIVIYQYMDDLYVGSDLEIGQHRTKIEELRQHLLRWGLTTPDKKHQKEPPFLWMGYELHPDK
@@ -183,7 +183,7 @@ WTVQPIVLPEKDSWTVNDICKLVGKLNWASQIYPGIKVRQLSKLLRGTKALTEVIPLTEEAELELAENREILKEPVHGVY
 YDPSKDLIAEIQKQGQGQWTYQIYQEPFKNLKTGKYARMRGAHTNDVKQLTEAVQKITTESIVIWGKTPKFKLPIQKETW
 ETWWTEYWQATWIPEWEFVNTPPLVKLWYQLEKEPIVGAETFYVDGAANRETKLGKAGYVTNKGRQKVVPLTNTTNQKTE
 LQAIYLALQDSGLEVNIVTNSQYALGIIQAQPDKSESELVNQIIEQLIKKEKVYLAWVPAHKGIGGNEQVDKLVSA
->4K6M:A|PDBID|CHAIN|SEQUENCE
+>4K6M
 GRPGGRTLGEQWKEKLNAMSREEFFKYRREAIIEVDRTEARRARRENNIVGGHPVSRGSAKLRWLVEKGFVSPIGKVIDL
 GCGRGGWSYYAATLKKVQEVRGYTKGGAGHEEPMLMQSYGWNLVSLKSGVDVFYKPSEPSDTLFCDIGESSPSPEVEEQR
 TLRVLEMTSDWLHRGPREFCIKVLCPYMPKVIEKMEVLQRRFGGGLVRLPLSRNSNHEMYWVSGAAGNVVHAVNMTSQVL
@@ -196,287 +196,3 @@ PRKNKIAVRTWLFENGEERVTRMAISGDDCVVKPLDDRFATALHFLNAMSKVRKDIQEWKPSHGWHDWQQVPFCSNHFQE
 IVMKDGRSIVVPCRGQDELIGRARISPGAGWNVKDTACLAKAYAQMWLLLYFHRRDLRLMANAICSAVPVDWVPTGRTSW
 SIHSKGEWMTTEDMLQVWNRVWIEENEWMMDKTPITSWTDVPYVGKREDIWCGSLIGTRSRATWAENIYAAINQVRAVIG
 KENYVDYMTSLRRYEDVLIQEDRVIGSSSHHHHHH
->4MH8:A|PDBID|CHAIN|SEQUENCE
-GSHMTWLSDFPQAWAETGGMGLAVRQAPLIIPLKATSTPVSIKQYPMSQEARLGIKPHIQRLLDQGILVPCQSPWNTPLL
-PVKKPGTNDYRPVQDLREVNKRVEDIHPTVPNPYNLLSGLPPSHQWYTVLDLKDAFFCLRLHPTSQPLFAFEWRDPEMGI
-SGQLTWTRLPQGFKNSPTLFDEALHRDLADFRIQHPDLILLQYVDDLLLAATSELDCQQGTRALLQTLGNLGYRASAKKA
-QICQKQVKYLGYLLKEGQRWLTEARKETVMGQPTPKTPRQLREFLGTAGFCRLWIPGFAEMAAPLYPLTKTGTLFNWGPD
-QQKAYQEIKQALLTAPALGLPDLTKPFELFVDEKQGYAKGVLTQKLGPWRRPVAYLSKKLDPVAAGWPPCLRMVAAIAVL
-TKDAGKLTMGQPLVIKAPHAVEALVKQPPDRWLSNARMTHYQALLLDTDRVQFGPVVALNPATLLPLPEEGLQHNCLDIL
-AEAHGTRPDLTDQPLPDADHTWYTDGSSLLQEGQRKAGAAVTTETEVIWAKALPAGTSAQRAELIALTQALKMAEGKKLN
-VYTDSRYAFATAHIHGEIYRRRGLLTSEGKEIKNKDEILALLKALFLPKRLSIIHCPGHQKGHSAEARGNRMADQAARKA
-AITETPDTSTLL
-HK/1/68	EN/42/72	PC/1/73	SL/840/74	VI/3A/75	LE/360/86	TE/1A/77	BI/21793/72	BI/5930/74	AM/1609/77	BI/2461/78	RD/577/80	NL/209/80	NL/233/82	NL/241/82	NL/330/85	ST/10/85	NL/450/88	VI/2/90	LY/1149/91	MA/G252/93	NL/1/95	NL/218/95	NL/172/96	BA/1/79	PH/2/82	CC/4/85	WE/4/85	VI/7/87	SI/2/87	TE/1B/77	BA/2/79	EN/496/80	NL/333/85	CE/1A/84	CE/1B/84	CO/2/86	SH/11/87	NL/620/89	GU/54/89	BE/353/89	BE/32A/92	HK/34/90	BE/32B/92	SD/9/93	OS/2352/93	PR/413/94	GD/25/93	JO/33/94	GE/A9509/95	FI/338/95	NL/47/95	NA/933/95	LY/2279/95	SP/1/96	BR/8/96	AU/10/97	SY/5B/97	NL/5/98	WU/359B/95	SY/5A/97	MW/10/99	SY/5HAY/97	SH/31/80	NL/1/02	PM/2007/99	NL/126/01	NL/118/01	VI/3C/75	NL/18/94	FU/411/02	NL/88/03	NL/22/03	NL/124/01	HK/107/71	PH/2V/82	BE/32V/92	NL/286/97	SY/5V/97
-BI/15793/68                  354	501	109	*	63	<10	<20	*	*	*	*	*	*	*	*	<10	*	*	*	*	*	*	*	*	<10	<10	*	<10	*	*	*	*	<10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-BI/16190/68                  640	320	80	40	40	*	*	640	320	<10	<10	<10	<10	<10	<10	<10	<10	*	<10	<10	<10	<10	<10	<10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-BI/16398/68                  1163	1163	291	73	89	*	<20	*	*	<20	<20	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<20	*	35	<20	<20	*	*	<20	<20	*	*	*	<20	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<20	*	*	*	*	*	*	*	*	*	*
-BI/808/69                    320	640	120	80	160	<10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-BI/908/69                    1280	640	80	40	57	<10	<20	*	*	<20	<20	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<20	*	60	<20	<20	*	*	<20	<20	*	*	*	<20	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<20	*	*	*	*	*	*	*	*	*	*
-BI/17938/69                  554	453	113	42	46	<10	<20	*	*	<20	<20	*	*	*	*	<10	*	*	*	*	*	*	*	*	<10	<10	*	*	<20	*	25	<20	<20	*	*	<20	<20	*	*	*	<20	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<20	*	*	*	*	*	*	*	*	*	*
-BI/93/70                     1109	640	*	57	46	<10	<20	*	*	<20	<20	*	*	*	*	<10	*	*	*	*	*	*	*	*	<10	<10	*	*	<20	*	<20	<20	<20	*	*	<20	<20	*	*	*	<20	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<20	*	*	*	*	*	*	*	*	*	*
-BI/2668/70                   320	320	80	24	46	<10	<20	*	*	<20	<20	*	*	*	*	<10	*	*	*	*	*	*	*	*	<10	<10	*	*	<20	*	<20	<20	<20	*	*	<20	<20	*	*	*	<20	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<20	*	*	*	*	*	*	*	*	*	*
-BI/6449/71                   165	392	57	*	35	<10	<20	*	*	<20	<20	*	*	*	*	<10	<20	*	*	*	*	*	*	*	<10	<10	*	<20	<20	*	<20	<20	<20	*	*	<20	<20	*	*	*	<20	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<20	*	*	*	*	*	*	*	*	*	*
-BI/21438/71                  905	905	139	98	89	<10	<40	*	*	<20	<20	*	*	*	*	<10	<20	*	*	*	*	*	*	*	<10	<10	*	*	<20	*	40	<20	<20	*	*	<20	<20	*	*	*	<20	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<20	*	*	*	*	*	*	*	*	*	*
-BI/21801/71                  905	905	160	98	87	<10	<40	*	*	<20	<20	*	*	*	*	<10	<20	*	*	*	*	*	*	*	<10	<10	*	*	<20	*	35	<20	<20	*	*	<20	<20	*	*	*	<20	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<20	*	*	*	*	*	*	*	*	*	*
-BI/6022/72                   453	905	226	226	184	<10	<80	*	*	<20	<20	*	*	*	*	<10	<20	*	*	*	*	*	*	*	<10	<10	*	*	<20	*	80	<20	<20	*	*	<20	<20	*	*	*	<20	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<20	*	*	*	*	*	*	*	*	*	*
-BI/5168/76                   <10	160	640	80	1280	*	80	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-BI/4273/75                   40	320	640	2560	40	*	32	*	*	*	*	*	*	*	*	<10	*	*	*	*	*	*	*	*	<10	<10	*	<10	*	*	*	*	<10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-BI/334/75                    <10	320	1280	160	160	*	20	*	*	*	*	*	*	*	*	<10	*	*	*	*	*	*	*	*	<10	<10	*	<10	*	*	*	*	<10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-BI/1843/75                   40	160	1280	160	160	*	40	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-BI/21793/72                  80	1280	1280	640	160	*	40	1280	1280	<10	<10	<10	<10	<10	<10	<10	<10	<10	<10	<10	<10	<10	<10	<10	<10	<10	*	<10	*	*	*	*	<10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-BI/23290/72                  80	640	640	320	226	*	*	*	*	<20	<20	*	*	*	*	*	<20	*	*	*	*	*	*	*	*	*	*	<20	<20	*	160	<20	<20	*	*	<20	<20	*	*	*	<20	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	80	*	*	*	*	*	*	*	*	*	*
-BI/23337/72                  80	640	640	320	226	*	<80	*	*	<20	<20	*	*	*	*	*	<20	*	*	*	*	*	*	*	*	*	*	<20	<20	*	160	<20	<20	*	*	<20	<20	*	*	*	<20	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	80	*	*	*	*	*	*	*	*	*	*
-BI/552/73                    160	640	1280	640	226	*	*	*	*	20	20	*	*	*	*	*	<20	*	*	*	*	*	*	*	*	*	*	<20	<20	*	200	<20	<20	*	*	<20	20	*	*	*	<20	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	80	*	*	*	*	*	*	*	*	*	*
-BI/748/73                    52	640	1280	291	135	<10	<60	*	*	<20	<20	*	*	*	*	<10	<20	*	*	*	*	*	*	*	<10	<10	<10	<20	<20	*	160	<20	<20	*	*	<20	<20	*	*	*	<20	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	50	*	*	*	*	*	*	*	*	*	*
-BI/3517/73                   80	1280	1280	320	101	*	<80	*	*	<20	<20	*	*	*	*	<10	<20	*	*	*	*	*	*	*	<10	<10	*	<20	<20	*	160	<20	<20	*	*	<20	<20	*	*	*	<20	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	40	*	*	*	*	*	*	*	*	*	*
-BI/5146/74                   40	320	640	640	80	*	16	*	*	*	*	*	*	*	*	<10	*	*	*	*	*	*	*	*	<10	<10	*	<10	*	*	*	*	<10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-BI/5930/74                   40	320	2560	160	160	*	40	640	1280	<10	<10	<10	<10	<10	<10	<10	<10	<10	<10	<10	<10	<10	<10	<10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-BI/5931/74                   16	291	905	80	320	<10	24	*	*	*	*	*	*	*	*	<10	*	*	*	*	*	*	*	*	<10	<10	*	<10	*	*	*	*	<10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-BI/7398/74                   20	320	2560	320	80	*	20	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-BI/9459/74                   60	392	2560	320	254	*	*	*	*	20	<20	*	*	*	*	<10	<20	*	*	*	*	*	*	*	<10	<10	*	<20	<20	*	160	<20	<20	*	*	<20	20	*	*	*	<20	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	*	*	*	*	*	*	*	*	*	*
-BI/2600/75                   80	320	1280	2560	40	*	40	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-BI/2813/75                   40	320	1280	160	80	*	80	320	1280	<10	<10	<10	<10	<10	<10	<10	<10	<10	<10	<10	<10	<10	<10	<10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-BI/628/76                    <10	120	320	80	80	*	1280	*	*	*	*	*	*	*	*	480	*	*	*	*	*	*	*	*	40	240	*	480	*	*	*	*	480	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-BI/1761/76                   <10	320	320	160	1016	*	80	*	*	1280	80	*	*	*	*	80	80	*	*	*	*	*	*	*	<10	80	*	160	<20	*	320	<20	*	*	*	20	320	*	*	*	<20	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	1280	*	*	*	*	*	*	*	*	*	*
-BI/2271/76                   <10	120	640	160	160	*	2032	*	*	*	*	*	*	*	*	640	*	*	*	*	*	*	*	*	80	320	*	640	*	*	*	*	480	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-BI/5029/76                   <10	160	160	40	905	*	80	*	*	1280	80	*	*	*	*	*	80	*	*	*	*	*	*	*	*	*	*	160	<20	*	320	100	<20	*	*	<20	320	*	*	*	<20	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	1920	*	*	*	*	*	*	*	*	*	*
-BI/5657/76                   <10	160	320	80	905	*	98	*	*	1280	80	*	*	*	*	*	80	*	*	*	*	*	*	*	*	*	*	200	<20	*	320	160	<20	*	*	20	240	*	*	*	<20	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	1280	*	*	*	*	*	*	*	*	*	*
-BI/6545/76                   <20	210	320	80	905	80	61	*	*	1600	80	*	*	*	*	80	80	*	*	*	*	*	*	*	<10	80	40	113	<20	*	320	100	<80	*	*	20	320	*	*	*	<20	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	1280	*	*	*	*	*	*	*	*	*	*
-AM/1609/77                   10	320	320	80	2560	*	105	160	640	2560	<10	<10	320	80	320	139	160	<10	<10	<10	<10	<10	<10	<10	<10	160	*	160	*	*	*	*	80	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-BI/3895/77                   10	320	320	160	1016	*	77	*	*	1280	80	*	*	*	*	120	80	*	*	*	*	*	*	*	<10	120	*	160	<20	*	320	160	*	*	*	20	320	*	*	*	<20	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	1120	*	*	*	*	*	*	*	*	*	*
-RD/5828/77                   60	320	320	320	905	*	179	*	*	1280	70	*	*	*	*	*	20	*	*	*	*	*	*	*	*	*	*	40	20	*	120	20	<20	*	*	20	40	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	640	*	*	*	*	*	*	*	*	*	*
-RD/8179/77                   40	320	640	160	1197	*	126	*	*	2560	100	*	*	*	*	*	80	*	*	*	*	*	*	*	*	*	*	160	<20	*	320	80	<20	*	*	<20	320	*	*	*	<20	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	1280	*	*	*	*	*	*	*	*	*	*
-NL/209/80                    <10	15	*	<10	57	640	421	<10	80	226	3620	5120	2560	1280	2560	1016	1431	*	<10	<10	<10	<10	<10	<10	302	844	960	1280	25	80	2560	1016	*	*	*	240	10240	*	*	*	20	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	640	*	*	*	*	560	*	*	*	*	*	*	*	*	*	*
-RD/577/80                    <10	10	*	<10	53	960	716	<10	80	320	2449	2560	5120	2560	2560	1016	1280	*	<10	<10	<10	<10	<10	<10	226	842	1120	972	28	80	2560	905	2032	*	*	179	8095	*	*	*	<20	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	640	*	*	*	*	640	*	*	*	*	*	*	*	*	*	*
-NL/233/82                    *	*	*	*	20	*	*	<10	<10	226	905	1280	1280	2560	5120	2560	905	40	<10	<10	<10	<10	<10	<10	*	*	*	960	40	*	640	640	640	*	*	120	2560	*	*	*	20	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	200	*	*	*	*	*	*	*	*	*	*
-NL/241/82                    *	*	*	*	40	*	200	<10	<10	172	972	640	2560	1280	2560	1280	1280	80	<10	<10	<10	<10	<10	<10	*	*	*	1280	40	*	1280	1120	1280	*	*	113	3620	*	*	*	35	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	*	*	*	*	*	*	*	*	*	*
-NL/330/85                    *	*	*	*	20	*	160	<10	<10	*	441	320	640	320	1280	1810	1431	320	<10	<10	<10	<10	<10	<10	40	1280	*	2395	113	*	320	640	506	*	*	277	8868	*	*	*	25	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	*	*	*	*	*	*	*	*	*	*
-ST/10/85                     *	*	*	*	40	*	*	<10	<10	*	358	320	640	320	2560	2560	3620	640	<10	80	<10	<10	<10	<10	*	*	*	2560	640	*	320	640	320	*	*	400	8960	*	*	*	160	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	80	*	*	*	*	*	*	*	*	*	*
-CO/2/86                      <10	<10	*	<10	28	2560	160	<10	<10	*	226	320	640	320	2560	1280	3620	1280	<10	80	<10	<10	<10	<10	34	571	640	2382	318	120	400	960	386	640	*	100	10240	*	*	*	160	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	120	*	*	*	*	*	*	*	*	*	*
-NL/450/88                    *	*	*	*	20	*	52	<10	<10	<40	*	<10	<10	<10	<10	556	1280	5653	1076	320	<10	<10	<10	<10	18	65	*	2774	890	2792	120	160	*	*	*	140	4661	7760	10240	10240	345	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<20	*	*	*	*	*	*	*	*	*	*
-NL/620/89                    *	*	*	*	20	*	*	<10	<10	<40	<20	<10	<10	<10	<10	453	905	2560	320	640	<10	<10	<10	<10	*	*	*	2217	1280	1280	20	40	<20	*	*	40	2560	10240	20480	10240	400	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<20	*	*	*	*	*	*	*	*	*	*
-VI/2/90                      *	*	*	*	*	*	*	<10	<10	<10	<10	<10	<10	<10	<10	*	640	508	1940	1810	<10	<10	<10	20	*	*	*	320	1280	160	*	*	*	*	*	*	640	211	3378	320	1280	80	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-LY/1149/91                   *	*	*	*	*	*	*	<10	<10	<10	<10	<10	<10	<10	<10	<10	640	202	1016	2560	<40	*	*	*	*	*	*	160	*	80	*	*	*	*	*	*	320	80	1280	*	640	<40	71	40	<40	80	320	<40	<160	80	80	40	<40	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-MA/G102/93                   *	*	*	*	*	*	*	<10	<10	<10	<10	<10	<10	<10	<10	<10	<10	57	<40	<40	101	1993	467	121	*	*	*	*	*	40	*	*	*	*	*	*	*	80	320	*	65	626	444	305	2551	1522	320	160	718	366	640	*	80	160	45	160	160	<40	160	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-MA/G252/93                   *	*	*	*	*	*	*	<10	<10	<10	<10	<10	<10	<10	<10	<10	<10	40	<10	29	1076	160	320	339	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	80	68	50	*	233	80	640	309	338	*	480	*	*	1600	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	1600	*	*	*	*	*	*	*	*	*
-NL/241/93                    *	*	*	*	*	*	*	<10	<10	<10	<10	<10	<10	<10	<10	<10	<10	40	<10	48	453	3836	2032	202	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	78	320	335	160	2032	1884	1810	1280	*	1280	1280	*	73	320	90	269	160	<40	160	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-NL/1/95                      <10	*	<10	*	*	*	*	<10	<10	<10	<10	<10	<10	<10	<10	<10	<10	<10	<10	74	453	4318	3342	*	*	*	*	*	*	<10	*	*	*	*	*	*	*	*	*	*	<10	*	320	*	1260	1301	1280	1402	1483	2833	1613	269	*	529	*	113	*	<40	101	*	*	*	*	*	*	*	*	*	*	560	*	*	*	*	*	<10	*	20	<10
-WE/4/85                      <10	<10	*	<10	20	1920	139	*	*	*	*	*	*	*	*	905	*	1280	*	*	*	*	*	*	50	557	640	2153	554	320	*	*	333	640	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-OK/5/88                      *	*	*	*	*	*	36	*	*	*	*	*	*	*	*	243	*	905	*	*	*	*	*	*	20	46	*	254	1114	422	*	*	80	*	*	*	640	806	2560	80	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-SI/2/87                      <10	<10	<10	<10	*	160	35	*	*	*	*	*	*	*	*	277	*	3225	40	*	*	<10	<10	<10	*	49	*	*	*	1824	240	*	30	*	*	*	320	3620	640	905	247	*	*	*	*	*	*	<10	<10	*	*	<10	<10	<10	<10	*	<10	*	<10	*	*	*	*	*	*	*	*	*	<10	<10	*	*	*	*	<10	200	47	<10	<10
-VI/7/87                      *	*	*	*	*	*	46	*	*	*	*	*	*	*	*	325	*	1114	*	*	*	*	*	*	20	43	*	470	1437	211	*	*	77	*	*	*	*	806	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-AL/4382/82                   *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	1280	*	*	*	*	*	*	1280	5120	*	5120	*	*	10240	2560	5120	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-LY/2380/81                   *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	2560	*	*	*	*	*	*	1280	2560	*	5120	*	*	5120	2560	5120	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-BI/4791/81                   *	*	*	*	*	*	640	*	*	*	*	*	*	*	*	*	*	1280	*	*	*	*	*	*	453	905	*	2560	*	*	2560	1280	1810	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	640	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-BI/10684/82                  *	*	*	*	*	*	1280	*	*	*	*	*	*	*	*	*	*	640	*	*	*	*	*	*	453	1280	*	2560	*	*	2560	905	3620	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	960	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-OS/13676/83                  *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	1280	*	*	*	*	*	*	640	2560	*	2560	*	*	2560	1280	5120	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-NL/333/85                    *	*	*	*	*	320	320	*	*	*	*	*	*	*	160	*	*	1280	*	*	*	*	*	*	40	160	*	2560	*	*	1280	*	*	1280	1280	320	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-BA/1/79                      *	<10	<10	<10	*	226	320	*	*	*	*	*	*	*	1280	640	*	320	*	*	*	*	*	*	640	905	*	1055	*	40	1280	*	1280	320	640	80	*	40	*	<10	<10	*	*	*	*	*	*	*	<10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<10	*	*	*	*	*	<10	160	<10	*	*
-PH/2/82                      <10	<10	<10	<10	*	226	*	*	*	*	*	*	*	*	2560	784	*	320	*	*	*	<10	<10	<10	*	*	*	462	*	190	640	*	196	640	640	40	*	80	*	<10	<10	*	*	*	*	*	*	<10	<10	*	*	<10	<10	<10	<10	*	<10	*	<10	*	*	*	*	*	*	*	*	*	<10	<10	*	*	*	*	<10	2480	<10	<10	<10
-CE/1/84                      *	*	*	*	*	320	320	*	*	*	*	*	*	*	*	*	*	640	*	*	*	*	*	*	40	160	*	*	*	*	*	*	*	1280	1280	640	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-LE/360/86                    *	<10	<10	<10	*	640	113	*	*	*	*	*	*	*	160	453	*	905	*	*	*	*	*	*	<40	320	*	1786	160	57	*	*	160	320	160	40	*	320	*	80	<10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<10	*	*	*	*	*	<10	160	<10	*	*
-VI/1/88                      *	*	*	*	*	*	40	*	*	*	*	*	*	*	*	557	*	1280	*	*	*	*	*	*	*	80	*	508	1470	453	*	*	160	*	*	*	640	1280	2560	80	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-CC/2/88                      *	*	*	*	*	*	20	*	*	*	*	*	*	*	*	1016	*	1280	*	*	*	*	*	*	*	640	*	5120	320	40	*	*	160	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-ST/12/88                     *	*	*	*	*	*	40	*	*	*	*	*	*	*	*	403	*	*	1280	*	*	*	*	*	40	40	*	*	1016	4064	*	*	80	*	*	*	5120	10240	10240	10240	320	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-EN/138/89                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	*	4457	640	*	*	*	*	*	*	*	*	1832	905	1114	*	*	*	*	*	*	640	10240	10240	*	320	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-EI/3447/89                   *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	*	*	*	*	*	*	*	*	*	*	*	*	*	1613	*	*	*	*	*	*	2560	5120	10240	5120	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-EN/427/88                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	*	2560	*	*	*	*	*	*	*	*	*	1280	640	2560	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-GE/5007/89                   *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	*	4064	*	*	*	*	*	*	*	*	*	2032	905	1280	*	*	*	*	*	*	2560	5120	10240	10240	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-WE/3/90                      *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	40	*	640	1280	*	*	*	*	18	*	*	*	160	640	160	*	*	*	*	*	*	640	320	2560	320	320	*	*	*	70	*	*	*	20	*	40	*	<10	50	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-WK/1/89                      *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	*	2560	*	*	*	*	*	*	*	*	*	1280	453	508	*	*	*	*	*	*	1280	4064	10240	5120	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-AT/3572DASH5/88              *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	*	10240	*	*	*	*	*	*	*	*	*	5120	1280	2560	*	*	*	*	*	*	5120	10240	10240	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-SH/11/87                     *	<10	<10	<10	*	80	*	*	*	*	*	*	*	*	*	160	*	3880	160	*	*	*	*	*	<10	*	*	970	320	905	<10	*	*	*	*	*	320	1613	640	*	67	*	*	*	*	*	*	*	<10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<10	*	*	*	*	*	<10	<10	<10	*	*
-GU/54/89                     *	<10	<10	<10	*	80	*	*	*	*	*	*	*	*	*	160	*	1280	160	*	*	*	*	*	<10	*	*	640	80	557	120	*	*	*	*	*	160	*	640	*	80	*	*	*	*	*	*	*	40	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<10	*	*	*	*	*	<10	<10	40	*	*
-HK/1/89                      *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	*	5120	640	*	*	*	*	*	*	*	*	2560	905	1280	*	*	*	*	*	*	2560	5881	11763	10240	320	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-NL/650/89                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	*	1280	*	*	*	*	*	*	*	*	*	1016	80	640	*	*	*	*	*	*	320	5120	5120	10240	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-NL/738/89                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	113	*	1280	*	*	*	*	*	*	*	*	*	640	28	320	*	*	*	*	*	*	254	5120	5120	2560	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-SP/35/89                     *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	*	2229	640	*	*	*	*	*	*	*	*	1280	453	557	*	*	*	*	*	*	2229	2560	10240	5120	320	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-SP/40/89                     *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	*	1280	*	*	*	*	*	*	*	*	*	403	1810	320	*	*	*	*	*	*	806	2560	6451	2560	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-WE/5/89                      *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	2560	*	*	*	*	*	*	*	*	*	508	453	*	*	*	*	*	*	*	508	3225	3225	1280	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-ME/2/90                      *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	*	5120	320	*	*	*	*	*	*	*	*	1280	905	*	*	*	*	*	*	*	*	10240	10240	10240	160	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-SU/1/90                      *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	*	5120	*	*	*	*	*	*	*	*	*	2560	1280	1280	*	*	*	*	*	*	2560	5120	10240	10240	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-VI/33/92                     *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	905	2560	*	*	*	*	10	*	*	*	320	*	226	*	*	*	*	*	*	1280	320	3620	*	1810	*	*	*	40	*	*	*	30	*	20	*	<5	20	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-NL/891/91                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	640	2560	*	*	*	*	15	*	*	*	320	*	113	*	*	*	*	*	*	640	160	3620	*	1280	*	*	*	40	*	*	*	20	*	40	*	<5	12	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-CA/1/91                      *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	7241	640	*	*	*	*	*	*	*	*	3620	*	1280	*	*	*	*	*	*	3620	7241	10240	*	453	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-EN/260/91                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	640	2560	*	*	*	*	15	*	*	*	320	*	113	*	*	*	*	*	*	1280	160	3620	*	1280	*	*	*	40	*	*	*	<5	*	20	*	<5	18	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-EN/261/91                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	1016	*	*	*	*	25	*	*	*	127	*	40	*	*	*	*	*	*	403	101	1613	*	640	*	*	*	160	*	*	*	120	*	140	*	<10	120	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-MA/G12/91                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	403	2560	*	*	*	*	10	*	*	*	320	*	160	*	*	*	*	*	*	640	160	4064	*	1280	*	*	*	40	*	*	*	<5	*	40	*	<5	10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-NL/816/91                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	1280	2560	*	*	*	*	10	*	*	*	320	*	80	*	*	*	*	*	*	640	80	2560	*	1280	*	*	*	40	*	*	*	<5	*	40	*	<5	<10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-AM/4112/92                   *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	1280	2560	*	*	*	*	20	*	*	*	320	*	80	*	*	*	*	*	*	1280	160	5120	*	1280	*	*	*	60	*	*	*	20	*	40	*	<5	20	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-ES/1285/92                   *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	2560	*	*	*	*	15	*	*	*	160	*	80	*	*	*	*	*	*	640	160	5120	*	640	*	*	*	35	*	*	*	<5	*	30	*	<5	10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-FI/220/92                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	640	*	*	*	*	10	*	*	*	40	*	80	*	*	*	*	*	*	160	80	640	*	403	*	*	*	40	*	*	*	20	*	40	*	<5	12	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-MA/G58/92                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	640	1280	*	*	*	*	20	*	*	*	160	*	80	*	*	*	*	*	*	1280	160	2560	*	640	*	*	*	80	*	*	*	40	*	40	*	18	20	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-NI/3129/92                   *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	640	2560	*	*	*	*	10	*	*	*	320	*	80	*	*	*	*	*	*	640	160	2560	*	1280	*	*	*	40	*	*	*	20	*	40	*	<5	10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-NL/819/92                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	640	1280	*	*	*	*	30	*	*	*	320	*	80	*	*	*	*	*	*	640	80	2560	*	1280	*	*	*	60	*	*	*	15	*	*	*	18	20	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-NL/935/92                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	1280	5120	*	*	*	*	20	*	*	*	320	*	80	*	*	*	*	*	*	1280	320	5120	*	2560	*	*	*	40	*	*	*	15	*	40	*	<5	30	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-PA/583/92                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	403	2560	*	*	*	*	10	*	*	*	202	*	50	*	*	*	*	*	*	403	101	2560	*	806	*	*	*	20	*	*	*	<5	*	25	*	<5	<5	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-PA/614/92                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	640	1280	*	*	*	*	20	*	*	*	320	*	80	*	*	*	*	*	*	640	160	2560	*	640	*	*	*	40	*	*	*	<5	*	18	*	10	<10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-SA/8/92                      *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	226	905	*	*	*	*	10	*	*	*	57	*	57	*	*	*	*	*	*	320	113	905	*	453	*	*	*	20	*	*	*	<5	*	40	*	<5	10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-SA/23/92                     *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	1280	*	*	*	*	10	*	*	*	80	*	160	*	*	*	*	*	*	320	160	640	*	640	*	*	*	10	*	*	*	<5	*	20	*	<5	<5	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-SA/27/92                     *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	640	*	*	*	*	20	*	*	*	80	*	80	*	*	*	*	*	*	160	80	640	*	640	*	*	*	20	*	*	*	20	*	40	*	<5	40	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-ST/7/92                      *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	1280	*	*	*	*	<10	*	*	*	160	*	80	*	*	*	*	*	*	640	160	5120	*	640	*	*	*	20	*	*	*	<5	*	<5	*	<5	<5	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-VI/68/92                     *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	640	5120	*	*	*	*	*	*	*	*	640	*	320	*	*	*	*	*	*	640	640	1280	*	5120	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-GE/5366/91                   *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	2560	320	*	*	*	*	*	*	*	*	1280	*	640	*	*	*	*	*	*	2560	5120	5120	*	320	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-BE/353/89                    <10	<10	<10	<10	<20	80	<20	*	*	<20	<20	*	*	*	*	*	80	320	640	458	<10	<10	<10	<20	<10	*	*	226	480	120	<20	20	<20	*	*	<20	320	139	1280	80	1488	14	229	53	*	*	*	<10	<10	*	<5	<10	<10	<10	<10	*	<10	*	<10	*	*	*	*	*	*	*	*	*	<20	<10	*	*	*	*	<10	<10	21	<10	<10
-LY/1182/91                   *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	1280	2560	*	*	*	40	*	*	*	160	*	67	*	*	*	*	*	*	320	67	1280	*	1076	20	*	*	80	*	*	*	40	*	50	*	20	20	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-BE/352/89                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	480	1280	40	*	*	10	*	*	*	160	*	120	*	*	*	*	*	*	480	240	1280	*	2334	40	640	80	80	*	*	*	60	*	80	*	<5	70	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-PA/467/92                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	905	2560	*	*	*	*	10	*	*	*	640	*	113	*	*	*	*	*	*	1280	113	5120	*	1280	*	*	*	30	*	*	*	<5	*	20	*	<5	12	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-TI/5957/92                   *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	640	2560	*	*	*	*	15	*	*	*	320	*	113	*	*	*	*	*	*	905	160	3620	*	1280	*	*	*	40	*	*	*	15	*	35	*	10	10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-AT/211/89                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	*	2560	*	*	*	*	*	*	*	*	*	1280	2560	320	*	*	*	*	*	*	1280	2560	10240	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-SP/34/89                     *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	*	1280	*	*	*	*	*	*	*	*	*	1280	160	320	*	*	*	*	*	*	640	2560	10240	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-SP/36/89                     *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	*	640	*	*	*	*	*	*	*	*	*	640	320	320	*	*	*	*	*	*	640	2560	5120	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-SP/53/89                     *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	*	2560	*	*	*	*	*	*	*	*	*	640	640	2560	*	*	*	*	*	*	2560	2560	10240	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-VI/1/89                      *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	*	320	*	*	*	*	*	*	*	*	*	320	40	320	*	*	*	*	*	*	320	5120	640	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-ME/5/90                      *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	*	2560	*	*	*	*	*	*	*	*	*	2560	1280	320	*	*	*	*	*	*	5120	5120	10240	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-SH/24/90                     *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	<40	80	40	*	*	18	*	*	*	*	*	160	*	*	*	*	*	*	*	5120	1280	*	160	320	10240	640	277	*	*	20	35	*	20	*	*	<5	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<5	*	*	*	*	*	*	*	*	*
-BE/32/92                     <10	<10	<10	<10	*	<10	*	*	*	*	*	*	*	*	*	*	*	80	<40	55	40	73	48	48	<10	*	*	*	*	*	<10	*	*	*	*	*	*	*	160	40	79	735	10240	905	320	*	*	96	97	*	*	16	15	23	15	*	<10	*	*	*	*	*	*	*	*	*	*	*	<10	<10	*	*	*	*	<10	<10	1093	23	<10
-FI/247/92                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	40	<40	<10	80	*	*	*	*	*	*	*	*	20	*	*	*	*	*	*	*	<10	160	*	40	640	640	160	1280	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-NL/938/92                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	640	<40	127	20	*	*	70	*	*	*	*	*	80	*	*	*	*	*	*	*	5120	1280	*	127	479	6451	640	733	*	*	100	140	*	70	*	*	30	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	18	*	*	*	*	*	*	*	*	*
-SE/C273/92                   *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<10	<40	<40	40	*	*	35	*	*	*	*	*	<10	*	*	*	*	*	*	*	<10	40	*	*	306	226	320	1197	*	*	80	160	*	480	*	*	35	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	10	*	*	*	*	*	*	*	*	*
-ST/12/92                     *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	80	<40	20	*	*	*	80	*	*	*	*	*	40	*	*	*	*	*	*	*	80	320	*	320	905	640	*	1693	*	*	320	733	*	1197	*	20	160	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	80	*	*	*	*	*	*	*	*	*
-ST/13/92                     *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	2560	1280	1280	*	*	*	12	*	*	*	*	*	320	*	*	*	*	*	*	*	640	640	*	1280	20	*	*	70	*	*	*	<10	*	20	*	<5	<10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-UM/1982/92                   *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	640	640	1280	*	*	*	*	*	*	*	*	*	80	*	*	*	*	*	*	*	160	2560	*	640	40	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-UM/2000/92                   *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	640	1280	2560	10	*	*	18	*	*	*	*	*	40	*	*	*	*	*	*	*	160	2560	*	640	28	320	80	80	*	*	*	15	*	30	*	<5	15	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-AK/4/93                      *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<10	<40	<10	*	*	*	55	*	*	*	*	*	<10	*	*	*	*	*	*	*	<10	80	*	40	423	640	*	847	*	*	240	*	*	960	*	12	106	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	40	*	*	*	*	*	*	*	*	*
-ES/5458/93                   *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	1280	1280	*	*	*	60	*	*	*	*	*	40	*	*	*	*	*	*	*	80	2560	*	640	20	*	*	120	*	*	*	120	*	80	*	40	80	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-MA/G101/93                   *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	640	2560	2560	*	*	*	10	*	*	*	*	*	80	*	*	*	*	*	*	*	160	2560	*	1280	80	*	*	20	*	*	*	<5	*	<5	*	<5	<5	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-MA/G109/93                   *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	80	<40	40	*	*	*	140	*	*	*	*	*	40	*	*	*	*	*	*	*	80	320	*	80	453	320	*	1600	*	*	1920	1120	*	1280	*	*	480	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	*	*	*	*	*	*	*	*	*
-MA/G116/93                   *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	1280	1280	*	*	*	15	*	*	*	*	*	40	*	*	*	*	*	*	*	80	1280	*	320	80	*	*	60	*	*	*	<5	*	*	*	<5	<10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-MA/G122/93                   *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	80	<40	40	*	*	*	240	*	*	*	*	*	40	*	*	*	*	*	*	*	80	320	*	80	905	640	*	2560	*	*	7680	7680	*	7680	*	*	960	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	640	*	*	*	*	*	*	*	*	*
-MA/G130/93                   *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	80	<40	20	*	*	*	35	*	*	*	*	*	40	*	*	*	*	*	*	*	160	320	*	80	784	320	*	1920	*	*	80	240	*	560	*	*	40	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	25	*	*	*	*	*	*	*	*	*
-NL/3/93                      *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	80	160	*	*	*	98	*	*	*	*	*	320	*	*	*	*	*	*	*	320	640	*	160	1431	640	*	1693	*	*	2240	876	*	2240	*	20	253	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	280	*	*	*	*	*	*	*	*	*
-NL/17/93                     *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	80	80	*	*	*	*	*	*	*	*	*	160	*	*	*	*	*	*	*	320	1280	*	320	1280	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-NL/101/93                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	<40	40	*	*	*	20	*	*	*	*	*	80	*	*	*	*	*	*	*	160	320	*	80	*	200	*	800	*	*	40	120	*	320	*	*	80	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	30	*	*	*	*	*	*	*	*	*
-NL/115/93                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	80	<40	40	*	*	*	40	*	*	*	*	*	40	*	*	*	*	*	*	*	160	320	*	80	*	280	*	1120	*	*	90	240	*	480	*	*	90	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	35	*	*	*	*	*	*	*	*	*
-NL/126/93                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	<40	40	*	*	*	20	*	*	*	*	*	40	*	*	*	*	*	*	*	160	320	*	80	*	160	*	640	*	*	60	160	*	360	*	*	23	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	18	*	*	*	*	*	*	*	*	*
-NL/165/93                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	640	640	*	*	*	10	*	*	*	*	*	40	*	*	*	*	*	*	*	80	640	*	320	80	*	*	40	*	*	*	<5	*	10	*	<5	<5	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-NL/179/93                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	<40	80	*	*	*	*	*	*	*	*	*	<10	*	*	*	*	*	*	*	320	320	*	320	1280	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-PA/287/93                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	640	640	1280	*	*	*	*	*	*	*	*	*	40	*	*	*	*	*	*	*	160	2560	*	320	40	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-SG/6/93                      *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<10	<40	<10	*	*	*	100	*	*	*	*	*	<10	*	*	*	*	*	*	*	<10	40	*	<10	554	400	*	3200	*	*	240	400	*	1920	*	*	280	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	20	*	*	*	*	*	*	*	*	*
-YA/56/93                     *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<10	<40	<10	*	*	*	100	*	*	*	*	*	<10	*	*	*	*	*	*	*	<10	<10	*	40	599	320	*	1600	*	*	160	320	*	1120	*	*	120	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	25	*	*	*	*	*	*	*	*	*
-YA/61/93                     *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<10	<40	<10	*	*	*	13	*	*	*	*	*	<10	*	*	*	*	*	*	*	<10	40	*	20	*	180	*	560	*	*	70	140	*	400	*	*	50	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	13	*	*	*	*	*	*	*	*	*
-YA/62/93                     *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<10	<40	<10	*	*	*	90	*	*	*	*	*	<10	*	*	*	*	*	*	*	<10	40	*	<10	423	200	*	1120	*	*	70	200	*	800	*	*	90	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	45	*	*	*	*	*	*	*	*	*
-NL/399/93                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	40	320	*	*	400	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	80	190	117	92	423	*	*	70	240	*	400	*	*	280	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	560	*	*	*	*	*	*	*	*	*
-SD/9/93                      *	<10	<10	<10	*	<10	*	*	*	*	*	*	*	*	*	*	*	*	*	<40	71	328	160	40	<10	*	*	*	*	<10	<10	*	*	*	*	*	*	20	*	<10	*	506	298	253	1113	640	160	<160	242	320	640	320	20	35	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<10	*	*	*	*	*	<10	<10	160	*	*
-LY/672/93                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	44	80	932	*	120	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	58	298	296	101	789	1280	392	*	223	*	1600	*	*	160	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	70	*	*	*	*	*	*	*	*	*
-LY/1803/93                   *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	40	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	80	320	640	226	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-NL/357/93                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	40	*	*	*	70	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	80	689	733	453	1920	*	*	480	800	*	2560	*	*	320	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	80	*	*	*	*	*	*	*	*	*
-NL/371/93                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	20	160	*	*	75	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	40	153	77	80	701	*	*	1920	1120	*	554	*	20	212	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	140	*	*	*	*	*	*	*	*	*
-NL/372/93                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	40	640	*	*	160	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	80	40	67	50	306	*	*	200	320	*	480	*	*	1280	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	1280	*	*	*	*	*	*	*	*	*
-NL/398/93                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	80	*	*	*	240	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	1224	1737	640	2240	*	*	2240	1120	*	1600	*	*	1120	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	640	*	*	*	*	*	*	*	*	*
-NL/440/93                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	40	*	*	*	100	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	139	923	689	453	3200	*	*	320	560	*	1920	*	*	320	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	80	*	*	*	*	*	*	*	*	*
-OS/2219/93                   *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	20	*	*	*	240	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	80	403	231	226	4480	*	*	2560	2560	*	3200	*	*	640	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	400	*	*	*	*	*	*	*	*	*
-OS/2352/93                   *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<80	50	1280	*	35	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	50	381	365	202	1115	1280	160	58	315	*	1440	*	*	70	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	20	*	*	*	*	*	*	*	*	*
-ST/20/93                     *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	92	453	*	*	416	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	183	421	402	291	1781	*	*	3840	2395	*	2240	*	80	453	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	*	*	*	*	*	*	*	*	*
-VI/104/93                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	20	*	*	*	240	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	40	640	386	320	3200	*	*	160	320	*	800	*	*	140	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	90	*	*	*	*	*	*	*	*	*
-WE/59/93                     *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	10	*	*	*	200	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	40	350	231	113	1120	*	*	960	1280	*	1600	*	*	280	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	120	*	*	*	*	*	*	*	*	*
-SP/19/93                     *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	40	320	*	*	320	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	80	110	*	80	320	*	*	140	320	*	400	*	*	800	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	1600	*	*	*	*	*	*	*	*	*
-LY/1815/93                   *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	40	*	*	*	280	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	40	299	320	160	1920	*	*	5760	2880	*	2880	*	*	640	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	*	*	*	*	*	*	*	*	*
-LY/22686/93                  *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	40	*	*	*	50	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	80	179	320	160	1600	*	*	1280	1600	*	1120	*	*	240	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	*	*	*	*	*	*	*	*	*
-LY/23602/93                  *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	*	*	*	120	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	358	506	320	2560	*	*	1120	3200	*	3200	*	*	1280	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	480	*	*	*	*	*	*	*	*	*
-SP/3/93                      *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	20	80	*	*	80	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	40	386	345	320	2024	*	*	120	280	*	960	*	*	100	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	35	*	*	*	*	*	*	*	*	*
-HK/1/94                      *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	160	*	*	160	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	196	212	160	1568	*	*	1920	2560	*	3200	*	*	640	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	400	*	*	*	*	*	*	*	*	*
-HK/2/94                      *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	80	160	*	*	160	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	196	277	160	1197	*	*	1120	960	*	800	*	*	280	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	240	*	*	*	*	*	*	*	*	*
-HK/55/94                     *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	80	320	2560	*	560	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	80	299	291	160	1379	1280	1280	2326	2326	*	1600	*	*	1920	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	2240	*	*	*	*	*	*	*	*	*
-HK/56/94                     *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	80	320	*	*	320	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	358	320	160	2217	*	*	4480	4480	*	4480	*	*	1600	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	400	*	*	*	*	*	*	*	*	*
-SA/15/94                     *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	80	320	*	*	320	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	554	554	160	2024	*	*	2240	5120	*	10240	*	*	960	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	480	*	*	*	*	*	*	*	*	*
-SA/25/94                     *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	80	160	*	*	320	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	320	599	80	2560	*	*	5120	6400	*	7680	*	*	960	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	480	*	*	*	*	*	*	*	*	*
-GD/25/93                     <10	*	<10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<40	320	1191	1024	117	*	*	*	*	*	<10	*	*	*	*	*	*	*	*	*	*	<10	240	115	*	1353	320	640	1432	*	*	640	224	50	277	15	*	<10	*	*	*	*	*	*	*	*	*	*	*	*	168	*	*	*	*	*	<10	112	37	<10
-SL/142/93                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	40	*	*	*	80	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	560	1197	*	1693	640	160	560	320	*	280	*	*	120	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	50	*	*	*	*	*	*	*	*	*
-SL/160/93                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<40	*	*	*	100	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	196	*	1109	320	640	2560	1280	*	1920	*	*	480	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	280	*	*	*	*	*	*	*	*	*
-EN/7/94                      *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<40	*	*	*	480	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	80	57	*	212	80	1280	400	560	*	640	*	*	2240	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	3200	*	*	*	*	*	*	*	*	*
-JO/33/94                     <10	<10	<10	<10	*	<10	*	*	*	*	*	*	*	*	*	*	*	*	*	<40	80	884	1320	80	<10	*	*	*	*	<10	<10	*	*	*	*	*	*	20	*	<10	<10	*	*	*	302	298	1280	907	*	640	254	158	<40	253	*	80	<40	<40	40	*	*	*	*	*	*	*	*	*	<10	40	*	*	*	*	*	<10	53	20	<10
-FI/338/95                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	101	320	139	640	733	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	*	*	190	160	640	*	305	1016	1177	640	80	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	2560	*	*	*	*	*	*	*	*	*
-ST/506/95                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	40	160	602	1280	320	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	*	*	581	392	640	1280	932	2560	2024	640	80	800	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	240	*	*	*	*	*	*	*	*	*
-JO/47/94                     *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<40	320	1280	*	40	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	200	*	*	547	320	1280	1197	1358	*	140	*	*	45	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	70	*	*	*	*	*	*	*	*	*
-GE/A9509/95                  *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	57	320	320	806	120	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	80	113	*	291	226	320	*	342	1280	640	160	40	254	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	60	*	*	*	*	*	*	*	*	*
-HK/32/95                     *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	80	640	5120	*	320	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	240	277	*	1846	1810	2560	2930	3225	*	1280	*	*	640	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	*	*	*	*	*	*	*	*	*
-GE/6447/91                   *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	1280	*	*	*	*	25	*	*	*	80	*	80	*	*	*	*	*	*	320	80	1280	*	640	*	*	*	30	*	*	*	<5	*	40	*	<5	20	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-LY/1189/91                   *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	640	2560	*	*	*	*	20	*	*	*	160	*	80	*	*	*	*	*	*	640	80	2560	*	2560	*	*	*	40	*	*	*	18	*	40	*	<5	18	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-LY/1276/91                   *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	640	*	*	*	*	60	*	*	*	120	*	80	*	*	*	*	*	*	320	80	1280	*	640	*	*	*	60	*	*	*	60	*	70	*	30	50	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-LY/1337/91                   *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	1920	*	*	*	*	*	*	*	*	160	*	80	*	*	*	*	*	*	320	80	2560	*	1280	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-LY/1373/91                   *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	2560	*	*	*	*	20	*	*	*	160	*	160	*	*	*	*	*	*	320	160	1280	*	1280	*	*	*	40	*	*	*	20	*	40	*	<5	18	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-LY/1594/91                   *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	2560	*	*	*	*	10	*	*	*	160	*	80	*	*	*	*	*	*	640	80	2560	*	1280	*	*	*	18	*	*	*	<5	*	25	*	<5	10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-LY/23672/91                  *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	1280	*	*	*	*	10	*	*	*	120	*	80	*	*	*	*	*	*	320	80	1280	*	640	*	*	*	35	*	*	*	<5	*	40	*	<5	10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-LY/24103/91                  *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	640	2560	*	*	*	*	20	*	*	*	320	*	160	*	*	*	*	*	*	640	160	2560	*	1280	*	*	*	20	*	*	*	<5	*	25	*	10	<10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-LY/24222/91                  *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	640	2560	*	*	*	*	40	*	*	*	160	*	160	*	*	*	*	*	*	320	160	2560	*	2560	*	*	*	50	*	*	*	40	*	50	*	10	35	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-ST/20/91                     *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	640	2560	*	*	*	*	10	*	*	*	160	*	160	*	*	*	*	*	*	640	160	640	*	2560	*	*	*	30	*	*	*	<5	*	30	*	<5	12	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-FI/218/92                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	640	*	*	*	*	20	*	*	*	80	*	80	*	*	*	*	*	*	160	80	640	*	640	*	*	*	20	*	*	*	20	*	30	*	<5	20	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-GE/5113/92                   *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	1280	*	*	*	*	10	*	*	*	80	*	160	*	*	*	*	*	*	320	160	2560	*	1280	*	*	*	10	*	*	*	<5	*	18	*	<5	<5	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-HO/56798/92                  *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	1280	*	*	*	*	10	*	*	*	80	*	80	*	*	*	*	*	*	320	80	1280	*	1280	*	*	*	35	*	*	*	<5	*	40	*	<5	12	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-HO/56829/92                  *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	640	1280	*	*	*	*	40	*	*	*	160	*	160	*	*	*	*	*	*	640	160	2560	*	1280	*	*	*	40	*	*	*	18	*	40	*	<5	20	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-HO/56941/92                  *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	1280	*	*	*	*	20	*	*	*	80	*	80	*	*	*	*	*	*	320	80	1280	*	1280	*	*	*	40	*	*	*	20	*	60	*	<10	30	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-OV/31/92                     *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	1280	5120	*	*	*	*	15	*	*	*	640	*	160	*	*	*	*	*	*	2560	160	10240	*	2560	*	*	*	25	*	*	*	20	*	40	*	<5	10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-NI/3126/92                   *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	2560	*	*	*	*	30	*	*	*	160	*	80	*	*	*	*	*	*	320	80	2560	*	1280	*	*	*	40	*	*	*	<10	*	40	*	<5	10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-NL/823/92                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	1280	*	*	*	*	20	*	*	*	160	*	80	*	*	*	*	*	*	320	80	1280	*	1280	*	*	*	40	*	*	*	18	*	20	*	<5	30	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-PA/320/92                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	2560	*	*	*	*	18	*	*	*	160	*	160	*	*	*	*	*	*	640	160	2560	*	1280	*	*	*	25	*	*	*	<10	*	35	*	<5	20	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-PA/325/92                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	2560	*	*	*	*	12	*	*	*	160	*	160	*	*	*	*	*	*	320	80	2560	*	2560	*	*	*	20	*	*	*	<10	*	35	*	<5	12	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-PA/407/92                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	1280	*	*	*	*	10	*	*	*	160	*	80	*	*	*	*	*	*	320	160	2560	*	640	*	*	*	20	*	*	*	<5	*	18	*	<5	<10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-PA/417/92                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	640	1280	*	*	*	*	50	*	*	*	160	*	80	*	*	*	*	*	*	320	80	1280	*	640	*	*	*	80	*	*	*	20	*	*	*	50	30	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-PA/424/92                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	1280	*	*	*	*	40	*	*	*	80	*	80	*	*	*	*	*	*	320	80	2560	*	640	*	*	*	40	*	*	*	<5	*	40	*	<10	10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-PA/457/92                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	2560	*	*	*	*	<5	*	*	*	160	*	160	*	*	*	*	*	*	640	160	2560	*	1280	*	*	*	10	*	*	*	<5	*	<5	*	<5	<5	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-PA/490/92                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	2560	*	*	*	*	25	*	*	*	160	*	80	*	*	*	*	*	*	320	80	2560	*	1280	*	*	*	35	*	*	*	20	*	40	*	<5	20	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-PA/512/92                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	1280	*	*	*	*	20	*	*	*	80	*	80	*	*	*	*	*	*	320	60	1280	*	640	*	*	*	20	*	*	*	<5	*	<5	*	<5	<5	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-PA/548/92                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	1280	*	*	*	*	10	*	*	*	80	*	80	*	*	*	*	*	*	160	80	1280	*	1280	*	*	*	10	*	*	*	<5	*	<5	*	<5	<5	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-PA/564/92                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	1920	*	*	*	*	60	*	*	*	160	*	80	*	*	*	*	*	*	320	80	1280	*	640	*	*	*	60	*	*	*	40	*	40	*	20	35	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-PA/597/92                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	1280	*	*	*	*	20	*	*	*	80	*	40	*	*	*	*	*	*	160	40	640	*	640	*	*	*	35	*	*	*	18	*	25	*	10	15	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-RD/100540/92                 *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	640	2560	*	*	*	*	*	*	*	*	160	*	160	*	*	*	*	*	*	640	160	1280	*	2560	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-ST/8/92                      *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	1280	*	*	*	*	30	*	*	*	160	*	80	*	*	*	*	*	*	320	80	1280	*	640	*	*	*	60	*	*	*	30	*	60	*	<5	20	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-FI/339/95                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<40	*	226	1280	280	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	40	20	*	113	80	*	*	462	640	640	320	*	1109	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	1920	*	*	*	*	*	*	*	*	*
-HK/3/95                      *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	80	*	2560	*	560	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	640	320	*	2395	1280	*	733	1358	*	1920	*	*	280	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	*	*	*	*	*	*	*	*	*
-FI/381/95                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<40	*	277	867	320	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	70	20	*	240	*	*	640	446	489	749	531	100	1109	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	1280	*	*	*	*	*	*	*	*	*
-HK/38/95                     *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	80	*	1280	1280	640	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	480	480	*	960	*	*	960	1280	2560	1280	640	80	960	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	*	*	*	*	*	*	*	*	*
-HK/49/95                     *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	120	*	800	1280	960	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	60	20	*	320	*	*	320	679	960	1037	1920	80	3840	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	3200	*	*	*	*	*	*	*	*	*
-HK/55/95                     *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	73	*	221	313	1113	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	1120	640	*	1920	*	*	200	345	584	826	489	626	558	1280	1280	320	80	1280	*	*	*	*	*	*	*	*	*	*	800	*	*	*	*	*	*	*	*	*
-LY/2279/95                   <10	*	<10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	88	*	459	448	458	*	*	*	*	*	<10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	*	*	*	465	618	1071	770	157	794	191	640	*	320	366	*	*	*	*	*	*	*	*	*	*	587	*	*	*	*	*	<10	*	480	120
-NA/933/95                    <10	*	<10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	98	*	140	355	784	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	140	*	420	*	*	85	*	413	*	366	613	*	1600	*	55	80	1817	*	160	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<10	*	480	90
-NL/271/95                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	80	*	320	640	960	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	13	<5	*	70	*	*	280	212	320	599	1280	160	4480	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	3840	*	*	*	*	*	*	*	*	*
-VI/75/95                     *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	40	*	720	960	320	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	320	*	1280	*	*	1280	480	800	792	280	50	1120	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	*	*	*	*	*	*	*	*	*
-WU/359/95                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	52	*	89	170	363	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	207	370	427	185	640	177	1016	1076	320	320	1810	2560	113	20	60	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-BR/8/96                      *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<80	*	<160	128	834	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	100	100	*	198	*	*	120	*	113	*	<80	481	162	*	640	640	320	160	*	*	*	*	*	*	*	*	*	*	280	*	*	*	*	*	*	*	*	*
-GE/3958/96                   *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	*	370	632	1174	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	120	80	*	320	*	*	50	538	757	757	757	1174	610	3044	3044	1280	320	5120	*	*	*	*	*	*	*	*	*	*	320	*	*	*	*	*	*	*	*	*
-HK/20/96                     *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	*	195	346	1148	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	80	80	*	320	*	*	80	254	640	554	640	593	614	1280	1280	640	1002	1280	*	*	*	*	*	*	*	*	*	*	320	*	*	*	*	*	*	*	*	*
-HK/42/96                     *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	80	*	1324	1313	97	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	90	120	*	320	*	*	200	957	1280	1358	320	49	287	*	151	320	<40	80	*	*	*	*	*	*	*	*	*	*	160	*	*	*	*	*	*	*	*	*
-HK/357/96                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	*	160	640	2560	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	120	100	*	400	*	*	160	392	640	784	640	320	960	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	400	*	*	*	*	*	*	*	*	*
-HK/358/96                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	80	*	120	160	640	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	60	60	*	240	*	*	40	226	320	240	160	240	320	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	240	*	*	*	*	*	*	*	*	*
-HK/434/96                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<40	*	453	761	50	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	80	80	*	320	*	*	2240	1197	640	423	160	<80	183	<40	<40	*	*	*	*	*	*	*	*	*	*	*	*	*	140	*	*	*	*	*	*	*	*	*
-NL/91/96                     *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	*	1280	2560	60	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	40	640	*	720	*	*	720	*	1280	784	640	*	200	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	80	*	*	*	*	*	*	*	*	*
-SP/1/96                      <10	*	<10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	57	*	128	165	587	*	*	*	*	*	<10	*	*	*	*	*	*	*	*	*	*	*	140	280	*	1120	*	*	106	247	226	*	166	431	488	761	694	*	320	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<10	*	720	100
-HK/1/97                      *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	187	235	854	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	120	*	160	*	*	240	80	*	80	*	593	400	1280	1280	320	105	1846	*	*	*	*	*	*	*	*	*	*	160	*	*	*	*	*	*	*	*	*
-NE/491/97                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	109	109	476	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	*	*	*	320	320	640	462	640	250	923	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-AU/10/97                     <10	*	<10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<40	<80	242	*	*	*	*	*	<10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<10	<10	*	*	16	<188	<100	<120	80	4434	2560	196	*	*	*	*	*	*	*	*	*	*	38	*	*	*	*	*	<10	<10	60	7680
-HK/280/97                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	80	108	863	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	431	320	640	923	640	320	923	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-NL/300/97                    <10	*	<10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	422	*	*	*	*	*	<10	*	*	*	*	*	*	*	*	*	*	<10	*	*	*	*	*	*	<10	<10	*	*	*	*	63	48	115	3880	2560	211	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<10	<10	160	2560
-SY/5/97                      <10	*	<10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<40	*	117	*	*	*	*	*	<10	*	*	*	*	*	*	*	*	*	*	<10	<5	<5	*	<5	*	*	<10	<10	*	70	<10	80	45	<40	80	3880	3880	88	320	4066	*	3840	*	480	2032	640	1466	*	*	160	1280	320	1600	*	<10	<10	45	2880
-NL/5/98                      <10	*	<10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	163	542	*	*	*	*	*	<10	*	*	*	*	*	*	*	*	*	*	*	100	200	*	480	*	*	99	400	*	1120	*	384	422	2104	1280	79	164	3056	1810	160	80	60	*	*	*	*	*	*	640	<10	<10	10	30	*	<10	*	960	80
-LY/1781/96                   *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	320	596	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	200	100	*	640	*	*	100	240	*	560	*	1280	569	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	360	*	*	*	*	*	*	*	*	*
-JO/10/97                     *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	80	160	422	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	120	*	358	*	*	90	98	*	253	*	250	264	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	*	*	*	*	*	*	*	*	*
-OS/21/97                     *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	80	160	842	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	800	50	*	560	*	*	70	160	*	1120	*	320	402	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	1120	*	*	*	*	*	*	*	*	*
-OS/244/97                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	320	708	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	160	*	320	*	*	60	240	*	560	*	640	368	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	*	*	*	*	*	*	*	*	*
-NL/414/98                    <10	*	<10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	317	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	640	*	67	*	3413	2560	*	320	1645	2003	1280	*	*	*	*	*	*	*	*	*	*	*	*	*	*	120	3200
-NL/462/98                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	960	*	*	*	*	7680	*	80	3414	1475	960	*	*	1280	*	*	*	*	80	640	320	*	*	*	*	*	*
-MW/10/99                     *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	58	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	80	*	*	*	*	480	403	599	1197	*	*	40	160	160	960	*	*	*	*	*
-NL/301/99                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	86	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	80	1808	2386	*	*	1280	1280	2560	1920	*	*	*	*	*	*	*	*	*	*	*
-NL/3/00                      *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	20	*	*	*	25	*	*	*	320	35	*	*	*	*	80	80	581	640	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-NL/427/98                    <10	*	<10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<40	145	*	*	*	*	*	<10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	30	*	30	*	2560	1280	115	*	2217	*	1280	*	*	*	*	*	*	*	*	*	*	*	*	<10	<10	*	2560
-TE/1/77                      *	80	320	<10	*	320	248	*	*	*	*	*	*	*	*	453	*	*	*	*	*	*	*	*	254	496	*	453	*	<10	2560	*	1280	320	*	*	*	40	*	<10	<10	*	*	*	*	*	*	*	<10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	320	*	*	*	*	*	<10	320	<10	*	*
-GF/V728/85                   *	*	*	*	*	*	80	*	*	*	*	*	*	*	*	1280	*	*	*	*	*	*	*	*	40	320	*	1280	*	*	*	*	240	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*
-PM/2007/99                   *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	1753	1465	*	*	2560	2189	2217	2933	*	*	40	1280	320	2240	*	*	*	*	*
-NL/118/01                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	3505	*	*	1280	3387	2024	2933	*	*	*	*	*	3840	*	*	*	*	*
-NL/126/01                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	669	784	*	*	960	847	1358	1339	*	*	*	*	*	1440	*	*	*	*	*
-NL/1/02                      *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	243	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	40	*	*	25	*	*	*	*	166	37	15	*	*	*	*	120	240	640	*	*	640	320	480	480	*	*	320	640	560	320	*	*	*	*	*
-NL/120/02                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	1920	1920	*	*	1920	1920	1920	1920	*	*	*	*	*	*	*	*	*	*	*
-NL/18/94                     <10	*	<10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	63	210	214	*	*	*	*	*	<10	*	*	*	*	*	*	*	*	*	*	*	400	400	*	3840	*	*	*	*	*	2880	640	69	733	53	*	<10	*	*	*	*	*	*	*	*	*	*	*	*	400	*	*	*	*	*	<10	19	253	<10
-FU/411/02                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<10	*	*	*	*	<10	<10	10	*	*	*	*	<10	*	160	*	*	*	320	*	*	*	*	2971	101	2342	560	*	*	*	*	*
-NL/22/03                     *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	100	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<10	*	*	*	*	25	40	15	*	*	*	*	25	60	160	*	*	*	113	80	70	*	*	3225	508	3225	*	*	*	*	*	*
-NL/213/03                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	200	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<10	*	*	*	*	70	50	25	*	*	*	*	40	*	640	*	*	*	1280	*	*	*	*	8127	1171	5941	1600	*	*	*	*	*
-NL/217/03                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	40	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<10	*	*	*	*	15	15	<10	*	*	*	*	15	*	640	*	*	*	640	*	*	*	*	4064	254	4064	560	*	*	*	*	*
-NL/222/03                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	100	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<10	*	*	*	*	50	60	30	*	*	*	*	30	200	358	*	*	*	392	280	960	*	*	6709	738	5941	504	*	*	*	*	*
-FI/170/03                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	50	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<10	*	*	*	*	20	20	<10	*	*	*	*	20	*	1280	*	*	*	1280	*	*	*	*	5120	738	5120	640	*	*	*	*	*
-NL/124/01                    *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	280	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	25	*	*	*	*	160	80	40	*	*	*	*	160	480	1440	*	*	*	640	960	1440	*	*	640	1120	640	1011	*	*	*	*	*
-NL/20/03                     *	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	640	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	100	*	*	*	*	200	160	160	*	*	*	*	280	800	1440	*	*	*	1280	1440	2240	*	*	320	3840	1120	2021	*	*	*	*	*
-HK/1/68                      1280	2560	53	<10	*	<10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<10	<10	<10	<10	*	*	*	*	*	<10	*	*	*	*	*	*	<10	*	*	*	*	*	*	*	*	*	<10	<10	*	*	<10	<10	<10	<10	*	<10	*	<10	*	*	*	*	*	*	*	*	*	<10	<10	*	*	*	*	1280	<10	<10	<10	<10
-HK/107/71                    *	320	1280	320	*	<10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<10	*	*	*	*	<10	<10	*	*	*	*	*	*	<10	*	<10	<10	*	*	*	*	*	*	*	<10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<10	*	*	*	*	*	5120	<10	<10	*	*
-EN/42/72                     *	5120	1280	640	*	<10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<10	*	*	*	*	<10	<10	*	*	*	*	*	*	<10	*	<10	<10	*	*	*	*	*	*	*	<10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	160	*	*	*	*	*	80	<10	<10	*	*
-PC/1/73                      68	640	1227	640	*	<10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<10	<10	<10	<10	*	*	*	*	*	80	*	*	*	*	*	*	<10	*	<10	*	*	*	*	*	*	*	<10	<10	*	*	<10	<10	<10	<10	*	<10	*	<10	*	*	*	*	*	*	*	*	*	320	<10	*	*	*	*	<10	*	<10	<10	<10
-VI/3/75                      *	320	1280	320	*	40	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	<10	*	*	*	*	*	320	*	*	*	*	*	*	*	*	*	<10	*	*	*	*	*	*	*	<10	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	2560	*	*	*	*	*	<10	40	<10	*	*

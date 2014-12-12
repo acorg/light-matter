@@ -220,8 +220,8 @@ def plot(x, y, read, scoreType, outputFile):
              color=col)
 
     # labels
-    ax.set_title('Read: %s, R^2: %.2f, SE: %.2f, slope: %.2f' % (read, rValue,
-                 se, slope))
+    ax.set_title('Read: %s, R^2: %.2f, SE: %.2f, slope: %.2f, p: %.2f' % (read,
+                 rValue, se, slope, pValue))
     ax.set_ylabel(scoreType)
     ax.set_xlabel('Light matter score')
 
@@ -272,6 +272,9 @@ class WriteMarkdownFile(object):
         self.openedFile.write('####%s\n\nRun in %.2f seconds.\n%d reads out '
                               'of %d matched.\n\n' % (testName, time,
                                                       len(testResult), readNr))
+        for read in testResult:
+            self.openedFile.write('Read %s matched %d subjects.\n\n' % (
+                                  read, len(testResult[read])))
         if self.verbose:
             for read in testResult:
                 for match in testResult[read]:

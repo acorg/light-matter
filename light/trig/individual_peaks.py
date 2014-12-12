@@ -1,4 +1,4 @@
-from dark.aa import PROPERTY_DETAILS
+from dark.aa import PROPERTY_DETAILS as PD
 from light.features import TrigPoint
 
 
@@ -22,21 +22,24 @@ class IndividualPeaks(object):
 
         for i in range(1, len(read.sequence) - 1):
             beforeAA = read.sequence[i - 1]
-            before = {'composition': PROPERTY_DETAILS[beforeAA]['composition'],
-                      'iep': PROPERTY_DETAILS[beforeAA]['iep'],
-                      'polarity': PROPERTY_DETAILS[beforeAA]['polarity']}
             middleAA = read.sequence[i]
-            middle = {'composition': PROPERTY_DETAILS[middleAA]['composition'],
-                      'iep': PROPERTY_DETAILS[middleAA]['iep'],
-                      'polarity': PROPERTY_DETAILS[middleAA]['polarity']}
             afterAA = read.sequence[i + 1]
-            after = {'composition': PROPERTY_DETAILS[afterAA]['composition'],
-                     'iep': PROPERTY_DETAILS[afterAA]['iep'],
-                     'polarity': PROPERTY_DETAILS[afterAA]['polarity']}
-            if (before['composition'] < middle['composition'] and
-                    after['composition'] < middle['composition'] and
-                    before['iep'] < middle['iep'] and
-                    after['iep'] < middle['iep'] and
-                    before['polarity'] < middle['polarity'] and
-                    after['polarity'] < middle['polarity']):
-                yield TrigPoint(self.NAME, self.SYMBOL, i)
+            if beforeAA in PD and middleAA in PD and afterAA in PD:
+                before = {'composition': PD[beforeAA]['composition'],
+                          'iep': PD[beforeAA]['iep'],
+                          'polarity': PD[beforeAA]['polarity']}
+
+                middle = {'composition': PD[middleAA]['composition'],
+                          'iep': PD[middleAA]['iep'],
+                          'polarity': PD[middleAA]['polarity']}
+
+                after = {'composition': PD[afterAA]['composition'],
+                         'iep': PD[afterAA]['iep'],
+                         'polarity': PD[afterAA]['polarity']}
+                if (before['composition'] < middle['composition'] and
+                        after['composition'] < middle['composition'] and
+                        before['iep'] < middle['iep'] and
+                        after['iep'] < middle['iep'] and
+                        before['polarity'] < middle['polarity'] and
+                        after['polarity'] < middle['polarity']):
+                    yield TrigPoint(self.NAME, self.SYMBOL, i)

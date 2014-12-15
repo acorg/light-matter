@@ -1,11 +1,12 @@
 from light.trig.peaks import Peaks
 from light.trig.troughs import Troughs
 from light.trig.amino_acids import AminoAcids
+from light.trig.polarity_peaks import PolarityPeaks
 from light.trig.individual_peaks import IndividualPeaks
 from light.trig.individual_troughs import IndividualTroughs
 
 ALL_TRIG_FINDER_CLASSES = {Peaks, Troughs, AminoAcids, IndividualPeaks,
-                           IndividualTroughs}
+                           IndividualTroughs, PolarityPeaks}
 
 
 def find(name):

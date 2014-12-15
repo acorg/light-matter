@@ -16,7 +16,7 @@ class TestPolarityPeaks(TestCase):
         string.
         """
         peaks = PolarityPeaks()
-        result = peaks.convertAAToProperties('ASDGEAHSDTDSCV')
+        result = peaks.sumProperties('ASDGEAHSDTDSCV')
         self.assertEqual([-0.20987654321, -0.1481481481483, 0.8518518518517,
                           0.864197530864, 1.691358024691, 1.481481481481,
                           1.839506172839, 1.9012345679007001,
@@ -26,21 +26,31 @@ class TestPolarityPeaks(TestCase):
 
     def testFindPolarityPeaks(self):
         """
-        The find method must find two peaks.
+        The find method must find a peak.
         """
-        read = AARead('i', 'DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDLLLLLLLLLL'
-                      'LLLLLLL')
+        read = AARead('i', 'DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDLLLLLLLLLL')
         peaks = PolarityPeaks()
-        result = list(peaks.find(read))
+        result = list(peaks.find(read, windowSize=43))
         self.assertEqual([TrigPoint('PolarityPeak', 'O', 33)], result)
 
     def testPolarityPeakAtEnd(self):
         """
-        If all aa are the same, the polarity peak must be at the end of the
+        If all aa are the same, the polarity peak must be at the start of the
         sequence.
         """
-        read = AARead('i', 'LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL'
-                      'LLLLLL')
+        read = AARead('i', 'LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL')
         peaks = PolarityPeaks()
-        result = list(peaks.find(read))
+        result = list(peaks.find(read, windowSize=45))
         self.assertEqual(TrigPoint('PolarityPeak', 'O', 0), result[0])
+
+    def testFindPolarityPeaksSmallerWindow(self):
+        """
+        The find method must find a peak, with a windowSize smaller than
+        the sequence length.
+        """
+        read = AARead('i', 'DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDLLLLLLLLLL')
+        peaks = PolarityPeaks()
+        result = list(peaks.find(read, windowSize=41))
+        self.assertEqual([TrigPoint('PolarityPeak', 'O', 33),
+                          TrigPoint('PolarityPeak', 'O', 33),
+                          TrigPoint('PolarityPeak', 'O', 33)], result)

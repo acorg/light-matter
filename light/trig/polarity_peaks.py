@@ -5,28 +5,32 @@ from light.features import TrigPoint
 class PolarityPeaks(object):
     """
     A class for computing statistics based on amino acid property peaks.
-    The statistic sums up the values of all properties as it walks along a
-    window on the amino acid sequence. In each window a peak is found, which
-    has the highest aggregated property value.
+    The statistic sums up the values of a given property for each amino acid
+    as it walks along the amino acid sequence and adds them to a list. It then
+    moves a window along the list generated and returns the index of the
+    highest value as the offset of a trig point.
     """
     NAME = 'PolarityPeak'
     SYMBOL = 'O'
 
     def sumProperties(self, sequence, prop='polarity'):
         """
-        Takes an amino acid sequence, converts it to a sequence of properties.
+        Takes an amino acid sequence, and returns a list where each element
+        is the value of the property of the amino acid at that position, plus
+        the values of the properties of all previous amino acids.
 
-        @param sequence: an amino acid sequence.
+        @param sequence: a C{str} amino acid sequence.
         @param prop: a C{str} name of the property which should be used to
             calculate the peak.
         """
         result = []
-        previousProp = 0
+        previousSumProperty = 0
         for aa in sequence:
             if aa in PROPERTY_DETAILS:
-                aaProperty = PROPERTY_DETAILS[aa][prop] + previousProp
-                result.append(aaProperty)
-                previousProp += PROPERTY_DETAILS[aa][prop]
+                currentSumProperty = (PROPERTY_DETAILS[aa][prop] +
+                                      previousSumProperty)
+                result.append(currentSumProperty)
+                previousSumProperty += PROPERTY_DETAILS[aa][prop]
         return result
 
     def find(self, read, windowSize=50, prop='polarity'):

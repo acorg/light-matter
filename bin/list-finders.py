@@ -18,12 +18,12 @@ key = attrgetter('NAME')
 
 print 'Landmark finders:'
 for finder in sorted(ALL_LANDMARK_FINDER_CLASSES, key=key):
-    print '  %s (symbol %s)' % (finder.NAME, finder.SYMBOL)
+    print' %s (symbol: %s)' % (finder.NAME, finder.SYMBOL)
     if args.verbose:
         print finder.__doc__
 
 print 'Trig point finders:'
 for finder in sorted(ALL_TRIG_FINDER_CLASSES, key=key):
-    print '  %s (symbol %s)' % (finder.NAME, finder.SYMBOL)
+    print ' %s (symbol: %s)' % (finder.NAME, finder.SYMBOL)
     if args.verbose:
         print finder.__doc__

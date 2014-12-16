@@ -5,8 +5,13 @@ from light.features import Landmark
 
 class BetaStrand(object):
     """
-    Simplistic identification of amino acid sequences that might correspond
-    to Beta strands.
+    Simplistic and permissive (i.e., this *will* produce false positives)
+    identification of amino acid sequences that hopefully correspond to Beta
+    strands.
+
+    Note that false positives may not be a problem. Even if a long sequence of
+    AAs with high beta strand propensities is not in fact a beta strand, their
+    existence may still be statistical relevant for matching purposes.
 
     This is based on simple beta strand amino acid propensities, as described
     in "Dependence of a-helical and b-sheet amino acid propensities on the
@@ -34,7 +39,8 @@ class BetaStrand(object):
 
     def find(self, read):
         """
-        Find beta strands in a sequence.
+        Find possible beta strands in a sequence (see above comments re
+        approach and false positives, etc).
 
         @param read: An instance of C{dark.reads.AARead}.
         @return: A generator that yields C{Landmark} instances.

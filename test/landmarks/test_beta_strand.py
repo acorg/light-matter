@@ -49,10 +49,20 @@ class TestBetaStrand(TestCase):
         result = list(landmark.find(read))
         self.assertEqual([Landmark('BetaStrand', 'S', 0, 3, 3)], result)
 
-    def testNotAtStartOfSequence(self):
+    def testAtStartOfSequence(self):
         """
         The find method must find a sequence of beta strand amino acids that
-        does not begin at the start of the sequence.
+        begins at the start of the sequence.
+        """
+        read = AARead('id', 'VILVILP')
+        landmark = BetaStrand()
+        result = list(landmark.find(read))
+        self.assertEqual([Landmark('BetaStrand', 'S', 0, 6, 6)], result)
+
+    def testAtEndOfSequence(self):
+        """
+        The find method must find a sequence of beta strand amino acids that
+        occurs at the end of the sequence.
         """
         read = AARead('id', 'PVILVIL')
         landmark = BetaStrand()

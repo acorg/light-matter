@@ -6,7 +6,6 @@ from operator import attrgetter
 from light.landmarks import ALL_LANDMARK_FINDER_CLASSES
 from light.trig import ALL_TRIG_FINDER_CLASSES
 
-
 parser = argparse.ArgumentParser(
     description='List all landmark and trig point finders.')
 

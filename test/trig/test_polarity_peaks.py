@@ -12,8 +12,8 @@ class TestPolarityPeaks(TestCase):
     """
     def testConversion(self):
         """
-        The amino acid sequence must be converted to the right properties
-        string.
+        The sequence must be correctly converted into a list of summed up
+        property values.
         """
         peaks = PolarityPeaks()
         result = peaks.sumProperties('ASDGEAHSDTDSCV')
@@ -24,16 +24,17 @@ class TestPolarityPeaks(TestCase):
                           3.876543209876, 3.024691358024, 2.271604938271],
                          result)
 
-    def testFindPolarityPeaks(self):
+    def testFindOnePolarityPeak(self):
         """
-        The find method must find a peak.
+        The find method must find one polarity peak in a sequence as long as
+        the window.
         """
         read = AARead('i', 'DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDLLLLLLLLLL')
         peaks = PolarityPeaks()
         result = list(peaks.find(read, windowSize=43))
         self.assertEqual([TrigPoint('PolarityPeak', 'O', 33)], result)
 
-    def testPolarityPeakAtEnd(self):
+    def testPolarityPeakAtStart(self):
         """
         If all aa are the same, the polarity peak must be at the start of the
         sequence.
@@ -41,9 +42,9 @@ class TestPolarityPeaks(TestCase):
         read = AARead('i', 'LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL')
         peaks = PolarityPeaks()
         result = list(peaks.find(read, windowSize=43))
-        self.assertEqual(TrigPoint('PolarityPeak', 'O', 0), result[0])
+        self.assertEqual([TrigPoint('PolarityPeak', 'O', 0)], result)
 
-    def testFindPolarityPeaksSmallerWindow(self):
+    def testFindOnePolarityPeaksSmallerWindow(self):
         """
         The find method must find a peak, with a windowSize smaller than
         the sequence length.
@@ -51,6 +52,35 @@ class TestPolarityPeaks(TestCase):
         read = AARead('i', 'DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDLLLLLLLLLL')
         peaks = PolarityPeaks()
         result = list(peaks.find(read, windowSize=41))
-        self.assertEqual([TrigPoint('PolarityPeak', 'O', 33),
-                          TrigPoint('PolarityPeak', 'O', 33),
-                          TrigPoint('PolarityPeak', 'O', 33)], result)
+        self.assertEqual([TrigPoint('PolarityPeak', 'O', 33)], result)
+
+    def testFindTwoPolarityPeaksSmallerWindow(self):
+        """
+        The find method must find two peaks, with a window size smaller than
+        the sequence length.
+        """
+        read = AARead('i', 'DDDDLLLLLLLDDDDDD')
+        peaks = PolarityPeaks()
+        result = list(peaks.find(read, windowSize=10))
+        self.assertEqual([TrigPoint('PolarityPeak', 'O', 3),
+                          TrigPoint('PolarityPeak', 'O', 15)], result)
+
+    def testPolarityPeakAtStartSmallWindow(self):
+        """
+        If all aa are the same, with negative property values, one polarity
+        peak must be returned at the start of the sequence.
+        """
+        read = AARead('i', 'LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL')
+        peaks = PolarityPeaks()
+        result = list(peaks.find(read, windowSize=10))
+        self.assertEqual([TrigPoint('PolarityPeak', 'O', 0)], result)
+
+    def testPolarityPeakAtEndSmallWindow(self):
+        """
+        If all aa are the same, with positive property values, one polarity
+        peak must be returned at the end of the first window.
+        """
+        read = AARead('i', 'DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD')
+        peaks = PolarityPeaks()
+        result = list(peaks.find(read, windowSize=10))
+        self.assertEqual([TrigPoint('PolarityPeak', 'O', 9)], result)

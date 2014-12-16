@@ -4,6 +4,7 @@ from light.landmarks import find, ALL_LANDMARK_FINDER_CLASSES
 from light.landmarks.alpha_helix import AlphaHelix
 from light.landmarks.alpha_helix_3_10 import AlphaHelix_3_10
 from light.landmarks.alpha_helix_pi import AlphaHelix_pi
+from light.landmarks.beta_strand import BetaStrand
 
 
 class TestFind(TestCase):
@@ -23,6 +24,12 @@ class TestFind(TestCase):
         The find function should be able to find the AlphaHelix class by name.
         """
         self.assertIs(AlphaHelix, find('AlphaHelix'))
+
+    def testFindBetaStrand(self):
+        """
+        The find function should be able to find the BetaStrand class by name.
+        """
+        self.assertIs(BetaStrand, find('BetaStrand'))
 
 
 class TestAllClasses(TestCase):
@@ -49,3 +56,9 @@ class TestAllClasses(TestCase):
         class.
         """
         self.assertIn(AlphaHelix_pi, ALL_LANDMARK_FINDER_CLASSES)
+
+    def testAllClassesContainsBetaStrand(self):
+        """
+        The ALL_LANDMARK_FINDER_CLASSES set must contain the BetaStrand class.
+        """
+        self.assertIn(BetaStrand, ALL_LANDMARK_FINDER_CLASSES)

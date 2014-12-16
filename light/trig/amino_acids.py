@@ -9,7 +9,7 @@ class AminoAcids(object):
     NAME = 'AminoAcids'
     SYMBOL = 'M'
 
-    def find(self, read, aa=['C', 'W']):
+    def find(self, read, aa=None):
         """
         A function that checks if and where a specific amino acid occurs in a
         sequence.

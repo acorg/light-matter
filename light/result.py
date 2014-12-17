@@ -61,13 +61,13 @@ class Result(object):
         alignments = []
         for subjectIndex in self.significant:
             hsps = self.significant[subjectIndex]['offsets']
-            subjectTitle, subjectLength = self._database.subjectInfo[
+            subjectTitle, subjectSequence = self._database.subjectInfo[
                 subjectIndex]
             matchScore = self.significant[subjectIndex]['matchScore']
             alignments.append({
                 'hsps': hsps,
                 'matchScore': matchScore,
-                'subjectLength': subjectLength,
+                'subjectLength': len(subjectSequence),
                 'subjectIndex': subjectIndex,
                 'subjectTitle': subjectTitle,
             })

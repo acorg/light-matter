@@ -1,9 +1,12 @@
 from unittest import TestCase
 from json import loads
 from cStringIO import StringIO
+from hashlib import sha256
 
 from light.landmarks.alpha_helix import AlphaHelix
+from light.landmarks.beta_strand import BetaStrand
 from light.trig.peaks import Peaks
+from light.trig.troughs import Troughs
 from light.database import Database
 from dark.reads import AARead
 
@@ -79,10 +82,8 @@ class TestDatabase(TestCase):
         db = Database([AlphaHelix], [])
         db.addSubject(AARead('id', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
         self.assertEqual({'A3:A2:23': [{'subjectIndex': 0,
-                                        'length': 36,
                                         'offset': 23}],
                          'A2:A3:-23': [{'subjectIndex': 0,
-                                        'length': 36,
                                         'offset': 0}]},
                          db.d)
 
@@ -106,16 +107,12 @@ class TestDatabase(TestCase):
         db.addSubject(AARead('id1', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
         db.addSubject(AARead('id2', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
         self.assertEqual({'A3:A2:23': [{'subjectIndex': 0,
-                                        'length': 36,
                                         'offset': 23},
                                        {'subjectIndex': 1,
-                                        'length': 36,
                                         'offset': 23}],
                          'A2:A3:-23': [{'subjectIndex': 0,
-                                        'length': 36,
                                         'offset': 0},
                                        {'subjectIndex': 1,
-                                        'length': 36,
                                         'offset': 0}]},
                          db.d)
 
@@ -151,16 +148,12 @@ class TestDatabase(TestCase):
         db.addSubject(AARead('id1', 'AFRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
         db.addSubject(AARead('id2', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
         self.assertEqual({'A3:A2:23': [{'subjectIndex': 0,
-                                        'length': 37,
                                         'offset': 24},
                                        {'subjectIndex': 1,
-                                        'length': 36,
                                         'offset': 23}],
                           'A2:A3:-23': [{'subjectIndex': 0,
-                                         'length': 37,
                                          'offset': 1},
                                         {'subjectIndex': 1,
-                                         'length': 36,
                                          'offset': 0}]},
                          db.d)
 
@@ -172,7 +165,6 @@ class TestDatabase(TestCase):
         db = Database([AlphaHelix], [Peaks])
         db.addSubject(AARead('id', 'FRRRFRRRFASA'))
         self.assertEqual({'A2:P:-10': [{'subjectIndex': 0,
-                                        'length': 12,
                                         'offset': 0}]},
                          db.d)
 
@@ -193,10 +185,8 @@ class TestDatabase(TestCase):
         db = Database([AlphaHelix], [Peaks])
         db.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
         self.assertEqual({'A2:P:-13': [{'subjectIndex': 0,
-                                        'length': 15,
                                         'offset': 0}],
                           'A2:P:-10': [{'subjectIndex': 0,
-                                        'length': 15,
                                         'offset': 0}]},
                          db.d)
 
@@ -209,7 +199,6 @@ class TestDatabase(TestCase):
         db = Database([AlphaHelix], [Peaks], limitPerLandmark=1)
         db.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
         self.assertEqual({'A2:P:-10': [{'subjectIndex': 0,
-                                        'length': 15,
                                         'offset': 0}]},
                          db.d)
 
@@ -232,7 +221,6 @@ class TestDatabase(TestCase):
         db = Database([AlphaHelix], [Peaks], maxDistance=11)
         db.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
         self.assertEqual({'A2:P:-10': [{'subjectIndex': 0,
-                                        'length': 15,
                                         'offset': 0}]},
                          db.d)
 
@@ -245,10 +233,8 @@ class TestDatabase(TestCase):
         db = Database([AlphaHelix], [Peaks], maxDistance=15)
         db.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
         self.assertEqual({'A2:P:-13': [{'subjectIndex': 0,
-                                        'length': 15,
                                         'offset': 0}],
                          'A2:P:-10': [{'subjectIndex': 0,
-                                       'length': 15,
                                        'offset': 0}]},
                          db.d)
 
@@ -381,9 +367,34 @@ class TestDatabase(TestCase):
         db = Database([AlphaHelix], [Peaks], limitPerLandmark=3,
                       maxDistance=10)
         db.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
+
+        checksum = sha256()
+        self.update(AlphaHelix.NAME, checksum)
+        self.update(Peaks.NAME, checksum)
+        self.update(3, checksum)  # Limit per landmark value.
+        self.update(10, checksum)  # Max distance value.
+        self.update('id', checksum)
+        self.update('FRRRFRRRFASAASA', checksum)
+
+        # The database dictionary now contains
+        #
+        # {
+        #     'A2:P:-10': [{'subjectIndex': 0, 'offset': 0}]}
+        # }
+        #
+        # We have to add the keys in order and the keys and values of the
+        # values in order.
+
+        self.update('A2:P:-10', checksum)
+        self.update('offset', checksum)
+        self.update(0, checksum)
+        self.update('subjectIndex', checksum)
+        self.update(0, checksum)
+
         out = StringIO()
         db.saveParamsAsJSON(out)
         expected = {
+            'checksum': checksum.hexdigest(),
             'landmarkFinderClasses': ['AlphaHelix'],
             'trigPointFinderClasses': ['Peaks'],
             'limitPerLandmark': 3,
@@ -393,3 +404,119 @@ class TestDatabase(TestCase):
             'totalCoveredResidues': 11,
         }
         self.assertEqual(expected, loads(out.getvalue()))
+
+    @staticmethod
+    def update(s, checksum):
+        """
+        Add the string representation of an object to a checksum,
+        followed by a NUL.
+
+        @param s: Anything that can be converted to a C{str} to be added to
+            the checksum.
+        @param checksum: Any hashlib sum instance with an update method.
+        """
+        checksum.update(str(s) + '\0')
+
+    def testChecksumEmptyDatabase(self):
+        """
+        The database checksum must be as expected when the database has no
+        finders and no subjects.
+        """
+        db = Database([], [])
+        expected = sha256()
+        self.update(None, expected)  # Limit per landmark value.
+        self.update(None, expected)  # Max distance value.
+        self.assertEqual(expected.hexdigest(), db.checksum())
+
+    def testChecksumEmptyDatabaseWithNonDefaultParams(self):
+        """
+        The database checksum must be as expected when the database is given
+        non-default values for limitPerLandmark and maxDistance.
+        """
+        db = Database([], [], limitPerLandmark=3, maxDistance=10)
+        expected = sha256()
+        self.update(3, expected)
+        self.update(10, expected)
+        self.assertEqual(expected.hexdigest(), db.checksum())
+
+    def testChecksumEmptyDatabaseWithFinders(self):
+        """
+        The database checksum must be as expected when the database has
+        finders.
+        """
+        db = Database([AlphaHelix, BetaStrand], [Peaks, Troughs])
+        expected = sha256()
+        self.update(AlphaHelix.NAME, expected)
+        self.update(BetaStrand.NAME, expected)
+        self.update(Peaks.NAME, expected)
+        self.update(Troughs.NAME, expected)
+        self.update(None, expected)  # Limit per landmark value.
+        self.update(None, expected)  # Max distance value.
+        self.assertEqual(expected.hexdigest(), db.checksum())
+
+    def testChecksumEmptyDatabaseWithFinderOrderInvariant(self):
+        """
+        The database checksum must be identical when the database has finders,
+        no matter what order the finders are given.
+        """
+        db1 = Database([AlphaHelix, BetaStrand], [Peaks, Troughs])
+        db2 = Database([BetaStrand, AlphaHelix], [Troughs, Peaks])
+        self.assertEqual(db1.checksum(), db2.checksum())
+
+    def testChecksumOneSubjectNoLandmarks(self):
+        """
+        The database checksum must be as expected when the database has one
+        subject but no landmarks are found.
+        """
+        db = Database([AlphaHelix], [])
+        subject = AARead('subject', 'FRRRFRRRFASAASA')
+        db.addSubject(subject)
+
+        expected = sha256()
+        self.update(AlphaHelix.NAME, expected)
+        self.update(None, expected)  # Limit per landmark value.
+        self.update(None, expected)  # Max distance value.
+        self.update('subject', expected)
+        self.update('FRRRFRRRFASAASA', expected)
+        self.assertEqual(expected.hexdigest(), db.checksum())
+
+    def testChecksumOneSubjectTwoLandmarks(self):
+        """
+        The database checksum must be as expected when the database has one
+        subject with two landmarks.
+        """
+        sequence = 'FRRRFRRRFRFRFRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'
+        db = Database([AlphaHelix], [])
+        subject = AARead('id', sequence)
+        db.addSubject(subject)
+
+        expected = sha256()
+        self.update(AlphaHelix.NAME, expected)
+        self.update(None, expected)  # Limit per landmark value.
+        self.update(None, expected)  # Max distance value.
+        self.update('id', expected)
+        self.update(sequence, expected)
+
+        # The database dictionary now contains
+        #
+        # {
+        #     'A3:A2:31': [{'subjectIndex': 0, 'offset': 31}],
+        #     'A2:A3:-31': [{'subjectIndex': 0, 'offset': 0}]
+        # }
+        #
+        # We have to add the keys in order and the keys and values of the
+        # values in order.
+
+        self.update('A2:A3:-31', expected)
+        self.update('offset', expected)
+        self.update(0, expected)
+        self.update('subjectIndex', expected)
+        self.update(0, expected)
+
+        self.update('A3:A2:31', expected)
+        self.update('offset', expected)
+        self.update(31, expected)
+        self.update('subjectIndex', expected)
+        self.update(0, expected)
+
+        self.assertEqual(expected.hexdigest(), db.checksum())

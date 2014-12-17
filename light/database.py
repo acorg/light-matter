@@ -53,7 +53,7 @@ class Database(object):
         subjectIndex = self.subjectCount
         self.subjectCount += 1
         self.totalResidues += len(subject)
-        self.subjectInfo.append((subject.id, len(subject)))
+        self.subjectInfo.append((subject.id, subject.sequence))
 
         for landmarkFinder in self.landmarkFinders:
             for landmark in landmarkFinder.find(subject):

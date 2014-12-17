@@ -59,7 +59,7 @@ class TestDatabase(TestCase):
         """
         db = Database([AlphaHelix], [])
         db.addSubject(AARead('id', 'FRRRFRRRF'))
-        self.assertEqual([('id', 9)], db.subjectInfo)
+        self.assertEqual([('id', 'FRRRFRRRF')], db.subjectInfo)
 
     def testOneReadOneLandmarkStatistics(self):
         """

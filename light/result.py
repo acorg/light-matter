@@ -65,14 +65,14 @@ class ScannedReadDatabaseResult(object):
             matchScore = self.significant[subjectIndex]['matchScore']
             alignments.append({
                 'hsps': hsps,
+                'matchScore': matchScore,
                 'subjectLength': subjectLength,
                 'subjectIndex': subjectIndex,
                 'subjectTitle': subjectTitle,
-                'matchScore': matchScore,
             })
         print >>fp, dumps({
-                          'query': self.read.id,
                           'alignments': alignments,
-                          'querySequence': self.read.sequence
+                          'query': self.read.id,
+                          'querySequence': self.read.sequence,
                           },
                           separators=(',', ':'))

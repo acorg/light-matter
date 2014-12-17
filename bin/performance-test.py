@@ -12,7 +12,7 @@ from dark.fasta import FastaReads
 
 from light.landmarks import find as findLandmark, ALL_LANDMARK_FINDER_CLASSES
 from light.trig import find as findTrigPoint, ALL_TRIG_FINDER_CLASSES
-from light.database import ScannedReadDatabase
+from light.database import Database
 
 """
 REMARKS:
@@ -178,8 +178,8 @@ def _runTest(databaseFile, sequenceFile, landmarkFinders, trigFinders,
         landmark per read.
     @param maxDistance: The maximum distance permitted between yielded pairs.
     """
-    database = ScannedReadDatabase(landmarkFinders, trigFinders,
-                                   limitPerLandmark, maxDistance)
+    database = Database(landmarkFinders, trigFinders, limitPerLandmark,
+                        maxDistance)
     databaseReads = FastaReads(databaseFile)
     for read in databaseReads:
         database.addRead(read)

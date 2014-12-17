@@ -3,12 +3,12 @@ import numpy as np
 from json import dumps
 
 
-class ScannedReadDatabaseResult(object):
+class Result(object):
     """
     A class that holds the results from a database lookup.
 
     @param read: a C{dark.read.AARead} instance.
-    @param database: A C{light.database.ScannedReadDatabase} instance.
+    @param database: A C{light.database.Database} instance.
     """
     def __init__(self, read, database):
         self.matches = {}
@@ -61,7 +61,8 @@ class ScannedReadDatabaseResult(object):
         alignments = []
         for subjectIndex in self.significant:
             hsps = self.significant[subjectIndex]['offsets']
-            subjectTitle, subjectLength = self._database.readInfo[subjectIndex]
+            subjectTitle, subjectLength = self._database.subjectInfo[
+                subjectIndex]
             matchScore = self.significant[subjectIndex]['matchScore']
             alignments.append({
                 'hsps': hsps,

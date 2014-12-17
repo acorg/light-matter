@@ -4,14 +4,14 @@ from cPickle import dump, load, HIGHEST_PROTOCOL
 from json import dumps
 
 
-from light.reads import ScannedRead
-from light.result import ScannedReadDatabaseResult
+from light.reads import ScannedRead, ScannedRead as ScannedSubject
+from light.result import Result
 
 
-class ScannedReadDatabase(object):
+class Database(object):
     """
-    Maintain a collection of reads and provide for database (index, search)
-    operations on them.
+    Maintain a collection of sequences ("subjects") and provide for database
+    (index, search) operations on them.
 
     @param landmarkFinderClasses: A C{list} of landmark classes.
     @param trigPointFinderClasses: A C{list} of trig point classes.
@@ -27,10 +27,10 @@ class ScannedReadDatabase(object):
         self.limitPerLandmark = limitPerLandmark
         self.maxDistance = maxDistance
         self.d = defaultdict(list)
-        self.readCount = 0
+        self.subjectCount = 0
         self.totalResidues = 0
         self.totalCoveredResidues = 0
-        self.readInfo = []
+        self.subjectInfo = []
 
         self.landmarkFinders = []
         for landmarkFinderClass in self.landmarkFinderClasses:
@@ -40,42 +40,44 @@ class ScannedReadDatabase(object):
         for trigPointFinderClass in self.trigPointFinderClasses:
             self.trigPointFinders.append(trigPointFinderClass())
 
-    def addRead(self, read):
+    def addSubject(self, subject):
         """
-        Examine a read for features and add its (landmark, trig point) pairs
-        to the search dictionary.
+        Examine a sequence for features and add its (landmark, trig point)
+        pairs to the search dictionary.
 
-        @param read: a C{dark.read.AARead} instance.
+        @param subject: a C{dark.read.AARead} instance. The subject sequence
+        is passed as a read instance even though in many cases it will not be
+        an actual read from a sequencing run.
         """
-        scannedRead = ScannedRead(read)
-        readIndex = self.readCount
-        self.readCount += 1
-        self.totalResidues += len(read)
-        self.readInfo.append((read.id, len(read)))
+        scannedSubject = ScannedSubject(subject)
+        subjectIndex = self.subjectCount
+        self.subjectCount += 1
+        self.totalResidues += len(subject)
+        self.subjectInfo.append((subject.id, len(subject)))
 
         for landmarkFinder in self.landmarkFinders:
-            for landmark in landmarkFinder.find(read):
-                scannedRead.landmarks.append(landmark)
+            for landmark in landmarkFinder.find(subject):
+                scannedSubject.landmarks.append(landmark)
 
         for trigFinder in self.trigPointFinders:
-            for trigPoint in trigFinder.find(read):
-                scannedRead.trigPoints.append(trigPoint)
+            for trigPoint in trigFinder.find(subject):
+                scannedSubject.trigPoints.append(trigPoint)
 
-        self.totalCoveredResidues += len(scannedRead.coveredIndices())
+        self.totalCoveredResidues += len(scannedSubject.coveredIndices())
 
-        for landmark, trigPoint in scannedRead.getPairs(
+        for landmark, trigPoint in scannedSubject.getPairs(
                 limitPerLandmark=self.limitPerLandmark,
                 maxDistance=self.maxDistance):
             key = '%s:%s:%s' % (landmark.hashkey(), trigPoint.hashkey(),
                                 landmark.offset - trigPoint.offset)
-            self.d[key].append({"subjectIndex": readIndex,
+            self.d[key].append({"subjectIndex": subjectIndex,
                                 "offset": landmark.offset,
-                                "length": len(read),
+                                "length": len(subject),
                                 })
 
     def __str__(self):
         return '%s: %d sequences, %d residues, %d hashes, %.2f%% coverage' % (
-            self.__class__.__name__, self.readCount, self.totalResidues,
+            self.__class__.__name__, self.subjectCount, self.totalResidues,
             len(self.d),
             float(self.totalCoveredResidues) / self.totalResidues * 100.0)
 
@@ -92,7 +94,7 @@ class ScannedReadDatabase(object):
                 klass.NAME for klass in self.trigPointFinderClasses],
             'limitPerLandmark': self.limitPerLandmark,
             'maxDistance': self.maxDistance,
-            'readCount': self.readCount,
+            'subjectCount': self.subjectCount,
             'totalResidues': self.totalResidues,
             'totalCoveredResidues': self.totalCoveredResidues,
         })
@@ -114,7 +116,7 @@ class ScannedReadDatabase(object):
             for trigPoint in trigFinder.find(read):
                 scannedRead.trigPoints.append(trigPoint)
 
-        result = ScannedReadDatabaseResult(read, self)
+        result = Result(read, self)
         for landmark, trigPoint in scannedRead.getPairs(
                 limitPerLandmark=self.limitPerLandmark,
                 maxDistance=self.maxDistance):
@@ -149,7 +151,7 @@ class ScannedReadDatabase(object):
         Load a database from a file.
 
         @param fp: A file pointer.
-        @return: An instance of L{ScannedReadDatabase}.
+        @return: An instance of L{Database}.
         """
         # NOTE: We're using pickle, which isn't considered secure. But running
         # other people's Python code in general shouldn't be considered

@@ -4,7 +4,7 @@ import argparse
 
 from dark.fasta import FastaReads
 
-from light.database import ScannedReadDatabase
+from light.database import Database
 
 if __name__ == '__main__':
 
@@ -24,7 +24,7 @@ if __name__ == '__main__':
 
     # Read database from file.
     with open(args.databaseFile) as fp:
-        database = ScannedReadDatabase.load(fp)
+        database = Database.load(fp)
 
     database.saveParamsAsJSON()
 

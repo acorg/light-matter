@@ -69,7 +69,10 @@ class ScannedReadDatabaseResult(object):
                 'subjectIndex': subjectIndex,
                 'subjectTitle': subjectTitle,
                 'matchScore': matchScore,
-                'readSequence': self.read.sequence,
             })
-        print >>fp, dumps({'query': self.read.id, 'alignments': alignments},
+        print >>fp, dumps({
+                          'query': self.read.id,
+                          'alignments': alignments,
+                          'querySequence': self.read.sequence
+                          },
                           separators=(',', ':'))

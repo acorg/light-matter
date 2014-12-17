@@ -4,19 +4,19 @@ from cStringIO import StringIO
 
 from light.landmarks.alpha_helix import AlphaHelix
 from light.trig.peaks import Peaks
-from light.database import ScannedReadDatabase
+from light.database import Database
 from dark.reads import AARead
 
 
-class TestScannedReadDatabase(TestCase):
+class TestDatabase(TestCase):
     """
-    Tests for the light.database.ScannedReadDatabase class.
+    Tests for the light.database.Database class.
     """
     def testFindersAreStored(self):
         """
         The list of landmark and trig point finders must be stored correctly.
         """
-        db = ScannedReadDatabase([AlphaHelix], [Peaks])
+        db = Database([AlphaHelix], [Peaks])
         self.assertEqual([AlphaHelix], db.landmarkFinderClasses)
         self.assertEqual([Peaks], db.trigPointFinderClasses)
 
@@ -24,8 +24,8 @@ class TestScannedReadDatabase(TestCase):
         """
         The database statistics must be initially correct.
         """
-        db = ScannedReadDatabase([], [])
-        self.assertEqual(0, db.readCount)
+        db = Database([], [])
+        self.assertEqual(0, db.subjectCount)
         self.assertEqual(0, db.totalResidues)
         self.assertEqual(0, db.totalCoveredResidues)
 
@@ -33,7 +33,7 @@ class TestScannedReadDatabase(TestCase):
         """
         The database must be empty if no reads have been added.
         """
-        db = ScannedReadDatabase([AlphaHelix], [Peaks])
+        db = Database([AlphaHelix], [Peaks])
         self.assertEqual({}, db.d)
 
     def testInitialDatabaseHasNoReadInfo(self):
@@ -41,33 +41,33 @@ class TestScannedReadDatabase(TestCase):
         The database must not have any stored read information if no reads have
         been added.
         """
-        db = ScannedReadDatabase([], [])
-        self.assertEqual([], db.readInfo)
+        db = Database([], [])
+        self.assertEqual([], db.subjectInfo)
 
     def testOneReadOneLandmark(self):
         """
         If one read is added but it only has one landmark, nothing is added
         to the database.
         """
-        db = ScannedReadDatabase([AlphaHelix], [])
-        db.addRead(AARead('id', 'FRRRFRRRF'))
+        db = Database([AlphaHelix], [])
+        db.addSubject(AARead('id', 'FRRRFRRRF'))
         self.assertEqual({}, db.d)
 
     def testOneReadOneLandmarkReadInfo(self):
         """
         If one read is added an entry is appended to the read info.
         """
-        db = ScannedReadDatabase([AlphaHelix], [])
-        db.addRead(AARead('id', 'FRRRFRRRF'))
-        self.assertEqual([('id', 9)], db.readInfo)
+        db = Database([AlphaHelix], [])
+        db.addSubject(AARead('id', 'FRRRFRRRF'))
+        self.assertEqual([('id', 9)], db.subjectInfo)
 
     def testOneReadOneLandmarkStatistics(self):
         """
         If one read is added the database statistics must be correct.
         """
-        db = ScannedReadDatabase([], [])
-        db.addRead(AARead('id', 'FRRRFRRRF'))
-        self.assertEqual(1, db.readCount)
+        db = Database([], [])
+        db.addSubject(AARead('id', 'FRRRFRRRF'))
+        self.assertEqual(1, db.subjectCount)
         self.assertEqual(9, db.totalResidues)
         self.assertEqual(0, db.totalCoveredResidues)
 
@@ -76,8 +76,8 @@ class TestScannedReadDatabase(TestCase):
         If one read is added and it has two landmarks, two keys are added
         to the database.
         """
-        db = ScannedReadDatabase([AlphaHelix], [])
-        db.addRead(AARead('id', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
+        db = Database([AlphaHelix], [])
+        db.addSubject(AARead('id', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
         self.assertEqual({'A3:A2:23': [{'subjectIndex': 0,
                                         'length': 36,
                                         'offset': 23}],
@@ -90,9 +90,9 @@ class TestScannedReadDatabase(TestCase):
         """
         If one read is added, the database statistics must be correct.
         """
-        db = ScannedReadDatabase([AlphaHelix], [])
-        db.addRead(AARead('id', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
-        self.assertEqual(1, db.readCount)
+        db = Database([AlphaHelix], [])
+        db.addSubject(AARead('id', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
+        self.assertEqual(1, db.subjectCount)
         self.assertEqual(36, db.totalResidues)
         self.assertEqual(22, db.totalCoveredResidues)
 
@@ -102,9 +102,9 @@ class TestScannedReadDatabase(TestCase):
         are added to the database and both reads are listed in the dictionary
         values for those two keys.
         """
-        db = ScannedReadDatabase([AlphaHelix], [])
-        db.addRead(AARead('id1', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
-        db.addRead(AARead('id2', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
+        db = Database([AlphaHelix], [])
+        db.addSubject(AARead('id1', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
+        db.addSubject(AARead('id2', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
         self.assertEqual({'A3:A2:23': [{'subjectIndex': 0,
                                         'length': 36,
                                         'offset': 23},
@@ -124,10 +124,10 @@ class TestScannedReadDatabase(TestCase):
         If two identical reads are added, the database statistics must be
         correct.
         """
-        db = ScannedReadDatabase([AlphaHelix], [])
-        db.addRead(AARead('id1', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
-        db.addRead(AARead('id2', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
-        self.assertEqual(2, db.readCount)
+        db = Database([AlphaHelix], [])
+        db.addSubject(AARead('id1', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
+        db.addSubject(AARead('id2', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
+        self.assertEqual(2, db.subjectCount)
         self.assertEqual(72, db.totalResidues)
         self.assertEqual(44, db.totalCoveredResidues)
 
@@ -136,9 +136,9 @@ class TestScannedReadDatabase(TestCase):
         If two identical reads are added, both with two landmarks, no keys
         will be added to the dictionary if limitPerLandmark is zero.
         """
-        db = ScannedReadDatabase([AlphaHelix], [], limitPerLandmark=0)
-        db.addRead(AARead('id1', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
-        db.addRead(AARead('id2', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
+        db = Database([AlphaHelix], [], limitPerLandmark=0)
+        db.addSubject(AARead('id1', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
+        db.addSubject(AARead('id2', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
         self.assertEqual({}, db.d)
 
     def testTwoReadsTwoLandmarksDifferentOffsets(self):
@@ -147,9 +147,9 @@ class TestScannedReadDatabase(TestCase):
         distance, two keys are added to the database and both reads are listed
         in the dictionary values for those two keys.
         """
-        db = ScannedReadDatabase([AlphaHelix], [])
-        db.addRead(AARead('id1', 'AFRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
-        db.addRead(AARead('id2', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
+        db = Database([AlphaHelix], [])
+        db.addSubject(AARead('id1', 'AFRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
+        db.addSubject(AARead('id2', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
         self.assertEqual({'A3:A2:23': [{'subjectIndex': 0,
                                         'length': 37,
                                         'offset': 24},
@@ -169,8 +169,8 @@ class TestScannedReadDatabase(TestCase):
         If one read is added and it has one landmark and one peak, one pair is
         added to the database.
         """
-        db = ScannedReadDatabase([AlphaHelix], [Peaks])
-        db.addRead(AARead('id', 'FRRRFRRRFASA'))
+        db = Database([AlphaHelix], [Peaks])
+        db.addSubject(AARead('id', 'FRRRFRRRFASA'))
         self.assertEqual({'A2:P:-10': [{'subjectIndex': 0,
                                         'length': 12,
                                         'offset': 0}]},
@@ -181,8 +181,8 @@ class TestScannedReadDatabase(TestCase):
         If one read is added and it has one landmark and one peak, but no trig
         finders are in use, nothing is added to the database.
         """
-        db = ScannedReadDatabase([AlphaHelix], [])
-        db.addRead(AARead('id', 'FRRRFRRRFASA'))
+        db = Database([AlphaHelix], [])
+        db.addSubject(AARead('id', 'FRRRFRRRFASA'))
         self.assertEqual({}, db.d)
 
     def testOneReadOneLandmarkTwoPeaks(self):
@@ -190,8 +190,8 @@ class TestScannedReadDatabase(TestCase):
         If one read is added and it has one landmark and two peaks, two pairs
         are added to the database.
         """
-        db = ScannedReadDatabase([AlphaHelix], [Peaks])
-        db.addRead(AARead('id', 'FRRRFRRRFASAASA'))
+        db = Database([AlphaHelix], [Peaks])
+        db.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
         self.assertEqual({'A2:P:-13': [{'subjectIndex': 0,
                                         'length': 15,
                                         'offset': 0}],
@@ -206,8 +206,8 @@ class TestScannedReadDatabase(TestCase):
         limit of one pair per landmarks is imposed, only one key is added to
         the database.
         """
-        db = ScannedReadDatabase([AlphaHelix], [Peaks], limitPerLandmark=1)
-        db.addRead(AARead('id', 'FRRRFRRRFASAASA'))
+        db = Database([AlphaHelix], [Peaks], limitPerLandmark=1)
+        db.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
         self.assertEqual({'A2:P:-10': [{'subjectIndex': 0,
                                         'length': 15,
                                         'offset': 0}]},
@@ -219,8 +219,8 @@ class TestScannedReadDatabase(TestCase):
         severe maximum distance is imposed, no keys are added to
         the database.
         """
-        db = ScannedReadDatabase([AlphaHelix], [Peaks], maxDistance=1)
-        db.addRead(AARead('id', 'FRRRFRRRFASAASA'))
+        db = Database([AlphaHelix], [Peaks], maxDistance=1)
+        db.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
         self.assertEqual({}, db.d)
 
     def testOneReadOneLandmarkTwoPeaksIntermediateMaxDistance(self):
@@ -229,8 +229,8 @@ class TestScannedReadDatabase(TestCase):
         maximum distance is imposed that makes one of the peaks too far
         away, only one key is added to the database.
         """
-        db = ScannedReadDatabase([AlphaHelix], [Peaks], maxDistance=11)
-        db.addRead(AARead('id', 'FRRRFRRRFASAASA'))
+        db = Database([AlphaHelix], [Peaks], maxDistance=11)
+        db.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
         self.assertEqual({'A2:P:-10': [{'subjectIndex': 0,
                                         'length': 15,
                                         'offset': 0}]},
@@ -242,8 +242,8 @@ class TestScannedReadDatabase(TestCase):
         maximum distance is imposed that is greater than the distance to the
         peaks, two keys are added to the database.
         """
-        db = ScannedReadDatabase([AlphaHelix], [Peaks], maxDistance=15)
-        db.addRead(AARead('id', 'FRRRFRRRFASAASA'))
+        db = Database([AlphaHelix], [Peaks], maxDistance=15)
+        db.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
         self.assertEqual({'A2:P:-13': [{'subjectIndex': 0,
                                         'length': 15,
                                         'offset': 0}],
@@ -257,12 +257,12 @@ class TestScannedReadDatabase(TestCase):
         When asked to save and then load an empty database, the correct
         database must result.
         """
-        db = ScannedReadDatabase([], [])
+        db = Database([], [])
         fp = StringIO()
         db.save(fp)
         fp.seek(0)
         result = db.load(fp)
-        self.assertEqual(0, result.readCount)
+        self.assertEqual(0, result.subjectCount)
         self.assertEqual(0, result.totalCoveredResidues)
         self.assertEqual({}, result.d)
         self.assertEqual([], result.landmarkFinderClasses)
@@ -276,13 +276,13 @@ class TestScannedReadDatabase(TestCase):
         When asked to save and then load a non-empty empty database, the
         correct database must result.
         """
-        db = ScannedReadDatabase([AlphaHelix], [Peaks])
-        db.addRead(AARead('id', 'FRRRFRRRFASAASA'))
+        db = Database([AlphaHelix], [Peaks])
+        db.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
         fp = StringIO()
         db.save(fp)
         fp.seek(0)
         result = db.load(fp)
-        self.assertEqual(db.readCount, result.readCount)
+        self.assertEqual(db.subjectCount, result.subjectCount)
         self.assertEqual(db.totalCoveredResidues, result.totalCoveredResidues)
         self.assertEqual(db.d, result.d)
         self.assertEqual(db.landmarkFinderClasses,
@@ -299,8 +299,8 @@ class TestScannedReadDatabase(TestCase):
         """
         subject = AARead('subject', 'FRRRFRRRFASAASA')
         query = AARead('query', 'FRRR')
-        db = ScannedReadDatabase([AlphaHelix], [Peaks])
-        db.addRead(subject)
+        db = Database([AlphaHelix], [Peaks])
+        db.addSubject(subject)
         result = db.find(query)
         self.assertEqual({}, result.matches)
 
@@ -310,8 +310,8 @@ class TestScannedReadDatabase(TestCase):
         """
         subject = AARead('subject', 'AFRRRFRRRFASAASA')
         query = AARead('query', 'FRRRFRRRFASAASA')
-        db = ScannedReadDatabase([AlphaHelix], [Peaks], maxDistance=11)
-        db.addRead(subject)
+        db = Database([AlphaHelix], [Peaks], maxDistance=11)
+        db.addSubject(subject)
         result = db.find(query)
         self.assertEqual(
             {
@@ -332,8 +332,8 @@ class TestScannedReadDatabase(TestCase):
         """
         subject = AARead('subject', 'FRRRFRRRFASAASA')
         query = AARead('query', 'FRRRFRRRFASAASA')
-        db = ScannedReadDatabase([AlphaHelix], [Peaks], maxDistance=1)
-        db.addRead(subject)
+        db = Database([AlphaHelix], [Peaks], maxDistance=1)
+        db.addSubject(subject)
         result = db.find(query)
         self.assertEqual({}, result.matches)
 
@@ -343,8 +343,8 @@ class TestScannedReadDatabase(TestCase):
         """
         subject = AARead('subject', 'FRRRFRRRFASAASA')
         query = AARead('query', 'FRRRFRRRFASAASA')
-        db = ScannedReadDatabase([AlphaHelix], [])
-        db.addRead(subject)
+        db = Database([AlphaHelix], [])
+        db.addSubject(subject)
         result = db.find(query)
         self.assertEqual({}, result.matches)
 
@@ -354,8 +354,8 @@ class TestScannedReadDatabase(TestCase):
         """
         subject = AARead('subject', 'FRRRFRRRFASAASA')
         query = AARead('query', 'FRRRFRRRFASAASA')
-        db = ScannedReadDatabase([AlphaHelix], [Peaks])
-        db.addRead(subject)
+        db = Database([AlphaHelix], [Peaks])
+        db.addSubject(subject)
         result = db.find(query)
         self.assertEqual(
             {
@@ -378,9 +378,9 @@ class TestScannedReadDatabase(TestCase):
         """
         Saving parameters as JSON must work correctly.
         """
-        db = ScannedReadDatabase([AlphaHelix], [Peaks], limitPerLandmark=3,
-                                 maxDistance=10)
-        db.addRead(AARead('id', 'FRRRFRRRFASAASA'))
+        db = Database([AlphaHelix], [Peaks], limitPerLandmark=3,
+                      maxDistance=10)
+        db.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
         out = StringIO()
         db.saveParamsAsJSON(out)
         expected = {
@@ -388,7 +388,7 @@ class TestScannedReadDatabase(TestCase):
             'trigPointFinderClasses': ['Peaks'],
             'limitPerLandmark': 3,
             'maxDistance': 10,
-            'readCount': 1,
+            'subjectCount': 1,
             'totalResidues': 15,
             'totalCoveredResidues': 11,
         }

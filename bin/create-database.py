@@ -9,7 +9,7 @@ from dark.fasta import FastaReads
 
 from light.landmarks import find as findLandmark, ALL_LANDMARK_FINDER_CLASSES
 from light.trig import find as findTrigPoint, ALL_TRIG_FINDER_CLASSES
-from light.database import ScannedReadDatabase
+from light.database import Database
 
 
 if __name__ == '__main__':
@@ -80,8 +80,8 @@ if __name__ == '__main__':
             sys.exit(1)
 
     # Create the database, add reads to it, print statistics, save to stdout.
-    database = ScannedReadDatabase(landmarkFinderClasses, trigFinderClasses,
-                                   args.limitPerLandmark, args.maxDistance)
+    database = Database(landmarkFinderClasses, trigFinderClasses,
+                        args.limitPerLandmark, args.maxDistance)
     reads = FastaReads(args.fastaFile)
     for read in reads:
         database.addRead(read)

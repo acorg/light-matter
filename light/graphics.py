@@ -60,7 +60,7 @@ def plotFeatures(read, landmarks=None, trigs=None, limitPerLandmark=None,
             trigFinders.append(trigFinderClass().find)
         else:
             raise ValueError('Could not find trig point finder %r.' % (
-                             landmarkFinderName))
+                             trigFinderName))
 
     # Find all landmarks and trig points on the read.
     scannedRead = ScannedRead(read)
@@ -84,10 +84,10 @@ def plotFeatures(read, landmarks=None, trigs=None, limitPerLandmark=None,
                      color='grey')
         landmarkColor = COLORS[landmark.symbol]
         trigPointColor = COLORS[trigPoint.symbol]
-        #readsAx.plot([landmark.offset], [count], 'o', color=landmarkColor)
-        readsAx.plot([landmark.offset, landmark.offset + landmark.length], [count, count], '-', color=landmarkColor, linewidth=5)
-        readsAx.plot([trigPoint.offset, trigPoint.offset + trigPoint.length], [count, count], '-', color=trigPointColor, linewidth=5)
-        #readsAx.plot([trigPoint.offset], [count], 'o', color=trigPointColor)
+        readsAx.plot([landmark.offset, landmark.offset + landmark.length],
+                     [count, count], '-', color=landmarkColor, linewidth=4)
+        readsAx.plot([trigPoint.offset, trigPoint.offset + trigPoint.length],
+                     [count, count], '-', color=trigPointColor, linewidth=4)
         count += 1
 
     readsAx.set_title('%s\n Length: %d, covered residues: %s' % (read.id,

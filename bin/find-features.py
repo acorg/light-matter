@@ -64,7 +64,7 @@ if __name__ == '__main__':
             trigFinders.append(trigFinderClass().find)
         else:
             print >>sys.stderr, '%s: Could not find trig point finder %r.' % (
-                basename(sys.argv[0]), landmarkFinderName)
+                basename(sys.argv[0]), trigFinderName)
             sys.exit(1)
 
     # For each read, find all landmarks and trig points and print details

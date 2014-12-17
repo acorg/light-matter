@@ -361,7 +361,7 @@ if __name__ == '__main__':
             trigFinderClasses.append(trigFinderClass)
         else:
             print '%s: Could not find trig point finder %r.' % (
-                basename(sys.argv[0]), landmarkFinderName)
+                basename(sys.argv[0]), trigFinderName)
             sys.exit(1)
 
     # start writing to file

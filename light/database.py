@@ -114,7 +114,7 @@ class ScannedReadDatabase(object):
             for trigPoint in trigFinder.find(read):
                 scannedRead.trigPoints.append(trigPoint)
 
-        result = ScannedReadDatabaseResult(read)
+        result = ScannedReadDatabaseResult(read, self)
         for landmark, trigPoint in scannedRead.getPairs(
                 limitPerLandmark=self.limitPerLandmark,
                 maxDistance=self.maxDistance):
@@ -126,10 +126,12 @@ class ScannedReadDatabase(object):
                 pass
             else:
                 for subjectDict in matchingKey:
-                    result.addMatch({
-                        'subjectOffset': subjectDict['offset'],
-                        'readOffset': landmark.offset,
-                    }, subjectDict['subjectIndex'], subjectDict['length'])
+                    result.addMatch(
+                        {
+                            'subjectOffset': subjectDict['offset'],
+                            'readOffset': landmark.offset,
+                        },
+                        subjectDict['subjectIndex'])
         result.finalize()
         return result
 

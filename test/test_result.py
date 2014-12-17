@@ -3,6 +3,7 @@ from cStringIO import StringIO
 from json import loads
 
 from light.result import ScannedReadDatabaseResult
+from light.database import ScannedReadDatabase
 from dark.reads import AARead
 
 
@@ -15,10 +16,12 @@ class TestResult(TestCase):
         A not significant result must not be returned if the matches are from
         the same reads.
         """
+        database = ScannedReadDatabase([], [])
         read = AARead('read', 'AGTARFSDDD')
-        result = ScannedReadDatabaseResult(read)
-        result.addMatch({'subjectOffset': 3, 'readOffset': 1}, 0, 300)
-        result.addMatch({'subjectOffset': 2, 'readOffset': 1}, 0, 300)
+        database.addRead(read)
+        result = ScannedReadDatabaseResult(read, database)
+        result.addMatch({'subjectOffset': 3, 'readOffset': 1}, 0)
+        result.addMatch({'subjectOffset': 2, 'readOffset': 1}, 0)
         result.finalize()
         self.assertEqual({}, result.significant)
 
@@ -26,8 +29,10 @@ class TestResult(TestCase):
         """
         One significant result must be returned.
         """
+        database = ScannedReadDatabase([], [])
         read = AARead('read', 'AGTARFSDDD')
-        result = ScannedReadDatabaseResult(read)
+        database.addRead(read)
+        result = ScannedReadDatabaseResult(read, database)
         offsets = [{'subjectOffset': 2, 'readOffset': 1},
                    {'subjectOffset': 2, 'readOffset': 1},
                    {'subjectOffset': 2, 'readOffset': 1},
@@ -47,8 +52,7 @@ class TestResult(TestCase):
                    {'subjectOffset': 2, 'readOffset': 1},
                    {'subjectOffset': 2, 'readOffset': 1},
                    {'subjectOffset': 3, 'readOffset': 1}]
-        result.matches = {0: {'subjectLength': 300,
-                          'offsets': offsets}}
+        result.matches = {0: {'offsets': offsets}}
         result.finalize()
         self.assertEqual(19, len(result.significant[0]['offsets']))
 
@@ -57,8 +61,10 @@ class TestResult(TestCase):
         Two significant results must be returned, when they are from different
         subjects.
         """
+        database = ScannedReadDatabase([], [])
         read = AARead('read', 'AGTARFSDDD')
-        result = ScannedReadDatabaseResult(read)
+        database.addRead(read)
+        result = ScannedReadDatabaseResult(read, database)
         offsets = [{'subjectOffset': 2, 'readOffset': 1},
                    {'subjectOffset': 2, 'readOffset': 1},
                    {'subjectOffset': 2, 'readOffset': 1},
@@ -78,10 +84,8 @@ class TestResult(TestCase):
                    {'subjectOffset': 2, 'readOffset': 1},
                    {'subjectOffset': 2, 'readOffset': 1},
                    {'subjectOffset': 3, 'readOffset': 1}]
-        result.matches = {0: {'subjectLength': 300,
-                          'offsets': offsets},
-                          1: {'subjectLength': 350,
-                              'offsets': offsets}}
+        result.matches = {0: {'offsets': offsets},
+                          1: {'offsets': offsets}}
         result.finalize()
         self.assertEqual(19, len(result.significant[0]['offsets']))
         self.assertEqual(19, len(result.significant[1]['offsets']))
@@ -90,8 +94,10 @@ class TestResult(TestCase):
         """
         If self.matches is empty, return an empty output.
         """
+        database = ScannedReadDatabase([], [])
         read = AARead('read', 'AGTARFSDDD')
-        result = ScannedReadDatabaseResult(read)
+        database.addRead(read)
+        result = ScannedReadDatabaseResult(read, database)
         fp = StringIO()
         result.save(fp=fp)
         result = loads(fp.getvalue())
@@ -102,18 +108,35 @@ class TestResult(TestCase):
         """
         Save must produce the right JSON format.
         """
-        read = AARead('read', 'AGTARFSDDD')
-        result = ScannedReadDatabaseResult(read)
+        database = ScannedReadDatabase([], [])
+        read = AARead('id', 'AGTARFSDDD')
+        database.addRead(read)
+        result = ScannedReadDatabaseResult(read, database)
         result.significant = {0: {'offsets':
                                   [{'readOffset': 0, 'subjectOffset': 0},
                                    {'readOffset': 0, 'subjectOffset': 0}],
-                                  'subjectLength': 15, 'matchScore': 15}}
+                                  'matchScore': 15}}
         fp = StringIO()
         result.save(fp=fp)
         result = loads(fp.getvalue())
-        self.assertEqual('read', result['query'])
-        self.assertEqual([{'subjectIndex': 0, 'subjectLength': 15,
-                         'hsps': [{'subjectOffset': 0, 'readOffset': 0},
-                                  {'subjectOffset': 0, 'readOffset': 0}],
-                          'matchScore': 15}],
-                         result['alignments'])
+        self.assertEqual('id', result['query'])
+        self.assertEqual(
+            [
+                {
+                    'subjectIndex': 0,
+                    'subjectLength': 10,
+                    'subjectTitle': 'id',
+                    'hsps': [
+                        {
+                            'subjectOffset': 0,
+                            'readOffset': 0
+                        },
+                        {
+                            'subjectOffset': 0,
+                            'readOffset': 0
+                        }
+                    ],
+                    'matchScore': 15
+                }
+            ],
+            result['alignments'])

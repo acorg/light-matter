@@ -140,3 +140,4 @@ class TestResult(TestCase):
                 }
             ],
             result['alignments'])
+        self.assertEqual('AGTARFSDDD', result['querySequence'])

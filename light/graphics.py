@@ -1,5 +1,3 @@
-import sys
-from os.path import basename
 import matplotlib.pyplot as plt
 
 from light.reads import ScannedRead
@@ -18,7 +16,7 @@ COLORS = {'A': 'blue',
           'O': 'black'}
 
 
-def plotFeatures(read, landmark=None, trig=None, limitPerLandmark=None,
+def plotFeatures(read, landmarks=None, trigs=None, limitPerLandmark=None,
                  maxDistance=None, readsAx=None):
     """
     A function which plots the positions of landmark and trigpoint pairs on a
@@ -37,13 +35,12 @@ def plotFeatures(read, landmark=None, trig=None, limitPerLandmark=None,
     fig = plt.figure(figsize=(width, 20))
     readsAx = readsAx or fig.add_subplot(111)
 
-    landmarks = landmark or []
-    trigs = trig or []
+    landmarks = landmarks or []
+    trigs = trigs or []
 
     if len(landmarks) + len(trigs) == 0:
-        print >>sys.stderr, ('You must specify either landmarks or trig '
-                             'points to find.')
-        sys.exit(1)
+        raise ValueError('You must specify either landmarks or trig points to '
+                         'find.')
 
     # Make sure all landmark finders requested exist.
     landmarkFinders = []
@@ -52,9 +49,8 @@ def plotFeatures(read, landmark=None, trig=None, limitPerLandmark=None,
         if landmarkFinderClass:
             landmarkFinders.append(landmarkFinderClass().find)
         else:
-            print >>sys.stderr, '%s: Could not find landmark finder %r.' % (
-                basename(sys.argv[0]), landmarkFinderName)
-            sys.exit(1)
+            raise ValueError('Could not find landmark finder %r.' % (
+                             landmarkFinderName))
 
     # Make sure all trig point finders requested exist.
     trigFinders = []
@@ -63,12 +59,10 @@ def plotFeatures(read, landmark=None, trig=None, limitPerLandmark=None,
         if trigFinderClass:
             trigFinders.append(trigFinderClass().find)
         else:
-            print >>sys.stderr, '%s: Could not find trig point finder %r.' % (
-                basename(sys.argv[0]), landmarkFinderName)
-            sys.exit(1)
+            raise ValueError('Could not find trig point finder %r.' % (
+                             landmarkFinderName))
 
     # Find all landmarks and trig points on the read.
-    totalCoveredResidues = 0
     scannedRead = ScannedRead(read)
 
     for landmarkFinder in landmarkFinders:
@@ -80,7 +74,7 @@ def plotFeatures(read, landmark=None, trig=None, limitPerLandmark=None,
             scannedRead.trigPoints.append(trigPoint)
 
     # plot landmarks and trig point pairs.
-    totalCoveredResidues += len(scannedRead.coveredIndices())
+    totalCoveredResidues = len(scannedRead.coveredIndices())
     count = 0
 
     for landmark, trigPoint in scannedRead.getPairs(
@@ -88,10 +82,12 @@ def plotFeatures(read, landmark=None, trig=None, limitPerLandmark=None,
             maxDistance=maxDistance):
         readsAx.plot([landmark.offset, trigPoint.offset], [count, count], '-',
                      color='grey')
-        landmarkColor = COLORS[landmark.hashkey()[0]]
-        trigPointColor = COLORS[trigPoint.hashkey()[0]]
-        readsAx.plot([landmark.offset], [count], 'o', color=landmarkColor)
-        readsAx.plot([trigPoint.offset], [count], 'o', color=trigPointColor)
+        landmarkColor = COLORS[landmark.symbol]
+        trigPointColor = COLORS[trigPoint.symbol]
+        #readsAx.plot([landmark.offset], [count], 'o', color=landmarkColor)
+        readsAx.plot([landmark.offset, landmark.offset + landmark.length], [count, count], '-', color=landmarkColor, linewidth=5)
+        readsAx.plot([trigPoint.offset, trigPoint.offset + trigPoint.length], [count, count], '-', color=trigPointColor, linewidth=5)
+        #readsAx.plot([trigPoint.offset], [count], 'o', color=trigPointColor)
         count += 1
 
     readsAx.set_title('%s\n Length: %d, covered residues: %s' % (read.id,

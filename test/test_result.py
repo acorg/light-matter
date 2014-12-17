@@ -124,8 +124,6 @@ class TestResult(TestCase):
             [
                 {
                     'subjectIndex': 0,
-                    'subjectLength': 10,
-                    'subjectTitle': 'id',
                     'hsps': [
                         {
                             'subjectOffset': 0,

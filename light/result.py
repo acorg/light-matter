@@ -8,10 +8,12 @@ class ScannedReadDatabaseResult(object):
     A class that holds the results from a database lookup.
 
     @param read: a C{dark.read.AARead} instance.
+    @param database: A C{light.database.ScannedReadDatabase} instance.
     """
-    def __init__(self, read):
+    def __init__(self, read, database):
         self.matches = {}
         self.read = read
+        self._database = database
         self._finalized = False
         self.significant = {}
 
@@ -21,19 +23,17 @@ class ScannedReadDatabaseResult(object):
         else:
             raise RuntimeError('You must call finalize() before printing.')
 
-    def addMatch(self, offsets, subjectIndex, subjectLength):
+    def addMatch(self, offsets, subjectIndex):
         """
         Add a match.
 
         @param offsets: a C{dict} with information about the match.
         @param subjectIndex: a C{int} index of the subject in the database.
-        @param subjectLength: a C{int} length of the subject.
         """
         if subjectIndex in self.matches:
             self.matches[subjectIndex]['offsets'].append(offsets)
         else:
             self.matches[subjectIndex] = {
-                'subjectLength': subjectLength,
                 'offsets': [offsets],
             }
 
@@ -61,13 +61,14 @@ class ScannedReadDatabaseResult(object):
         alignments = []
         for subjectIndex in self.significant:
             hsps = self.significant[subjectIndex]['offsets']
-            subjectLength = self.significant[subjectIndex]['subjectLength']
+            subjectTitle, subjectLength = self._database.readInfo[subjectIndex]
             matchScore = self.significant[subjectIndex]['matchScore']
             alignments.append({
                 'hsps': hsps,
                 'subjectLength': subjectLength,
                 'subjectIndex': subjectIndex,
-                'matchScore': matchScore
+                'subjectTitle': subjectTitle,
+                'matchScore': matchScore,
             })
         print >>fp, dumps({'query': self.read.id, 'alignments': alignments},
                           separators=(',', ':'))

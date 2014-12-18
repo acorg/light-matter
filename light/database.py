@@ -2,6 +2,8 @@ import sys
 from collections import defaultdict
 from cPickle import dump, load, HIGHEST_PROTOCOL
 from json import dumps
+from hashlib import sha256
+from operator import attrgetter
 
 
 from light.reads import ScannedRead, ScannedRead as ScannedSubject
@@ -72,7 +74,6 @@ class Database(object):
                                 landmark.offset - trigPoint.offset)
             self.d[key].append({"subjectIndex": subjectIndex,
                                 "offset": landmark.offset,
-                                "length": len(subject),
                                 })
 
     def __str__(self):
@@ -88,6 +89,7 @@ class Database(object):
         @param fp: A file pointer.
         """
         print >>fp, dumps({
+            'checksum': self.checksum(),
             'landmarkFinderClasses': [
                 klass.NAME for klass in self.landmarkFinderClasses],
             'trigPointFinderClasses': [
@@ -162,3 +164,51 @@ class Database(object):
         # grow large. Anyway, for now let's proceed with pickle and caution.
         # See google for more on Python and pickle security.
         return load(fp)
+
+    def checksum(self):
+        """
+        Compute a checksum for the specification and contents of this database.
+
+        @return: A C{str} checksum.
+        """
+        result = sha256()
+
+        def update(s):
+            """
+            Add the string representation of an object to the checksum,
+            followed by a NUL.
+
+            @param s: Anything that can be converted to a C{str} to be added to
+                the checksum.
+            """
+            result.update(str(s) + '\0')
+
+        # Add the (sorted) names of all landmark and trig point finder classes.
+        key = attrgetter('NAME')
+        for finder in sorted(self.landmarkFinders, key=key):
+            update(finder.NAME)
+        for finder in sorted(self.trigPointFinders, key=key):
+            update(finder.NAME)
+
+        # Add other initialization parameters.
+        update(self.limitPerLandmark)
+        update(self.maxDistance)
+
+        # Add all subject info.
+        for subjectId, subjectSequence in self.subjectInfo:
+            update(subjectId)
+            update(subjectSequence)
+
+        # Add all hash keys and their content. We do this in sorted order
+        # for the keys of self.d and then within each dict in the self.d
+        # values we make sure we have the sorted order of those keys
+        # too. This makes sure the checksum is invariant with respect to
+        # the order in which Python enumerates its dictionary keys.
+        for key in sorted(self.d.keys()):
+            update(key)
+            for details in self.d[key]:
+                for detailKey in sorted(details.keys()):
+                    update(detailKey)
+                    update(details[detailKey])
+
+        return result.hexdigest()

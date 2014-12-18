@@ -84,7 +84,7 @@ if __name__ == '__main__':
                         args.limitPerLandmark, args.maxDistance)
     reads = FastaReads(args.fastaFile)
     for read in reads:
-        database.addRead(read)
+        database.addSubject(read)
     print >>sys.stderr, database
     print >>sys.stderr, 'Database built in %.2f seconds. Saving.' % (
         time() - startTime)

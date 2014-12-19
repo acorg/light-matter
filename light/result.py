@@ -35,7 +35,7 @@ class Result(object):
         landmarkName, trigPointName, distance = key.split(':')
         info = {
             'distance': int(distance),
-            'landmarkLength': int(landmarkLength),
+            'landmarkLength': landmarkLength,
             'landmarkName': landmarkName,
             'offsets': offsets,
             'trigPointName': trigPointName,
@@ -73,7 +73,6 @@ class Result(object):
         """
         alignments = []
         for subjectIndex in self.significant:
-            print 'self.significant[subjectIndex]', self.significant[subjectIndex]
             hsps = self.significant[subjectIndex]['info']
             matchScore = self.significant[subjectIndex]['matchScore']
             alignments.append({

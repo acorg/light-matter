@@ -23,30 +23,19 @@ class Result(object):
         else:
             raise RuntimeError('You must call finalize() before printing.')
 
-    def addMatch(self, offsets, subjectIndex, landmarkLength, key):
+    def addMatch(self, info, subjectIndex):
         """
         Add a match.
 
-        @param offsets: a C{dict} with information about the match.
+        @param info: a C{dict} with information about the landmark and
+            trigpoint names, offsets, landmark length and distance between
+            landmark and trigpoint.
         @param subjectIndex: a C{int} index of the subject in the database.
-        @param landmarkLength: a C{int} length of the landmark.
-        @param key: the key that was matched.
         """
-        landmarkName, trigPointName, distance = key.split(':')
-        info = {
-            'distance': int(distance),
-            'landmarkLength': landmarkLength,
-            'landmarkName': landmarkName,
-            'offsets': offsets,
-            'trigPointName': trigPointName,
-        }
-
         if subjectIndex in self.matches:
-            self.matches[subjectIndex]['offsets'].append(offsets)
             self.matches[subjectIndex]['info'].append(info)
         else:
             self.matches[subjectIndex] = {
-                'offsets': [offsets],
                 'info': [info],
             }
 
@@ -59,8 +48,9 @@ class Result(object):
             maximum bucket count to be considered significant.
         """
         for subjectIndex in self.matches:
-            offsets = [offsets['subjectOffset'] - offsets['readOffset']
-                       for offsets in self.matches[subjectIndex]['offsets']]
+            offsets = [info['offsets']['subjectOffset'] -
+                       info['offsets']['readOffset']
+                       for info in self.matches[subjectIndex]['info']]
             hist, edges = np.histogram(offsets)
             mean = np.mean(hist)
             match = max(hist)
@@ -75,6 +65,7 @@ class Result(object):
 
         @param fp: a file pointer.
         """
+        print 'noooooot'
         alignments = []
         for subjectIndex in self.significant:
             hsps = self.significant[subjectIndex]['info']

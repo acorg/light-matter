@@ -20,8 +20,26 @@ class TestResult(TestCase):
         read = AARead('read', 'AGTARFSDDD')
         database.addSubject(read)
         result = Result(read, database)
-        result.addMatch({'subjectOffset': 3, 'readOffset': 1}, 0, 5, 'A:P:-6')
-        result.addMatch({'subjectOffset': 2, 'readOffset': 1}, 0, 5, 'A:P:-6')
+        result.addMatch({
+                        'trigPointName': 'Peaks',
+                        'distance': -13,
+                        'landmarkLength': 9,
+                        'landmarkName': 'AlphaHelix',
+                        'offsets': {
+                            'subjectOffset': 2,
+                            'readOffset': 1,
+                        }
+                        }, 0)
+        result.addMatch({
+                        'trigPointName': 'Peaks',
+                        'distance': -13,
+                        'landmarkLength': 9,
+                        'landmarkName': 'AlphaHelix',
+                        'offsets': {
+                            'subjectOffset': 2,
+                            'readOffset': 1,
+                        }
+                        }, 0)
         result.finalize(15)
         self.assertEqual({}, result.significant)
 
@@ -35,26 +53,19 @@ class TestResult(TestCase):
         read = AARead('read', 'AGTARFSDDD')
         database.addSubject(read)
         result = Result(read, database)
-        offsets = [{'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 3, 'readOffset': 1}]
-        result.matches = {0: {'offsets': offsets}}
+        info = [
+            {
+                'trigPointName': 'Peaks',
+                'distance': -10,
+                'landmarkLength': 9,
+                'landmarkName': 'AlphaHelix',
+                'offsets': {
+                    'subjectOffset': 0,
+                    'readOffset': 0
+                }
+            }
+        ]
+        result.matches = {0: {'info': info}}
         result.finalize(100)
         self.assertEqual({}, result.significant)
 
@@ -66,28 +77,41 @@ class TestResult(TestCase):
         read = AARead('read', 'AGTARFSDDD')
         database.addSubject(read)
         result = Result(read, database)
-        offsets = [{'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 3, 'readOffset': 1}]
-        result.matches = {0: {'offsets': offsets}}
-        result.finalize(15)
-        self.assertEqual(19, len(result.significant[0]['offsets']))
+        info = [
+            {
+                'trigPointName': 'Peaks',
+                'distance': -10,
+                'landmarkLength': 9,
+                'landmarkName': 'AlphaHelix',
+                'offsets': {
+                    'subjectOffset': 0,
+                    'readOffset': 0
+                }
+            },
+            {
+                'trigPointName': 'Peaks',
+                'distance': -10,
+                'landmarkLength': 9,
+                'landmarkName': 'AlphaHelix',
+                'offsets': {
+                    'subjectOffset': 0,
+                    'readOffset': 0
+                }
+            },
+            {
+                'trigPointName': 'Peaks',
+                'distance': -10,
+                'landmarkLength': 9,
+                'landmarkName': 'AlphaHelix',
+                'offsets': {
+                    'subjectOffset': 10,
+                    'readOffset': 0
+                }
+            }
+        ]
+        result.matches = {0: {'info': info}}
+        result.finalize(0)
+        self.assertEqual(1, len(result.significant))
 
     def testEvaluateTwoSignificantDifferentSubjects(self):
         """
@@ -98,30 +122,43 @@ class TestResult(TestCase):
         read = AARead('read', 'AGTARFSDDD')
         database.addSubject(read)
         result = Result(read, database)
-        offsets = [{'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 2, 'readOffset': 1},
-                   {'subjectOffset': 3, 'readOffset': 1}]
-        result.matches = {0: {'offsets': offsets},
-                          1: {'offsets': offsets}}
-        result.finalize(15)
-        self.assertEqual(19, len(result.significant[0]['offsets']))
-        self.assertEqual(19, len(result.significant[1]['offsets']))
+        info = [
+            {
+                'trigPointName': 'Peaks',
+                'distance': -10,
+                'landmarkLength': 9,
+                'landmarkName': 'AlphaHelix',
+                'offsets': {
+                    'subjectOffset': 0,
+                    'readOffset': 0
+                }
+            },
+            {
+                'trigPointName': 'Peaks',
+                'distance': -10,
+                'landmarkLength': 9,
+                'landmarkName': 'AlphaHelix',
+                'offsets': {
+                    'subjectOffset': 0,
+                    'readOffset': 0
+                }
+            },
+            {
+                'trigPointName': 'Peaks',
+                'distance': -13,
+                'landmarkLength': 9,
+                'landmarkName': 'AlphaHelix',
+                'offsets': {
+                    'subjectOffset': 10,
+                    'readOffset': 0
+                }
+            }
+        ]
+        result.matches = {0: {'info': info},
+                          1: {'info': info}}
+        result.finalize(1)
+        self.assertEqual(2, len(result.significant[0]))
+        self.assertEqual(2, len(result.significant[1]))
 
     def testSaveEmpty(self):
         """

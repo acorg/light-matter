@@ -137,10 +137,14 @@ class Database(object):
                 for subjectDict in matchingKey:
                     result.addMatch(
                         {
-                            'subjectOffset': subjectDict['offset'],
-                            'readOffset': landmark.offset,
+                            'distance': landmark.offset - trigPoint.offset,
+                            'landmarkLength': landmarkLength,
+                            'landmarkName': landmark.name,
+                            'offsets': {'subjectOffset': subjectDict['offset'],
+                                        'readOffset': landmark.offset},
+                            'trigPointName': trigPoint.name
                         },
-                        subjectDict['subjectIndex'], landmarkLength, key)
+                        subjectDict['subjectIndex'])
         result.finalize(aboveMeanThreshold)
         return result
 

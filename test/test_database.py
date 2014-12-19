@@ -302,19 +302,13 @@ class TestDatabase(TestCase):
         self.assertEqual(
             {
                 0: {
-                    'offsets': [
-                        {
-                            'readOffset': 0,
-                            'subjectOffset': 1,
-                        }
-                    ],
                     'info': [
                         {
                             'distance': -10,
                             'landmarkLength': 9,
-                            'landmarkName': 'A2',
+                            'landmarkName': 'AlphaHelix',
                             'offsets': {'readOffset': 0, 'subjectOffset': 1},
-                            'trigPointName': 'P'
+                            'trigPointName': 'Peaks'
                         }
                     ],
                 }
@@ -355,30 +349,20 @@ class TestDatabase(TestCase):
         self.assertEqual(
             {
                 0: {
-                    'offsets': [
-                        {
-                            'readOffset': 0,
-                            'subjectOffset': 0
-                        },
-                        {
-                            'readOffset': 0,
-                            'subjectOffset': 0
-                        }
-                    ],
                     'info': [
                         {
                             'distance': -10,
                             'landmarkLength': 9,
-                            'landmarkName': 'A2',
+                            'landmarkName': 'AlphaHelix',
                             'offsets': {'readOffset': 0, 'subjectOffset': 0},
-                            'trigPointName': 'P',
+                            'trigPointName': 'Peaks',
                         },
                         {
                             'distance': -13,
                             'landmarkLength': 9,
-                            'landmarkName': 'A2',
+                            'landmarkName': 'AlphaHelix',
                             'offsets': {'readOffset': 0, 'subjectOffset': 0},
-                            'trigPointName': 'P',
+                            'trigPointName': 'Peaks',
                         }
                     ],
                 }

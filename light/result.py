@@ -50,9 +50,13 @@ class Result(object):
                 'info': [info],
             }
 
-    def finalize(self):
+    def finalize(self, aboveMeanThreshold):
         """
         Evaluates whether a subject is matched significantly by a read.
+
+        @param aboveMeanThreshold: A numeric amount by which the maximum delta
+            count in a bucket must exceed the mean bucket count for that
+            maximum bucket count to be considered significant.
         """
         for subjectIndex in self.matches:
             offsets = [offsets['subjectOffset'] - offsets['readOffset']
@@ -60,7 +64,7 @@ class Result(object):
             hist, edges = np.histogram(offsets)
             mean = np.mean(hist)
             match = max(hist)
-            if mean + 15 < match:
+            if match >= mean + aboveMeanThreshold:
                 self.matches[subjectIndex]['matchScore'] = match
                 self.significant[subjectIndex] = self.matches[subjectIndex]
         self._finalized = True

@@ -22,7 +22,40 @@ class TestResult(TestCase):
         result = Result(read, database)
         result.addMatch({'subjectOffset': 3, 'readOffset': 1}, 0)
         result.addMatch({'subjectOffset': 2, 'readOffset': 1}, 0)
-        result.finalize()
+        result.finalize(15)
+        self.assertEqual({}, result.significant)
+
+    def testEvaluateOneNotSignificant(self):
+        """
+        No significant results must be returned unless the number of deltas in
+        a bucket exceeds the mean by more than the passed aboveMeanThreshold
+        value.
+        """
+        database = Database([], [])
+        read = AARead('read', 'AGTARFSDDD')
+        database.addSubject(read)
+        result = Result(read, database)
+        offsets = [{'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 2, 'readOffset': 1},
+                   {'subjectOffset': 3, 'readOffset': 1}]
+        result.matches = {0: {'offsets': offsets}}
+        result.finalize(100)
         self.assertEqual({}, result.significant)
 
     def testEvaluateOneSignificant(self):
@@ -53,7 +86,7 @@ class TestResult(TestCase):
                    {'subjectOffset': 2, 'readOffset': 1},
                    {'subjectOffset': 3, 'readOffset': 1}]
         result.matches = {0: {'offsets': offsets}}
-        result.finalize()
+        result.finalize(15)
         self.assertEqual(19, len(result.significant[0]['offsets']))
 
     def testEvaluateTwoSignificantDifferentSubjects(self):
@@ -86,7 +119,7 @@ class TestResult(TestCase):
                    {'subjectOffset': 3, 'readOffset': 1}]
         result.matches = {0: {'offsets': offsets},
                           1: {'offsets': offsets}}
-        result.finalize()
+        result.finalize(15)
         self.assertEqual(19, len(result.significant[0]['offsets']))
         self.assertEqual(19, len(result.significant[1]['offsets']))
 

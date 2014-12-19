@@ -101,12 +101,16 @@ class Database(object):
             'totalCoveredResidues': self.totalCoveredResidues,
         })
 
-    def find(self, read):
+    def find(self, read, aboveMeanThreshold=15):
         """
         A function which takes a read, computes all hashes for it, looks up
         matching hashes and checks which database sequence it matches.
 
         @param read: a C{dark.read.AARead} instance.
+        @param aboveMeanThreshold: A numeric amount by which the maximum delta
+            count in a bucket must exceed the mean bucket count for that
+            maximum bucket count to be considered significant.
+        @return: A C{light.result.Result} instance.
         """
         scannedRead = ScannedRead(read)
 
@@ -136,7 +140,7 @@ class Database(object):
                             'readOffset': landmark.offset,
                         },
                         subjectDict['subjectIndex'])
-        result.finalize()
+        result.finalize(aboveMeanThreshold)
         return result
 
     def save(self, fp=sys.stdout):

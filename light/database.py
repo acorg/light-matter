@@ -42,6 +42,20 @@ class Database(object):
         for trigPointFinderClass in self.trigPointFinderClasses:
             self.trigPointFinders.append(trigPointFinderClass())
 
+    @staticmethod
+    def key(landmark, trigPoint):
+        """
+        Compute a key to store information about a landmark / trig point
+        association for a read.
+
+        @param landmark: A C{light.features.Landmark} instance.
+        @param trigPoint: A C{light.features.TrigPoint} instance.
+        @return: A C{str} key based on the landmark, the trig point,
+            and the distance between them.
+        """
+        return '%s:%s:%s' % (landmark.hashkey(), trigPoint.hashkey(),
+                             landmark.offset - trigPoint.offset)
+
     def addSubject(self, subject):
         """
         Examine a sequence for features and add its (landmark, trig point)
@@ -70,8 +84,7 @@ class Database(object):
         for landmark, trigPoint in scannedSubject.getPairs(
                 limitPerLandmark=self.limitPerLandmark,
                 maxDistance=self.maxDistance):
-            key = '%s:%s:%s' % (landmark.hashkey(), trigPoint.hashkey(),
-                                landmark.offset - trigPoint.offset)
+            key = self.key(landmark, trigPoint)
             self.d[key].append({"subjectIndex": subjectIndex,
                                 "offset": landmark.offset,
                                 })
@@ -122,31 +135,28 @@ class Database(object):
             for trigPoint in trigFinder.find(read):
                 scannedRead.trigPoints.append(trigPoint)
 
-        result = Result(read, self)
+        matches = defaultdict(list)
+
         for landmark, trigPoint in scannedRead.getPairs(
                 limitPerLandmark=self.limitPerLandmark,
                 maxDistance=self.maxDistance):
-            key = '%s:%s:%s' % (landmark.hashkey(), trigPoint.hashkey(),
-                                landmark.offset - trigPoint.offset)
+            key = self.key(landmark, trigPoint)
             try:
-                matchingKey = self.d[key]
-                landmarkLength = landmark.length
+                subjects = self.d[key]
             except KeyError:
                 pass
             else:
-                for subjectDict in matchingKey:
-                    result.addMatch(
-                        {
-                            'distance': landmark.offset - trigPoint.offset,
-                            'landmarkLength': landmarkLength,
-                            'landmarkName': landmark.name,
-                            'offsets': {'subjectOffset': subjectDict['offset'],
-                                        'readOffset': landmark.offset},
-                            'trigPointName': trigPoint.name
-                        },
-                        subjectDict['subjectIndex'])
-        result.finalize(aboveMeanThreshold)
-        return result
+                for subject in subjects:
+                    matches[subject['subjectIndex']].append({
+                        'distance': landmark.offset - trigPoint.offset,
+                        'landmarkLength': landmark.length,
+                        'landmarkName': landmark.name,
+                        'readOffset': landmark.offset,
+                        'subjectOffset': subject['offset'],
+                        'trigPointName': trigPoint.name,
+                    })
+
+        return Result(read, matches, aboveMeanThreshold)
 
     def save(self, fp=sys.stdout):
         """

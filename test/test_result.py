@@ -2,250 +2,263 @@ from unittest import TestCase
 from cStringIO import StringIO
 from json import loads
 
-from light.result import Result
-from light.database import Database
 from dark.reads import AARead
+
+from light.result import Result
 
 
 class TestResult(TestCase):
     """
     Tests for the light.result.Result class.
     """
-    def testEvaluateNotSignificantIdenticalReads(self):
+    def testNoMatches(self):
         """
-        A not significant result must not be returned if the matches are from
-        the same reads.
+        A result with no matches added to it must have the expected attributes.
         """
-        database = Database([], [])
         read = AARead('read', 'AGTARFSDDD')
-        database.addSubject(read)
-        result = Result(read, database)
-        result.addMatch({
-                        'trigPointName': 'Peaks',
-                        'distance': -13,
-                        'landmarkLength': 9,
-                        'landmarkName': 'AlphaHelix',
-                        'offsets': {
-                            'subjectOffset': 2,
-                            'readOffset': 1,
-                        }
-                        }, 0)
-        result.addMatch({
-                        'trigPointName': 'Peaks',
-                        'distance': -13,
-                        'landmarkLength': 9,
-                        'landmarkName': 'AlphaHelix',
-                        'offsets': {
-                            'subjectOffset': 2,
-                            'readOffset': 1,
-                        }
-                        }, 0)
-        result.finalize(15)
-        self.assertEqual({}, result.significant)
+        result = Result(read, {}, 0)
+        self.assertEqual({}, result.matches)
+        self.assertEqual(set(), result.significant)
+        self.assertIs(read, result.read)
 
-    def testEvaluateOneNotSignificant(self):
+    def testAddOneMatch(self):
         """
-        No significant results must be returned unless the number of deltas in
-        a bucket exceeds the mean by more than the passed aboveMeanThreshold
-        value.
+        Adding information about one match should result in that information
+        being stored in the result instance.
         """
-        database = Database([], [])
         read = AARead('read', 'AGTARFSDDD')
-        database.addSubject(read)
-        result = Result(read, database)
-        info = [
-            {
-                'trigPointName': 'Peaks',
-                'distance': -10,
-                'landmarkLength': 9,
-                'landmarkName': 'AlphaHelix',
-                'offsets': {
-                    'subjectOffset': 0,
-                    'readOffset': 0
-                }
-            }
-        ]
-        result.matches = {0: {'info': info}}
-        result.finalize(100)
-        self.assertEqual({}, result.significant)
+        matches = {
+            0: [
+                {
+                    'trigPointName': 'Peaks',
+                    'distance': -13,
+                    'landmarkLength': 9,
+                    'landmarkName': 'AlphaHelix',
+                    'subjectOffset': 2,
+                    'readOffset': 1,
+                },
+            ],
+        }
+        result = Result(read, matches, 0)
+        self.assertEqual(matches, result.matches)
 
-    def testEvaluateOneSignificant(self):
+    def testNoSignificantMatches(self):
         """
-        One significant result must be returned.
+        No matches are significant if there are not enough distance deltas
+        above the mean number of deltas.
         """
-        database = Database([], [])
         read = AARead('read', 'AGTARFSDDD')
-        database.addSubject(read)
-        result = Result(read, database)
-        info = [
-            {
-                'trigPointName': 'Peaks',
-                'distance': -10,
-                'landmarkLength': 9,
-                'landmarkName': 'AlphaHelix',
-                'offsets': {
+        matches = {
+            0: [
+                {
+                    'trigPointName': 'Peaks',
+                    'distance': -13,
+                    'landmarkLength': 9,
+                    'landmarkName': 'AlphaHelix',
+                    'subjectOffset': 2,
+                    'readOffset': 1,
+                },
+                {
+                    'trigPointName': 'Peaks',
+                    'distance': -13,
+                    'landmarkLength': 9,
+                    'landmarkName': 'AlphaHelix',
+                    'subjectOffset': 2,
+                    'readOffset': 1,
+                },
+            ],
+        }
+        result = Result(read, matches, 5)
+        self.assertEqual(set(), result.significant)
+
+    def testOneSignificantMatch(self):
+        """
+        The index of a significant result must be set correctly, and its score
+        (the maximum number of identical distances) must be too.
+        """
+        read = AARead('read', 'AGTARFSDDD')
+        matches = {
+            0: [
+                {
+                    'trigPointName': 'Peaks',
+                    'distance': 0,
+                    'landmarkLength': 9,
+                    'landmarkName': 'AlphaHelix',
                     'subjectOffset': 0,
-                    'readOffset': 0
-                }
-            },
-            {
-                'trigPointName': 'Peaks',
-                'distance': -10,
-                'landmarkLength': 9,
-                'landmarkName': 'AlphaHelix',
-                'offsets': {
+                    'readOffset': 0,
+                },
+                {
+                    'trigPointName': 'Peaks',
+                    'distance': 0,
+                    'landmarkLength': 9,
+                    'landmarkName': 'AlphaHelix',
                     'subjectOffset': 0,
-                    'readOffset': 0
-                }
-            },
-            {
-                'trigPointName': 'Peaks',
-                'distance': -10,
-                'landmarkLength': 9,
-                'landmarkName': 'AlphaHelix',
-                'offsets': {
+                    'readOffset': 0,
+                },
+                {
+                    'trigPointName': 'Peaks',
+                    'distance': -10,
+                    'landmarkLength': 9,
+                    'landmarkName': 'AlphaHelix',
                     'subjectOffset': 10,
-                    'readOffset': 0
-                }
-            }
-        ]
-        result.matches = {0: {'info': info}}
-        result.finalize(0)
-        self.assertEqual(1, len(result.significant))
+                    'readOffset': 0,
+                },
+            ],
+        }
 
-    def testEvaluateTwoSignificantDifferentSubjects(self):
+        result = Result(read, matches, aboveMeanThreshold=0.1)
+        self.assertEqual({0}, result.significant)
+        self.assertEqual(2, result.scores[0])
+
+    def testTwoSignificantMatches(self):
         """
-        Two significant results must be returned, when they are from different
-        subjects.
+        Two significant results must be returned, when a read matches two
+        different subjects, and their scores must be correct.
         """
-        database = Database([], [])
         read = AARead('read', 'AGTARFSDDD')
-        database.addSubject(read)
-        result = Result(read, database)
-        info = [
-            {
-                'trigPointName': 'Peaks',
-                'distance': -10,
-                'landmarkLength': 9,
-                'landmarkName': 'AlphaHelix',
-                'offsets': {
+        matches = {
+            0: [
+                {
+                    'trigPointName': 'Peaks',
+                    'distance': 0,
+                    'landmarkLength': 9,
+                    'landmarkName': 'AlphaHelix',
                     'subjectOffset': 0,
-                    'readOffset': 0
-                }
-            },
-            {
-                'trigPointName': 'Peaks',
-                'distance': -10,
-                'landmarkLength': 9,
-                'landmarkName': 'AlphaHelix',
-                'offsets': {
+                    'readOffset': 0,
+                },
+                {
+                    'trigPointName': 'Peaks',
+                    'distance': 0,
+                    'landmarkLength': 9,
+                    'landmarkName': 'AlphaHelix',
                     'subjectOffset': 0,
-                    'readOffset': 0
-                }
-            },
-            {
-                'trigPointName': 'Peaks',
-                'distance': -13,
-                'landmarkLength': 9,
-                'landmarkName': 'AlphaHelix',
-                'offsets': {
+                    'readOffset': 0,
+                },
+                {
+                    'trigPointName': 'Peaks',
+                    'distance': -10,
+                    'landmarkLength': 9,
+                    'landmarkName': 'AlphaHelix',
                     'subjectOffset': 10,
-                    'readOffset': 0
-                }
-            }
-        ]
-        result.matches = {0: {'info': info},
-                          1: {'info': info}}
-        result.finalize(1)
-        self.assertEqual(2, len(result.significant[0]))
-        self.assertEqual(2, len(result.significant[1]))
+                    'readOffset': 0,
+                },
+            ],
+
+            1: [
+                {
+                    'trigPointName': 'Peaks',
+                    'distance': 0,
+                    'landmarkLength': 9,
+                    'landmarkName': 'AlphaHelix',
+                    'subjectOffset': 0,
+                    'readOffset': 0,
+                },
+                {
+                    'trigPointName': 'Peaks',
+                    'distance': 0,
+                    'landmarkLength': 9,
+                    'landmarkName': 'AlphaHelix',
+                    'subjectOffset': 0,
+                    'readOffset': 0,
+                },
+            ],
+        }
+
+        result = Result(read, matches, aboveMeanThreshold=0.1)
+        self.assertEqual({0, 1}, result.significant)
+        self.assertEqual(2, result.scores[0])
+        self.assertEqual(2, result.scores[1])
 
     def testSaveEmpty(self):
         """
         If self.matches is empty, return an empty output.
         """
-        database = Database([], [])
         read = AARead('read', 'AGTARFSDDD')
-        database.addSubject(read)
-        result = Result(read, database)
+        result = Result(read, [], 0)
         fp = StringIO()
         result.save(fp=fp)
         result = loads(fp.getvalue())
-        self.assertEqual('read', result['query'])
-        self.assertEqual([], result['alignments'])
+        self.assertEqual(
+            {
+                'alignments': [],
+                'queryId': 'read',
+                'querySequence': 'AGTARFSDDD',
+            },
+            result)
 
     def testSave(self):
         """
         Save must produce the right JSON format.
         """
-        database = Database([], [])
-        read = AARead('id', 'AGTARFSDDD')
-        database.addSubject(read)
-        result = Result(read, database)
-        result.significant = {0: {
-            'offsets': [
+        read = AARead('id', 'FRRRFRRRFRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF')
+        matches = {
+            0: [
                 {
-                    'readOffset': 0, 'subjectOffset': 0
-                },
-                {
-                    'readOffset': 0, 'subjectOffset': 0
-                }
-            ],
-            'info': [
-                {
-                    'distance': -10,
+                    'trigPointName': 'AlphaHelix',
+                    'distance': -27,
                     'landmarkLength': 9,
-                    'landmarkName': 'A2',
-                    'offsets': {
-                        'readOffset': 0,
-                        'subjectOffset': 0
-                    },
-                    'trigPointName': 'P',
-                },
-                {
-                    'distance': -13,
-                    'landmarkLength': 9,
-                    'landmarkName': 'A2',
-                    'offsets': {
-                        'readOffset': 0,
-                        'subjectOffset': 0
-                    },
-                    'trigPointName': 'P',
+                    'readOffset': 0,
+                    'subjectOffset': 0,
+                    'landmarkName': 'AlphaHelix',
                 },
             ],
-            'matchScore': 15,
+
+            27: [
+                {
+                    'trigPointName': 'AlphaHelix',
+                    'distance': 27,
+                    'landmarkLength': 13,
+                    'readOffset': 27,
+                    'subjectOffset': 27,
+                    'landmarkName': 'AlphaHelix',
+                },
+            ],
         }
-        }
+        result = Result(read, matches, aboveMeanThreshold=0.1)
         fp = StringIO()
         result.save(fp=fp)
         result = loads(fp.getvalue())
-        self.assertEqual('id', result['query'])
-        self.assertEqual('AGTARFSDDD', result['querySequence'])
-        self.assertEqual([{
-                         'subjectIndex': 0,
-                         'matchScore': 15,
-                         'hsps': [
-                             {
-                                 'trigPointName': 'P',
-                                 'distance': -10,
-                                 'landmarkLength': 9,
-                                 'landmarkName': 'A2',
-                                 'offsets': {
-                                     'subjectOffset': 0,
-                                     'readOffset': 0
-                                 }
-                             },
-                             {
-                                 'trigPointName': 'P',
-                                 'distance': -13,
-                                 'landmarkLength': 9,
-                                 'landmarkName': 'A2',
-                                 'offsets': {
-                                     'subjectOffset': 0,
-                                     'readOffset': 0
-                                 }
-                             }
-                         ]
-                         }
-        ],
-            result['alignments'])
+        self.assertEqual(
+            {
+                'alignments': [
+                    {
+                        'hsps': [
+                            {
+                                'matchInfo': [
+                                    {
+                                        'distance': -27,
+                                        'landmarkLength': 9,
+                                        'landmarkName': 'AlphaHelix',
+                                        'readOffset': 0,
+                                        'subjectOffset': 0,
+                                        'trigPointName': 'AlphaHelix'
+                                    },
+                                ],
+                                'matchScore': 1,
+                            },
+                        ],
+                        'subjectIndex': 0
+                    },
+                    {
+                        'hsps': [
+                            {
+                                'matchInfo': [
+                                    {
+                                        'distance': 27,
+                                        'landmarkLength': 13,
+                                        'landmarkName': 'AlphaHelix',
+                                        'readOffset': 27,
+                                        'subjectOffset': 27,
+                                        'trigPointName': 'AlphaHelix',
+                                    },
+                                ],
+                                'matchScore': 1,
+                            },
+                        ],
+                        'subjectIndex': 27,
+                    },
+                ],
+                'queryId': 'id',
+                'querySequence': 'FRRRFRRRFRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF',
+            },
+            result)

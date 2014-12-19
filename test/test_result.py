@@ -137,6 +137,15 @@ class TestResult(TestCase):
         self.assertEqual('read', result['query'])
         self.assertEqual([], result['alignments'])
 
+    def testSaveReturnsItsArgument(self):
+        """
+        The save function must return its (fp) argument.
+        """
+        database = Database([], [])
+        result = Result(AARead('id', 'A'), database)
+        fp = StringIO()
+        self.assertIs(fp, result.save(fp))
+
     def testSave(self):
         """
         Save must produce the right JSON format.

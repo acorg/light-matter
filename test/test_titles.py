@@ -1,15 +1,15 @@
-from json import dumps
 from unittest import TestCase
 from mock import patch
 
 from mocking import mockOpen
-from sample_data import PARAMS, RECORD0, RECORD1, RECORD2, RECORD3, RECORD4
+from sample_data import (
+    DB, PARAMS, COWPOX, MONKEYPOX, MUMMYPOX, SQUIRRELPOX55, SQUIRRELPOX1296,
+    RECORD0, RECORD1, RECORD2, RECORD3, RECORD4,
+    READ0, READ2, READ3)
 
-from dark.reads import Read, AARead
 from dark.hsp import HSP
 from dark.titles import titleCounts, TitleAlignments, TitlesAlignments
 
-from light.database import Database
 from light.alignments import LightReadsAlignments
 
 
@@ -23,10 +23,9 @@ class TestTitleCounts(TestCase):
         If passed an empty readsAlignments, titleCounts must return an
         empty dictionary.
         """
-        mockOpener = mockOpen(read_data=dumps(PARAMS) + '\n')
+        mockOpener = mockOpen(read_data=PARAMS)
         with patch('__builtin__.open', mockOpener, create=True):
-            db = Database([], [])
-            readsAlignments = LightReadsAlignments('file.json', db)
+            readsAlignments = LightReadsAlignments('file.json', DB)
             self.assertEqual({}, titleCounts(readsAlignments))
 
     def testThreeRecords(self):
@@ -34,22 +33,16 @@ class TestTitleCounts(TestCase):
         If alignments for three reads are passed to titleCounts, it must
         return the correct title counts.
         """
-        mockOpener = mockOpen(read_data=(
-            dumps(PARAMS) + '\n' + dumps(RECORD0) + '\n' +
-            dumps(RECORD1) + '\n' + dumps(RECORD2) + '\n'))
+        mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2))
         with patch('__builtin__.open', mockOpener, create=True):
-            db = Database([], [])
-            db.addSubject(Read('id0', 'A' * 70))
-            db.addSubject(Read('id1', 'A' * 70))
-            db.addSubject(Read('id2', 'A' * 70))
-            readsAlignments = LightReadsAlignments('file.json', db)
+            readsAlignments = LightReadsAlignments('file.json', DB)
             self.assertEqual(
                 {
-                    'gi|887699|gb|DQ37780 Squirrelpox virus 1296/99': 1,
-                    'gi|887699|gb|DQ37780 Mummypox virus 3000 B.C.': 1,
-                    'gi|887699|gb|DQ37780 Cowpox virus 15': 1,
-                    'gi|887699|gb|DQ37780 Monkeypox virus 456': 1,
-                    'gi|887699|gb|DQ37780 Squirrelpox virus 55': 1
+                    SQUIRRELPOX1296.id: 1,
+                    MUMMYPOX.id: 1,
+                    COWPOX.id: 1,
+                    MONKEYPOX.id: 1,
+                    SQUIRRELPOX55.id: 1
                 },
                 titleCounts(readsAlignments))
 
@@ -58,17 +51,12 @@ class TestTitleCounts(TestCase):
         If alignments for reads have a common title, the count on that title
         must be correct.
         """
-        mockOpener = mockOpen(read_data=(
-            dumps(PARAMS) + '\n' + dumps(RECORD2) + '\n' +
-            dumps(RECORD3) + '\n'))
+        mockOpener = mockOpen(read_data=(PARAMS + RECORD2 + RECORD3))
         with patch('__builtin__.open', mockOpener, create=True):
-            db = Database([], [])
-            db.addSubject(Read('id2', 'A' * 70))
-            db.addSubject(Read('id3', 'A' * 70))
-            readsAlignments = LightReadsAlignments('file.json', db)
+            readsAlignments = LightReadsAlignments('file.json', DB)
             self.assertEqual(
                 {
-                    'gi|887699|gb|DQ37780 Cowpox virus 15': 2,
+                    COWPOX.id: 2,
                 },
                 titleCounts(readsAlignments))
 
@@ -83,10 +71,9 @@ class TestTitlesAlignments(TestCase):
         An instance of TitlesAlignments must have no titles if passed an
         empty readsAlignments instance.
         """
-        mockOpener = mockOpen(read_data=(dumps(PARAMS) + '\n'))
+        mockOpener = mockOpen(read_data=(PARAMS))
         with patch('__builtin__.open', mockOpener, create=True):
-            db = Database([], [])
-            readsAlignments = LightReadsAlignments('file.json', db)
+            readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
             self.assertEqual([], titlesAlignments.keys())
 
@@ -94,23 +81,17 @@ class TestTitlesAlignments(TestCase):
         """
         An instance of TitlesAlignments must have the expected titles.
         """
-        mockOpener = mockOpen(read_data=(
-            dumps(PARAMS) + '\n' + dumps(RECORD0) + '\n' +
-            dumps(RECORD1) + '\n' + dumps(RECORD2) + '\n'))
+        mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2))
         with patch('__builtin__.open', mockOpener, create=True):
-            db = Database([], [])
-            db.addSubject(Read('id0', 'A' * 70))
-            db.addSubject(Read('id1', 'A' * 70))
-            db.addSubject(Read('id2', 'A' * 70))
-            readsAlignments = LightReadsAlignments('file.json', db)
+            readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
             self.assertEqual(
                 [
-                    'gi|887699|gb|DQ37780 Cowpox virus 15',
-                    'gi|887699|gb|DQ37780 Monkeypox virus 456',
-                    'gi|887699|gb|DQ37780 Mummypox virus 3000 B.C.',
-                    'gi|887699|gb|DQ37780 Squirrelpox virus 1296/99',
-                    'gi|887699|gb|DQ37780 Squirrelpox virus 55',
+                    COWPOX.id,
+                    MONKEYPOX.id,
+                    MUMMYPOX.id,
+                    SQUIRRELPOX1296.id,
+                    SQUIRRELPOX55.id,
                 ],
                 sorted(titlesAlignments.keys()))
 
@@ -119,36 +100,24 @@ class TestTitlesAlignments(TestCase):
         An instance of TitleAlignments in a TitlesAlignments instance must
         have the expected attributes.
         """
-        mockOpener = mockOpen(read_data=(
-            dumps(PARAMS) + '\n' + dumps(RECORD0) + '\n'))
+        mockOpener = mockOpen(read_data=(PARAMS + RECORD0))
         with patch('__builtin__.open', mockOpener, create=True):
-            db = Database([], [])
-            title1 = 'gi|887699|gb|DQ37780 Squirrelpox virus 1296/99'
-            read1 = AARead(title1, 'A' * 70)
-            db.addSubject(read1)
 
-            title2 = 'gi|887699|gb|DQ37780 Squirrelpox virus 55'
-            read2 = AARead(title2, 'A' * 80)
-            db.addSubject(read2)
-
-            readsAlignments = LightReadsAlignments('file.json', db)
+            readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
 
-            titleAlignments = titlesAlignments[title1]
-            self.assertEqual(title1, titleAlignments.subjectTitle)
+            titleAlignments = titlesAlignments[SQUIRRELPOX1296.id]
+            self.assertEqual(SQUIRRELPOX1296.id, titleAlignments.subjectTitle)
             self.assertEqual(70, titleAlignments.subjectLength)
             self.assertEqual(1, len(titleAlignments))
-            # TODO: remove me.
-            # print 'read1', read1.id
-            # print 'titleAlignments[0].read', titleAlignments[0].read.id
-            self.assertEqual(read1, titleAlignments[0].read)
+            self.assertEqual(READ0, titleAlignments[0].read)
             self.assertEqual(HSP(20), titleAlignments[0].hsps[0])
 
-            titleAlignments = titlesAlignments[title2]
-            self.assertEqual(title2, titleAlignments.subjectTitle)
+            titleAlignments = titlesAlignments[SQUIRRELPOX55.id]
+            self.assertEqual(SQUIRRELPOX55.id, titleAlignments.subjectTitle)
             self.assertEqual(80, titleAlignments.subjectLength)
             self.assertEqual(1, len(titleAlignments))
-            self.assertEqual(read2, titleAlignments[0].read)
+            self.assertEqual(READ0, titleAlignments[0].read)
             self.assertEqual(HSP(25), titleAlignments[0].hsps[0])
 
     def testTitleCollection(self):
@@ -156,28 +125,21 @@ class TestTitlesAlignments(TestCase):
         A title that occurs in the alignments of multiple reads must have
         the data from both reads collected properly.
         """
-        mockOpener = mockOpen(read_data=(
-            dumps(PARAMS) + '\n' + dumps(RECORD2) + '\n' +
-            dumps(RECORD3) + '\n'))
+        mockOpener = mockOpen(read_data=(PARAMS + RECORD2 + RECORD3))
         with patch('__builtin__.open', mockOpener, create=True):
-            db = Database([], [])
-            read2 = Read('id2', 'A' * 70)
-            read3 = Read('id3', 'A' * 70)
-            db.addSubject(read2)
-            db.addSubject(read3)
-            readsAlignments = LightReadsAlignments('file.json', db)
+            readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
 
-            title = 'gi|887699|gb|DQ37780 Cowpox virus 15'
+            title = COWPOX.id
             titleAlignments = titlesAlignments[title]
             self.assertEqual(title, titleAlignments.subjectTitle)
             self.assertEqual(30000, titleAlignments.subjectLength)
             self.assertEqual(2, len(titleAlignments))
 
-            self.assertEqual(read2, titleAlignments[0].read)
+            self.assertEqual(READ2, titleAlignments[0].read)
             self.assertEqual(HSP(20), titleAlignments[0].hsps[0])
 
-            self.assertEqual(read3, titleAlignments[1].read)
+            self.assertEqual(READ3, titleAlignments[1].read)
             self.assertEqual(HSP(20), titleAlignments[1].hsps[0])
 
     def testAddTitleRepeat(self):
@@ -185,14 +147,11 @@ class TestTitlesAlignments(TestCase):
         The addTitle function must raise a C{KeyError} if an attempt is made
         to add a pre-existing title to a TitlesAlignments instance.
         """
-        mockOpener = mockOpen(read_data=(
-            dumps(PARAMS) + '\n' + dumps(RECORD0) + '\n'))
+        mockOpener = mockOpen(read_data=(PARAMS + RECORD0))
         with patch('__builtin__.open', mockOpener, create=True):
-            db = Database([], [])
-            db.addSubject(Read('id0', 'A' * 70))
-            readsAlignments = LightReadsAlignments('file.json', db)
+            readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
-            title = 'gi|887699|gb|DQ37780 Squirrelpox virus 1296/99'
+            title = SQUIRRELPOX1296.id
             titleAlignments = TitleAlignments(title, 55)
             error = ("Title 'gi\|887699\|gb\|DQ37780 Squirrelpox virus "
                      "1296/99' already present in TitlesAlignments instance\.")
@@ -204,14 +163,11 @@ class TestTitlesAlignments(TestCase):
         The addTitle function must add a title to the TitlesAlignments
         instance.
         """
-        mockOpener = mockOpen(read_data=(
-            dumps(PARAMS) + '\n' + dumps(RECORD0) + '\n'))
+        mockOpener = mockOpen(read_data=(PARAMS + RECORD0))
         with patch('__builtin__.open', mockOpener, create=True):
-            db = Database([], [])
-            db.addSubject(Read('id0', 'A' * 70))
-            readsAlignments = LightReadsAlignments('file.json', db)
+            readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
-            title = 'gi|887699|gb|DQ37780 Squirrelpox virus 23'
+            title = 'Squirrelpox virus 23'
             titleAlignments = TitleAlignments(title, 55)
             self.assertTrue(title not in titlesAlignments)
             titlesAlignments.addTitle(title, titleAlignments)
@@ -222,15 +178,9 @@ class TestTitlesAlignments(TestCase):
         The hsps function must yield all the hsps for all titles in a
         TitlesAlignments instance.
         """
-        mockOpener = mockOpen(read_data=(
-            dumps(PARAMS) + '\n' + dumps(RECORD0) + '\n' +
-            dumps(RECORD1) + '\n' + dumps(RECORD2) + '\n'))
+        mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2))
         with patch('__builtin__.open', mockOpener, create=True):
-            db = Database([], [])
-            db.addSubject(Read('id0', 'A' * 70))
-            db.addSubject(Read('id1', 'A' * 70))
-            db.addSubject(Read('id2', 'A' * 70))
-            readsAlignments = LightReadsAlignments('file.json', db)
+            readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = list(titlesAlignments.hsps())
             self.assertEqual(
@@ -248,24 +198,18 @@ class TestTitlesAlignmentsFiltering(TestCase):
         The filter function must return a TitlesAlignments instance with all
         the titles of the original when called with no arguments.
         """
-        mockOpener = mockOpen(read_data=(
-            dumps(PARAMS) + '\n' + dumps(RECORD0) + '\n' +
-            dumps(RECORD1) + '\n' + dumps(RECORD2) + '\n'))
+        mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2))
         with patch('__builtin__.open', mockOpener, create=True):
-            db = Database([], [])
-            db.addSubject(Read('id0', 'A' * 70))
-            db.addSubject(Read('id1', 'A' * 70))
-            db.addSubject(Read('id2', 'A' * 70))
-            readsAlignments = LightReadsAlignments('file.json', db)
+            readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = titlesAlignments.filter()
             self.assertEqual(
                 [
-                    'gi|887699|gb|DQ37780 Cowpox virus 15',
-                    'gi|887699|gb|DQ37780 Monkeypox virus 456',
-                    'gi|887699|gb|DQ37780 Mummypox virus 3000 B.C.',
-                    'gi|887699|gb|DQ37780 Squirrelpox virus 1296/99',
-                    'gi|887699|gb|DQ37780 Squirrelpox virus 55',
+                    COWPOX.id,
+                    MONKEYPOX.id,
+                    MUMMYPOX.id,
+                    SQUIRRELPOX1296.id,
+                    SQUIRRELPOX55.id,
                 ],
                 sorted(result.keys()))
 
@@ -274,70 +218,49 @@ class TestTitlesAlignmentsFiltering(TestCase):
         The filter function work correctly when passed a value for
         minMatchingReads.
         """
-        mockOpener = mockOpen(read_data=(
-            dumps(PARAMS) + '\n' + dumps(RECORD0) + '\n' +
-            dumps(RECORD1) + '\n' + dumps(RECORD2) + '\n' +
-            dumps(RECORD3) + '\n'))
+        mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2 +
+                                         RECORD3))
         with patch('__builtin__.open', mockOpener, create=True):
-            db = Database([], [])
-            db.addSubject(Read('id0', 'A' * 70))
-            db.addSubject(Read('id1', 'A' * 70))
-            db.addSubject(Read('id2', 'A' * 70))
-            db.addSubject(Read('id3', 'A' * 70))
-            readsAlignments = LightReadsAlignments('file.json', db)
+            readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = titlesAlignments.filter(minMatchingReads=2)
             self.assertEqual(
                 [
-                    'gi|887699|gb|DQ37780 Cowpox virus 15',
+                    COWPOX.id,
                 ],
                 result.keys())
 
-    def testMinMedianScore_Bits(self):
+    def testMinMedianScore(self):
         """
         The filter function work correctly when passed a value for
-        minMedianScore when using bit scores.
+        minMedianScore.
         """
-        mockOpener = mockOpen(read_data=(
-            dumps(PARAMS) + '\n' + dumps(RECORD0) + '\n' +
-            dumps(RECORD1) + '\n' + dumps(RECORD2) + '\n' +
-            dumps(RECORD3) + '\n'))
+        mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2 +
+                                         RECORD3))
         with patch('__builtin__.open', mockOpener, create=True):
-            db = Database([], [])
-            db.addSubject(Read('id0', 'A' * 70))
-            db.addSubject(Read('id1', 'A' * 70))
-            db.addSubject(Read('id2', 'A' * 70))
-            db.addSubject(Read('id3', 'A' * 70))
-            readsAlignments = LightReadsAlignments('file.json', db)
+            readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = titlesAlignments.filter(minMedianScore=22)
             self.assertEqual(
                 [
-                    'gi|887699|gb|DQ37780 Squirrelpox virus 55',
+                    SQUIRRELPOX55.id,
                 ],
                 result.keys())
 
-    def testWithScoreBetterThan_Bits(self):
+    def testWithScoreBetterThan(self):
         """
         The filter function work correctly when passed a value for
-        withScoreBetterThan when using bit scores.
+        withScoreBetterThan.
         """
-        mockOpener = mockOpen(read_data=(
-            dumps(PARAMS) + '\n' + dumps(RECORD0) + '\n' +
-            dumps(RECORD1) + '\n' + dumps(RECORD2) + '\n' +
-            dumps(RECORD3) + '\n'))
+        mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2 +
+                                         RECORD3))
         with patch('__builtin__.open', mockOpener, create=True):
-            db = Database([], [])
-            db.addSubject(Read('id0', 'A' * 70))
-            db.addSubject(Read('id1', 'A' * 70))
-            db.addSubject(Read('id2', 'A' * 70))
-            db.addSubject(Read('id3', 'A' * 70))
-            readsAlignments = LightReadsAlignments('file.json', db)
+            readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = titlesAlignments.filter(withScoreBetterThan=24)
             self.assertEqual(
                 [
-                    'gi|887699|gb|DQ37780 Squirrelpox virus 55',
+                    SQUIRRELPOX55.id,
                 ],
                 result.keys())
 
@@ -346,26 +269,19 @@ class TestTitlesAlignmentsFiltering(TestCase):
         The filter function work correctly when passed a 0.0 value for
         minNewReads, i.e. that considers any read set sufficiently novel.
         """
-        mockOpener = mockOpen(read_data=(
-            dumps(PARAMS) + '\n' + dumps(RECORD0) + '\n' +
-            dumps(RECORD1) + '\n' + dumps(RECORD2) + '\n' +
-            dumps(RECORD3) + '\n'))
+        mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2 +
+                                         RECORD3))
         with patch('__builtin__.open', mockOpener, create=True):
-            db = Database([], [])
-            db.addSubject(Read('id0', 'A' * 70))
-            db.addSubject(Read('id1', 'A' * 70))
-            db.addSubject(Read('id2', 'A' * 70))
-            db.addSubject(Read('id3', 'A' * 70))
-            readsAlignments = LightReadsAlignments('file.json', db)
+            readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = titlesAlignments.filter(minNewReads=0.0)
             self.assertEqual(
                 [
-                    'gi|887699|gb|DQ37780 Cowpox virus 15',
-                    'gi|887699|gb|DQ37780 Monkeypox virus 456',
-                    'gi|887699|gb|DQ37780 Mummypox virus 3000 B.C.',
-                    'gi|887699|gb|DQ37780 Squirrelpox virus 1296/99',
-                    'gi|887699|gb|DQ37780 Squirrelpox virus 55',
+                    COWPOX.id,
+                    MONKEYPOX.id,
+                    MUMMYPOX.id,
+                    SQUIRRELPOX1296.id,
+                    SQUIRRELPOX55.id,
                 ],
                 sorted(result.keys()))
 
@@ -374,36 +290,26 @@ class TestTitlesAlignmentsFiltering(TestCase):
         The filter function work correctly when passed a 1.0 value for
         minNewReads.
         """
-        mockOpener = mockOpen(read_data=(
-            dumps(PARAMS) + '\n' + dumps(RECORD0) + '\n' +
-            dumps(RECORD1) + '\n' + dumps(RECORD2) + '\n' +
-            dumps(RECORD3) + '\n'))
+        mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2 +
+                                         RECORD3))
         with patch('__builtin__.open', mockOpener, create=True):
-            db = Database([], [])
-            db.addSubject(Read('id0', 'A' * 70))
-            db.addSubject(Read('id1', 'A' * 70))
-            db.addSubject(Read('id2', 'A' * 70))
-            db.addSubject(Read('id3', 'A' * 70))
-            readsAlignments = LightReadsAlignments('file.json', db)
+            readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = titlesAlignments.filter(minNewReads=1.0)
 
-            # Either 'gi|887699|gb|DQ37780 Mummypox virus 3000 B.C.'
-            # invalidates 'gi|887699|gb|DQ37780 Monkeypox virus 456' or
+            # Either MUMMYPOX.id
+            # invalidates MONKEYPOX.id or
             # vice-versa. It depends on Python's dict walking order. Check
             # for both, making sure just one of them is true.
 
-            mummypox = 'gi|887699|gb|DQ37780 Mummypox virus 3000 B.C.'
-            monkeypox = 'gi|887699|gb|DQ37780 Monkeypox virus 456'
-
             assertionCount = 0
-            if mummypox in result:
-                self.assertTrue(monkeypox in
-                                result.readSetFilter.invalidates(mummypox))
+            if MUMMYPOX.id in result:
+                self.assertTrue(MONKEYPOX.id in
+                                result.readSetFilter.invalidates(MUMMYPOX.id))
                 assertionCount += 1
-            if monkeypox in result:
-                self.assertTrue(mummypox in
-                                result.readSetFilter.invalidates(monkeypox))
+            if MONKEYPOX.id in result:
+                self.assertTrue(MUMMYPOX.id in
+                                result.readSetFilter.invalidates(MONKEYPOX.id))
                 assertionCount += 1
 
             self.assertEqual(1, assertionCount)
@@ -413,17 +319,10 @@ class TestTitlesAlignmentsFiltering(TestCase):
         The coverage function must return an titlesAlignments instance with
         no titles if none of its titles has sufficient coverage.
         """
-        mockOpener = mockOpen(read_data=(
-            dumps(PARAMS) + '\n' + dumps(RECORD0) + '\n' +
-            dumps(RECORD1) + '\n' + dumps(RECORD2) + '\n' +
-            dumps(RECORD3) + '\n'))
+        mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2 +
+                                         RECORD3))
         with patch('__builtin__.open', mockOpener, create=True):
-            db = Database([], [])
-            db.addSubject(Read('id0', 'A' * 70))
-            db.addSubject(Read('id1', 'A' * 70))
-            db.addSubject(Read('id2', 'A' * 70))
-            db.addSubject(Read('id3', 'A' * 70))
-            readsAlignments = LightReadsAlignments('file.json', db)
+            readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = titlesAlignments.filter(minCoverage=0.1)
             self.assertEqual(0, len(result))
@@ -433,26 +332,19 @@ class TestTitlesAlignmentsFiltering(TestCase):
         The coverage function must return an titlesAlignments instance with
         all titles if all its titles has sufficient coverage.
         """
-        mockOpener = mockOpen(read_data=(
-            dumps(PARAMS) + '\n' + dumps(RECORD0) + '\n' +
-            dumps(RECORD1) + '\n' + dumps(RECORD2) + '\n' +
-            dumps(RECORD3) + '\n'))
+        mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2 +
+                                         RECORD3))
         with patch('__builtin__.open', mockOpener, create=True):
-            db = Database([], [])
-            db.addSubject(Read('id0', 'A' * 70))
-            db.addSubject(Read('id1', 'A' * 70))
-            db.addSubject(Read('id2', 'A' * 70))
-            db.addSubject(Read('id3', 'A' * 70))
-            readsAlignments = LightReadsAlignments('file.json', db)
+            readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = titlesAlignments.filter(minCoverage=0.0)
             self.assertEqual(
                 [
-                    'gi|887699|gb|DQ37780 Cowpox virus 15',
-                    'gi|887699|gb|DQ37780 Monkeypox virus 456',
-                    'gi|887699|gb|DQ37780 Mummypox virus 3000 B.C.',
-                    'gi|887699|gb|DQ37780 Squirrelpox virus 1296/99',
-                    'gi|887699|gb|DQ37780 Squirrelpox virus 55',
+                    COWPOX.id,
+                    MONKEYPOX.id,
+                    MUMMYPOX.id,
+                    SQUIRRELPOX1296.id,
+                    SQUIRRELPOX55.id,
                 ],
                 sorted(result.keys()))
 
@@ -462,17 +354,10 @@ class TestTitlesAlignmentsFiltering(TestCase):
         only the expected titles if only some of its titles have sufficient
         coverage.
         """
-        mockOpener = mockOpen(read_data=(
-            dumps(PARAMS) + '\n' + dumps(RECORD0) + '\n' +
-            dumps(RECORD1) + '\n' + dumps(RECORD2) + '\n' +
-            dumps(RECORD3) + '\n'))
+        mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2 +
+                                         RECORD3))
         with patch('__builtin__.open', mockOpener, create=True):
-            db = Database([], [])
-            db.addSubject(Read('id0', 'A' * 70))
-            db.addSubject(Read('id1', 'A' * 70))
-            db.addSubject(Read('id2', 'A' * 70))
-            db.addSubject(Read('id3', 'A' * 70))
-            readsAlignments = LightReadsAlignments('file.json', db)
+            readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
             # To understand why the following produces the result it does,
             # you need to look at the HSP coverage in sample_data.py and
@@ -480,9 +365,9 @@ class TestTitlesAlignmentsFiltering(TestCase):
             result = titlesAlignments.filter(minCoverage=0.0011)
             self.assertEqual(
                 [
-                    'gi|887699|gb|DQ37780 Cowpox virus 15',
-                    'gi|887699|gb|DQ37780 Monkeypox virus 456',
-                    'gi|887699|gb|DQ37780 Mummypox virus 3000 B.C.',
+                    COWPOX.id,
+                    MONKEYPOX.id,
+                    MUMMYPOX.id,
                 ],
                 sorted(result.keys()))
 
@@ -496,10 +381,9 @@ class TestTitleSorting(TestCase):
         """
         Sorting on an unknown attribute must raise C{ValueError}.
         """
-        mockOpener = mockOpen(read_data=dumps(PARAMS) + '\n')
+        mockOpener = mockOpen(read_data=PARAMS)
         with patch('__builtin__.open', mockOpener, create=True):
-            db = Database([], [])
-            readsAlignments = LightReadsAlignments('file.json', db)
+            readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
             self.assertRaises(ValueError, titlesAlignments.sortTitles, 'xxx')
 
@@ -507,90 +391,67 @@ class TestTitleSorting(TestCase):
         """
         Sorting when there are no titles must return the empty list.
         """
-        mockOpener = mockOpen(read_data=dumps(PARAMS) + '\n')
+        mockOpener = mockOpen(read_data=PARAMS)
         with patch('__builtin__.open', mockOpener, create=True):
-            db = Database([], [])
-            readsAlignments = LightReadsAlignments('file.json', db)
+            readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = titlesAlignments.sortTitles('title')
             self.assertEqual([], result)
 
-    def testMedianScore_Bits(self):
+    def testMedianScore(self):
         """
         Sorting on median score must work when scores are bit scores,
         including a secondary sort on title.
         """
-        mockOpener = mockOpen(read_data=(
-            dumps(PARAMS) + '\n' + dumps(RECORD0) + '\n' +
-            dumps(RECORD1) + '\n' + dumps(RECORD2) + '\n' +
-            dumps(RECORD3) + '\n' + dumps(RECORD4) + '\n'))
+        mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2 +
+                                         RECORD3 + RECORD4))
         with patch('__builtin__.open', mockOpener, create=True):
-            db = Database([], [])
-            db.addSubject(Read('id0', 'A' * 70))
-            db.addSubject(Read('id1', 'A' * 70))
-            db.addSubject(Read('id2', 'A' * 70))
-            db.addSubject(Read('id3', 'A' * 70))
-            db.addSubject(Read('id4', 'A' * 70))
-            readsAlignments = LightReadsAlignments('file.json', db)
+            readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = titlesAlignments.sortTitles('medianScore')
             self.assertEqual([
-                'gi|887699|gb|DQ37780 Squirrelpox virus 55',       # 25
-                'gi|887699|gb|DQ37780 Monkeypox virus 456',        # 20
-                'gi|887699|gb|DQ37780 Mummypox virus 3000 B.C.',   # 20
-                'gi|887699|gb|DQ37780 Squirrelpox virus 1296/99',  # 20
-                'gi|887699|gb|DQ37780 Cowpox virus 15',            # 15
+                SQUIRRELPOX55.id,       # 25
+                MONKEYPOX.id,        # 20
+                MUMMYPOX.id,   # 20
+                SQUIRRELPOX1296.id,  # 20
+                COWPOX.id,            # 15
             ], result)
 
-    def testMaxScore_Bits(self):
+    def testMaxScore(self):
         """
         Sorting on max score must work when scores are bit scores, including a
         secondary sort on title.
         """
-        mockOpener = mockOpen(read_data=(
-            dumps(PARAMS) + '\n' + dumps(RECORD0) + '\n' +
-            dumps(RECORD1) + '\n' + dumps(RECORD2) + '\n' +
-            dumps(RECORD3) + '\n'))
+        mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2 +
+                                         RECORD3))
         with patch('__builtin__.open', mockOpener, create=True):
-            db = Database([], [])
-            db.addSubject(Read('id0', 'A' * 70))
-            db.addSubject(Read('id1', 'A' * 70))
-            db.addSubject(Read('id2', 'A' * 70))
-            db.addSubject(Read('id3', 'A' * 70))
-            readsAlignments = LightReadsAlignments('file.json', db)
+            readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = titlesAlignments.sortTitles('maxScore')
             self.assertEqual([
-                'gi|887699|gb|DQ37780 Squirrelpox virus 55',       # 25
-                'gi|887699|gb|DQ37780 Cowpox virus 15',            # 20
-                'gi|887699|gb|DQ37780 Monkeypox virus 456',        # 20
-                'gi|887699|gb|DQ37780 Mummypox virus 3000 B.C.',   # 20
-                'gi|887699|gb|DQ37780 Squirrelpox virus 1296/99',  # 20
+                SQUIRRELPOX55.id,       # 25
+                COWPOX.id,            # 20
+                MONKEYPOX.id,        # 20
+                MUMMYPOX.id,   # 20
+                SQUIRRELPOX1296.id,  # 20
             ], result)
 
     def testReadCount(self):
         """
         Sorting on read count must work, including a secondary sort on title.
         """
-        mockOpener = mockOpen(read_data=(
-            dumps(PARAMS) + '\n' + dumps(RECORD0) + '\n' +
-            dumps(RECORD1) + '\n' + dumps(RECORD2) + '\n' +
-            dumps(RECORD3) + '\n'))
+        mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2 +
+                                         RECORD3))
         with patch('__builtin__.open', mockOpener, create=True):
-            db = Database([], [])
-            db.addSubject(Read('id0', 'A' * 70))
-            db.addSubject(Read('id1', 'A' * 70))
-            db.addSubject(Read('id2', 'A' * 70))
-            db.addSubject(Read('id3', 'A' * 70))
-            readsAlignments = LightReadsAlignments('file.json', db)
+            readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = titlesAlignments.sortTitles('readCount')
             self.assertEqual([
-                'gi|887699|gb|DQ37780 Cowpox virus 15',            # 3
-                'gi|887699|gb|DQ37780 Monkeypox virus 456',        # 1
-                'gi|887699|gb|DQ37780 Mummypox virus 3000 B.C.',   # 1
-                'gi|887699|gb|DQ37780 Squirrelpox virus 1296/99',  # 1
-                'gi|887699|gb|DQ37780 Squirrelpox virus 55',       # 1
+                COWPOX.id,            # 3
+                MONKEYPOX.id,        # 1
+                MUMMYPOX.id,   # 1
+                SQUIRRELPOX1296.id,  # 1
+                SQUIRRELPOX55.id,       # 1
             ], result)
 
     def testLength(self):
@@ -598,48 +459,34 @@ class TestTitleSorting(TestCase):
         Sorting on sequence length must work, including a secondary sort on
         title.
         """
-        mockOpener = mockOpen(read_data=(
-            dumps(PARAMS) + '\n' + dumps(RECORD0) + '\n' +
-            dumps(RECORD1) + '\n' + dumps(RECORD2) + '\n' +
-            dumps(RECORD3) + '\n'))
+        mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2 +
+                                         RECORD3))
         with patch('__builtin__.open', mockOpener, create=True):
-            db = Database([], [])
-            db.addSubject(Read('id0', 'A' * 70))
-            db.addSubject(Read('id1', 'A' * 70))
-            db.addSubject(Read('id2', 'A' * 70))
-            db.addSubject(Read('id3', 'A' * 70))
-            readsAlignments = LightReadsAlignments('file.json', db)
+            readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = titlesAlignments.sortTitles('length')
             self.assertEqual([
-                'gi|887699|gb|DQ37780 Squirrelpox virus 55',       # 38000
-                'gi|887699|gb|DQ37780 Squirrelpox virus 1296/99',  # 37000
-                'gi|887699|gb|DQ37780 Monkeypox virus 456',        # 35000
-                'gi|887699|gb|DQ37780 Mummypox virus 3000 B.C.',   # 35000
-                'gi|887699|gb|DQ37780 Cowpox virus 15',            # 30000
+                SQUIRRELPOX55.id,       # 38000
+                SQUIRRELPOX1296.id,  # 37000
+                MONKEYPOX.id,        # 35000
+                MUMMYPOX.id,   # 35000
+                COWPOX.id,            # 30000
             ], result)
 
     def testTitle(self):
         """
         Sorting on title must work.
         """
-        mockOpener = mockOpen(read_data=(
-            dumps(PARAMS) + '\n' + dumps(RECORD0) + '\n' +
-            dumps(RECORD1) + '\n' + dumps(RECORD2) + '\n' +
-            dumps(RECORD3) + '\n'))
+        mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2 +
+                                         RECORD3))
         with patch('__builtin__.open', mockOpener, create=True):
-            db = Database([], [])
-            db.addSubject(Read('id0', 'A' * 70))
-            db.addSubject(Read('id1', 'A' * 70))
-            db.addSubject(Read('id2', 'A' * 70))
-            db.addSubject(Read('id3', 'A' * 70))
-            readsAlignments = LightReadsAlignments('file.json', db)
+            readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = titlesAlignments.sortTitles('title')
             self.assertEqual([
-                'gi|887699|gb|DQ37780 Cowpox virus 15',
-                'gi|887699|gb|DQ37780 Monkeypox virus 456',
-                'gi|887699|gb|DQ37780 Mummypox virus 3000 B.C.',
-                'gi|887699|gb|DQ37780 Squirrelpox virus 1296/99',
-                'gi|887699|gb|DQ37780 Squirrelpox virus 55',
+                COWPOX.id,
+                MONKEYPOX.id,
+                MUMMYPOX.id,
+                SQUIRRELPOX1296.id,
+                SQUIRRELPOX55.id,
             ], result)

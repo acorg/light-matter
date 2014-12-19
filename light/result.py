@@ -61,6 +61,7 @@ class Result(object):
         Print one line of JSON output.
 
         @param fp: a file pointer.
+        @return: The C{fp} we were passed (this is useful in testing).
         """
         alignments = []
         for subjectIndex in self.significant:
@@ -77,3 +78,5 @@ class Result(object):
                           'querySequence': self.read.sequence,
                           },
                           separators=(',', ':'))
+
+        return fp

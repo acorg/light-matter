@@ -1,7 +1,6 @@
 def printHSP(hsp, indent=''):
-    for attr in ['bits', 'expect', 'query_end', 'query_start',
-                 'sbjct', 'query', 'sbjct_end', 'sbjct_start']:
-        print '%s%s: %s' % (indent, attr, hsp[attr])
+    for key, value in hsp.iteritems():
+        print '%s%s: %s' % (indent, key, value)
 
 
 def normalizeHSP(hsp, readLen):
@@ -13,18 +12,14 @@ def normalizeHSP(hsp, readLen):
     match). The returned read indices are offsets into the hit. I.e.,
     they indicate where on the hit the read lies.
 
-    In the returned object, all indices are suitable for Python string
-    slicing etc.  We must be careful to convert from the 1-based offsets
-    found in BLAST output properly.
-
-    NOTE: the returned readStartInSubject value may be negative.  We consider
-    the hit sequence to start at offset 0.  So if the read string has
-    sufficient additional nucleotides before the start of the alignment
+    NOTE: the returned readStartInSubject value may be negative.  We
+    consider the hit sequence to start at offset 0.  So if the read string
+    has sufficient additional residues before the start of the alignment
     match, it may protrude to the left of the hit. Similarly, the returned
     readEndInSubject can be greater than the subjectEnd.
 
-    @param hsp: an HSP in the form of a C{dict}, built from a BLAST record.
-        All passed hsp offsets are 1-based.
+    @param hsp: an HSP in the form of a C{dict}, built from a light matter
+        JSON result.
     @param readLen: the length of the read sequence.
     """
 
@@ -49,80 +44,22 @@ def normalizeHSP(hsp, readLen):
         else:
             raise AssertionError()
 
-    # The following variable names with underscores match the names of
-    # attributes BioPython uses and the values (1-based) match those
-    # reported by BLAST.
-    read_start = hsp['query_start']
-    read_end = hsp['query_end']
-    sbjct_start = hsp['sbjct_start']
-    sbjct_end = hsp['sbjct_end']
+    readStart = hsp['readOffset']
+    readEnd = readStart + hsp['landmarkLength']
+    subjectStart = hsp['subjectOffset']
+    subjectEnd = subjectStart + hsp['landmarkLength']
+    readStartInSubject = subjectStart - readStart
+    readEndInSubject = readStartInSubject + readLen
 
-    # When the read is positive, BLASTN and TBLASTX give read offsets
-    # ascending.
-    #
-    # TBLASTX reports negative read sense with indices ascending.
-    # BLASTN does not report negative read sense.
-    #
-    # In all cases the read offsets should be ascending.
-    if read_start > read_end:
-        debugPrint(locals(),
-                   'Assertion "read_start <= read_end" failed. '
-                   'read_start = %d, read_end = %d' %
-                   (read_start, read_end))
-
-    # Make sure indices are ascending.
-    if sbjct_start > sbjct_end:
-        debugPrint(locals())
-
-    # Now that we have asserted what we can about the original HSP values
-    # and gotten them into ascending order, make some sane 0-based offsets.
-    readStartInSubject = read_start - 1
-    readEndInSubject = read_end
-    subjectStart = sbjct_start - 1
-    subjectEnd = sbjct_end
-
-    # No operations on original 1-based HSP variables (with underscores)
-    # should appear beyond this point.
-
-    subjectLength = subjectEnd - subjectStart
-    readLength = readEndInSubject - readStartInSubject
-
-    hitGaps = hsp['sbjct'].count('-')
-    readGaps = hsp['query'].count('-')
-
-    # Sanity check that the length of the matches in the hit and read
-    # are identical, taking into account gaps in either (indicated by '-'
-    # characters in the match sequences, as returned by BLAST).
-    subjectLengthWithGaps = subjectLength + hitGaps
-    readLengthWithGaps = readLength + readGaps
-    if subjectLengthWithGaps != readLengthWithGaps:
-        debugPrint(locals(),
-                   'Including gaps, hit match length (%d) != Read match '
-                   'length (%d)' % (subjectLengthWithGaps,
-                                    readLengthWithGaps))
-
-    # TODO: check the mod 3 value of the start offsets.
-
-    # Calculate read indices. These are indices relative to the hit!
-
-    # unmatchedReadLeft is the number of read bases that will be sticking
-    # out to the left of the start of the hit in our plots.
-    unmatchedReadLeft = readStartInSubject
-
-    # Set the read offsets based on the direction the match with the
-    # hit takes.
-    readStartInSubject = subjectStart - unmatchedReadLeft
-    readEndInSubject = readStartInSubject + readLen + readGaps
-
-    # Final sanity checks.
+    # Sanity checks.
     if readStartInSubject > subjectStart:
         debugPrint(locals(), 'readStartInSubject > subjectStart')
     if readEndInSubject < subjectEnd:
         debugPrint(locals(), 'readEndInSubject < subjectEnd')
 
     return {
-        'readStart': read_start - 1,
-        'readEnd': read_end,
+        'readStart': readStart,
+        'readEnd': readEnd,
         'readStartInSubject': readStartInSubject,
         'readEndInSubject': readEndInSubject,
         'subjectStart': subjectStart,

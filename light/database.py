@@ -87,6 +87,7 @@ class Database(object):
         Save the database parameters to a file in JSON format.
 
         @param fp: A file pointer.
+        @return: The C{fp} we were passed (this is useful in testing).
         """
         print >>fp, dumps({
             'checksum': self.checksum(),
@@ -100,6 +101,8 @@ class Database(object):
             'totalResidues': self.totalResidues,
             'totalCoveredResidues': self.totalCoveredResidues,
         })
+
+        return fp
 
     def find(self, read, aboveMeanThreshold=15):
         """

@@ -360,6 +360,15 @@ class TestDatabase(TestCase):
             },
             result.matches)
 
+    def testSaveParamsAsJSONReturnsItsArgument(self):
+        """
+        The saveParamsAsJSON function must return its (fp) argument.
+        """
+        db = Database([AlphaHelix], [Peaks], limitPerLandmark=3,
+                      maxDistance=10)
+        io = StringIO()
+        self.assertIs(io, db.saveParamsAsJSON(io))
+
     def testSaveParamsAsJSON(self):
         """
         Saving parameters as JSON must work correctly.

@@ -308,6 +308,15 @@ class TestDatabase(TestCase):
                             'subjectOffset': 1,
                         }
                     ],
+                    'info': [
+                        {
+                            'distance': -10,
+                            'landmarkLength': 9,
+                            'landmarkName': 'A2',
+                            'offsets': {'readOffset': 0, 'subjectOffset': 1},
+                            'trigPointName': 'P'
+                        }
+                    ],
                 }
             },
             result.matches)
@@ -354,6 +363,22 @@ class TestDatabase(TestCase):
                         {
                             'readOffset': 0,
                             'subjectOffset': 0
+                        }
+                    ],
+                    'info': [
+                        {
+                            'distance': -10,
+                            'landmarkLength': 9,
+                            'landmarkName': 'A2',
+                            'offsets': {'readOffset': 0, 'subjectOffset': 0},
+                            'trigPointName': 'P',
+                        },
+                        {
+                            'distance': -13,
+                            'landmarkLength': 9,
+                            'landmarkName': 'A2',
+                            'offsets': {'readOffset': 0, 'subjectOffset': 0},
+                            'trigPointName': 'P',
                         }
                     ],
                 }

@@ -20,8 +20,8 @@ class TestResult(TestCase):
         read = AARead('read', 'AGTARFSDDD')
         database.addSubject(read)
         result = Result(read, database)
-        result.addMatch({'subjectOffset': 3, 'readOffset': 1}, 0)
-        result.addMatch({'subjectOffset': 2, 'readOffset': 1}, 0)
+        result.addMatch({'subjectOffset': 3, 'readOffset': 1}, 0, 5, 'A:P:-6')
+        result.addMatch({'subjectOffset': 2, 'readOffset': 1}, 0, 5, 'A:P:-6')
         result.finalize()
         self.assertEqual({}, result.significant)
 
@@ -112,30 +112,70 @@ class TestResult(TestCase):
         read = AARead('id', 'AGTARFSDDD')
         database.addSubject(read)
         result = Result(read, database)
-        result.significant = {0: {'offsets':
-                                  [{'readOffset': 0, 'subjectOffset': 0},
-                                   {'readOffset': 0, 'subjectOffset': 0}],
-                                  'matchScore': 15}}
+        result.significant = {0: {
+            'offsets': [
+                {
+                    'readOffset': 0, 'subjectOffset': 0
+                },
+                {
+                    'readOffset': 0, 'subjectOffset': 0
+                }
+            ],
+            'info': [
+                {
+                    'distance': -10,
+                    'landmarkLength': 9,
+                    'landmarkName': 'A2',
+                    'offsets': {
+                        'readOffset': 0,
+                        'subjectOffset': 0
+                    },
+                    'trigPointName': 'P',
+                },
+                {
+                    'distance': -13,
+                    'landmarkLength': 9,
+                    'landmarkName': 'A2',
+                    'offsets': {
+                        'readOffset': 0,
+                        'subjectOffset': 0
+                    },
+                    'trigPointName': 'P',
+                },
+            ],
+            'matchScore': 15,
+        }
+        }
         fp = StringIO()
         result.save(fp=fp)
         result = loads(fp.getvalue())
         self.assertEqual('id', result['query'])
-        self.assertEqual(
-            [
-                {
-                    'subjectIndex': 0,
-                    'hsps': [
-                        {
-                            'subjectOffset': 0,
-                            'readOffset': 0
-                        },
-                        {
-                            'subjectOffset': 0,
-                            'readOffset': 0
-                        }
-                    ],
-                    'matchScore': 15
-                }
-            ],
-            result['alignments'])
         self.assertEqual('AGTARFSDDD', result['querySequence'])
+        self.assertEqual([{
+                         'subjectIndex': 0,
+                         'matchScore': 15,
+                         'hsps': [
+                             {
+                                 'trigPointName': 'P',
+                                 'distance': -10,
+                                 'landmarkLength': 9,
+                                 'landmarkName': 'A2',
+                                 'offsets': {
+                                     'subjectOffset': 0,
+                                     'readOffset': 0
+                                 }
+                             },
+                             {
+                                 'trigPointName': 'P',
+                                 'distance': -13,
+                                 'landmarkLength': 9,
+                                 'landmarkName': 'A2',
+                                 'offsets': {
+                                     'subjectOffset': 0,
+                                     'readOffset': 0
+                                 }
+                             }
+                         ]
+                         }
+        ],
+            result['alignments'])

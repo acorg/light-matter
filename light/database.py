@@ -126,6 +126,7 @@ class Database(object):
                                 landmark.offset - trigPoint.offset)
             try:
                 matchingKey = self.d[key]
+                landmarkLength = landmark.length
             except KeyError:
                 pass
             else:
@@ -135,7 +136,7 @@ class Database(object):
                             'subjectOffset': subjectDict['offset'],
                             'readOffset': landmark.offset,
                         },
-                        subjectDict['subjectIndex'])
+                        subjectDict['subjectIndex'], landmarkLength, key)
         result.finalize()
         return result
 

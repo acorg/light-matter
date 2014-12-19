@@ -23,18 +23,31 @@ class Result(object):
         else:
             raise RuntimeError('You must call finalize() before printing.')
 
-    def addMatch(self, offsets, subjectIndex):
+    def addMatch(self, offsets, subjectIndex, landmarkLength, key):
         """
         Add a match.
 
         @param offsets: a C{dict} with information about the match.
         @param subjectIndex: a C{int} index of the subject in the database.
+        @param landmarkLength: a C{int} length of the landmark.
+        @param key: the key that was matched.
         """
+        landmarkName, trigPointName, distance = key.split(':')
+        info = {
+            'distance': int(distance),
+            'landmarkLength': int(landmarkLength),
+            'landmarkName': landmarkName,
+            'offsets': offsets,
+            'trigPointName': trigPointName,
+        }
+
         if subjectIndex in self.matches:
             self.matches[subjectIndex]['offsets'].append(offsets)
+            self.matches[subjectIndex]['info'].append(info)
         else:
             self.matches[subjectIndex] = {
                 'offsets': [offsets],
+                'info': [info],
             }
 
     def finalize(self):
@@ -60,7 +73,8 @@ class Result(object):
         """
         alignments = []
         for subjectIndex in self.significant:
-            hsps = self.significant[subjectIndex]['offsets']
+            print 'self.significant[subjectIndex]', self.significant[subjectIndex]
+            hsps = self.significant[subjectIndex]['info']
             matchScore = self.significant[subjectIndex]['matchScore']
             alignments.append({
                 'hsps': hsps,

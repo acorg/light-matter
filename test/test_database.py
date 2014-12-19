@@ -3,6 +3,7 @@ from json import loads
 from cStringIO import StringIO
 from hashlib import sha256
 
+from light.features import Landmark, TrigPoint
 from light.landmarks.alpha_helix import AlphaHelix
 from light.landmarks.beta_strand import BetaStrand
 from light.trig.peaks import Peaks
@@ -38,6 +39,25 @@ class TestDatabase(TestCase):
         """
         db = Database([AlphaHelix], [Peaks])
         self.assertEqual({}, db.d)
+
+    def testKey(self):
+        """
+        The database key function must return the expected value.
+        """
+        db = Database([], [])
+        landmark = Landmark('name', 'A', 20, 0)
+        trigPoint = TrigPoint('name', 'B', 10)
+        self.assertEqual('A1:B:10', db.key(landmark, trigPoint))
+
+    def testKeyWithRepeatCount(self):
+        """
+        The database key function must return the expected value when the
+        landmark it is passed has a repeat count.
+        """
+        db = Database([], [])
+        landmark = Landmark('name', 'A', 20, 0, 5)
+        trigPoint = TrigPoint('name', 'B', 10)
+        self.assertEqual('A5:B:10', db.key(landmark, trigPoint))
 
     def testInitialDatabaseHasNoReadInfo(self):
         """
@@ -290,9 +310,10 @@ class TestDatabase(TestCase):
         result = db.find(query)
         self.assertEqual({}, result.matches)
 
-    def testFindOneMatching(self):
+    def testFindOneMatchingInsignificant(self):
         """
-        One matching key must be found.
+        One matching subject should be found, but is not significant with the
+        default value of aboveMeanThreshold.
         """
         subject = AARead('subject', 'AFRRRFRRRFASAASA')
         query = AARead('query', 'FRRRFRRRFASAASA')
@@ -301,14 +322,42 @@ class TestDatabase(TestCase):
         result = db.find(query)
         self.assertEqual(
             {
-                0: {
-                    'offsets': [
-                        {
-                            'readOffset': 0,
-                            'subjectOffset': 1,
-                        }
-                    ],
-                }
+                0: [
+                    {
+                        'trigPointName': 'Peaks',
+                        'distance': -10,
+                        'landmarkLength': 9,
+                        'readOffset': 0,
+                        'subjectOffset': 1,
+                        'landmarkName': 'AlphaHelix',
+                    },
+                ],
+            },
+            result.matches)
+        self.assertEqual(0, len(result.significant))
+
+    def testFindOneMatchingSignificant(self):
+        """
+        One matching and significant subject must be found if the
+        aboveMeanThreshold is sufficiently low.
+        """
+        subject = AARead('subject', 'AFRRRFRRRFASAASA')
+        query = AARead('query', 'FRRRFRRRFASAASA')
+        db = Database([AlphaHelix], [Peaks], maxDistance=11)
+        db.addSubject(subject)
+        result = db.find(query, aboveMeanThreshold=0.1)
+        self.assertEqual(
+            {
+                0: [
+                    {
+                        'trigPointName': 'Peaks',
+                        'distance': -10,
+                        'landmarkLength': 9,
+                        'readOffset': 0,
+                        'subjectOffset': 1,
+                        'landmarkName': 'AlphaHelix',
+                    },
+                ],
             },
             result.matches)
 
@@ -345,18 +394,24 @@ class TestDatabase(TestCase):
         result = db.find(query)
         self.assertEqual(
             {
-                0: {
-                    'offsets': [
-                        {
-                            'readOffset': 0,
-                            'subjectOffset': 0
-                        },
-                        {
-                            'readOffset': 0,
-                            'subjectOffset': 0
-                        }
-                    ],
-                }
+                0: [
+                    {
+                        'distance': -10,
+                        'landmarkLength': 9,
+                        'landmarkName': 'AlphaHelix',
+                        'readOffset': 0,
+                        'subjectOffset': 0,
+                        'trigPointName': 'Peaks',
+                    },
+                    {
+                        'distance': -13,
+                        'landmarkLength': 9,
+                        'landmarkName': 'AlphaHelix',
+                        'readOffset': 0,
+                        'subjectOffset': 0,
+                        'trigPointName': 'Peaks',
+                    }
+                ],
             },
             result.matches)
 

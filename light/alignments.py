@@ -2,7 +2,7 @@ import copy
 
 from dark.alignments import ReadsAlignments, ReadsAlignmentsParams
 from dark.utils import numericallySortFilenames
-from dark.reads import Reads
+from dark.reads import AARead, Reads
 
 from light.params import checkCompatibleParams
 from light.conversion import JSONRecordsReader
@@ -32,6 +32,10 @@ class LightReadsAlignments(ReadsAlignments):
         else:
             self.resultFilenames = resultFilenames
         self._database = database
+
+        # Add a dictionary that will allow us to look up databae subjects
+        # by title.
+        self._subjects = dict(database.subjectInfo)
 
         # Prepare application parameters in order to initialize self.
         self._reader = self._getReader(self.resultFilenames[0])
@@ -102,8 +106,6 @@ class LightReadsAlignments(ReadsAlignments):
         Obtain information about a subject sequence, given its title.
 
         @param title: A C{str} sequence title from a light matter match.
-        @return: A C{SeqIO.read} instance.
+        @return: An C{AARead} instance.
         """
-        # TODO: Look up the title in the database that was given to
-        # find-matches.py on the command line to create these result.
-        return 'dummy'
+        return AARead(title, self._subjects[title])

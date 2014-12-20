@@ -190,7 +190,7 @@ class TestResult(TestCase):
         """
         The save function must return its (fp) argument.
         """
-        result = Result(AARead('id', 'A'), {})
+        result = Result(AARead('id', 'A'), {}, aboveMeanThreshold=0)
         fp = StringIO()
         self.assertIs(fp, result.save(fp))
 

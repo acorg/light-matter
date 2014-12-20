@@ -1,3 +1,4 @@
+# from pprint import pprint
 from cStringIO import StringIO
 
 from dark.reads import AARead
@@ -28,17 +29,24 @@ SQUIRRELPOX1296 = AARead('Squirrelpox virus 1296/99', 'FRRRFRRRFAC')
 # An alpha helix 3, 10 with one trig point.
 SQUIRRELPOX55 = AARead('Squirrelpox virus 55', 'FRRFRRFAC')
 
-DB.addSubject(SQUIRRELPOX1296)
-DB.addSubject(SQUIRRELPOX55)
+DB.addSubject(COWPOX)
 DB.addSubject(MONKEYPOX)
 DB.addSubject(MUMMYPOX)
-DB.addSubject(COWPOX)
+DB.addSubject(SQUIRRELPOX1296)
+DB.addSubject(SQUIRRELPOX55)
 
 PARAMS = DB.saveParamsAsJSON(StringIO()).getvalue()
 
 # Run find on a read that hits both squirrelpox subjects.
 READ0 = AARead('id0', SQUIRRELPOX1296.sequence + SQUIRRELPOX55.sequence)
 _result = DB.find(READ0, aboveMeanThreshold=1)
+# print 'find result for', SQUIRRELPOX1296.id
+# for subjectIndex in _result.matches:
+#     print '>>> SUBJECT: %r (index %d)' % (DB.subjectInfo[subjectIndex][0],
+#                                           subjectIndex)
+#     pprint(_result.matches[subjectIndex])
+# print 'significant:'
+# pprint(_result.significant)
 RECORD0 = _result.save(StringIO()).getvalue()
 
 # Run find on a read that hits both monkeypox and mummypox.

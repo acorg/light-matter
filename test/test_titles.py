@@ -257,7 +257,7 @@ class TestTitlesAlignmentsFiltering(TestCase):
         with patch('__builtin__.open', mockOpener, create=True):
             readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
-            result = titlesAlignments.filter(withScoreBetterThan=24)
+            result = titlesAlignments.filter(withScoreBetterThan=3)
             self.assertEqual(
                 [
                     SQUIRRELPOX55.id,

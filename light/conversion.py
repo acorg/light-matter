@@ -71,12 +71,12 @@ class JSONRecordsReader(object):
             for lightHsp in lightAlignment['hsps']:
                 # normalized = normalizeHSP(lightHsp, len(read))
                 hsp = HSP(
-                    lightAlignment['matchScore'],
-                    readStart=lightHsp['readOffset'],
+                    lightHsp['matchScore'],
+                    # readStart=lightHsp['readOffset'],
                     # readEnd=normalized['readEnd'],
                     # readStartInSubject=normalized['readStartInSubject'],
                     # readEndInSubject=normalized['readEndInSubject'],
-                    subjectStart=lightHsp['subjectOffset'],
+                    # subjectStart=lightHsp['subjectOffset'],
                     # subjectEnd=normalized['subjectEnd'],
                 )
 
@@ -107,7 +107,7 @@ class JSONRecordsReader(object):
                         'Line is %r.' %
                         (lineNumber, self._filename, e, line[:-1]))
                 else:
-                    read = AARead(record['query'], record['querySequence'])
+                    read = AARead(record['queryId'], record['querySequence'])
                     alignments = self._dictToAlignments(record, read)
                     yield ReadAlignments(read, alignments)
         finally:

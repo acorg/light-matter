@@ -1,18 +1,13 @@
-from json import loads
+from json import dumps, loads
 import bz2
 from unittest import TestCase
 from mock import patch
-from cStringIO import StringIO
-from Bio import SeqIO
 
 from mocking import mockOpen
-from sample_data import DB, PARAMS, RECORD0, RECORD1, RECORD2, RECORD3
+from sample_data import DB, PARAMS, RECORD0, RECORD1, RECORD2, RECORD3, COWPOX
 
-from dark.reads import Read
 from dark.hsp import HSP
-from dark import ncbidb
 
-from light.database import Database
 from light.alignments import LightReadsAlignments
 
 
@@ -206,7 +201,7 @@ class TestLightReadsAlignments(TestCase):
                 else:
                     params = loads(PARAMS)
                     params['limitPerLandmark'] = 100
-                    return BZ2([params, RECORD1])
+                    return BZ2([dumps(params), RECORD1])
 
         sideEffect = SideEffect()
         with patch.object(bz2, 'BZ2File') as mockMethod:
@@ -228,12 +223,9 @@ class TestLightReadsAlignments(TestCase):
         mockOpener = mockOpen(read_data=PARAMS)
         with patch('__builtin__.open', mockOpener, create=True):
             readsAlignments = LightReadsAlignments('file.json', DB)
-            with patch.object(ncbidb, 'getSequence') as mockMethod:
-                mockMethod.return_value = SeqIO.read(
-                    StringIO('>id1 Description\nAA\n'), 'fasta')
-                sequence = readsAlignments.getSubjectSequence('title')
-                self.assertEqual('AA', str(sequence.seq))
-                self.assertEqual('id1 Description', sequence.description)
+            subject = readsAlignments.getSubjectSequence(COWPOX.id)
+            self.assertEqual(COWPOX.sequence, subject.sequence)
+            self.assertEqual(COWPOX.id, subject.id)
 
     def testHsps(self):
         """
@@ -324,9 +316,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         """
         mockOpener = mockOpen(read_data=PARAMS + RECORD0)
         with patch('__builtin__.open', mockOpener, create=True):
-            db = Database([], [])
-            db.addSubject(Read('H6E8I1T01BFUH9', 'A' * 500))
-            readsAlignments = LightReadsAlignments('file.json', db)
+            readsAlignments = LightReadsAlignments('file.json', DB)
             result = list(readsAlignments.filter(scoreCutoff=1000))
             self.assertEqual(1, len(result))
             self.assertEqual(1, len(result[0]))
@@ -338,9 +328,6 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         cut-off value results in some HSPs being invalid, then those HSPs must
         be removed entirely.
         """
-        from pprint import pprint
-        print 'RECORD0'
-        pprint(loads(RECORD0))
         mockOpener = mockOpen(read_data=PARAMS + RECORD0)
         with patch('__builtin__.open', mockOpener, create=True):
             readsAlignments = LightReadsAlignments('file.json', DB)

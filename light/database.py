@@ -72,9 +72,10 @@ class Database(object):
                 maxDistance=self.maxDistance):
             key = '%s:%s:%s' % (landmark.hashkey(), trigPoint.hashkey(),
                                 landmark.offset - trigPoint.offset)
-            self.d[key].append({"subjectIndex": subjectIndex,
-                                "offset": landmark.offset,
-                                })
+            self.d[key].append({
+                'subjectIndex': subjectIndex,
+                'offset': landmark.offset,
+            })
 
     def __str__(self):
         return '%s: %d sequences, %d residues, %d hashes, %.2f%% coverage' % (

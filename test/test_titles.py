@@ -474,7 +474,7 @@ class TestTitleSorting(TestCase):
                 SQUIRRELPOX1296.id,  # 15
                 MONKEYPOX.id,        # 13
                 SQUIRRELPOX55.id,    # 11
-                MUMMYPOX.id,         #  8
+                MUMMYPOX.id,         # 8
             ], result)
 
     def testTitle(self):

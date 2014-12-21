@@ -1,4 +1,3 @@
-from pprint import pprint
 from json import loads
 from unittest import TestCase
 
@@ -8,8 +7,37 @@ from light.alignments import jsonDictToAlignments
 
 from sample_data import (
     DB, PARAMS, COWPOX, MONKEYPOX, MUMMYPOX, SQUIRRELPOX55, SQUIRRELPOX1296,
-    RECORD0, RECORD1, RECORD2, RECORD3, RECORD4,
-    READ0, READ2, READ3)
+    RECORD0, RECORD1, RECORD2, RECORD3, RECORD4)
+
+
+class TestParams(TestCase):
+    """
+    Test the database parameters.
+    """
+    def testPARAMS(self):
+        """
+        The database parameters must be as expected.
+        """
+        self.assertEqual(
+            {
+                'subjectCount': 5,
+                'totalCoveredResidues': 56,
+                'checksum': ('fcf984b6e7e4dda26e2a8c6de6f406ef2fd7a38e50c917b9'
+                             'a36119f3295753e4'),
+                'limitPerLandmark': None,
+                'trigPointFinderClasses': [
+                    'AminoAcids',
+                ],
+                'totalResidues': 68,
+                'landmarkFinderClasses': [
+                    'AlphaHelix',
+                    'AlphaHelix_3_10',
+                    'AlphaHelix_pi',
+                    'BetaStrand',
+                ],
+                'maxDistance': None,
+            },
+            loads(PARAMS))
 
 
 class TestRecords(TestCase):

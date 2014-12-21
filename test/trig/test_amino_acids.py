@@ -12,7 +12,7 @@ class TestAminoAcids(TestCase):
     """
     def testFindWithoutAA(self):
         """
-        If the desired aa is not present, find nothing
+        If the desired amino acid is not present, return one trig point.
         """
         read = AARead('id', 'ASAAAAASAAA')
         aas = AminoAcids()
@@ -21,7 +21,7 @@ class TestAminoAcids(TestCase):
 
     def testFindWithOneAA(self):
         """
-        If the desired aa is not present, find nothing
+        If one of the desired amino acids is present, return one trig point.
         """
         read = AARead('id', 'ASAACAASAAA')
         aas = AminoAcids()
@@ -30,7 +30,7 @@ class TestAminoAcids(TestCase):
 
     def testFindWithTwoAA(self):
         """
-        If the desired aa is not present, find nothing
+        If two of the desired amino acids are present, return two trig points.
         """
         read = AARead('id', 'ASAACAACAAA')
         aas = AminoAcids()
@@ -40,7 +40,8 @@ class TestAminoAcids(TestCase):
 
     def testFindWithTwoAABeginningAndEnd(self):
         """
-        If the desired aa is not present, find nothing
+        If two of the desired amino acids are present at the beginnitn and end
+        of the sequence, return two trig points.
         """
         read = AARead('id', 'CASAAAAAAAC')
         aas = AminoAcids()

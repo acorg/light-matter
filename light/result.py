@@ -44,10 +44,8 @@ class Result(object):
         alignments = []
         for subjectIndex in self.significant:
             alignments.append({
-                'hsps': [{
-                    'matchInfo': self.matches[subjectIndex],
-                    'matchScore': self.scores[subjectIndex],
-                }],
+                'matchInfo': self.matches[subjectIndex],
+                'matchScore': self.scores[subjectIndex],
                 'subjectIndex': subjectIndex,
             })
 

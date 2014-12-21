@@ -7,8 +7,11 @@ from mocking import mockOpen
 from sample_data import DB, PARAMS, RECORD0, RECORD1, RECORD2, RECORD3, COWPOX
 
 from dark.hsp import HSP
+from dark.reads import AARead
 
-from light.alignments import LightReadsAlignments
+from light.database import Database
+from light.alignments import (
+    LightReadsAlignments, LightAlignment, jsonDictToAlignments)
 
 
 class BZ2(object):
@@ -30,6 +33,22 @@ class BZ2(object):
         index = self._index
         self._index = len(self._data)
         return iter(self._data[index:])
+
+
+class TestLightAlignment(TestCase):
+    """
+    Test the LightAlignment class. The class only stores one additional
+    attribute and the rest of its behavior is inherited from
+    C{dark.alignment.Alignment} which is tested in the dark matter code.
+    """
+
+    def testStoresMatchInfo(self):
+        """
+        The LightAlignment class must store the match info it is passed.
+        """
+        matchInfo = {}
+        lightAlignment = LightAlignment(55, 'title', matchInfo)
+        self.assertIs(matchInfo, lightAlignment.matchInfo)
 
 
 class TestLightReadsAlignments(TestCase):
@@ -63,12 +82,12 @@ class TestLightReadsAlignments(TestCase):
 
     def testScoreTitle(self):
         """
-        The score title must be correct when we are using bit scores.
+        The score title must be as expected.
         """
         mockOpener = mockOpen(read_data=PARAMS)
         with patch('__builtin__.open', mockOpener, create=True):
             readsAlignments = LightReadsAlignments('file.json', DB)
-            self.assertEqual('Bit score', readsAlignments.params.scoreTitle)
+            self.assertEqual('Score', readsAlignments.params.scoreTitle)
 
     def testSubjectIsNucleotides(self):
         """
@@ -322,26 +341,6 @@ class TestLightReadsAlignmentsFiltering(TestCase):
             self.assertEqual(1, len(result[0]))
             self.assertEqual('FIX ME', result[0][0].subjectTitle)
 
-    def testScoreCutoffRemovesHsps(self):
-        """
-        If the filter function is supposed to filter on scoreCutoff and the
-        cut-off value results in some HSPs being invalid, then those HSPs must
-        be removed entirely.
-        """
-        mockOpener = mockOpen(read_data=PARAMS + RECORD0)
-        with patch('__builtin__.open', mockOpener, create=True):
-            readsAlignments = LightReadsAlignments('file.json', DB)
-            result = list(readsAlignments.filter(scoreCutoff=3))
-
-            # There should only be one HSP left in the alignments for the
-            # first read, and it should have the right score.
-            self.assertEqual(1, len(result[0][0].hsps))
-            self.assertEqual(HSP(170), result[0][0].hsps[0])
-
-            # The second alignment should also be present.
-            self.assertEqual(1, len(result[0][1].hsps))
-            self.assertEqual(HSP(180), result[0][1].hsps[0])
-
     def testTitleByRegexCaseInvariant(self):
         """
         Filtering with a title regex must work independent of case.
@@ -352,7 +351,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
             result = list(readsAlignments.filter(titleRegex='sqUIRRel'))
             self.assertEqual(1, len(result))
             self.assertEqual('id0', result[0].read.id)
-            self.assertEqual('gi|887699|gb|DQ37780 Squirrelpox virus 1296/99',
+            self.assertEqual('Squirrelpox virus 1296/99',
                              result[0][0].subjectTitle)
 
     def testTitleByRegexAllAlignments(self):
@@ -366,7 +365,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
             result = list(readsAlignments.filter(titleRegex='squirrel'))
             self.assertEqual(1, len(result))
             self.assertEqual('id0', result[0].read.id)
-            self.assertEqual('gi|887699|gb|DQ37780 Squirrelpox virus 1296/99',
+            self.assertEqual('Squirrelpox virus 1296/99',
                              result[0][0].subjectTitle)
 
     def testTitleByRegexOneAlignments(self):
@@ -380,7 +379,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
             result = list(readsAlignments.filter(titleRegex='Mummy'))
             self.assertEqual(1, len(result))
             self.assertEqual('id1', result[0].read.id)
-            self.assertEqual('gi|887699|gb|DQ37780 Mummypox virus 3000 B.C.',
+            self.assertEqual('Mummypox virus 3000 B.C.',
                              result[0][0].subjectTitle)
 
     def testTitleByNegativeRegexOneAlignment(self):
@@ -396,8 +395,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
             self.assertEqual(3, len(result))
             self.assertEqual('id1', result[1].read.id)
             self.assertEqual(1, len(result[1]))
-            self.assertEqual('gi|887699|gb|DQ37780 Monkeypox virus 456',
-                             result[1][0].subjectTitle)
+            self.assertEqual('Monkeypox virus 456', result[1][0].subjectTitle)
 
     def testTitleByNegativeRegexMatchesAll(self):
         """
@@ -419,7 +417,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2))
         with patch('__builtin__.open', mockOpener, create=True):
             readsAlignments = LightReadsAlignments('file.json', DB)
-            title = 'gi|887699|gb|DQ37780 Squirrelpox virus 1296/99'
+            title = 'Squirrelpox virus 1296/99'
             result = list(readsAlignments.filter(negativeTitleRegex='pox',
                                                  whitelist=[title]))
             self.assertEqual(1, len(result))
@@ -435,8 +433,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2))
         with patch('__builtin__.open', mockOpener, create=True):
             readsAlignments = LightReadsAlignments('file.json', DB)
-            blacklist = ['gi|887699|gb|DQ37780 Squirrelpox virus 1296/99',
-                         'gi|887699|gb|DQ37780 Squirrelpox virus 55']
+            blacklist = ['Squirrelpox virus 1296/99', 'Squirrelpox virus 55']
             result = list(readsAlignments.filter(titleRegex='pox',
                                                  blacklist=blacklist))
             self.assertEqual(2, len(result))
@@ -457,8 +454,8 @@ class TestLightReadsAlignmentsFiltering(TestCase):
             self.assertEqual(3, len(result))
             self.assertEqual('id0', result[0].read.id)
             self.assertEqual(1, len(result[0]))
-            # The Squirrelpox virus 55 hit in RECORD0 is not returned.
-            self.assertEqual('gi|887699|gb|DQ37780 Squirrelpox virus 1296/99',
+            # The Squirrelpox virus 55 hit in RECORD0 must not be returned.
+            self.assertEqual('Squirrelpox virus 1296/99',
                              result[0][0].subjectTitle)
 
     def testMinTitleSequenceLength(self):
@@ -473,8 +470,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
             self.assertEqual(1, len(result))
             self.assertEqual('id0', result[0].read.id)
             self.assertEqual(1, len(result[0]))
-            self.assertEqual('gi|887699|gb|DQ37780 Squirrelpox virus 55',
-                             result[0][0].subjectTitle)
+            self.assertEqual('Squirrelpox virus 55', result[0][0].subjectTitle)
 
     def testMinTitleSequenceLengthNoHits(self):
         """
@@ -500,8 +496,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
             self.assertEqual(1, len(result))
             self.assertEqual('id2', result[0].read.id)
             self.assertEqual(1, len(result[0]))
-            self.assertEqual('gi|887699|gb|DQ37780 Cowpox virus 15',
-                             result[0][0].subjectTitle)
+            self.assertEqual('Cowpox virus 15', result[0][0].subjectTitle)
 
     def testMaxTitleSequenceLengthNoHits(self):
         """
@@ -528,10 +523,9 @@ class TestLightReadsAlignmentsFiltering(TestCase):
             self.assertEqual(1, len(result))
             self.assertEqual('id0', result[0].read.id)
             self.assertEqual(2, len(result[0]))
-            self.assertEqual('gi|887699|gb|DQ37780 Squirrelpox virus 1296/99',
+            self.assertEqual('Squirrelpox virus 1296/99',
                              result[0][0].subjectTitle)
-            self.assertEqual('gi|887699|gb|DQ37780 Squirrelpox virus 55',
-                             result[0][1].subjectTitle)
+            self.assertEqual('Squirrelpox virus 55', result[0][1].subjectTitle)
 
     def testMinStart(self):
         """
@@ -545,7 +539,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
             self.assertEqual(1, len(result))
             self.assertEqual('id0', result[0].read.id)
             self.assertEqual(1, len(result[0]))
-            self.assertEqual('gi|887699|gb|DQ37780 Squirrelpox virus 1296/99',
+            self.assertEqual('Squirrelpox virus 1296/99',
                              result[0][0].subjectTitle)
 
     def testMinStartNoHits(self):
@@ -572,8 +566,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
             self.assertEqual(1, len(result))
             self.assertEqual('id2', result[0].read.id)
             self.assertEqual(1, len(result[0]))
-            self.assertEqual('gi|887699|gb|DQ37780 Cowpox virus 15',
-                             result[0][0].subjectTitle)
+            self.assertEqual('Cowpox virus 15', result[0][0].subjectTitle)
 
     def testMaxStopNoHits(self):
         """
@@ -696,3 +689,102 @@ class TestLightReadsAlignmentsFiltering(TestCase):
             readsAlignments = LightReadsAlignments('file.json', DB)
             result = list(readsAlignments.filter(readIdRegex='^ID0$'))
             self.assertEqual(0, len(result))
+
+
+class TestJSONDictToAlignments(TestCase):
+    """
+    Test the jsonDictToAlignments function.
+    """
+
+    def testNoAlignments(self):
+        """
+        The jsonDictToAlignments function must return an empty list if passed
+        a light matter result dict (as would be read from a JSON file) with
+        no alignments.
+        """
+        database = Database([], [])
+        lightDict = {
+            'alignments': [],
+        }
+        self.assertEqual([], jsonDictToAlignments(lightDict, database))
+
+    def testTwoAlignments(self):
+        """
+        The jsonDictToAlignments function must produce the correct result when
+        passed a light matter result dict (as would be read from a JSON file)
+        that has two alignments in it.
+        """
+        database = Database([], [])
+        subject0 = AARead('subject0', 'AAA')
+        subject1 = AARead('subject1', 'VVV')
+        database.addSubject(subject0)
+        database.addSubject(subject1)
+        lightDict = {
+            'alignments': [
+                {
+                    'matchInfo': [
+                        {
+                            'distance': 11,
+                            'landmarkLength': 9,
+                            'landmarkName': 'AlphaHelix',
+                            'readOffset': 0,
+                            'subjectOffset': 0,
+                            'trigPointName': 'AminoAcids',
+                        },
+                        {
+                            'distance': 14,
+                            'landmarkLength': 9,
+                            'landmarkName': 'AlphaHelix',
+                            'readOffset': 0,
+                            'subjectOffset': 0,
+                            'trigPointName': 'AminoAcids',
+                        },
+                    ],
+                    'matchScore': 2,
+                    'subjectIndex': 0,
+                },
+                {
+                    'matchInfo': [
+                        {
+                            'distance': 8,
+                            'landmarkLength': 7,
+                            'landmarkName': 'AlphaHelix_3_10',
+                            'readOffset': 15,
+                            'subjectOffset': 0,
+                            'trigPointName': 'AminoAcids',
+                        },
+                        {
+                            'distance': 10,
+                            'landmarkLength': 7,
+                            'landmarkName': 'AlphaHelix_3_10',
+                            'readOffset': 15,
+                            'subjectOffset': 0,
+                            'trigPointName': 'AminoAcids',
+                        },
+                        {
+                            'distance': 10,
+                            'landmarkLength': 7,
+                            'landmarkName': 'AlphaHelix_3_10',
+                            'readOffset': 15,
+                            'subjectOffset': 0,
+                            'trigPointName': 'AminoAcids',
+                        },
+                    ],
+                    'matchScore': 3,
+                    'subjectIndex': 1,
+                },
+
+            ],
+            'queryId': 'id0',
+            'querySequence': 'ADDDADDDAMDCMDCADDADDAMCDC',
+        }
+        alignments = jsonDictToAlignments(lightDict, database)
+        self.assertEqual(2, len(alignments))
+        self.assertEqual(HSP(2), alignments[0].hsps[0])
+        self.assertEqual('subject0', alignments[0].subjectTitle)
+        self.assertEqual(lightDict['alignments'][0]['matchInfo'],
+                         alignments[0].matchInfo)
+        self.assertEqual(HSP(3), alignments[1].hsps[0])
+        self.assertEqual('subject1', alignments[1].subjectTitle)
+        self.assertEqual(lightDict['alignments'][1]['matchInfo'],
+                         alignments[1].matchInfo)

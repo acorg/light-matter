@@ -152,7 +152,7 @@ class Database(object):
             else:
                 for subject in subjects:
                     matches[subject['subjectIndex']].append({
-                        'distance': landmark.offset - trigPoint.offset,
+                        'distance': trigPoint.offset - landmark.offset,
                         'landmarkLength': landmark.length,
                         'landmarkName': landmark.name,
                         'readOffset': landmark.offset,

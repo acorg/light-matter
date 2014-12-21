@@ -230,39 +230,31 @@ class TestResult(TestCase):
             {
                 'alignments': [
                     {
-                        'hsps': [
+                        'matchInfo': [
                             {
-                                'matchInfo': [
-                                    {
-                                        'distance': -27,
-                                        'landmarkLength': 9,
-                                        'landmarkName': 'AlphaHelix',
-                                        'readOffset': 0,
-                                        'subjectOffset': 0,
-                                        'trigPointName': 'AlphaHelix'
-                                    },
-                                ],
-                                'matchScore': 1,
+                                'distance': -27,
+                                'landmarkLength': 9,
+                                'landmarkName': 'AlphaHelix',
+                                'readOffset': 0,
+                                'subjectOffset': 0,
+                                'trigPointName': 'AlphaHelix'
                             },
                         ],
+                        'matchScore': 1,
                         'subjectIndex': 0
                     },
                     {
-                        'hsps': [
+                        'matchInfo': [
                             {
-                                'matchInfo': [
-                                    {
-                                        'distance': 27,
-                                        'landmarkLength': 13,
-                                        'landmarkName': 'AlphaHelix',
-                                        'readOffset': 27,
-                                        'subjectOffset': 27,
-                                        'trigPointName': 'AlphaHelix',
-                                    },
-                                ],
-                                'matchScore': 1,
+                                'distance': 27,
+                                'landmarkLength': 13,
+                                'landmarkName': 'AlphaHelix',
+                                'readOffset': 27,
+                                'subjectOffset': 27,
+                                'trigPointName': 'AlphaHelix',
                             },
                         ],
+                        'matchScore': 1,
                         'subjectIndex': 27,
                     },
                 ],

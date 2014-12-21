@@ -1,4 +1,4 @@
-from unittest import TestCase
+from unittest import TestCase, skip
 from mock import patch
 
 from mocking import mockOpen
@@ -108,22 +108,24 @@ class TestTitlesAlignments(TestCase):
 
             titleAlignments = titlesAlignments[SQUIRRELPOX1296.id]
             self.assertEqual(SQUIRRELPOX1296.id, titleAlignments.subjectTitle)
-            self.assertEqual(70, titleAlignments.subjectLength)
+            self.assertEqual(len(SQUIRRELPOX1296.sequence),
+                             titleAlignments.subjectLength)
             self.assertEqual(1, len(titleAlignments))
             self.assertEqual(READ0, titleAlignments[0].read)
-            self.assertEqual(HSP(20), titleAlignments[0].hsps[0])
+            self.assertEqual(HSP(2), titleAlignments[0].hsps[0])
 
             titleAlignments = titlesAlignments[SQUIRRELPOX55.id]
             self.assertEqual(SQUIRRELPOX55.id, titleAlignments.subjectTitle)
-            self.assertEqual(80, titleAlignments.subjectLength)
+            self.assertEqual(len(SQUIRRELPOX55.sequence),
+                             titleAlignments.subjectLength)
             self.assertEqual(1, len(titleAlignments))
             self.assertEqual(READ0, titleAlignments[0].read)
-            self.assertEqual(HSP(25), titleAlignments[0].hsps[0])
+            self.assertEqual(HSP(2), titleAlignments[0].hsps[0])
 
     def testTitleCollection(self):
         """
         A title that occurs in the alignments of multiple reads must have
-        the data from both reads collected properly.
+        the data from those reads collected properly.
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD2 + RECORD3))
         with patch('__builtin__.open', mockOpener, create=True):
@@ -132,15 +134,17 @@ class TestTitlesAlignments(TestCase):
 
             title = COWPOX.id
             titleAlignments = titlesAlignments[title]
-            self.assertEqual(title, titleAlignments.subjectTitle)
-            self.assertEqual(30000, titleAlignments.subjectLength)
             self.assertEqual(2, len(titleAlignments))
 
+            self.assertEqual(title, titleAlignments.subjectTitle)
+            self.assertEqual(len(COWPOX.sequence),
+                             titleAlignments.subjectLength)
+
             self.assertEqual(READ2, titleAlignments[0].read)
-            self.assertEqual(HSP(20), titleAlignments[0].hsps[0])
+            self.assertEqual(HSP(24), titleAlignments[0].hsps[0])
 
             self.assertEqual(READ3, titleAlignments[1].read)
-            self.assertEqual(HSP(20), titleAlignments[1].hsps[0])
+            self.assertEqual(HSP(24), titleAlignments[1].hsps[0])
 
     def testAddTitleRepeat(self):
         """
@@ -153,8 +157,8 @@ class TestTitlesAlignments(TestCase):
             titlesAlignments = TitlesAlignments(readsAlignments)
             title = SQUIRRELPOX1296.id
             titleAlignments = TitleAlignments(title, 55)
-            error = ("Title 'gi\|887699\|gb\|DQ37780 Squirrelpox virus "
-                     "1296/99' already present in TitlesAlignments instance\.")
+            error = ("Title 'Squirrelpox virus 1296/99' already present in "
+                     "TitlesAlignments instance\.")
             self.assertRaisesRegexp(KeyError, error, titlesAlignments.addTitle,
                                     title, titleAlignments)
 
@@ -184,7 +188,7 @@ class TestTitlesAlignments(TestCase):
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = list(titlesAlignments.hsps())
             self.assertEqual(
-                sorted([HSP(20), HSP(25), HSP(20), HSP(20), HSP(20)]),
+                sorted([HSP(2), HSP(2), HSP(1), HSP(1), HSP(24)]),
                 sorted(result))
 
 
@@ -243,7 +247,7 @@ class TestTitlesAlignmentsFiltering(TestCase):
             result = titlesAlignments.filter(minMedianScore=22)
             self.assertEqual(
                 [
-                    SQUIRRELPOX55.id,
+                    COWPOX.id,
                 ],
                 result.keys())
 
@@ -257,10 +261,10 @@ class TestTitlesAlignmentsFiltering(TestCase):
         with patch('__builtin__.open', mockOpener, create=True):
             readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
-            result = titlesAlignments.filter(withScoreBetterThan=3)
+            result = titlesAlignments.filter(withScoreBetterThan=20)
             self.assertEqual(
                 [
-                    SQUIRRELPOX55.id,
+                    COWPOX.id,
                 ],
                 result.keys())
 
@@ -314,6 +318,7 @@ class TestTitlesAlignmentsFiltering(TestCase):
 
             self.assertEqual(1, assertionCount)
 
+    @skip('Coverage is not yet implemented for light matter title alignments.')
     def testCoverageExcludesAll(self):
         """
         The coverage function must return an titlesAlignments instance with
@@ -327,6 +332,7 @@ class TestTitlesAlignmentsFiltering(TestCase):
             result = titlesAlignments.filter(minCoverage=0.1)
             self.assertEqual(0, len(result))
 
+    @skip('Coverage is not yet implemented for light matter title alignments.')
     def testCoverageIncludesAll(self):
         """
         The coverage function must return an titlesAlignments instance with
@@ -348,6 +354,7 @@ class TestTitlesAlignmentsFiltering(TestCase):
                 ],
                 sorted(result.keys()))
 
+    @skip('Coverage is not yet implemented for light matter title alignments.')
     def testCoverageIncludesSome(self):
         """
         The coverage function must return an titlesAlignments instance with
@@ -400,8 +407,7 @@ class TestTitleSorting(TestCase):
 
     def testMedianScore(self):
         """
-        Sorting on median score must work when scores are bit scores,
-        including a secondary sort on title.
+        Sorting on median score must work, including a secondary sort on title.
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2 +
                                          RECORD3 + RECORD4))
@@ -410,17 +416,16 @@ class TestTitleSorting(TestCase):
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = titlesAlignments.sortTitles('medianScore')
             self.assertEqual([
-                SQUIRRELPOX55.id,       # 25
-                MONKEYPOX.id,        # 20
-                MUMMYPOX.id,   # 20
-                SQUIRRELPOX1296.id,  # 20
-                COWPOX.id,            # 15
+                COWPOX.id,           # 24
+                SQUIRRELPOX1296.id,  # 2
+                SQUIRRELPOX55.id,    # 2
+                MONKEYPOX.id,        # 1
+                MUMMYPOX.id,         # 1
             ], result)
 
     def testMaxScore(self):
         """
-        Sorting on max score must work when scores are bit scores, including a
-        secondary sort on title.
+        Sorting on max score must work, including a secondary sort on title.
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2 +
                                          RECORD3))
@@ -429,11 +434,11 @@ class TestTitleSorting(TestCase):
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = titlesAlignments.sortTitles('maxScore')
             self.assertEqual([
-                SQUIRRELPOX55.id,       # 25
-                COWPOX.id,            # 20
-                MONKEYPOX.id,        # 20
-                MUMMYPOX.id,   # 20
-                SQUIRRELPOX1296.id,  # 20
+                COWPOX.id,           # 24
+                SQUIRRELPOX1296.id,  # 2
+                SQUIRRELPOX55.id,    # 2
+                MONKEYPOX.id,        # 1
+                MUMMYPOX.id,         # 1
             ], result)
 
     def testReadCount(self):
@@ -447,17 +452,16 @@ class TestTitleSorting(TestCase):
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = titlesAlignments.sortTitles('readCount')
             self.assertEqual([
-                COWPOX.id,            # 3
+                COWPOX.id,           # 3
                 MONKEYPOX.id,        # 1
-                MUMMYPOX.id,   # 1
+                MUMMYPOX.id,         # 1
                 SQUIRRELPOX1296.id,  # 1
-                SQUIRRELPOX55.id,       # 1
+                SQUIRRELPOX55.id,    # 1
             ], result)
 
     def testLength(self):
         """
-        Sorting on sequence length must work, including a secondary sort on
-        title.
+        Sorting on sequence length must work.
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2 +
                                          RECORD3))
@@ -466,11 +470,11 @@ class TestTitleSorting(TestCase):
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = titlesAlignments.sortTitles('length')
             self.assertEqual([
-                SQUIRRELPOX55.id,       # 38000
-                SQUIRRELPOX1296.id,  # 37000
-                MONKEYPOX.id,        # 35000
-                MUMMYPOX.id,   # 35000
-                COWPOX.id,            # 30000
+                COWPOX.id,           # 21
+                SQUIRRELPOX1296.id,  # 15
+                MONKEYPOX.id,        # 13
+                SQUIRRELPOX55.id,    # 11
+                MUMMYPOX.id,         #  8
             ], result)
 
     def testTitle(self):

@@ -1,3 +1,9 @@
+# NOTE: This code is not yet in use. But there are tests for it based on
+#       light matter mini-HSP-like objects (the info found in the 'matches'
+#       info dicts passed to a Result by Database.find). So it will become
+#       useful when we want to display those details.
+
+
 def printHSP(hsp, indent=''):
     for key, value in hsp.iteritems():
         print '%s%s: %s' % (indent, key, value)
@@ -8,15 +14,15 @@ def normalizeHSP(hsp, readLen):
     Examine the sense of an HSP and return information about where the
     read and the alignment (match) begin and end.  Return a dict with keys
     that allow the read and the alignment to be displayed relative to the
-    hit orientation (i.e., with start < stop for both the read and the
-    match). The returned read indices are offsets into the hit. I.e.,
-    they indicate where on the hit the read lies.
+    subject orientation (i.e., with start < stop for both the read and the
+    match). The returned read indices are offsets into the subject. I.e.,
+    they indicate where on the subject the read lies.
 
     NOTE: the returned readStartInSubject value may be negative.  We
-    consider the hit sequence to start at offset 0.  So if the read string
-    has sufficient additional residues before the start of the alignment
-    match, it may protrude to the left of the hit. Similarly, the returned
-    readEndInSubject can be greater than the subjectEnd.
+    consider the subject sequence to start at offset 0.  So if the read
+    string has sufficient additional residues before the start of the
+    alignment match, it may protrude to the left of the subject. Similarly,
+    the returned readEndInSubject can be greater than the subjectEnd.
 
     @param hsp: an HSP in the form of a C{dict}, built from a light matter
         JSON result.

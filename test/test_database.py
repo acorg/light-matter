@@ -18,6 +18,12 @@ class TestDatabase(TestCase):
     """
     Tests for the light.database.Database class.
     """
+    def testAboveMeanThresholdDefault(self):
+        """
+        The above mean threshold default value must be as expected.
+        """
+        self.assertEqual(15, Database.ABOVE_MEAN_THRESHOLD_DEFAULT)
+
     def testFindersAreStored(self):
         """
         The list of landmark and trig point finders must be stored correctly.
@@ -336,7 +342,7 @@ class TestDatabase(TestCase):
                 ],
             },
             result.matches)
-        self.assertEqual(0, len(result.significant))
+        self.assertEqual(0, len(list(result.significant())))
 
     def testFindOneMatchingSignificant(self):
         """

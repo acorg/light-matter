@@ -16,17 +16,19 @@ class TestParams(TestCase):
     """
     def testPARAMS(self):
         """
-        The database parameters must be as expected.
+        The saved (JSON format) database parameters must be as expected.
         """
+        self.maxDiff = None
         self.assertEqual(
             {
                 'subjectCount': 5,
-                'totalCoveredResidues': 56,
-                'checksum': ('fcf984b6e7e4dda26e2a8c6de6f406ef2fd7a38e50c917b9'
-                             'a36119f3295753e4'),
+                'totalCoveredResidues': 61,
+                'checksum': ('e00eba538693d82ef6d275cc935c5b55'
+                             'aede072c040fe312a47bbc268ba10f56'),
                 'limitPerLandmark': None,
                 'trigPointFinderClasses': [
                     'AminoAcids',
+                    'Troughs',
                 ],
                 'totalResidues': 68,
                 'landmarkFinderClasses': [
@@ -46,28 +48,28 @@ class TestRecords(TestCase):
     """
     def testRECORD0(self):
         """
-        The results in RECORD0 must match two subject: SQUIRRELPOX1296 (with
+        The results in RECORD0 must match two subjects: SQUIRRELPOX1296 (with
         score 2) and SQUIRRELPOX55 (with score 2).
         """
         alignments = jsonDictToAlignments(loads(RECORD0), DB)
         self.assertEqual(2, len(alignments))
 
         self.assertEqual(SQUIRRELPOX1296.id, alignments[0].subjectTitle)
-        self.assertEqual(HSP(2), alignments[0].hsps[0])
+        self.assertEqual(HSP(5), alignments[0].hsps[0])
 
         self.assertEqual(SQUIRRELPOX55.id, alignments[1].subjectTitle)
-        self.assertEqual(HSP(2), alignments[1].hsps[0])
+        self.assertEqual(HSP(4), alignments[1].hsps[0])
 
     def testRECORD1(self):
         """
-        The results in RECORD1 must match two subject: MONKEYPOX (with score
+        The results in RECORD1 must match two subjects: MONKEYPOX (with score
         1) and MUMMYPOX (with score 1).
         """
         alignments = jsonDictToAlignments(loads(RECORD1), DB)
         self.assertEqual(2, len(alignments))
 
         self.assertEqual(MONKEYPOX.id, alignments[0].subjectTitle)
-        self.assertEqual(HSP(1), alignments[0].hsps[0])
+        self.assertEqual(HSP(3), alignments[0].hsps[0])
 
         self.assertEqual(MUMMYPOX.id, alignments[1].subjectTitle)
         self.assertEqual(HSP(1), alignments[1].hsps[0])
@@ -80,7 +82,7 @@ class TestRecords(TestCase):
         self.assertEqual(1, len(alignments))
 
         self.assertEqual(COWPOX.id, alignments[0].subjectTitle)
-        self.assertEqual(HSP(24), alignments[0].hsps[0])
+        self.assertEqual(HSP(36), alignments[0].hsps[0])
 
     def testRECORD3(self):
         """
@@ -90,7 +92,7 @@ class TestRecords(TestCase):
         self.assertEqual(1, len(alignments))
 
         self.assertEqual(COWPOX.id, alignments[0].subjectTitle)
-        self.assertEqual(HSP(24), alignments[0].hsps[0])
+        self.assertEqual(HSP(36), alignments[0].hsps[0])
 
     def testRECORD4(self):
         """
@@ -100,4 +102,4 @@ class TestRecords(TestCase):
         self.assertEqual(1, len(alignments))
 
         self.assertEqual(COWPOX.id, alignments[0].subjectTitle)
-        self.assertEqual(HSP(24), alignments[0].hsps[0])
+        self.assertEqual(HSP(36), alignments[0].hsps[0])

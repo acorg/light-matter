@@ -112,7 +112,7 @@ class TestTitlesAlignments(TestCase):
                              titleAlignments.subjectLength)
             self.assertEqual(1, len(titleAlignments))
             self.assertEqual(READ0, titleAlignments[0].read)
-            self.assertEqual(HSP(2), titleAlignments[0].hsps[0])
+            self.assertEqual(HSP(5), titleAlignments[0].hsps[0])
 
             titleAlignments = titlesAlignments[SQUIRRELPOX55.id]
             self.assertEqual(SQUIRRELPOX55.id, titleAlignments.subjectTitle)
@@ -120,7 +120,7 @@ class TestTitlesAlignments(TestCase):
                              titleAlignments.subjectLength)
             self.assertEqual(1, len(titleAlignments))
             self.assertEqual(READ0, titleAlignments[0].read)
-            self.assertEqual(HSP(2), titleAlignments[0].hsps[0])
+            self.assertEqual(HSP(4), titleAlignments[0].hsps[0])
 
     def testTitleCollection(self):
         """
@@ -141,10 +141,10 @@ class TestTitlesAlignments(TestCase):
                              titleAlignments.subjectLength)
 
             self.assertEqual(READ2, titleAlignments[0].read)
-            self.assertEqual(HSP(24), titleAlignments[0].hsps[0])
+            self.assertEqual(HSP(36), titleAlignments[0].hsps[0])
 
             self.assertEqual(READ3, titleAlignments[1].read)
-            self.assertEqual(HSP(24), titleAlignments[1].hsps[0])
+            self.assertEqual(HSP(36), titleAlignments[1].hsps[0])
 
     def testAddTitleRepeat(self):
         """
@@ -188,7 +188,7 @@ class TestTitlesAlignments(TestCase):
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = list(titlesAlignments.hsps())
             self.assertEqual(
-                sorted([HSP(2), HSP(2), HSP(1), HSP(1), HSP(24)]),
+                sorted([HSP(5), HSP(4), HSP(3), HSP(1), HSP(36)]),
                 sorted(result))
 
 

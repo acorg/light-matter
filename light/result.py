@@ -1,11 +1,12 @@
 import sys
 import numpy as np
 from json import dumps
+from collections import defaultdict
 
 
 class Result(object):
     """
-    Hold the result of a database lookup on a read.
+    Hold the result of a database look-up on a read.
 
     @param read: A C{dark.read.AARead} instance.
     @param matches: A C{dict} of matches. Keys are C{int} subject indices.
@@ -15,24 +16,43 @@ class Result(object):
     @param aboveMeanThreshold: A numeric amount by which the maximum count
         across all buckets must exceed the mean bucket count for the
         maximum bucket count to be considered significant.
+    @param storeAnalysis: A C{bool}. If C{True} the intermediate significance
+        analysis of each matched subject will be stored. Else it is discarded.
     """
-    def __init__(self, read, matches, aboveMeanThreshold):
+    def __init__(self, read, matches, aboveMeanThreshold, storeAnalysis=False):
         self.matches = matches
         self.read = read
-        self.significant = set()
-        self.scores = {}
+        self.analysis = defaultdict(dict)
         for subjectIndex in matches:
             offsets = [match['subjectOffset'] - match['readOffset']
                        for match in matches[subjectIndex]]
-            hist = np.histogram(offsets)[0]
-            mean = np.mean(hist)
-            match = max(hist)
-            self.scores[subjectIndex] = match
-            if match >= mean + aboveMeanThreshold:
-                self.significant.add(subjectIndex)
+            histogram, histogramBuckets = np.histogram(offsets)
+            maxCount = np.max(histogram)
+            meanCount = np.mean(histogram)
+            significant = (maxCount >= meanCount + aboveMeanThreshold)
+            self.analysis[subjectIndex] = {
+                'score': maxCount,
+                'significant': significant,
+            }
 
-    def __str__(self):
-        return repr(self.significant)
+            if storeAnalysis:
+                self.analysis[subjectIndex].update({
+                    'offsets': offsets,
+                    'histogram': histogram,
+                    'histogramBuckets': histogramBuckets,
+                    'maxCount': maxCount,
+                    'meanCount': meanCount,
+                })
+
+    def significant(self):
+        """
+        Which subject matches were significant?
+
+        @return: A generator that yields the subject indices of the
+            significant matched subjects.
+        """
+        return (subjectIndex for subjectIndex, analysis in
+                self.analysis.iteritems() if analysis['significant'])
 
     def save(self, fp=sys.stdout):
         """
@@ -42,10 +62,10 @@ class Result(object):
         @return: The C{fp} we were passed (this is useful in testing).
         """
         alignments = []
-        for subjectIndex in self.significant:
+        for subjectIndex in self.significant():
             alignments.append({
                 'matchInfo': self.matches[subjectIndex],
-                'matchScore': self.scores[subjectIndex],
+                'matchScore': self.analysis[subjectIndex]['score'],
                 'subjectIndex': subjectIndex,
             })
 

@@ -9,10 +9,11 @@ from light.landmarks.alpha_helix_3_10 import AlphaHelix_3_10
 from light.landmarks.alpha_helix_pi import AlphaHelix_pi
 from light.landmarks.beta_strand import BetaStrand
 from light.trig.amino_acids import AminoAcids
+from light.trig.troughs import Troughs
 
 
 DB = Database([AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, BetaStrand],
-              [AminoAcids])
+              [AminoAcids, Troughs])
 
 # An alpha helix with many Cysteine (C) trig points.
 COWPOX = AARead('Cowpox virus 15', 'ADDDADDDAMCDCMCDCMCDC')
@@ -44,15 +45,15 @@ def p(read, result):
         print '=== READ %s find result ===' % read
         for subjectIndex in result.matches:
             print '>>> SUBJECT: %r (score %d, index %d)' % (
-                DB.subjectInfo[subjectIndex][0], result.scores[subjectIndex],
-                subjectIndex)
+                DB.subjectInfo[subjectIndex][0],
+                result.analysis[subjectIndex]['score'], subjectIndex)
             pprint(result.matches[subjectIndex])
-        print 'significant:', result.significant
+        print 'significant:', list(result.significant())
         print
 
 # Run find on a read that hits both squirrelpox subjects.
 READ0 = AARead('id0', SQUIRRELPOX1296.sequence + SQUIRRELPOX55.sequence)
-_result = DB.find(READ0, aboveMeanThreshold=1.5)
+_result = DB.find(READ0, aboveMeanThreshold=3)
 # p(0, _result)
 RECORD0 = _result.save(StringIO()).getvalue()
 

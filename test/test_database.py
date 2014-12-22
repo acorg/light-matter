@@ -5,9 +5,7 @@ from hashlib import sha256
 
 from light.features import Landmark, TrigPoint
 from light.landmarks.alpha_helix import AlphaHelix
-from light.landmarks.alpha_helix_pi import AlphaHelix_pi
 from light.landmarks.beta_strand import BetaStrand
-from light.trig.amino_acids import AminoAcids
 from light.trig.peaks import Peaks
 from light.trig.troughs import Troughs
 from light.database import Database
@@ -422,24 +420,6 @@ class TestDatabase(TestCase):
                 ],
             },
             result.matches)
-
-    # TODO: Remove this test.
-    def xxx_testBetaAndAminoAcid(self):
-        """
-        This was used for debugging and may be useful again soon.
-        """
-        # An alpha helix pi with one Cysteine (C) trig point.
-        seq0 = 'ADDDDADDDDAMC'
-        # A beta strand with one trig point.
-        seq1 = 'VVVVVVAC'
-        subject0 = AARead('Monkeypox virus 456', seq0)
-        subject1 = AARead('Mummypox virus 3000 B.C.', seq1)
-        db = Database([AlphaHelix, AlphaHelix_pi, BetaStrand], [AminoAcids])
-        db.addSubject(subject0)
-        db.addSubject(subject1)
-        query = AARead('query', seq0 + 'A' + seq1)
-        result = db.find(query, aboveMeanThreshold=0.0)
-        self.assertEqual({}, result.matches)
 
     def testSaveParamsAsJSONReturnsItsArgument(self):
         """

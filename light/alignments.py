@@ -9,7 +9,6 @@ from dark.alignments import (
 from dark.utils import numericallySortFilenames
 
 from light.params import checkCompatibleParams
-# from light.hsp import normalizeHSP
 
 
 class LightAlignment(Alignment):

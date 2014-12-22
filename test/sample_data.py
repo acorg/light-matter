@@ -1,4 +1,3 @@
-from pprint import pprint
 from cStringIO import StringIO
 
 from dark.reads import AARead
@@ -38,19 +37,6 @@ DB.addSubject(SQUIRRELPOX55)
 
 PARAMS = DB.saveParamsAsJSON(StringIO()).getvalue()
 
-
-# TODO: remove this function & calls to it.
-def p(read, result):
-    if True:
-        print '=== READ %s find result ===' % read
-        for subjectIndex in result.matches:
-            print '>>> SUBJECT: %r (score %d, index %d)' % (
-                DB.subjectInfo[subjectIndex][0],
-                result.analysis[subjectIndex]['score'], subjectIndex)
-            pprint(result.matches[subjectIndex])
-        print 'significant:', list(result.significant())
-        print
-
 # Run find on a read that hits both squirrelpox subjects.
 READ0 = AARead('id0', SQUIRRELPOX1296.sequence + SQUIRRELPOX55.sequence)
 _result = DB.find(READ0, aboveMeanThreshold=3)
@@ -65,7 +51,6 @@ RECORD0 = _result.save(StringIO()).getvalue()
 # residues later).
 READ1 = AARead('id1', MUMMYPOX.sequence + MONKEYPOX.sequence)
 _result = DB.find(READ1, aboveMeanThreshold=0.0)
-# p(1, _result)
 RECORD1 = _result.save(StringIO()).getvalue()
 
 # Run find on a read that hits only cowpox. Using the default value of
@@ -73,17 +58,14 @@ RECORD1 = _result.save(StringIO()).getvalue()
 # also has an alpha helix) not being significant.
 READ2 = AARead('id2', COWPOX.sequence)
 _result = DB.find(READ2)
-# p(2, _result)
 RECORD2 = _result.save(StringIO()).getvalue()
 
 # Run find on a second read that also hits just cowpox.
 READ3 = AARead('id3', COWPOX.sequence)
 _result = DB.find(READ3)
-# p(3, _result)
 RECORD3 = _result.save(StringIO()).getvalue()
 
 # Run find on a third read that also hits just cowpox.
 READ4 = AARead('id4', COWPOX.sequence)
 _result = DB.find(READ4)
-# p(4, _result)
 RECORD4 = _result.save(StringIO()).getvalue()

@@ -23,6 +23,7 @@ if __name__ == '__main__':
 
     parser.add_argument(
         '--sequence', action='append', dest='sequences',
+        metavar='"id sequence"',
         help='Amino acid sequences to add to the database. The sequence id '
         'will be the text up to the last space, if any, otherwise will be '
         'automatically assigned.')

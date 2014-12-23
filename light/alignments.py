@@ -178,8 +178,9 @@ class JSONRecordsReader(object):
 
         @param filename: A C{str} filename containing JSON light matter
             results.
-        @raise ValueError: if the first line of the file isn't valid JSON
-            or if the input file is empty.
+        @raise ValueError: if the first line of the file isn't valid JSON,
+            if the input file is empty or if the database and output file
+            checksums don't match.
         """
         if filename.endswith('.bz2'):
             self._fp = bz2.BZ2File(filename)
@@ -196,6 +197,10 @@ class JSONRecordsReader(object):
             raise ValueError(
                 'Could not convert first line of %r to JSON (%s). '
                 'Line is %r.' % (self._filename, e, line[:-1]))
+
+        if self.params['checksum'] != self._database.checksum():
+            raise ValueError(
+                'Database and output file have different checksums.')
 
     def readAlignments(self):
         """

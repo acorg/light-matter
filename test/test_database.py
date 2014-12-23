@@ -16,6 +16,12 @@ class TestDatabase(TestCase):
     """
     Tests for the light.database.Database class.
     """
+    def testAboveMeanThresholdDefault(self):
+        """
+        The above mean threshold default value must be as expected.
+        """
+        self.assertEqual(15, Database.ABOVE_MEAN_THRESHOLD_DEFAULT)
+
     def testFindersAreStored(self):
         """
         The list of landmark and trig point finders must be stored correctly.
@@ -325,7 +331,7 @@ class TestDatabase(TestCase):
                 0: [
                     {
                         'trigPointName': 'Peaks',
-                        'distance': -10,
+                        'distance': 10,
                         'landmarkLength': 9,
                         'readOffset': 0,
                         'subjectOffset': 1,
@@ -334,7 +340,7 @@ class TestDatabase(TestCase):
                 ],
             },
             result.matches)
-        self.assertEqual(0, len(result.significant))
+        self.assertEqual(0, len(list(result.significant())))
 
     def testFindOneMatchingSignificant(self):
         """
@@ -351,7 +357,7 @@ class TestDatabase(TestCase):
                 0: [
                     {
                         'trigPointName': 'Peaks',
-                        'distance': -10,
+                        'distance': 10,
                         'landmarkLength': 9,
                         'readOffset': 0,
                         'subjectOffset': 1,
@@ -396,7 +402,7 @@ class TestDatabase(TestCase):
             {
                 0: [
                     {
-                        'distance': -10,
+                        'distance': 10,
                         'landmarkLength': 9,
                         'landmarkName': 'AlphaHelix',
                         'readOffset': 0,
@@ -404,7 +410,7 @@ class TestDatabase(TestCase):
                         'trigPointName': 'Peaks',
                     },
                     {
-                        'distance': -13,
+                        'distance': 13,
                         'landmarkLength': 9,
                         'landmarkName': 'AlphaHelix',
                         'readOffset': 0,
@@ -414,6 +420,15 @@ class TestDatabase(TestCase):
                 ],
             },
             result.matches)
+
+    def testSaveParamsAsJSONReturnsItsArgument(self):
+        """
+        The saveParamsAsJSON function must return its (fp) argument.
+        """
+        db = Database([AlphaHelix], [Peaks], limitPerLandmark=3,
+                      maxDistance=10)
+        io = StringIO()
+        self.assertIs(io, db.saveParamsAsJSON(io))
 
     def testSaveParamsAsJSON(self):
         """

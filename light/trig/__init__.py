@@ -4,15 +4,19 @@ from light.trig.amino_acids import AminoAcids
 from light.trig.individual_peaks import IndividualPeaks
 from light.trig.individual_troughs import IndividualTroughs
 
-ALL_TRIG_FINDER_CLASSES = {Peaks, Troughs, AminoAcids, IndividualPeaks,
-                           IndividualTroughs}
+ALL_TRIG_FINDER_CLASSES = {
+    Peaks, Troughs, AminoAcids, IndividualPeaks, IndividualTroughs}
+
+DEFAULT_TRIG_FINDER_CLASSES = {
+    Peaks, Troughs, AminoAcids}
 
 
-def find(name):
+def findTrigPoint(name):
     """
     A function to find a trig point finder.
 
-    @param name: The name of the trig point finder to find.
+    @param name: The C{str} name of the trig point finder class to find.
+    @return: The found class, or C{None}.
     """
 
     for klass in ALL_TRIG_FINDER_CLASSES:
@@ -21,4 +25,5 @@ def find(name):
 
 
 # Default exports for 'from light.trig import *'
-__all__ = ['find', 'ALL_TRIG_FINDER_CLASSES']
+__all__ = ['findTrigPoint', 'ALL_TRIG_FINDER_CLASSES',
+           'DEFAULT_TRIG_FINDER_CLASSES']

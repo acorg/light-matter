@@ -8,8 +8,8 @@ from os.path import basename
 from dark.fasta import FastaReads
 from dark.reads import Reads, AARead
 
-from light.landmarks import find as findLandmark, ALL_LANDMARK_FINDER_CLASSES
-from light.trig import find as findTrigPoint, ALL_TRIG_FINDER_CLASSES
+from light.landmarks import findLandmark, DEFAULT_LANDMARK_FINDER_CLASSES
+from light.trig import findTrigPoint, DEFAULT_TRIG_FINDER_CLASSES
 from light.database import Database
 
 
@@ -34,13 +34,13 @@ if __name__ == '__main__':
 
     parser.add_argument(
         '--landmark', action='append', dest='landmarkFinderNames',
-        choices=sorted(klass.NAME for klass in ALL_LANDMARK_FINDER_CLASSES),
+        choices=sorted(cl.NAME for cl in DEFAULT_LANDMARK_FINDER_CLASSES),
         help='The name of a landmark finder to use. May be specified '
         'multiple times.')
 
     parser.add_argument(
         '--trig', action='append', dest='trigFinderNames',
-        choices=sorted(klass.NAME for klass in ALL_TRIG_FINDER_CLASSES),
+        choices=sorted(cl.NAME for cl in DEFAULT_TRIG_FINDER_CLASSES),
         help='The name of a trig point finder to use. May be specified '
         'multiple times.')
 
@@ -56,9 +56,9 @@ if __name__ == '__main__':
 
     landmarkFinderNames = (args.landmarkFinderNames or
                            [klass.NAME for klass in
-                            ALL_LANDMARK_FINDER_CLASSES])
+                            DEFAULT_LANDMARK_FINDER_CLASSES])
     trigFinderNames = (args.trigFinderNames or
-                       [klass.NAME for klass in ALL_TRIG_FINDER_CLASSES])
+                       [klass.NAME for klass in DEFAULT_TRIG_FINDER_CLASSES])
 
     if len(landmarkFinderNames) + len(trigFinderNames) == 0:
         print >>sys.stderr, ('You must specify either landmark or trig point '

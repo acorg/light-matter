@@ -7,8 +7,8 @@ from operator import attrgetter
 
 from light.reads import ScannedRead, ScannedRead as ScannedSubject
 from light.result import Result
-from light.landmarks import find as findLandmark
-from light.trig import find as findTrigPoint
+from light.landmarks import findLandmark
+from light.trig import findTrigPoint
 
 
 class Database(object):

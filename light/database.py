@@ -1,13 +1,14 @@
 import sys
 from collections import defaultdict
-from cPickle import dump, load, HIGHEST_PROTOCOL
-from json import dumps
+from ujson import dump, dumps, load
 from hashlib import sha256
 from operator import attrgetter
 
 
 from light.reads import ScannedRead, ScannedRead as ScannedSubject
 from light.result import Result
+from light.landmarks import find as findLandmark
+from light.trig import find as findTrigPoint
 
 
 class Database(object):
@@ -34,16 +35,18 @@ class Database(object):
         self.trigPointFinderClasses = trigPointFinderClasses
         self.limitPerLandmark = limitPerLandmark
         self.maxDistance = maxDistance
-        self.d = defaultdict(list)
+        # It may look like self.d should be a defaultdict(list). But that
+        # will not work because a database JSON save followed by a load
+        # will restore the defaultdict as a vanilla dict.
+        self.d = {}
         self.subjectCount = 0
         self.totalResidues = 0
         self.totalCoveredResidues = 0
         self.subjectInfo = []
-
+        # Create instances of the landmark and trig point finder classes.
         self.landmarkFinders = []
         for landmarkFinderClass in self.landmarkFinderClasses:
             self.landmarkFinders.append(landmarkFinderClass())
-
         self.trigPointFinders = []
         for trigPointFinderClass in self.trigPointFinderClasses:
             self.trigPointFinders.append(trigPointFinderClass())
@@ -91,10 +94,14 @@ class Database(object):
                 limitPerLandmark=self.limitPerLandmark,
                 maxDistance=self.maxDistance):
             key = self.key(landmark, trigPoint)
-            self.d[key].append({
+            value = {
                 'subjectIndex': subjectIndex,
                 'offset': landmark.offset,
-            })
+            }
+            try:
+                self.d[key].append(value)
+            except KeyError:
+                self.d[key] = [value]
 
     def __str__(self):
         return '%s: %d sequences, %d residues, %d hashes, %.2f%% coverage' % (
@@ -178,7 +185,20 @@ class Database(object):
 
         @param fp: A file pointer.
         """
-        dump(self, fp, protocol=HIGHEST_PROTOCOL)
+        state = {
+            'landmarkFinderClassNames': [klass.NAME for klass in
+                                         self.landmarkFinderClasses],
+            'trigPointFinderClassNames': [klass.NAME for klass in
+                                          self.trigPointFinderClasses],
+            'limitPerLandmark': self.limitPerLandmark,
+            'maxDistance': self.maxDistance,
+            'd': self.d,
+            'subjectCount': self.subjectCount,
+            'totalResidues': self.totalResidues,
+            'totalCoveredResidues': self.totalCoveredResidues,
+            'subjectInfo': self.subjectInfo,
+        }
+        dump(state, fp)
 
     @staticmethod
     def load(fp=sys.stdin):
@@ -188,15 +208,40 @@ class Database(object):
         @param fp: A file pointer.
         @return: An instance of L{Database}.
         """
-        # NOTE: We're using pickle, which isn't considered secure. But running
-        # other people's Python code in general shouldn't be considered
-        # secure, either. Make sure you don't load saved databases from
-        # untrusted sources. We could write this using JSON, but the set
-        # objects in self.d are not serializable and I don't want to convert
-        # each to a tuple due to concerns about memory usage when databases
-        # grow large. Anyway, for now let's proceed with pickle and caution.
-        # See google for more on Python and pickle security.
-        return load(fp)
+        state = load(fp)
+
+        landmarkFinderClasses = []
+        for landmarkClassName in state['landmarkFinderClassNames']:
+            klass = findLandmark(landmarkClassName)
+            if klass:
+                landmarkFinderClasses.append(klass)
+            else:
+                print >>sys.stderr, (
+                    'Could not find landscape finder class %r! Has that '
+                    'class been renamed or removed?' % landmarkClassName)
+                sys.exit(1)
+
+        trigPointFinderClasses = []
+        for trigPointClassName in state['trigPointFinderClassNames']:
+            klass = findTrigPoint(trigPointClassName)
+            if klass:
+                trigPointFinderClasses.append(klass)
+            else:
+                print >>sys.stderr, (
+                    'Could not find trig point finder class %r! Has that '
+                    'class been renamed or removed?' % trigPointClassName)
+                sys.exit(1)
+
+        database = Database(landmarkFinderClasses, trigPointFinderClasses,
+                            limitPerLandmark=state['limitPerLandmark'],
+                            maxDistance=state['maxDistance'])
+
+        # Monkey-patch the new database instance to restore its state.
+        for attr in ('d', 'subjectCount', 'totalResidues',
+                     'totalCoveredResidues', 'subjectInfo'):
+            setattr(database, attr, state[attr])
+
+        return database
 
     def checksum(self):
         """

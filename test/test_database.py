@@ -285,10 +285,10 @@ class TestDatabase(TestCase):
 
     def testSaveLoadNonEmpty(self):
         """
-        When asked to save and then load a non-empty empty database, the
-        correct database must result.
+        When asked to save and then load a non-empty database, the correct
+        database must result.
         """
-        db = Database([AlphaHelix], [Peaks])
+        db = Database([AlphaHelix, BetaStrand], [Peaks, Troughs])
         db.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
         fp = StringIO()
         db.save(fp)

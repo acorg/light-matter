@@ -6,3 +6,5 @@ scipy
 pep8
 pyflakes
 matplotlib
+dark-matter
+ujson

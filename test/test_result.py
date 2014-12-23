@@ -18,7 +18,7 @@ class TestResult(TestCase):
         read = AARead('read', 'AGTARFSDDD')
         result = Result(read, {}, 0)
         self.assertEqual({}, result.matches)
-        self.assertEqual(set(), result.significant)
+        self.assertEqual([], list(result.significant()))
         self.assertIs(read, result.read)
 
     def testAddOneMatch(self):
@@ -69,7 +69,7 @@ class TestResult(TestCase):
             ],
         }
         result = Result(read, matches, 5)
-        self.assertEqual(set(), result.significant)
+        self.assertEqual([], list(result.significant()))
 
     def testOneSignificantMatch(self):
         """
@@ -107,8 +107,8 @@ class TestResult(TestCase):
         }
 
         result = Result(read, matches, aboveMeanThreshold=0.1)
-        self.assertEqual({0}, result.significant)
-        self.assertEqual(2, result.scores[0])
+        self.assertEqual([0], list(result.significant()))
+        self.assertEqual(2, result.analysis[0]['score'])
 
     def testTwoSignificantMatches(self):
         """
@@ -165,9 +165,9 @@ class TestResult(TestCase):
         }
 
         result = Result(read, matches, aboveMeanThreshold=0.1)
-        self.assertEqual({0, 1}, result.significant)
-        self.assertEqual(2, result.scores[0])
-        self.assertEqual(2, result.scores[1])
+        self.assertEqual([0, 1], sorted(list(result.significant())))
+        self.assertEqual(2, result.analysis[0]['score'])
+        self.assertEqual(2, result.analysis[1]['score'])
 
     def testSaveEmpty(self):
         """
@@ -185,6 +185,14 @@ class TestResult(TestCase):
                 'querySequence': 'AGTARFSDDD',
             },
             result)
+
+    def testSaveReturnsItsArgument(self):
+        """
+        The save function must return its (fp) argument.
+        """
+        result = Result(AARead('id', 'A'), {}, aboveMeanThreshold=0)
+        fp = StringIO()
+        self.assertIs(fp, result.save(fp))
 
     def testSave(self):
         """
@@ -222,39 +230,31 @@ class TestResult(TestCase):
             {
                 'alignments': [
                     {
-                        'hsps': [
+                        'matchInfo': [
                             {
-                                'matchInfo': [
-                                    {
-                                        'distance': -27,
-                                        'landmarkLength': 9,
-                                        'landmarkName': 'AlphaHelix',
-                                        'readOffset': 0,
-                                        'subjectOffset': 0,
-                                        'trigPointName': 'AlphaHelix'
-                                    },
-                                ],
-                                'matchScore': 1,
+                                'distance': -27,
+                                'landmarkLength': 9,
+                                'landmarkName': 'AlphaHelix',
+                                'readOffset': 0,
+                                'subjectOffset': 0,
+                                'trigPointName': 'AlphaHelix'
                             },
                         ],
+                        'matchScore': 1,
                         'subjectIndex': 0
                     },
                     {
-                        'hsps': [
+                        'matchInfo': [
                             {
-                                'matchInfo': [
-                                    {
-                                        'distance': 27,
-                                        'landmarkLength': 13,
-                                        'landmarkName': 'AlphaHelix',
-                                        'readOffset': 27,
-                                        'subjectOffset': 27,
-                                        'trigPointName': 'AlphaHelix',
-                                    },
-                                ],
-                                'matchScore': 1,
+                                'distance': 27,
+                                'landmarkLength': 13,
+                                'landmarkName': 'AlphaHelix',
+                                'readOffset': 27,
+                                'subjectOffset': 27,
+                                'trigPointName': 'AlphaHelix',
                             },
                         ],
+                        'matchScore': 1,
                         'subjectIndex': 27,
                     },
                 ],

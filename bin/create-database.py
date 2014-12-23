@@ -88,6 +88,7 @@ if __name__ == '__main__':
     print >>sys.stderr, database
     print >>sys.stderr, 'Database built in %.2f seconds. Saving...' % (
         time() - startTime),
-    startTime = time()
+
+    saveStartTime = time()
     database.save()
-    print >>sys.stderr, 'saved in %.2f seconds.' % (time() - startTime)
+    print >>sys.stderr, 'saved in %.2f seconds.' % (time() - saveStartTime)

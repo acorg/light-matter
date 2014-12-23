@@ -255,7 +255,7 @@ class TestLightReadsAlignments(TestCase):
         with patch.object(bz2, 'BZ2File') as mockMethod:
             mockMethod.side_effect = sideEffect.sideEffect
             error = 'Database and output file have different checksums.'
-            readsAlignments = LightReadsAlignments(['file1.json.bz2'], DB)
+            readsAlignments = LightReadsAlignments(['file.json.bz2'], DB)
             self.assertRaisesRegexp(ValueError, error, list, readsAlignments)
 
     def testGetSubjectSequence(self):

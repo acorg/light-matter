@@ -200,9 +200,7 @@ class JSONRecordsReader(object):
 
         if self.params['checksum'] != self._database.checksum():
             raise ValueError(
-                'Database and output file have different checksums: '
-                'Database: %s, Output file: %s' % (self._database.checksum(),
-                                                   self.params['checksum']))
+                'Database and output file have different checksums.')
 
     def readAlignments(self):
         """

@@ -237,6 +237,27 @@ class TestLightReadsAlignments(TestCase):
                 ['file1.json.bz2', 'file2.json.bz2'], DB)
             self.assertRaisesRegexp(ValueError, error, list, readsAlignments)
 
+    def testIncompatibleChecksum(self):
+        """
+        If an output file and a database with incompatible checksums are given
+        to L{LightReadsAlignments}, a C{ValueError} must be raised when the
+        files are read.
+        """
+
+        class SideEffect(object):
+
+            def sideEffect(self, _ignoredFilename):
+                params = loads(PARAMS)
+                params['checksum'] = 'abc'
+                return BZ2([dumps(params) + '\n', RECORD1])
+
+        sideEffect = SideEffect()
+        with patch.object(bz2, 'BZ2File') as mockMethod:
+            mockMethod.side_effect = sideEffect.sideEffect
+            error = 'Database and output file have different checksums.'
+            readsAlignments = LightReadsAlignments(['file1.json.bz2'], DB)
+            self.assertRaisesRegexp(ValueError, error, list, readsAlignments)
+
     def testGetSubjectSequence(self):
         """
         The getSubjectSequence function must return a correct C{SeqIO.read}

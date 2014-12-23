@@ -15,7 +15,7 @@ def findTrigPoint(name):
     """
     A function to find a trig point finder.
 
-    @param name: The C{str} name of the trig point finder to find.
+    @param name: The C{str} name of the trig point finder class to find.
     @return: The found class, or C{None}.
     """
 

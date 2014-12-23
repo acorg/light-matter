@@ -14,7 +14,7 @@ def findLandmark(name):
     """
     A function to find a landmark finder.
 
-    @param name: The C{str} name of the landmark finder to find.
+    @param name: The C{str} name of the landmark finder class to find.
     @return: The found class, or C{None}.
     """
 

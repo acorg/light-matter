@@ -7,8 +7,8 @@ from os.path import basename
 
 from dark.fasta import FastaReads
 
-from light.landmarks import find as findLandmark, ALL_LANDMARK_FINDER_CLASSES
-from light.trig import find as findTrigPoint, ALL_TRIG_FINDER_CLASSES
+from light.landmarks import findLandmark, ALL_LANDMARK_FINDER_CLASSES
+from light.trig import findTrigPoint, ALL_TRIG_FINDER_CLASSES
 from light.database import Database
 
 if __name__ == '__main__':

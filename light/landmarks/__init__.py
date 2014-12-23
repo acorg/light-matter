@@ -6,12 +6,16 @@ from light.landmarks.beta_strand import BetaStrand
 ALL_LANDMARK_FINDER_CLASSES = {
     AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, BetaStrand}
 
+DEFAULT_LANDMARK_FINDER_CLASSES = {
+    AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, BetaStrand}
 
-def find(name):
+
+def findLandmark(name):
     """
     A function to find a landmark finder.
 
-    @param name: The name of the landmark finder to find.
+    @param name: The C{str} name of the landmark finder to find.
+    @return: The found class, or C{None}.
     """
 
     for klass in ALL_LANDMARK_FINDER_CLASSES:
@@ -20,4 +24,5 @@ def find(name):
 
 
 # Default exports for 'from light.landmarks import *'
-__all__ = ['find', 'ALL_LANDMARK_FINDER_CLASSES']
+__all__ = ['findLandmark', 'ALL_LANDMARK_FINDER_CLASSES',
+           'DEFAULT_LANDMARK_FINDER_CLASSES']

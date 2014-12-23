@@ -1,8 +1,12 @@
 from unittest import TestCase
 
-from light.trig import find, ALL_TRIG_FINDER_CLASSES
+from light.trig import (
+    findTrigPoint, ALL_TRIG_FINDER_CLASSES, DEFAULT_TRIG_FINDER_CLASSES)
 from light.trig.peaks import Peaks
 from light.trig.troughs import Troughs
+from light.trig.amino_acids import AminoAcids
+from light.trig.individual_peaks import IndividualPeaks
+from light.trig.individual_troughs import IndividualTroughs
 
 
 class TestFindTrig(TestCase):
@@ -15,13 +19,15 @@ class TestFindTrig(TestCase):
         The find function should return C{None} if asked to find a trig
         class that doesn't exist.
         """
-        self.assertIs(None, find('silly'))
+        self.assertIs(None, findTrigPoint('silly'))
 
     def testFindPeaks(self):
         """
-        The find function should be able to find the Peak class by name.
+        The find function should be able to find all trig point classes by
+        name.
         """
-        self.assertIs(Peaks, find('Peaks'))
+        for klass in ALL_TRIG_FINDER_CLASSES:
+            self.assertIs(klass, findTrigPoint(klass.NAME))
 
 
 class TestAllTrigClasses(TestCase):
@@ -29,15 +35,24 @@ class TestAllTrigClasses(TestCase):
     Trivial tests for the ALL_TRIG_FINDER_CLASSES set.
     """
 
-    def testAllClassesContainsTroughs(self):
+    def testAllClasses(self):
         """
-        The ALL_TRIG_FINDER_CLASSES set must contain the Troughs class.
+        The ALL_TRIG_FINDER_CLASSES set must be as expected.
         """
-        self.assertIn(Troughs, ALL_TRIG_FINDER_CLASSES)
+        self.assertEqual(
+            {AminoAcids, Peaks, Troughs, IndividualPeaks, IndividualTroughs},
+            ALL_TRIG_FINDER_CLASSES)
 
-    def testAllClassesContainsPeaks(self):
+
+class TestDefaultTrigClasses(TestCase):
+    """
+    Trivial tests for the DEFAULT_TRIG_FINDER_CLASSES set.
+    """
+
+    def testDefaultClasses(self):
         """
-        The ALL_LANDMARK_FINDER_CLASSES set must contain the Peaks
-        class.
+        The DEFAULT_TRIG_FINDER_CLASSES must be as expected.
         """
-        self.assertIn(Peaks, ALL_TRIG_FINDER_CLASSES)
+        self.assertEqual(
+            {Peaks, Troughs, AminoAcids},
+            DEFAULT_TRIG_FINDER_CLASSES)

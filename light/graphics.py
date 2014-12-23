@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt
 
 from light.reads import ScannedRead
-from light.landmarks import find as findLandmark
-from light.trig import find as findTrigPoint
+from light.landmarks import findLandmark
+from light.trig import findTrigPoint
 
 COLORS = {'A': 'blue',
           'B': 'cyan',

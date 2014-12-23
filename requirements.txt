@@ -6,4 +6,4 @@ scipy
 pep8
 pyflakes
 matplotlib
-MySQL-python
+dark-matter

@@ -12,25 +12,27 @@ class TestAminoAcids(TestCase):
     """
     def testFindWithoutAA(self):
         """
-        If the desired amino acid is not present, return one trig point.
+        If the desired amino acid is not present, return an empty list.
         """
         read = AARead('id', 'ASAAAAASAAA')
         aas = AminoAcids()
         result = list(aas.find(read))
         self.assertEqual([], result)
 
-    def testFindWithOneAA(self):
+    def testFindWithOneAAC(self):
         """
-        If one of the desired amino acids is present, return one trig point.
+        If one of the desired amino acids (C) is present, return one trig
+        point.
         """
         read = AARead('id', 'ASAACAASAAA')
         aas = AminoAcids()
         result = list(aas.find(read))
         self.assertEqual([TrigPoint('AminoAcids', 'M', 4)], result)
 
-    def testFindWithTwoAA(self):
+    def testFindWithTwoAAC(self):
         """
-        If two of the desired amino acids are present, return two trig points.
+        If two of the desired amino acids (C) are present, return two trig
+        points.
         """
         read = AARead('id', 'ASAACAACAAA')
         aas = AminoAcids()
@@ -38,13 +40,65 @@ class TestAminoAcids(TestCase):
         self.assertEqual([TrigPoint('AminoAcids', 'M', 4),
                           TrigPoint('AminoAcids', 'M', 7)], result)
 
-    def testFindWithTwoAABeginningAndEnd(self):
+    def testFindWithTwoAABeginningAndEndC(self):
         """
-        If two of the desired amino acids are present at the beginnitn and end
-        of the sequence, return two trig points.
+        If two of the desired amino acids are present (C) at the beginning and
+        end of the sequence, return two trig points.
         """
         read = AARead('id', 'CASAAAAAAAC')
         aas = AminoAcids()
         result = list(aas.find(read))
         self.assertEqual([TrigPoint('AminoAcids', 'M', 0),
                           TrigPoint('AminoAcids', 'M', 10)], result)
+
+    def testFindWithOneAAW(self):
+        """
+        If one of the desired amino acids (W) is present, return one trig
+        point.
+        """
+        read = AARead('id', 'ASAAWAASAAA')
+        aas = AminoAcids()
+        result = list(aas.find(read))
+        self.assertEqual([TrigPoint('AminoAcids', 'M', 4)], result)
+
+    def testFindWithTwoAAW(self):
+        """
+        If two of the desired amino acids (W) are present, return two trig
+        points.
+        """
+        read = AARead('id', 'ASAAWAAWAAA')
+        aas = AminoAcids()
+        result = list(aas.find(read))
+        self.assertEqual([TrigPoint('AminoAcids', 'M', 4),
+                          TrigPoint('AminoAcids', 'M', 7)], result)
+
+    def testFindWithTwoAABeginningAndEndW(self):
+        """
+        If two of the desired amino acids are present (W) at the beginning and
+        end of the sequence, return two trig points.
+        """
+        read = AARead('id', 'WASAAAAAAAW')
+        aas = AminoAcids()
+        result = list(aas.find(read))
+        self.assertEqual([TrigPoint('AminoAcids', 'M', 0),
+                          TrigPoint('AminoAcids', 'M', 10)], result)
+
+    def testFindWithTwoDifferentAA(self):
+        """
+        If two different desired amino acids (C and W) are present, return two
+        trig points.
+        """
+        read = AARead('id', 'ASAACAAWAAA')
+        aas = AminoAcids()
+        result = list(aas.find(read))
+        self.assertEqual([TrigPoint('AminoAcids', 'M', 4),
+                          TrigPoint('AminoAcids', 'M', 7)], result)
+
+    def testFindRightNonDefaultAA(self):
+        """
+        If the default amino acid list is changed, return the right trig point.
+        """
+        read = AARead('id', 'ASAACAAWAAA')
+        aas = AminoAcids()
+        result = list(aas.find(read, aa=['S']))
+        self.assertEqual([TrigPoint('AminoAcids', 'M', 1)], result)

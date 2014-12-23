@@ -1,6 +1,6 @@
 import sys
 from collections import defaultdict
-from ujson import dump, load
+from ujson import dump, dumps, load
 from hashlib import sha256
 from operator import attrgetter
 
@@ -23,6 +23,12 @@ class Database(object):
     @param maxDistance: The C{int} maximum distance permitted between
         yielded pairs.
     """
+
+    # The default amount by which the maximum delta count in a bucket must
+    # exceed the mean bucket count for that maximum bucket count to be
+    # considered significant.
+    ABOVE_MEAN_THRESHOLD_DEFAULT = 15
+
     def __init__(self, landmarkFinderClasses, trigPointFinderClasses,
                  limitPerLandmark=None, maxDistance=None):
         self.landmarkFinderClasses = landmarkFinderClasses
@@ -108,8 +114,9 @@ class Database(object):
         Save the database parameters to a file in JSON format.
 
         @param fp: A file pointer.
+        @return: The C{fp} we were passed (this is useful in testing).
         """
-        dump({
+        print >>fp, dumps({
             'checksum': self.checksum(),
             'landmarkFinderClasses': [
                 klass.NAME for klass in self.landmarkFinderClasses],
@@ -120,9 +127,12 @@ class Database(object):
             'subjectCount': self.subjectCount,
             'totalResidues': self.totalResidues,
             'totalCoveredResidues': self.totalCoveredResidues,
-        }, fp)
+        })
 
-    def find(self, read, aboveMeanThreshold=15):
+        return fp
+
+    def find(self, read, aboveMeanThreshold=ABOVE_MEAN_THRESHOLD_DEFAULT,
+             storeAnalysis=False):
         """
         A function which takes a read, computes all hashes for it, looks up
         matching hashes and checks which database sequence it matches.
@@ -131,6 +141,8 @@ class Database(object):
         @param aboveMeanThreshold: A numeric amount by which the maximum delta
             count in a bucket must exceed the mean bucket count for that
             maximum bucket count to be considered significant.
+        @param storeAnalysis: A C{bool}. If C{True} the intermediate
+            significance analysis computed in the Result will be stored.
         @return: A C{light.result.Result} instance.
         """
         scannedRead = ScannedRead(read)
@@ -156,7 +168,7 @@ class Database(object):
             else:
                 for subject in subjects:
                     matches[subject['subjectIndex']].append({
-                        'distance': landmark.offset - trigPoint.offset,
+                        'distance': trigPoint.offset - landmark.offset,
                         'landmarkLength': landmark.length,
                         'landmarkName': landmark.name,
                         'readOffset': landmark.offset,
@@ -164,7 +176,8 @@ class Database(object):
                         'trigPointName': trigPoint.name,
                     })
 
-        return Result(read, matches, aboveMeanThreshold)
+        return Result(read, matches, aboveMeanThreshold,
+                      storeAnalysis=storeAnalysis)
 
     def save(self, fp=sys.stdout):
         """

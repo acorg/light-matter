@@ -8,9 +8,9 @@ from light.landmarks.alpha_helix_pi import AlphaHelix_pi
 from light.landmarks.beta_strand import BetaStrand
 
 
-class TestFind(TestCase):
+class TestFindLandmark(TestCase):
     """
-    Tests for the light.landmarks.find function.
+    Tests for the light.landmarks.findLandmark function.
     """
 
     def testFindFails(self):
@@ -20,7 +20,7 @@ class TestFind(TestCase):
         """
         self.assertIs(None, findLandmark('silly'))
 
-    def testFindAlphaHelix(self):
+    def testFindAllClasses(self):
         """
         The find function should be able to find all landmark classes by name.
         """
@@ -54,3 +54,11 @@ class TestDefaultLandmarkClasses(TestCase):
         self.assertEqual(
             {AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, BetaStrand},
             DEFAULT_LANDMARK_FINDER_CLASSES)
+
+    def testDefaultClassesAreInAllClasses(self):
+        """
+        The DEFAULT_LANDMARK_FINDER_CLASSES must all appear in
+        ALL_LANDMARK_FINDER_CLASSES.
+        """
+        for klass in DEFAULT_LANDMARK_FINDER_CLASSES:
+            self.assertIn(klass, ALL_LANDMARK_FINDER_CLASSES)

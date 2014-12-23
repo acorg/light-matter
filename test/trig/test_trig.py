@@ -9,19 +9,19 @@ from light.trig.individual_peaks import IndividualPeaks
 from light.trig.individual_troughs import IndividualTroughs
 
 
-class TestFindTrig(TestCase):
+class TestFindTrigPoint(TestCase):
     """
-    Tests for the light.trig.find function.
+    Tests for the light.trig.findTrigPoint function.
     """
 
-    def testFindTrigFails(self):
+    def testFindTrigPointFails(self):
         """
         The find function should return C{None} if asked to find a trig
-        class that doesn't exist.
+        point class that doesn't exist.
         """
         self.assertIs(None, findTrigPoint('silly'))
 
-    def testFindPeaks(self):
+    def testFindAllClasses(self):
         """
         The find function should be able to find all trig point classes by
         name.
@@ -56,3 +56,11 @@ class TestDefaultTrigClasses(TestCase):
         self.assertEqual(
             {Peaks, Troughs, AminoAcids},
             DEFAULT_TRIG_FINDER_CLASSES)
+
+    def testDefaultClassesAreInAllClasses(self):
+        """
+        The DEFAULT_TRIG_FINDER_CLASSES must all appear in
+        ALL_TRIG_FINDER_CLASSES.
+        """
+        for klass in DEFAULT_TRIG_FINDER_CLASSES:
+            self.assertIn(klass, ALL_TRIG_FINDER_CLASSES)

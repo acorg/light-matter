@@ -86,6 +86,8 @@ if __name__ == '__main__':
     for read in reads:
         database.addSubject(read)
     print >>sys.stderr, database
-    print >>sys.stderr, 'Database built in %.2f seconds. Saving.' % (
-        time() - startTime)
+    print >>sys.stderr, 'Database built in %.2f seconds. Saving...' % (
+        time() - startTime),
+    startTime = time()
     database.save()
+    print >>sys.stderr, 'saved in %.2f seconds.' % (time() - startTime)

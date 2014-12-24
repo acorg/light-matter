@@ -16,6 +16,18 @@ class TestDatabase(TestCase):
     """
     Tests for the light.database.Database class.
     """
+    @staticmethod
+    def _update(s, checksum):
+        """
+        Add the string representation of an object to a checksum,
+        followed by a NUL.
+
+        @param s: Anything that can be converted to a C{str} to be added to
+            the checksum.
+        @param checksum: Any hashlib sum instance with an update method.
+        """
+        checksum.update(str(s) + '\0')
+
     def testAboveMeanThresholdDefault(self):
         """
         The above mean threshold default value must be as expected.
@@ -439,12 +451,12 @@ class TestDatabase(TestCase):
         db.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
 
         checksum = sha256()
-        self.update(AlphaHelix.NAME, checksum)
-        self.update(Peaks.NAME, checksum)
-        self.update(3, checksum)  # Limit per landmark value.
-        self.update(10, checksum)  # Max distance value.
-        self.update('id', checksum)
-        self.update('FRRRFRRRFASAASA', checksum)
+        self._update(AlphaHelix.NAME, checksum)
+        self._update(Peaks.NAME, checksum)
+        self._update(3, checksum)  # Limit per landmark value.
+        self._update(10, checksum)  # Max distance value.
+        self._update('id', checksum)
+        self._update('FRRRFRRRFASAASA', checksum)
 
         # The database dictionary now contains
         #
@@ -455,11 +467,11 @@ class TestDatabase(TestCase):
         # We have to add the keys in order and the keys and values of the
         # values in order.
 
-        self.update('A2:P:-10', checksum)
-        self.update('offset', checksum)
-        self.update(0, checksum)
-        self.update('subjectIndex', checksum)
-        self.update(0, checksum)
+        self._update('A2:P:-10', checksum)
+        self._update('offset', checksum)
+        self._update(0, checksum)
+        self._update('subjectIndex', checksum)
+        self._update(0, checksum)
 
         out = StringIO()
         db.saveParamsAsJSON(out)
@@ -475,17 +487,31 @@ class TestDatabase(TestCase):
         }
         self.assertEqual(expected, loads(out.getvalue()))
 
-    @staticmethod
-    def update(s, checksum):
+    def testChecksumDirtyOnEmptyDatabase(self):
         """
-        Add the string representation of an object to a checksum,
-        followed by a NUL.
+        The database checksum status must be dirty on creation.
+        """
+        db = Database([], [])
+        self.assertTrue(db.checksumDirty())
 
-        @param s: Anything that can be converted to a C{str} to be added to
-            the checksum.
-        @param checksum: Any hashlib sum instance with an update method.
+    def testChecksumCleanAfterCallingChecksum(self):
         """
-        checksum.update(str(s) + '\0')
+        The database checksum status must be non-dirty once the checksum()
+        function has been called.
+        """
+        db = Database([], [])
+        db.checksum()
+        self.assertFalse(db.checksumDirty())
+
+    def testChecksumCDirtyAfterCallingChecksumThenAddingSubject(self):
+        """
+        The database checksum status must be dirty if a new subject is added
+        after the checksum() function has been called.
+        """
+        db = Database([], [])
+        db.checksum()
+        db.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
+        self.assertTrue(db.checksumDirty())
 
     def testChecksumEmptyDatabase(self):
         """
@@ -494,8 +520,8 @@ class TestDatabase(TestCase):
         """
         db = Database([], [])
         expected = sha256()
-        self.update(None, expected)  # Limit per landmark value.
-        self.update(None, expected)  # Max distance value.
+        self._update(None, expected)  # Limit per landmark value.
+        self._update(None, expected)  # Max distance value.
         self.assertEqual(expected.hexdigest(), db.checksum())
 
     def testChecksumEmptyDatabaseWithNonDefaultParams(self):
@@ -505,8 +531,8 @@ class TestDatabase(TestCase):
         """
         db = Database([], [], limitPerLandmark=3, maxDistance=10)
         expected = sha256()
-        self.update(3, expected)
-        self.update(10, expected)
+        self._update(3, expected)
+        self._update(10, expected)
         self.assertEqual(expected.hexdigest(), db.checksum())
 
     def testChecksumEmptyDatabaseWithFinders(self):
@@ -516,12 +542,12 @@ class TestDatabase(TestCase):
         """
         db = Database([AlphaHelix, BetaStrand], [Peaks, Troughs])
         expected = sha256()
-        self.update(AlphaHelix.NAME, expected)
-        self.update(BetaStrand.NAME, expected)
-        self.update(Peaks.NAME, expected)
-        self.update(Troughs.NAME, expected)
-        self.update(None, expected)  # Limit per landmark value.
-        self.update(None, expected)  # Max distance value.
+        self._update(AlphaHelix.NAME, expected)
+        self._update(BetaStrand.NAME, expected)
+        self._update(Peaks.NAME, expected)
+        self._update(Troughs.NAME, expected)
+        self._update(None, expected)  # Limit per landmark value.
+        self._update(None, expected)  # Max distance value.
         self.assertEqual(expected.hexdigest(), db.checksum())
 
     def testChecksumEmptyDatabaseWithFinderOrderInvariant(self):
@@ -543,11 +569,11 @@ class TestDatabase(TestCase):
         db.addSubject(subject)
 
         expected = sha256()
-        self.update(AlphaHelix.NAME, expected)
-        self.update(None, expected)  # Limit per landmark value.
-        self.update(None, expected)  # Max distance value.
-        self.update('subject', expected)
-        self.update('FRRRFRRRFASAASA', expected)
+        self._update(AlphaHelix.NAME, expected)
+        self._update(None, expected)  # Limit per landmark value.
+        self._update(None, expected)  # Max distance value.
+        self._update('subject', expected)
+        self._update('FRRRFRRRFASAASA', expected)
         self.assertEqual(expected.hexdigest(), db.checksum())
 
     def testChecksumOneSubjectTwoLandmarks(self):
@@ -561,11 +587,11 @@ class TestDatabase(TestCase):
         db.addSubject(subject)
 
         expected = sha256()
-        self.update(AlphaHelix.NAME, expected)
-        self.update(None, expected)  # Limit per landmark value.
-        self.update(None, expected)  # Max distance value.
-        self.update('id', expected)
-        self.update(sequence, expected)
+        self._update(AlphaHelix.NAME, expected)
+        self._update(None, expected)  # Limit per landmark value.
+        self._update(None, expected)  # Max distance value.
+        self._update('id', expected)
+        self._update(sequence, expected)
 
         # The database dictionary now contains
         #
@@ -577,16 +603,16 @@ class TestDatabase(TestCase):
         # We have to add the keys in order and the keys and values of the
         # values in order.
 
-        self.update('A2:A3:-31', expected)
-        self.update('offset', expected)
-        self.update(0, expected)
-        self.update('subjectIndex', expected)
-        self.update(0, expected)
+        self._update('A2:A3:-31', expected)
+        self._update('offset', expected)
+        self._update(0, expected)
+        self._update('subjectIndex', expected)
+        self._update(0, expected)
 
-        self.update('A3:A2:31', expected)
-        self.update('offset', expected)
-        self.update(31, expected)
-        self.update('subjectIndex', expected)
-        self.update(0, expected)
+        self._update('A3:A2:31', expected)
+        self._update('offset', expected)
+        self._update(31, expected)
+        self._update('subjectIndex', expected)
+        self._update(0, expected)
 
         self.assertEqual(expected.hexdigest(), db.checksum())

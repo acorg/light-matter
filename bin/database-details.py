@@ -29,7 +29,8 @@ if __name__ == '__main__':
 
     parser.add_argument(
         '--printSubjects', default=False, type=str,
-        help='If a filename is given, write all subjects to the file.')
+        help='If a filename is given, write all subjects to the file in fasta '
+        'format.')
 
     parser.add_argument(
         '--printHashes', default=False, action='store_true',
@@ -40,6 +41,7 @@ if __name__ == '__main__':
     with open(args.json) as fp:
         database = Database.load(fp)
 
+    # print basic database information
     print 'Database file name: %s' % args.json
     print 'Sequences: %s' % database.subjectCount
     print 'Hashes: %d' % len(database.d)

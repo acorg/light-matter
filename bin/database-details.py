@@ -3,7 +3,9 @@
 import argparse
 from operator import attrgetter
 from collections import defaultdict
-from Bio import Seq, SeqIO, SeqRecord
+from Bio import SeqIO
+from Bio.Seq import Seq
+from Bio.SeqRecord import SeqRecord
 
 from light.database import Database
 from light.landmarks import ALL_LANDMARK_FINDER_CLASSES
@@ -64,15 +66,14 @@ if __name__ == '__main__':
     if args.printSubjects:
         subjects = []
         for sb in database.subjectInfo:
-            subjects.append(SeqRecord(Seq(sb[1]), id='%s' % sb[0],
-                            description=''))
-        with open(args.printSubjects) as fp:
+            subjects.append(SeqRecord(Seq(sb[1]), id=sb[0], description=''))
+        with open(args.printSubjects, 'w') as fp:
             SeqIO.write(subjects, fp, 'fasta')
         print 'Written %d subjects to %s' % (len(database.subjectInfo),
                                              args.printSubjects)
     # print hashes
     if args.printHashes:
-        for key, subjects in database.d:
+        for key, subjects in database.d.iteritems():
             print key
             for subject in subjects:
                 index = subject['subjectIndex']

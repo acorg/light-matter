@@ -16,6 +16,15 @@ COLORS = {'A': 'blue',
           'O': 'black'}
 
 
+def plotHistograms(lightTitlesAlignments, title):
+    """
+    For a lightTitlesAlignment, plot the histograms calculated by light.Result.
+
+    @param lightTitlesAlignments: A L{dark.titles.TitlesAlignments} instance.
+    @param title: A C{str} sequence title that was found by light matter.
+    """
+
+
 def plotFeatures(read, landmarks=None, trigs=None, limitPerLandmark=None,
                  maxDistance=None, readsAx=None):
     """

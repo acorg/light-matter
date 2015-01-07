@@ -30,7 +30,7 @@ if __name__ == '__main__':
         help='the JSON file of a light matter database.')
 
     parser.add_argument(
-        '--printSubjects', default=False, type=str,
+        '--printSubjects', metavar='SUBJECT-FILENAME', default=False, type=str,
         help='If a filename is given, write all subjects to the file in fasta '
         'format.')
 
@@ -50,6 +50,7 @@ if __name__ == '__main__':
     print 'Residues: %d' % database.totalResidues
     print 'Coverage: %.2f%%' % (float(database.totalCoveredResidues) /
                                 database.totalResidues * 100.0)
+    print 'Checksum: %s' % database.checksum()
     print 'Number of landmark and trigpoints found:'
 
     # print hashes and subjects

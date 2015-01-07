@@ -70,8 +70,8 @@ if __name__ == '__main__':
             subjects.append(SeqRecord(Seq(sb[1]), id=sb[0], description=''))
         with open(args.printSubjects, 'w') as fp:
             SeqIO.write(subjects, fp, 'fasta')
-        print 'Written %d subjects to %s' % (len(database.subjectInfo),
-                                             args.printSubjects)
+        print 'Wrote %d subjects to %s' % (len(database.subjectInfo),
+                                           args.printSubjects)
     # print hashes
     if args.printHashes:
         for key, subjects in database.d.iteritems():

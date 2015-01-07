@@ -182,17 +182,16 @@ def _runTest(databaseFile, sequenceFile, landmarkFinders, trigFinders,
                         maxDistance)
     databaseReads = FastaReads(databaseFile)
     for read in databaseReads:
-        database.addRead(read)
+        database.addSubject(read)
 
     resultDict = defaultdict(dict)
     lookupReads = FastaReads(sequenceFile)
     for read in lookupReads:
         result = database.find(read)
-        if len(result.significant) > 0:
-            for subjectIndex in result.significant:
-                subject = database.readInfo[subjectIndex][0]
-                score = result.significant[subjectIndex]['matchScore']
-                resultDict[read.id][subject] = score
+        for subjectIndex in result.significant():
+            subject = database.subjectInfo[subjectIndex][0]
+            score = result.analysis[subjectIndex]['score']
+            resultDict[read.id][subject] = score
     return resultDict
 
 

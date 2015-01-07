@@ -43,6 +43,7 @@ class Database(object):
         self.totalResidues = 0
         self.totalCoveredResidues = 0
         self.subjectInfo = []
+        self._checksum = None
         # Create instances of the landmark and trig point finder classes.
         self.landmarkFinders = []
         for landmarkFinderClass in self.landmarkFinderClasses:
@@ -74,6 +75,8 @@ class Database(object):
         is passed as a read instance even though in many cases it will not be
         an actual read from a sequencing run.
         """
+        # Invalidate the stored checksum (if any).
+        self._checksum = None
         scannedSubject = ScannedSubject(subject)
         subjectIndex = self.subjectCount
         self.subjectCount += 1
@@ -186,6 +189,7 @@ class Database(object):
         @param fp: A file pointer.
         """
         state = {
+            '_checksum': self.checksum(),
             'landmarkFinderClassNames': [klass.NAME for klass in
                                          self.landmarkFinderClasses],
             'trigPointFinderClassNames': [klass.NAME for klass in
@@ -237,7 +241,7 @@ class Database(object):
                             maxDistance=state['maxDistance'])
 
         # Monkey-patch the new database instance to restore its state.
-        for attr in ('d', 'subjectCount', 'totalResidues',
+        for attr in ('_checksum', 'd', 'subjectCount', 'totalResidues',
                      'totalCoveredResidues', 'subjectInfo'):
             setattr(database, attr, state[attr])
 
@@ -249,6 +253,10 @@ class Database(object):
 
         @return: A C{str} checksum.
         """
+        # If the checksum is already known, return it.
+        if self._checksum is not None:
+            return self._checksum
+
         result = sha256()
 
         def update(s):
@@ -289,4 +297,15 @@ class Database(object):
                     update(detailKey)
                     update(details[detailKey])
 
-        return result.hexdigest()
+        self._checksum = result.hexdigest()
+        return self._checksum
+
+    def checksumDirty(self):
+        """
+        Check if the database has an up-to-date checksum stored.
+
+        @return: A C{bool}, C{True} if the in-memory checksum is valid,
+            C{False} if not.
+        """
+        # This function exists for testing purposes.
+        return self._checksum is None

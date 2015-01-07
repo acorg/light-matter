@@ -95,13 +95,15 @@ class CombinedFeatureList(object):
         self._features = SortedCollection(landmarks + trigPoints,
                                           key=attrgetter('offset'))
 
-    def nearest(self, offset, maxDistance=None):
+    def nearest(self, offset, maxDistance=None, minDistance=None):
         """
         Find the features nearest to the given offset.
 
         @param offset: The C{int} offset whose nearest features are wanted.
         @param maxDistance: The C{int} maximum distance a feature may be from
             the given offset to be considered.
+        @param minDistance: The C{int} minimum distance between a feature and
+            the given offset.
         @return: A generator that yields nearby features.
         """
 
@@ -134,7 +136,9 @@ class CombinedFeatureList(object):
                     return
                 else:
                     # We only have a right neighboring feature.
-                    if maxDistance is None or rightDelta <= maxDistance:
+                    if ((maxDistance is None or rightDelta <= maxDistance) and
+                            (minDistance is None or
+                             rightDelta >= minDistance)):
                         yield self._features[right]
                         right += 1
                     else:
@@ -143,7 +147,9 @@ class CombinedFeatureList(object):
             else:
                 if rightDelta is None:
                     # We only have a left neighboring feature.
-                    if maxDistance is None or leftDelta <= maxDistance:
+                    if ((maxDistance is None or leftDelta <= maxDistance) and
+                            (minDistance is None or
+                             leftDelta >= minDistance)):
                         yield self._features[left]
                         left -= 1
                     else:
@@ -152,14 +158,18 @@ class CombinedFeatureList(object):
                 else:
                     # Deltas on both left and right are available.
                     if leftDelta < rightDelta:
-                        if maxDistance is None or leftDelta <= maxDistance:
+                        if ((maxDistance is None or leftDelta <= maxDistance)
+                            and (minDistance is None or
+                                 leftDelta >= minDistance)):
                             yield self._features[left]
                             left -= 1
                         else:
                             # The smallest available delta is too large.
                             return
                     else:
-                        if maxDistance is None or rightDelta <= maxDistance:
+                        if ((maxDistance is None or rightDelta <= maxDistance)
+                            and (minDistance is None or
+                                 rightDelta >= minDistance)):
                             yield self._features[right]
                             right += 1
                         else:

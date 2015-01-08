@@ -8,7 +8,7 @@ ALPHAHELIX = re.compile('OIIIO(?:IIIO)+')
 
 class AlphaHelix(object):
     """
-    A class for computing statistics based on alpha helices.  Based
+    A class for computing statistics based on alpha helices. Based
     around the assumption that an alpha helix is composed of three times
     one hydrophobic and 3 hydrophilic amino acids.
 

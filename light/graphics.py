@@ -17,7 +17,7 @@ COLORS = {'A': 'blue',
 
 
 def plotFeatures(read, landmarks=None, trigs=None, limitPerLandmark=None,
-                 maxDistance=None, readsAx=None):
+                 maxDistance=None, minDistance=None, readsAx=None):
     """
     A function which plots the positions of landmark and trigpoint pairs on a
     sequence.
@@ -28,6 +28,8 @@ def plotFeatures(read, landmarks=None, trigs=None, limitPerLandmark=None,
     @param limitPerLandmark: An C{int} limit on the number of pairs to
         yield per landmark.
     @param maxDistance: The C{int} maximum distance permitted between
+        yielded pairs.
+    @param minDistance: The C{int} minimum distance permitted between
         yielded pairs.
     @param readsAx: If not None, use this as the subplot for displaying reads.
     """
@@ -79,7 +81,7 @@ def plotFeatures(read, landmarks=None, trigs=None, limitPerLandmark=None,
 
     for landmark, trigPoint in scannedRead.getPairs(
             limitPerLandmark=limitPerLandmark,
-            maxDistance=maxDistance):
+            maxDistance=maxDistance, minDistance=minDistance):
         readsAx.plot([landmark.offset, trigPoint.offset], [count, count], '-',
                      color='grey')
         landmarkColor = COLORS[landmark.symbol]

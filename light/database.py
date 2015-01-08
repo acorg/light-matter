@@ -22,6 +22,8 @@ class Database(object):
         yield per landmark.
     @param maxDistance: The C{int} maximum distance permitted between
         yielded pairs.
+    @param minDistance: The C{int} minimum distance between
+        yielded pairs.
     """
 
     # The default amount by which the maximum delta count in a bucket must
@@ -30,11 +32,12 @@ class Database(object):
     ABOVE_MEAN_THRESHOLD_DEFAULT = 15
 
     def __init__(self, landmarkFinderClasses, trigPointFinderClasses,
-                 limitPerLandmark=None, maxDistance=None):
+                 limitPerLandmark=None, maxDistance=None, minDistance=None):
         self.landmarkFinderClasses = landmarkFinderClasses
         self.trigPointFinderClasses = trigPointFinderClasses
         self.limitPerLandmark = limitPerLandmark
         self.maxDistance = maxDistance
+        self.minDistance = minDistance
         # It may look like self.d should be a defaultdict(list). But that
         # will not work because a database JSON save followed by a load
         # will restore the defaultdict as a vanilla dict.
@@ -95,7 +98,7 @@ class Database(object):
 
         for landmark, trigPoint in scannedSubject.getPairs(
                 limitPerLandmark=self.limitPerLandmark,
-                maxDistance=self.maxDistance):
+                maxDistance=self.maxDistance, minDistance=self.minDistance):
             key = self.key(landmark, trigPoint)
             value = {
                 'subjectIndex': subjectIndex,
@@ -127,6 +130,7 @@ class Database(object):
                 klass.NAME for klass in self.trigPointFinderClasses],
             'limitPerLandmark': self.limitPerLandmark,
             'maxDistance': self.maxDistance,
+            'minDistance': self.minDistance,
             'subjectCount': self.subjectCount,
             'totalResidues': self.totalResidues,
             'totalCoveredResidues': self.totalCoveredResidues,
@@ -162,7 +166,7 @@ class Database(object):
 
         for landmark, trigPoint in scannedRead.getPairs(
                 limitPerLandmark=self.limitPerLandmark,
-                maxDistance=self.maxDistance):
+                maxDistance=self.maxDistance, minDistance=self.minDistance):
             key = self.key(landmark, trigPoint)
             try:
                 subjects = self.d[key]
@@ -196,6 +200,7 @@ class Database(object):
                                           self.trigPointFinderClasses],
             'limitPerLandmark': self.limitPerLandmark,
             'maxDistance': self.maxDistance,
+            'minDistance': self.minDistance,
             'd': self.d,
             'subjectCount': self.subjectCount,
             'totalResidues': self.totalResidues,
@@ -238,7 +243,8 @@ class Database(object):
 
         database = Database(landmarkFinderClasses, trigPointFinderClasses,
                             limitPerLandmark=state['limitPerLandmark'],
-                            maxDistance=state['maxDistance'])
+                            maxDistance=state['maxDistance'],
+                            minDistance=state['minDistance'])
 
         # Monkey-patch the new database instance to restore its state.
         for attr in ('_checksum', 'd', 'subjectCount', 'totalResidues',
@@ -279,6 +285,7 @@ class Database(object):
         # Add other initialization parameters.
         update(self.limitPerLandmark)
         update(self.maxDistance)
+        update(self.minDistance)
 
         # Add all subject info.
         for subjectId, subjectSequence in self.subjectInfo:

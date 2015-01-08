@@ -33,7 +33,8 @@ class ScannedRead(object):
                 indices.add(index)
         return indices
 
-    def getPairs(self, limitPerLandmark=None, maxDistance=None):
+    def getPairs(self, limitPerLandmark=None, maxDistance=None,
+                 minDistance=None):
         """
         Get pairs of (landmark, trig point) for use in building a search
         dictionary that can be used to identify this read.
@@ -41,6 +42,8 @@ class ScannedRead(object):
         @param limitPerLandmark: An C{int} limit on the number of pairs to
             yield per landmark.
         @param maxDistance: The C{int} maximum distance permitted between
+            yielded pairs.
+        @param minDistance: The C{int} minimum distance permitted between
             yielded pairs.
         @return: A generator that yields (landmark, trig point) pairs.
         """
@@ -52,7 +55,8 @@ class ScannedRead(object):
         for landmark in self.landmarks:
             count = 0
             nearest = features.nearest(landmark.offset,
-                                       maxDistance=maxDistance)
+                                       maxDistance=maxDistance,
+                                       minDistance=minDistance)
             while limitPerLandmark is None or count < limitPerLandmark:
                 try:
                     feature = nearest.next()

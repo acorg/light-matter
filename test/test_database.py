@@ -276,6 +276,42 @@ class TestDatabase(TestCase):
                                        'offset': 0}]},
                          db.d)
 
+    def testOneReadOneLandmarkTwoPeaksPermissiveMinDistance(self):
+        """
+        If one read is added and it has one landmark and two peaks, but a
+        permissive minimum distance is imposed, all keys are added to
+        the database.
+        """
+        db = Database([AlphaHelix], [Peaks], minDistance=1)
+        db.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
+        self.assertEqual({'A2:P:-13': [{'subjectIndex': 0,
+                                        'offset': 0}],
+                         'A2:P:-10': [{'subjectIndex': 0,
+                                       'offset': 0}]},
+                         db.d)
+
+    def testOneReadOneLandmarkTwoPeaksIntermediateMinDistance(self):
+        """
+        If one read is added and it has one landmark and two peaks, but an
+        intermediate minimum distance is imposed, all keys are added to
+        the database.
+        """
+        db = Database([AlphaHelix], [Peaks], minDistance=11)
+        db.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
+        self.assertEqual({'A2:P:-13': [{'subjectIndex': 0,
+                                        'offset': 0}]},
+                         db.d)
+
+    def testOneReadOneLandmarkTwoPeaksSevereMinDistance(self):
+        """
+        If one read is added and it has one landmark and two peaks, but a
+        severe minimum distance is imposed, no keys are added to
+        the database.
+        """
+        db = Database([AlphaHelix], [Peaks], minDistance=100)
+        db.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
+        self.assertEqual({}, db.d)
+
     def testSaveLoadEmpty(self):
         """
         When asked to save and then load an empty database, the correct
@@ -447,7 +483,7 @@ class TestDatabase(TestCase):
         Saving parameters as JSON must work correctly.
         """
         db = Database([AlphaHelix], [Peaks], limitPerLandmark=3,
-                      maxDistance=10)
+                      maxDistance=10, minDistance=10)
         db.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
 
         checksum = sha256()
@@ -455,6 +491,7 @@ class TestDatabase(TestCase):
         self._update(Peaks.NAME, checksum)
         self._update(3, checksum)  # Limit per landmark value.
         self._update(10, checksum)  # Max distance value.
+        self._update(10, checksum)  # Min distance value.
         self._update('id', checksum)
         self._update('FRRRFRRRFASAASA', checksum)
 
@@ -481,6 +518,7 @@ class TestDatabase(TestCase):
             'trigPointFinderClasses': ['Peaks'],
             'limitPerLandmark': 3,
             'maxDistance': 10,
+            'minDistance': 10,
             'subjectCount': 1,
             'totalResidues': 15,
             'totalCoveredResidues': 11,
@@ -522,6 +560,7 @@ class TestDatabase(TestCase):
         expected = sha256()
         self._update(None, expected)  # Limit per landmark value.
         self._update(None, expected)  # Max distance value.
+        self._update(None, expected)  # Min distance value.
         self.assertEqual(expected.hexdigest(), db.checksum())
 
     def testChecksumEmptyDatabaseWithNonDefaultParams(self):
@@ -529,10 +568,12 @@ class TestDatabase(TestCase):
         The database checksum must be as expected when the database is given
         non-default values for limitPerLandmark and maxDistance.
         """
-        db = Database([], [], limitPerLandmark=3, maxDistance=10)
+        db = Database([], [], limitPerLandmark=3, maxDistance=10,
+                      minDistance=1)
         expected = sha256()
         self._update(3, expected)
         self._update(10, expected)
+        self._update(1, expected)
         self.assertEqual(expected.hexdigest(), db.checksum())
 
     def testChecksumEmptyDatabaseWithFinders(self):
@@ -548,6 +589,7 @@ class TestDatabase(TestCase):
         self._update(Troughs.NAME, expected)
         self._update(None, expected)  # Limit per landmark value.
         self._update(None, expected)  # Max distance value.
+        self._update(None, expected)  # Min distance value.
         self.assertEqual(expected.hexdigest(), db.checksum())
 
     def testChecksumEmptyDatabaseWithFinderOrderInvariant(self):
@@ -572,6 +614,7 @@ class TestDatabase(TestCase):
         self._update(AlphaHelix.NAME, expected)
         self._update(None, expected)  # Limit per landmark value.
         self._update(None, expected)  # Max distance value.
+        self._update(None, expected)  # Min distance value.
         self._update('subject', expected)
         self._update('FRRRFRRRFASAASA', expected)
         self.assertEqual(expected.hexdigest(), db.checksum())
@@ -590,6 +633,7 @@ class TestDatabase(TestCase):
         self._update(AlphaHelix.NAME, expected)
         self._update(None, expected)  # Limit per landmark value.
         self._update(None, expected)  # Max distance value.
+        self._update(None, expected)  # Min distance value.
         self._update('id', expected)
         self._update(sequence, expected)
 

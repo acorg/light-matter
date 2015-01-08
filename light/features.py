@@ -136,42 +136,58 @@ class CombinedFeatureList(object):
                     return
                 else:
                     # We only have a right neighboring feature.
-                    if ((maxDistance is None or rightDelta <= maxDistance) and
-                            (minDistance is None or
-                             rightDelta >= minDistance)):
-                        yield self._features[right]
-                        right += 1
+                    if maxDistance is None or rightDelta <= maxDistance:
+                        if minDistance is None or rightDelta >= minDistance:
+                            yield self._features[right]
+                            right += 1
+                        else:
+                            # the offset is smaller than the minDistance,
+                            # don't yield, but continue.
+                            right += 1
                     else:
                         # The next delta is too large. We're done.
                         return
+
             else:
                 if rightDelta is None:
                     # We only have a left neighboring feature.
-                    if ((maxDistance is None or leftDelta <= maxDistance) and
-                            (minDistance is None or
-                             leftDelta >= minDistance)):
-                        yield self._features[left]
-                        left -= 1
-                    else:
-                        # The next delta is too large. We're done.
-                        return
-                else:
-                    # Deltas on both left and right are available.
-                    if leftDelta < rightDelta:
-                        if ((maxDistance is None or leftDelta <= maxDistance)
-                            and (minDistance is None or
-                                 leftDelta >= minDistance)):
+                    if maxDistance is None or leftDelta <= maxDistance:
+                        if minDistance is None or leftDelta >= minDistance:
                             yield self._features[left]
                             left -= 1
                         else:
+                            # the offset is smaller than the minDistance,
+                            # don't yield, but continue.
+                            left -= 1
+                    else:
+                        # The next delta is too large. We're done.
+                        return
+
+                else:
+                    # Deltas on both left and right are available.
+                    if leftDelta < rightDelta:
+                        if maxDistance is None or leftDelta <= maxDistance:
+                            if minDistance is None or leftDelta >= minDistance:
+                                yield self._features[left]
+                                left -= 1
+                            else:
+                                # the offset is smaller than the minDistance,
+                                # don't yield, but continue.
+                                left -= 1
+                        else:
                             # The smallest available delta is too large.
                             return
+
                     else:
-                        if ((maxDistance is None or rightDelta <= maxDistance)
-                            and (minDistance is None or
-                                 rightDelta >= minDistance)):
-                            yield self._features[right]
-                            right += 1
+                        if maxDistance is None or rightDelta <= maxDistance:
+                            if (minDistance is None or
+                                    rightDelta >= minDistance):
+                                yield self._features[right]
+                                right += 1
+                            else:
+                                # the offset is smaller than the minDistance,
+                                # don't yield, but continue.
+                                right += 1
                         else:
                             # The smallest available delta is too large.
                             return

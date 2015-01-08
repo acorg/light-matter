@@ -6,7 +6,7 @@ from light.landmarks.alpha_helix import AlphaHelix
 from light.landmarks.alpha_helix_3_10 import AlphaHelix_3_10
 from light.landmarks.alpha_helix_pi import AlphaHelix_pi
 from light.landmarks.beta_strand import BetaStrand
-from light.landmarks.turn import Turn
+from light.landmarks.beta_turn import BetaTurn
 
 
 class TestFindLandmark(TestCase):
@@ -39,7 +39,7 @@ class TestAllLandmarkClasses(TestCase):
         The ALL_LANDMARK_FINDER_CLASSES set must be as expected.
         """
         self.assertEqual(
-            {AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, BetaStrand, Turn},
+            {AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, BetaStrand, BetaTurn},
             ALL_LANDMARK_FINDER_CLASSES)
 
 
@@ -53,7 +53,7 @@ class TestDefaultLandmarkClasses(TestCase):
         The DEFAULT_LANDMARK_FINDER_CLASSES must be as expected.
         """
         self.assertEqual(
-            {AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, BetaStrand, Turn},
+            {AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, BetaStrand, BetaTurn},
             DEFAULT_LANDMARK_FINDER_CLASSES)
 
     def testDefaultClassesAreInAllClasses(self):

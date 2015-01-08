@@ -164,7 +164,7 @@ BITSCORES = {'2J7W': [1328.15, 899.427, 46.2098, 0, 21.9422, 0, 0, 0, 0, 0,
 
 
 def _runTest(databaseFile, sequenceFile, landmarkFinders, trigFinders,
-             limitPerLandmark, maxDistance):
+             limitPerLandmark, maxDistance, minDistance):
     """
     A function that runs tests on files and returns results.
 
@@ -177,9 +177,10 @@ def _runTest(databaseFile, sequenceFile, landmarkFinders, trigFinders,
     @param limitPerLandmark: A limit on the number of pairs to yield per
         landmark per read.
     @param maxDistance: The maximum distance permitted between yielded pairs.
+    @param minDistance: The minimum distance permitted between yielded pairs.
     """
     database = Database(landmarkFinders, trigFinders, limitPerLandmark,
-                        maxDistance)
+                        maxDistance, minDistance)
     databaseReads = FastaReads(databaseFile)
     for read in databaseReads:
         database.addSubject(read)
@@ -249,16 +250,19 @@ class WriteMarkdownFile(object):
     def open(self):
         self.openedFile = open(self.outputFile, 'w')
 
-    def writeHeader(self, landmark, trig, maxDistance, limitPerLandmark):
+    def writeHeader(self, landmark, trig, maxDistance, minDistance,
+                    limitPerLandmark):
         self.openedFile.write('Title:\nDate:\nCategory: light-matter\nTags: '
                               'light-matter, benchmarking\nSummary: '
                               'Performance and sensitivity testing\n\n'
                               '#####Database arguments:</b> Landmarks: %s, '
                               'trig points: %s, maxDistance: %s, '
+                              'minDistance: %s '
                               'limitPerLandmark: %s \n\n' %
                               ([i.NAME for i in landmarkFinderClasses],
                                [i.NAME for i in trigFinderClasses],
-                               args.maxDistance, args.limitPerLandmark))
+                               args.maxDistance, args.minDistance,
+                               args.limitPerLandmark))
 
     def writeTest(self, testName, testResult, time, readNr):
         """
@@ -322,6 +326,9 @@ if __name__ == '__main__':
     parser.add_argument(
         '--maxDistance', type=int, default=None,
         help='The maximum distance permitted between yielded pairs.')
+    parser.add_argument(
+        '--minDistance', type=int, default=None,
+        help='The minimum distance permitted between yielded pairs.')
 
     parser.add_argument(
         '--verbose', default=False, action='store_true',
@@ -367,7 +374,8 @@ if __name__ == '__main__':
     writer = WriteMarkdownFile(args.outputFile, args.verbose)
     writer.open()
     writer.writeHeader(landmarkFinderNames, trigFinderNames,
-                       args.maxDistance, args.limitPerLandmark)
+                       args.maxDistance, args.minDistance,
+                       args.limitPerLandmark)
 
     # run tests
     # 1) A complete sequence must match itself:
@@ -375,7 +383,7 @@ if __name__ == '__main__':
     print >>sys.stderr, '1) A complete sequence must find itself.'
     oneResult = _runTest(T1DB, T1READ, landmarkFinderClasses,
                          trigFinderClasses, args.limitPerLandmark,
-                         args.maxDistance)
+                         args.maxDistance, args.minDistance)
     oneTime = time() - oneStart
     writer.writeTest('1) A complete sequence must match itself', oneResult,
                      oneTime, 1)
@@ -385,7 +393,7 @@ if __name__ == '__main__':
     print >>sys.stderr, '2) Reads made from a sequence must match itself.'
     twoResult = _runTest(T2DB, T2READ, landmarkFinderClasses,
                          trigFinderClasses, args.limitPerLandmark,
-                         args.maxDistance)
+                         args.maxDistance, args.minDistance)
     twoTime = time() - twoStart
     writer.writeTest('2) Reads made from a sequence must match itself',
                      twoResult, twoTime, 9)
@@ -395,7 +403,7 @@ if __name__ == '__main__':
     print >>sys.stderr, '3) A sequence must match related sequences.'
     threeResult = _runTest(T3DB, T3READ, landmarkFinderClasses,
                            trigFinderClasses, args.limitPerLandmark,
-                           args.maxDistance)
+                           args.maxDistance, args.minDistance)
     threeTime = time() - threeStart
     writer.writeTest('3) A sequence must find related sequences', threeResult,
                      threeTime, 1)
@@ -406,7 +414,7 @@ if __name__ == '__main__':
                          'sequences.')
     fourResult = _runTest(T4DB, T4READ, landmarkFinderClasses,
                           trigFinderClasses, args.limitPerLandmark,
-                          args.maxDistance)
+                          args.maxDistance, args.minDistance)
     fourTime = time() - fourStart
     fourTitle = '4) Reads made from a sequence must match related sequences'
     writer.writeTest(fourTitle, fourResult, fourTime, 7)
@@ -420,7 +428,7 @@ if __name__ == '__main__':
                          'must correlate.')
     fiveSixResult = _runTest(T56DB, T56READ, landmarkFinderClasses,
                              trigFinderClasses, args.limitPerLandmark,
-                             args.maxDistance)
+                             args.maxDistance, args.minDistance)
     fiveSixTime = time() - fiveSixStart
     sTitle = '6) The BLASTp bit scores and light matter scores must correlate'
     writer.writeTest('5) The Z-scores and light matter score must correlate',

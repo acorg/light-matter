@@ -28,8 +28,7 @@ class Peaks(object):
 
     def find(self, read, properties=None):
         """
-        A function that checks if and where a peak in a sequence
-        occurs.
+        A function that checks if and where a peak in a sequence occurs.
 
         @param read: An instance of C{dark.reads.AARead}.
         @param properties: a list of properties that should be included.

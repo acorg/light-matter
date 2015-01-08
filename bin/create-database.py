@@ -54,7 +54,7 @@ if __name__ == '__main__':
 
     parser.add_argument(
         '--minDistance', type=int, default=None,
-        help='The minimum distance between yielded pairs.')
+        help='The minimum distance permitted between yielded pairs.')
 
     args = parser.parse_args()
 

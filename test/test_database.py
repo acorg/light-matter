@@ -293,8 +293,8 @@ class TestDatabase(TestCase):
     def testOneReadOneLandmarkTwoPeaksIntermediateMinDistance(self):
         """
         If one read is added and it has one landmark and two peaks, but an
-        intermediate minimum distance is imposed, all keys are added to
-        the database.
+        intermediate minimum distance is imposed, only the key for the pair
+        that exceeds the minimum distance is added to the database.
         """
         db = Database([AlphaHelix], [Peaks], minDistance=11)
         db.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
@@ -483,7 +483,7 @@ class TestDatabase(TestCase):
         Saving parameters as JSON must work correctly.
         """
         db = Database([AlphaHelix], [Peaks], limitPerLandmark=3,
-                      maxDistance=10, minDistance=10)
+                      maxDistance=10, minDistance=5)
         db.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
 
         checksum = sha256()
@@ -491,7 +491,7 @@ class TestDatabase(TestCase):
         self._update(Peaks.NAME, checksum)
         self._update(3, checksum)  # Limit per landmark value.
         self._update(10, checksum)  # Max distance value.
-        self._update(10, checksum)  # Min distance value.
+        self._update(5, checksum)  # Min distance value.
         self._update('id', checksum)
         self._update('FRRRFRRRFASAASA', checksum)
 
@@ -518,7 +518,7 @@ class TestDatabase(TestCase):
             'trigPointFinderClasses': ['Peaks'],
             'limitPerLandmark': 3,
             'maxDistance': 10,
-            'minDistance': 10,
+            'minDistance': 5,
             'subjectCount': 1,
             'totalResidues': 15,
             'totalCoveredResidues': 11,

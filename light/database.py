@@ -22,7 +22,7 @@ class Database(object):
         yield per landmark.
     @param maxDistance: The C{int} maximum distance permitted between
         yielded pairs.
-    @param minDistance: The C{int} minimum distance between
+    @param minDistance: The C{int} minimum distance permitted between
         yielded pairs.
     """
 

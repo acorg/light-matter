@@ -4,6 +4,8 @@ from unittest import TestCase
 from dark.reads import AARead
 
 from light.database import Database
+from light.landmarks.alpha_helix import AlphaHelix
+from light.landmarks.beta_strand import BetaStrand
 
 
 class TestDatabase(TestCase):
@@ -44,15 +46,35 @@ class TestDatabase(TestCase):
         elapsed = time.time() - startTime
         self.details = elapsed
 
-    def testAdd10KSubjects(self):
+
+class _TestSubjectAddMixin(object):
+    """
+    Test database subject adding performance.
+    """
+
+    def testAdd1000Subjects(self):
         """
-        How long does it take to add 10K subjects to a database that has no
-        landmark or trig point finders?
+        How long does it take to add 1000 subjects to a database.
         """
         read = AARead('id', 'MTMTSTTSNLPGILSQPSSELLTNWYAEQVVQGHIL')
-        database = Database([], [])
+        database = Database(self.LANDMARKS, self.TRIG_POINTS)
         startTime = time.time()
-        for _ in xrange(10000):
+        for _ in xrange(1000):
             database.addSubject(read)
         elapsed = time.time() - startTime
         self.details = elapsed
+
+
+class SubjectAddNoLandmarksNoTrigPoints(_TestSubjectAddMixin, TestCase):
+    LANDMARKS = []
+    TRIG_POINTS = []
+
+
+class SubjectAddBetaStrand(_TestSubjectAddMixin, TestCase):
+    LANDMARKS = [BetaStrand]
+    TRIG_POINTS = []
+
+
+class SubjectAddAlphaHelix(_TestSubjectAddMixin, TestCase):
+    LANDMARKS = [AlphaHelix]
+    TRIG_POINTS = []

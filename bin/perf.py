@@ -3,7 +3,7 @@
 import unittest
 import argparse
 
-from performance.runner import PerformanceTestRunner
+from light.performance.runner import PerformanceTestRunner
 
 
 if __name__ == '__main__':

@@ -19,7 +19,7 @@ class BZ2(object):
     def close(self):
         pass
 
-    def readline(self):
+    def read(self):
         self._index += 1
         return self._data[self._index - 1]
 

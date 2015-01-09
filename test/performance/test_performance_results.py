@@ -135,7 +135,7 @@ class TestPerformanceResult(TestCase):
     def testReturnResultNameNotPresent(self):
         """
         If returnResult is asked to return results from a non-existing test, a
-        ValueError must be raised.
+        KeyError must be raised.
         """
         class SideEffect(object):
             def __init__(self):
@@ -154,9 +154,9 @@ class TestPerformanceResult(TestCase):
             mockMethod.side_effect = sideEffect.sideEffect
             performance = PerformanceResult(['file1.json.bz2',
                                              'file2.json.bz2'])
-            error = "No test with name: 'weirdName' present in result."
+            error = 'weirdName not present in self.result'
             self.assertRaisesRegexp(
-                ValueError, error, performance.returnResult, 'weirdName')
+                KeyError, error, performance.returnResult, 'weirdName')
 
     def testReturnResultGoodName(self):
         """

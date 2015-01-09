@@ -54,8 +54,7 @@ class PerformanceResult(object):
         @param testName: the C{str} name of the test of which results should be
             returned.
         """
-        try:
+        if not self.result[testName]:
+            raise KeyError('%s not present in self.result' % testName)
+        else:
             return self.result[testName]
-        except ValueError:
-            raise ValueError('No test with name: %s present in result.' % (
-                             testName))

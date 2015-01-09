@@ -1,12 +1,25 @@
+# The code in this file is adapted from the TextTestRunner and TextTestResult
+# classes that are distributed with unittest. The original code can be found in
+# unittest/runner.py wherever you have Python installed (to find that location
+# do this
+#
+#   $ python -c 'from unittest import runner; print runner.__file__'
+#
+# There are no tests for this code. If we want to add them, which we should
+# do at some point (especially if we start adding to it), we might want to
+# move it under light.performance and put tests in the test directory etc.
+
 import sys
-import time
+from time import time, gmtime, strftime
 from ujson import dump
 
 from unittest import TestResult
 
 
 class _WritelnDecorator(object):
-    """Used to decorate file-like objects with a handy 'writeln' method"""
+    """
+    Used to decorate file-like objects with a handy 'writeln' method.
+    """
     def __init__(self, stream):
         self.stream = stream
 
@@ -48,6 +61,7 @@ class PerformanceTestResult(TestResult):
         """
         if not self.errors:
             dump({
+                'UTC': strftime('%F %T', gmtime(self.startTestRunTime)),
                 'description': description,
                 'results': self.results,
                 'startTestRunTime': self.startTestRunTime,
@@ -57,7 +71,7 @@ class PerformanceTestResult(TestResult):
 
     def stopTest(self, test):
         super(PerformanceTestResult, self).stopTest(test)
-        elapsed = time.time() - self.startTime
+        elapsed = time() - self.startTime
         if self.status:
             result = {
                 'elapsed': elapsed,
@@ -73,7 +87,7 @@ class PerformanceTestResult(TestResult):
 
     def startTest(self, test):
         super(PerformanceTestResult, self).startTest(test)
-        self.startTime = time.time()
+        self.startTime = time()
         self.currentTest = test
         if self.showAll:
             self.stream.write(str(test))
@@ -130,10 +144,10 @@ class PerformanceTestResult(TestResult):
             self.stream.writeln('%s' % err)
 
     def startTestRun(self):
-        self.startTestRunTime = time.time()
+        self.startTestRunTime = time()
 
     def stopTestRun(self):
-        self.stopTestRunTime = time.time()
+        self.stopTestRunTime = time()
 
 
 class PerformanceTestRunner(object):
@@ -144,7 +158,6 @@ class PerformanceTestRunner(object):
     @param verbosity: An C{int} used to control the amount of information
         printed by the result class.
     """
-    resultclass = PerformanceTestResult
 
     def __init__(self, stream=sys.stderr, verbosity=1):
         self.stream = _WritelnDecorator(stream)
@@ -159,12 +172,12 @@ class PerformanceTestRunner(object):
         """
         result = PerformanceTestResult(self.stream, self.verbosity)
         result.startTestRun()
-        startTime = time.time()
+        startTime = time()
         try:
             test(result)
         finally:
             result.stopTestRun()
-        stopTime = time.time()
+        stopTime = time()
         timeTaken = stopTime - startTime
         result.printErrors()
         run = result.testsRun
@@ -203,5 +216,5 @@ class PerformanceTestRunner(object):
             if infos:
                 self.stream.writeln(' (%s)' % (', '.join(infos),))
             else:
-                self.stream.write('\n')
+                self.stream.writeln()
         return result

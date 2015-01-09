@@ -12,7 +12,7 @@ class TestFindSelf(TestCase):
     Test that a database built from one sequence can match the same sequence.
     """
 
-    def testFindIdenticalSequenced(self):
+    def testFindIdenticalSequence(self):
         """
         Build a database with one subject and then search for that same
         sequence. Add details of the result to self.

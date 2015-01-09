@@ -53,13 +53,14 @@ class PerformanceTestResult(TestResult):
 
     def save(self, fp=sys.stdout, description=None):
         """
-        Write test results to C{fp} in JSON format, if no error has occurred.
+        Write test results to C{fp} in JSON format, if no errors or failures
+        have occurred.
 
         @param fp: A file-like object.
         @param description: A C{str} description of the code whose performance
             is being tested.
         """
-        if not self.errors:
+        if not self.errors and not self.failures:
             dump({
                 'UTC': strftime('%F %T', gmtime(self.startTestRunTime)),
                 'description': description,
@@ -71,6 +72,12 @@ class PerformanceTestResult(TestResult):
 
     def stopTest(self, test):
         super(PerformanceTestResult, self).stopTest(test)
+        try:
+            # Do not record details for tests that ask to be ignored.
+            if test.ignore:
+                return
+        except AttributeError:
+            pass
         elapsed = time() - self.startTime
         if self.status:
             result = {

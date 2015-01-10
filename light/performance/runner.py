@@ -13,7 +13,7 @@ import sys
 from time import time, gmtime, strftime
 from ujson import dump
 
-from unittest import TestResult
+from unittest import TestResult, TestSuite
 
 
 class _WritelnDecorator(object):
@@ -155,6 +155,27 @@ class PerformanceTestResult(TestResult):
 
     def stopTestRun(self):
         self.stopTestRunTime = time()
+
+
+def filterTestSuite(pattern, suite):
+    """
+    Filter a test suite to only include tests that contain a pattern.
+
+    @param pattern: A C{str} that must appear in the id of retained tests.
+    @param suite: A C{TestSuite} instance.
+    @return: A new C{TestSuite} instance containing only the matching
+        tests from C{suite}.
+    """
+    new = TestSuite()
+    for test in suite:
+        if isinstance(test, TestSuite):
+            subSuite = filterTestSuite(pattern, test)
+            if subSuite.countTestCases():
+                new.addTest(subSuite)
+        else:
+            if test.id().find(pattern) > -1:
+                new.addTest(test)
+    return new
 
 
 class PerformanceTestRunner(object):

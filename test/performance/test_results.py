@@ -3,7 +3,7 @@ from json import dumps
 from mock import patch
 import bz2
 
-from light.performance.results import PerformanceResult
+from light.performance.results import PerformanceResults
 from sample_data import RESULT1, RESULT2
 from test.mocking import mockOpen
 
@@ -29,9 +29,9 @@ class BZ2(object):
         return iter(self._data[index:])
 
 
-class TestPerformanceResult(TestCase):
+class TestPerformanceResults(TestCase):
     """
-    Tests for the PerformanceResult class.
+    Tests for the PerformanceResults class.
     """
     def testEmptyFileValueError(self):
         """
@@ -40,9 +40,9 @@ class TestPerformanceResult(TestCase):
         """
         mockOpener = mockOpen()
         with patch('__builtin__.open', mockOpener, create=True):
-            error = "Result JSON file 'file.json' was empty."
+            error = "^Result JSON file 'file\\.json' was empty\\.$"
             self.assertRaisesRegexp(
-                ValueError, error, PerformanceResult, ['file.json'])
+                ValueError, error, PerformanceResults, ['file.json'])
 
     def testNonJSONInput(self):
         """
@@ -51,10 +51,10 @@ class TestPerformanceResult(TestCase):
         """
         mockOpener = mockOpen(read_data='not JSON\n')
         with patch('__builtin__.open', mockOpener, create=True):
-            error = ("Content of file 'file.json' could not be converted to "
-                     "JSON.")
+            error = ("^Content of file 'file\\.json' could not be converted "
+                     "to JSON \\(No JSON object could be decoded\\)\\.$")
             self.assertRaisesRegexp(
-                ValueError, error, PerformanceResult, ['file.json'])
+                ValueError, error, PerformanceResults, ['file.json'])
 
     def testCorrectJSONDictOneFile(self):
         """
@@ -63,10 +63,10 @@ class TestPerformanceResult(TestCase):
         test = 'performance.perf_database.TestDatabase.testCreation'
         mockOpener = mockOpen(read_data=dumps(RESULT1) + '\n')
         with patch('__builtin__.open', mockOpener, create=True):
-            performance = PerformanceResult(['file.json'])
+            performance = PerformanceResults(['file.json'])
             self.assertEqual({'elapsed': 4.3869e-05,
                               'status': 'success',
-                              }, performance.result[0]['results'][test])
+                              }, performance.tests[0]['results'][test])
 
     def testCorrectJSONDictOneCompressedFile(self):
         """
@@ -77,15 +77,15 @@ class TestPerformanceResult(TestCase):
         test = 'performance.perf_database.TestDatabase.testCreation'
         with patch.object(bz2, 'BZ2File') as mockMethod:
             mockMethod.return_value = result
-            performance = PerformanceResult(['file.json.bz2'])
+            performance = PerformanceResults(['file.json.bz2'])
             self.assertEqual({'elapsed': 4.3869e-05,
                               'status': 'success',
-                              }, performance.result[0]['results'][test])
+                              }, performance.tests[0]['results'][test])
 
     def testCorrectJSONDictTwoCompressedFiles(self):
         """
-        If two compressed resultFiles are given, the correct JSON dictionary
-        must be made.
+        If two compressed result files are given, two results must be present
+        on the PerformanceResults instance.
         """
         class SideEffect(object):
             def __init__(self):
@@ -101,46 +101,12 @@ class TestPerformanceResult(TestCase):
         sideEffect = SideEffect()
         with patch.object(bz2, 'BZ2File') as mockMethod:
             mockMethod.side_effect = sideEffect.sideEffect
-            performance = PerformanceResult(['file1.json.bz2',
-                                             'file2.json.bz2'])
-            self.assertEqual(2, len(performance.result))
+            performance = PerformanceResults(['f1.json.bz2', 'f2.json.bz2'])
+            self.assertEqual(2, len(performance.tests))
 
-    def testShowAllTests(self):
+    def testTestNames(self):
         """
-        ShowAllTests must return all test names correctly.
-        """
-        class SideEffect(object):
-            def __init__(self):
-                self.first = True
-
-            def sideEffect(self, _ignoredFilename):
-                if self.first:
-                    self.first = False
-                    return BZ2([dumps(RESULT1) + '\n'])
-                else:
-                    return BZ2([dumps(RESULT2) + '\n'])
-
-        sideEffect = SideEffect()
-
-        with patch.object(bz2, 'BZ2File') as mockMethod:
-            mockMethod.side_effect = sideEffect.sideEffect
-            performance = PerformanceResult(['file1.json.bz2',
-                                             'file2.json.bz2'])
-            allTests = list(performance.showAllTests())
-            self.assertEqual(5, len(allTests))
-            self.assertEqual(['performance.perf_database.TestDatabase.'
-                              'testAdd10KSubjects', 'performance.perf_database'
-                              '.TestDatabase.testChecksumEmpty',
-                              'performance.perf_findSelf.TestFindSelf.'
-                              'testFindIdenticalSequenced', 'performance.'
-                              'perf_database.TestDatabase.testCreation',
-                              'performance.perf_database.TestDatabase.'
-                              'testChecksum10K'], allTests)
-
-    def testReturnResultNameNotPresent(self):
-        """
-        If returnResult is asked to return results from a non-existing test,
-        None must be returned.
+        testNames must return all test names correctly.
         """
         class SideEffect(object):
             def __init__(self):
@@ -157,15 +123,23 @@ class TestPerformanceResult(TestCase):
 
         with patch.object(bz2, 'BZ2File') as mockMethod:
             mockMethod.side_effect = sideEffect.sideEffect
-            performance = PerformanceResult(['file1.json.bz2',
-                                             'file2.json.bz2'])
-            testName = list(performance.returnResult('weirdName'))
-            self.assertEqual([None, None], testName)
+            performance = PerformanceResults(['f1.json.bz2', 'f2.json.bz2'])
+            allTests = list(performance.testNames())
+            self.assertItemsEqual(
+                [
+                    'performance.perf_database.TestDatabase.testAddSubjects',
+                    'performance.perf_database.TestDatabase.testChecksum',
+                    'performance.perf_database.TestDatabase.testChecksumEmpty',
+                    'performance.perf_database.TestDatabase.testCreation',
+                    'performance.perf_database.TestDatabase.testSomething',
+                    'performance.perf_findSelf.TestFindSelf.testFindIdentical',
+                ],
+                allTests)
 
-    def testReturnResultGoodName(self):
+    def testResultsForTestNameNotPresent(self):
         """
-        returnResult must return all results correctly, if asked to return
-        results from a test present in the result.
+        If resultsForTest is asked to return results from a non-existent test,
+        C{None} must be returned for both result files.
         """
         class SideEffect(object):
             def __init__(self):
@@ -182,11 +156,62 @@ class TestPerformanceResult(TestCase):
 
         with patch.object(bz2, 'BZ2File') as mockMethod:
             mockMethod.side_effect = sideEffect.sideEffect
-            performance = PerformanceResult(['file1.json.bz2',
-                                             'file2.json.bz2'])
+            performance = PerformanceResults(['f1.json.bz2', 'f2.json.bz2'])
+            result = list(performance.resultsForTest('weirdName'))
+            self.assertEqual([None, None], result)
+
+    def testResultsForTestSomeTestsMatch(self):
+        """
+        resultsForTest must return all results correctly, if asked to return
+        results from a test that is present in just the second result file.
+        """
+        class SideEffect(object):
+            def __init__(self):
+                self.first = True
+
+            def sideEffect(self, _ignoredFilename):
+                if self.first:
+                    self.first = False
+                    return BZ2([dumps(RESULT1) + '\n'])
+                else:
+                    return BZ2([dumps(RESULT2) + '\n'])
+
+        sideEffect = SideEffect()
+
+        with patch.object(bz2, 'BZ2File') as mockMethod:
+            mockMethod.side_effect = sideEffect.sideEffect
+            performance = PerformanceResults(['f1.json.bz2', 'f2.json.bz2'])
+            test = 'performance.perf_database.TestDatabase.testSomething'
+            result = list(performance.resultsForTest(test))
+            self.assertEqual([None,
+                              {'status': 'success',
+                               'details': 0.1157001019,
+                               'elapsed': 0.1762839317}],
+                             result)
+
+    def testResultsForTestAllTestsMatch(self):
+        """
+        resultsForTest must return all results correctly, if asked to return
+        results from a test that is present in all the results.
+        """
+        class SideEffect(object):
+            def __init__(self):
+                self.first = True
+
+            def sideEffect(self, _ignoredFilename):
+                if self.first:
+                    self.first = False
+                    return BZ2([dumps(RESULT1) + '\n'])
+                else:
+                    return BZ2([dumps(RESULT2) + '\n'])
+
+        sideEffect = SideEffect()
+
+        with patch.object(bz2, 'BZ2File') as mockMethod:
+            mockMethod.side_effect = sideEffect.sideEffect
+            performance = PerformanceResults(['f1.json.bz2', 'f2.json.bz2'])
             test = 'performance.perf_database.TestDatabase.testCreation'
-            allResults = list(performance.returnResult(test))
-            self.assertEqual(2, len(allResults))
+            result = list(performance.resultsForTest(test))
             self.assertEqual([{'status': 'success', 'elapsed': 4.3869e-05},
                               {'status': 'success', 'elapsed': 0.100043869}],
-                             allResults)
+                             result)

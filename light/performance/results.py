@@ -41,7 +41,10 @@ class PerformanceResult(object):
         """
         Return a C{list} of names of all tests present in the resultFilenames.
         """
-        return [results['results'].keys() for results in self.result]
+        allTests = set()
+        for tests in self.result:
+            allTests.update(tests['results'].iterkeys())
+        return allTests
 
     def returnResult(self, testName):
         """

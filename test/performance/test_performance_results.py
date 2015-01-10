@@ -127,8 +127,7 @@ class TestPerformanceResult(TestCase):
             performance = PerformanceResult(['file1.json.bz2',
                                              'file2.json.bz2'])
             allTests = list(performance.showAllTests())
-            print allTests
-            self.assertEqual(2, len(allTests))
+            self.assertEqual(5, len(allTests))
 
     def testReturnResultNameNotPresent(self):
         """

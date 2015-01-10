@@ -7,6 +7,19 @@ from light.landmarks import BetaStrand
 from light.trig import Peaks
 
 
+class _FindSelfMixin(object):
+    """
+    Test if a database build from a sequence finds itself.
+    """
+    SEQUENCE = ''
+    def testFindSelf(self):
+        """
+        Does a sequence match itself using different landmark and trig point
+        finders.
+        """
+
+
+
 class TestFindSelf(TestCase):
     """
     Test that a database built from one sequence can match the same sequence.

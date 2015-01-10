@@ -23,8 +23,15 @@ if __name__ == '__main__':
         '--description', default='<not given>',
         help='A description of the code being tested.')
 
+    parser.add_argument(
+        '--testIdPattern', default=None,
+        help='A test id prefix. Tests whose ids do not contain this pattern '
+        'will not be run. The pattern is case-sensitive.')
+
     args = parser.parse_args()
     suite = unittest.defaultTestLoader.discover(args.startDir,
                                                 pattern='perf_*.py')
-    result = PerformanceTestRunner(verbosity=args.verbosity).run(suite)
+    runner = PerformanceTestRunner(verbosity=args.verbosity,
+                                   testIdPattern=args.testIdPattern)
+    result = runner.run(suite)
     result.save(description=args.description)

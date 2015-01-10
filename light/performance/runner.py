@@ -13,7 +13,7 @@ import sys
 from time import time, gmtime, strftime
 from ujson import dump
 
-from unittest import TestResult
+from unittest import TestResult, TestSuite
 
 
 class _WritelnDecorator(object):
@@ -157,6 +157,27 @@ class PerformanceTestResult(TestResult):
         self.stopTestRunTime = time()
 
 
+def filterTestSuite(pattern, suite):
+    """
+    Filter a test suite to only include tests that contain a pattern.
+
+    @param pattern: A C{str} that must appear in the id of retained tests.
+    @param suite: A C{TestSuite} instance.
+    @return: A new C{TestSuite} instance containing only the matching
+        tests from C{suite}.
+    """
+    new = TestSuite()
+    for test in suite:
+        if isinstance(test, TestSuite):
+            subSuite = filterTestSuite(pattern, test)
+            if subSuite.countTestCases():
+                new.addTest(subSuite)
+        else:
+            if test.id().find(pattern) > -1:
+                new.addTest(test)
+    return new
+
+
 class PerformanceTestRunner(object):
     """
     A performance test runner.
@@ -164,11 +185,14 @@ class PerformanceTestRunner(object):
     @param stream: A file-like object.
     @param verbosity: An C{int} used to control the amount of information
         printed by the result class.
+    @param testIdPattern: A C{str} test id prefix. Tests whose ids do not start
+        with this prefix must not be run. The pattern is case-sensitive.
     """
 
-    def __init__(self, stream=sys.stderr, verbosity=1):
+    def __init__(self, stream=sys.stderr, verbosity=1, testIdPattern=None):
         self.stream = _WritelnDecorator(stream)
         self.verbosity = verbosity
+        self.testIdPattern = testIdPattern
 
     def run(self, test):
         """
@@ -177,6 +201,8 @@ class PerformanceTestRunner(object):
         @param test: A C{TestCase} or C{TestSuite} instance.
         @return: An instance of L{PerformanceTestResult}.
         """
+        if self.testIdPattern:
+            test = filterTestSuite(self.testIdPattern, test)
         result = PerformanceTestResult(self.stream, self.verbosity)
         result.startTestRun()
         startTime = time()

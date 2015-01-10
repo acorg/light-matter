@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
+import sys
 import unittest
 import argparse
+from os.path import basename
 
-from light.performance.runner import PerformanceTestRunner
+from light.performance.runner import PerformanceTestRunner, filterTestSuite
 
 
 if __name__ == '__main__':
@@ -31,7 +33,12 @@ if __name__ == '__main__':
     args = parser.parse_args()
     suite = unittest.defaultTestLoader.discover(args.startDir,
                                                 pattern='perf_*.py')
-    runner = PerformanceTestRunner(verbosity=args.verbosity,
-                                   testIdPattern=args.testIdPattern)
-    result = runner.run(suite)
+    if args.testIdPattern:
+        suite = filterTestSuite(args.testIdPattern, suite)
+        if suite.countTestCases() == 0:
+            print >>sys.stderr, '%s: No test cases match %r.' % (
+                basename(sys.argv[0]), args.testIdPattern)
+            sys.exit(1)
+
+    result = PerformanceTestRunner(verbosity=args.verbosity).run(suite)
     result.save(description=args.description)

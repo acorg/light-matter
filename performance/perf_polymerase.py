@@ -33,7 +33,7 @@ class _TestPolymerase(object):
 
 class TestAlphaHelix(_TestPolymerase, TestCase):
     """
-    Test looking up polymerases with just a AlphaHelix landmark finder.
+    Test looking up polymerases with just an AlphaHelix landmark finder.
     """
     landmarkFinderClasses = [AlphaHelix]
     trigFinderClasses = []
@@ -41,7 +41,7 @@ class TestAlphaHelix(_TestPolymerase, TestCase):
 
 class TestAlphaHelix_3_10(_TestPolymerase, TestCase):
     """
-    Test looking up polymerases with just a AlphaHelix_3_10 landmark finder.
+    Test looking up polymerases with just an AlphaHelix_3_10 landmark finder.
     """
     landmarkFinderClasses = [AlphaHelix_3_10]
     trigFinderClasses = []
@@ -49,7 +49,7 @@ class TestAlphaHelix_3_10(_TestPolymerase, TestCase):
 
 class TestAlphaHelix_pi(_TestPolymerase, TestCase):
     """
-    Test looking up polymerases with just a AlphaHelix_pi landmark finder.
+    Test looking up polymerases with just an AlphaHelix_pi landmark finder.
     """
     landmarkFinderClasses = [AlphaHelix_pi]
     trigFinderClasses = []
@@ -73,7 +73,7 @@ class TestBetaTurn(_TestPolymerase, TestCase):
 
 class TestAminoAcids(_TestPolymerase, TestCase):
     """
-    Test looking up polymerases with just a AminoAcids trig point finder.
+    Test looking up polymerases with just an AminoAcids trig point finder.
     """
     landmarkFinderClasses = []
     trigFinderClasses = [AminoAcids]
@@ -97,7 +97,7 @@ class TestTroughs(_TestPolymerase, TestCase):
 
 class TestIndividualPeaks(_TestPolymerase, TestCase):
     """
-    Test looking up polymerases with just a IndividualPeaks trig point finder.
+    Test looking up polymerases with just an IndividualPeaks trig point finder.
     """
     landmarkFinderClasses = []
     trigFinderClasses = [IndividualPeaks]
@@ -105,7 +105,7 @@ class TestIndividualPeaks(_TestPolymerase, TestCase):
 
 class TestIndividualTroughs(_TestPolymerase, TestCase):
     """
-    Test looking up polymerases with just a IndividualTroughs trig point
+    Test looking up polymerases with just an IndividualTroughs trig point
     finder.
     """
     landmarkFinderClasses = []

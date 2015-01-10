@@ -64,10 +64,9 @@ class TestPerformanceResult(TestCase):
         mockOpener = mockOpen(read_data=dumps(RESULT1) + '\n')
         with patch('__builtin__.open', mockOpener, create=True):
             performance = PerformanceResult(['file.json'])
-            self.assertEqual([{1420819327.900306: {
-                               'elapsed': 4.3869e-05,
-                               'status': 'success',
-                               }}], performance.result[test])
+            self.assertEqual({'elapsed': 4.3869e-05,
+                              'status': 'success',
+                              }, performance.result[0]['results'][test])
 
     def testCorrectJSONDictOneCompressedFile(self):
         """
@@ -79,10 +78,9 @@ class TestPerformanceResult(TestCase):
         with patch.object(bz2, 'BZ2File') as mockMethod:
             mockMethod.return_value = result
             performance = PerformanceResult(['file.json.bz2'])
-            self.assertEqual([{1420819327.900306: {
-                               'elapsed': 4.3869e-05,
-                               'status': 'success',
-                               }}], performance.result[test])
+            self.assertEqual({'elapsed': 4.3869e-05,
+                              'status': 'success',
+                              }, performance.result[0]['results'][test])
 
     def testCorrectJSONDictTwoCompressedFiles(self):
         """
@@ -101,12 +99,11 @@ class TestPerformanceResult(TestCase):
                     return BZ2([dumps(RESULT2) + '\n'])
 
         sideEffect = SideEffect()
-        test = 'performance.perf_database.TestDatabase.testCreation'
         with patch.object(bz2, 'BZ2File') as mockMethod:
             mockMethod.side_effect = sideEffect.sideEffect
             performance = PerformanceResult(['file1.json.bz2',
                                              'file2.json.bz2'])
-            self.assertEqual(2, len(performance.result[test]))
+            self.assertEqual(2, len(performance.result))
 
     def testShowAllTests(self):
         """
@@ -129,13 +126,14 @@ class TestPerformanceResult(TestCase):
             mockMethod.side_effect = sideEffect.sideEffect
             performance = PerformanceResult(['file1.json.bz2',
                                              'file2.json.bz2'])
-            allTests = performance.showAllTests()
-            self.assertEqual(5, len(allTests))
+            allTests = list(performance.showAllTests())
+            print allTests
+            self.assertEqual(2, len(allTests))
 
     def testReturnResultNameNotPresent(self):
         """
-        If returnResult is asked to return results from a non-existing test, a
-        KeyError must be raised.
+        If returnResult is asked to return results from a non-existing test,
+        None must be returned.
         """
         class SideEffect(object):
             def __init__(self):
@@ -154,9 +152,8 @@ class TestPerformanceResult(TestCase):
             mockMethod.side_effect = sideEffect.sideEffect
             performance = PerformanceResult(['file1.json.bz2',
                                              'file2.json.bz2'])
-            error = 'weirdName not present in self.result'
-            self.assertRaisesRegexp(
-                KeyError, error, performance.returnResult, 'weirdName')
+            testName = list(performance.returnResult('weirdName'))
+            self.assertEqual([None, None], testName)
 
     def testReturnResultGoodName(self):
         """
@@ -181,7 +178,8 @@ class TestPerformanceResult(TestCase):
             performance = PerformanceResult(['file1.json.bz2',
                                              'file2.json.bz2'])
             test = 'performance.perf_database.TestDatabase.testCreation'
-            allResults = performance.returnResult(test)
+            allResults = list(performance.returnResult(test))
             self.assertEqual(2, len(allResults))
-            self.assertEqual('success',
-                             allResults[0][1420819327.9003059864]['status'])
+            self.assertEqual([{'status': 'success', 'elapsed': 4.3869e-05},
+                              {'status': 'success', 'elapsed': 0.100043869}],
+                             allResults)

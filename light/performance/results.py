@@ -1,6 +1,5 @@
 import bz2
 from json import loads
-from collections import defaultdict
 
 
 class PerformanceResult(object):
@@ -13,14 +12,13 @@ class PerformanceResult(object):
     @raise ValueError: If any of the resultFiles are empty or the content can't
         be converted to JSON.
     """
-
     def __init__(self, resultFilenames):
         if type(resultFilenames) == str:
             resultFilenames = [resultFilenames]
         else:
             self.resultFilenames = resultFilenames
 
-        self.result = defaultdict(list)
+        self.result = []
 
         for filename in resultFilenames:
             if filename.endswith('.bz2'):
@@ -37,21 +35,13 @@ class PerformanceResult(object):
                 raise ValueError('Content of file %r could not be converted '
                                  'to JSON.' % filename)
 
-            for test, res in fileResult['results'].items():
-                self.result[test].append({fileResult['startTestRunTime']: res})
-            self.result['resultInfo'] = {fileResult['startTestRunTime']: {
-                'UTC': fileResult['UTC'],
-                'description': fileResult['description'],
-                'elapsed': fileResult['elapsed'],
-                'testCount': fileResult['testCount'],
-            },
-            }
+            self.result.append(fileResult)
 
     def showAllTests(self):
         """
         Return a C{list} of names of all tests present in the resultFilenames.
         """
-        return [test for test in self.result.keys() if test != 'resultInfo']
+        return [results['results'].keys() for results in self.result]
 
     def returnResult(self, testName):
         """
@@ -61,7 +51,5 @@ class PerformanceResult(object):
             returned.
         @raise KeyError: If testName is not present in self.result.
         """
-        if not self.result[testName]:
-            raise KeyError('%s not present in self.result' % testName)
-        else:
-            return self.result[testName]
+        return (results['results'].get(testName, None) for
+                results in self.result)

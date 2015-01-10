@@ -138,8 +138,7 @@ class Database(object):
 
         return fp
 
-    def find(self, read, aboveMeanThreshold=ABOVE_MEAN_THRESHOLD_DEFAULT,
-             storeAnalysis=False):
+    def find(self, read, aboveMeanThreshold=None, storeAnalysis=False):
         """
         A function which takes a read, computes all hashes for it, looks up
         matching hashes and checks which database sequence it matches.
@@ -152,6 +151,9 @@ class Database(object):
             significance analysis computed in the Result will be stored.
         @return: A C{light.result.Result} instance.
         """
+        if aboveMeanThreshold is None:
+            aboveMeanThreshold = self.ABOVE_MEAN_THRESHOLD_DEFAULT
+
         scannedRead = ScannedRead(read)
 
         for landmarkFinder in self.landmarkFinders:

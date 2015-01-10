@@ -8,11 +8,9 @@ from os.path import basename
 import matplotlib.pyplot as plt
 from collections import defaultdict
 
-from dark.fasta import FastaReads
-
 from light.landmarks import findLandmark, ALL_LANDMARK_FINDER_CLASSES
 from light.trig import findTrigPoint, ALL_TRIG_FINDER_CLASSES
-from light.database import Database
+from light.performance.query import queryDatabase
 
 """
 REMARKS:
@@ -43,8 +41,8 @@ T3READ = '../performance/read/t3-read.fasta'
 T4DB = '../performance/database/t4-db.fasta'
 T4READ = '../performance/read/t4-read.fasta'
 
-T56DB = '../performance/database/t5-6-db.fasta'
-T56READ = '../performance/read/t5-6-read.fasta'
+T56DB = '../performance/database/polymerase-db.fasta'
+T56READ = '../performance/read/polymerase-queries.fasta'
 
 # blast and z-scores
 ORDER = ['2J7W', '4K6M', '1S49', '1NB6', '3OLB', '1XR7', '1XR6', '3CDW',
@@ -161,39 +159,6 @@ BITSCORES = {'2J7W': [1328.15, 899.427, 46.2098, 0, 21.9422, 0, 0, 0, 0, 0,
              '1MU2': [19.631, 0, 0, 20.7866, 0, 0, 0, 0, 23.0978, 0, 0,
                       23.8682, 0, 0, 0, 0, 20.7866, 0, 0, 691.419, 1137.48],
              }
-
-
-def _runTest(databaseFile, sequenceFile, landmarkFinders, trigFinders,
-             limitPerLandmark, maxDistance, minDistance):
-    """
-    A function that runs tests on files and returns results.
-
-    @param databaseFile: a C{str} filename with sequences that should be
-        turned into a database.
-    @param sequenceFile: a C{str} filename with sequences that should be
-        looked up in the database.
-    @param landmarkFinders: a C{list} of landmarkFinders.
-    @param landmarkFinders: a C{list} of landmarkFinders.
-    @param limitPerLandmark: A limit on the number of pairs to yield per
-        landmark per read.
-    @param maxDistance: The maximum distance permitted between yielded pairs.
-    @param minDistance: The minimum distance permitted between yielded pairs.
-    """
-    database = Database(landmarkFinders, trigFinders, limitPerLandmark,
-                        maxDistance, minDistance)
-    databaseReads = FastaReads(databaseFile)
-    for read in databaseReads:
-        database.addSubject(read)
-
-    resultDict = defaultdict(dict)
-    lookupReads = FastaReads(sequenceFile)
-    for read in lookupReads:
-        result = database.find(read)
-        for subjectIndex in result.significant():
-            subject = database.subjectInfo[subjectIndex][0]
-            score = result.analysis[subjectIndex]['score']
-            resultDict[read.id][subject] = score
-    return resultDict
 
 
 def plot(x, y, read, scoreType, outputFile):
@@ -381,9 +346,9 @@ if __name__ == '__main__':
     # 1) A complete sequence must match itself:
     oneStart = time()
     print >>sys.stderr, '1) A complete sequence must find itself.'
-    oneResult = _runTest(T1DB, T1READ, landmarkFinderClasses,
-                         trigFinderClasses, args.limitPerLandmark,
-                         args.maxDistance, args.minDistance)
+    oneResult = queryDatabase(T1DB, T1READ, landmarkFinderClasses,
+                              trigFinderClasses, args.limitPerLandmark,
+                              args.maxDistance, args.minDistance)
     oneTime = time() - oneStart
     writer.writeTest('1) A complete sequence must match itself', oneResult,
                      oneTime, 1)
@@ -391,9 +356,9 @@ if __name__ == '__main__':
     # 2) Reads made from a sequence must match itself:
     twoStart = time()
     print >>sys.stderr, '2) Reads made from a sequence must match itself.'
-    twoResult = _runTest(T2DB, T2READ, landmarkFinderClasses,
-                         trigFinderClasses, args.limitPerLandmark,
-                         args.maxDistance, args.minDistance)
+    twoResult = queryDatabase(T2DB, T2READ, landmarkFinderClasses,
+                              trigFinderClasses, args.limitPerLandmark,
+                              args.maxDistance, args.minDistance)
     twoTime = time() - twoStart
     writer.writeTest('2) Reads made from a sequence must match itself',
                      twoResult, twoTime, 9)
@@ -401,9 +366,9 @@ if __name__ == '__main__':
     # 3) A sequence must find related sequences:
     threeStart = time()
     print >>sys.stderr, '3) A sequence must match related sequences.'
-    threeResult = _runTest(T3DB, T3READ, landmarkFinderClasses,
-                           trigFinderClasses, args.limitPerLandmark,
-                           args.maxDistance, args.minDistance)
+    threeResult = queryDatabase(T3DB, T3READ, landmarkFinderClasses,
+                                trigFinderClasses, args.limitPerLandmark,
+                                args.maxDistance, args.minDistance)
     threeTime = time() - threeStart
     writer.writeTest('3) A sequence must find related sequences', threeResult,
                      threeTime, 1)
@@ -412,9 +377,9 @@ if __name__ == '__main__':
     fourStart = time()
     print >>sys.stderr, ('4) Reads made from a sequence must match related '
                          'sequences.')
-    fourResult = _runTest(T4DB, T4READ, landmarkFinderClasses,
-                          trigFinderClasses, args.limitPerLandmark,
-                          args.maxDistance, args.minDistance)
+    fourResult = queryDatabase(T4DB, T4READ, landmarkFinderClasses,
+                               trigFinderClasses, args.limitPerLandmark,
+                               args.maxDistance, args.minDistance)
     fourTime = time() - fourStart
     fourTitle = '4) Reads made from a sequence must match related sequences'
     writer.writeTest(fourTitle, fourResult, fourTime, 7)
@@ -426,9 +391,9 @@ if __name__ == '__main__':
                          'correlate.')
     print >>sys.stderr, ('6) The BLASTp bit scores and light matter scores '
                          'must correlate.')
-    fiveSixResult = _runTest(T56DB, T56READ, landmarkFinderClasses,
-                             trigFinderClasses, args.limitPerLandmark,
-                             args.maxDistance, args.minDistance)
+    fiveSixResult = queryDatabase(T56DB, T56READ, landmarkFinderClasses,
+                                  trigFinderClasses, args.limitPerLandmark,
+                                  args.maxDistance, args.minDistance)
     fiveSixTime = time() - fiveSixStart
     sTitle = '6) The BLASTp bit scores and light matter scores must correlate'
     writer.writeTest('5) The Z-scores and light matter score must correlate',

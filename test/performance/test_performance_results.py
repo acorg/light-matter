@@ -128,6 +128,14 @@ class TestPerformanceResult(TestCase):
                                              'file2.json.bz2'])
             allTests = list(performance.showAllTests())
             self.assertEqual(5, len(allTests))
+            self.assertEqual(['performance.perf_database.TestDatabase.'
+                              'testAdd10KSubjects', 'performance.perf_database'
+                              '.TestDatabase.testChecksumEmpty',
+                              'performance.perf_findSelf.TestFindSelf.'
+                              'testFindIdenticalSequenced', 'performance.'
+                              'perf_database.TestDatabase.testCreation',
+                              'performance.perf_database.TestDatabase.'
+                              'testChecksum10K'], allTests)
 
     def testReturnResultNameNotPresent(self):
         """

@@ -1,11 +1,11 @@
-# sample performance test result
+# Sample performance test results.
 
 RESULT1 = {
     "UTC": "2015-01-09 16:02:07",
     "startTestRunTime": 1420819327.9003059864,
     "description": "<not given>",
     "results": {
-        "performance.perf_database.TestDatabase.testAdd10KSubjects": {
+        "performance.perf_database.TestDatabase.testAddSubjects": {
             "status": "success",
             "details": 0.0606100559,
             "elapsed": 0.0608661175,
@@ -15,7 +15,7 @@ RESULT1 = {
             "details": 0.0000140667,
             "elapsed": 0.000054121,
         },
-        "performance.perf_findSelf.TestFindSelf.testFindIdenticalSequenced": {
+        "performance.perf_findSelf.TestFindSelf.testFindIdentical": {
             "status": "success",
             "details": {
                 "score": 48,
@@ -27,7 +27,7 @@ RESULT1 = {
             "status": "success",
             "elapsed": 0.000043869
         },
-        "performance.perf_database.TestDatabase.testChecksum10K": {
+        "performance.perf_database.TestDatabase.testChecksum": {
             "status": "success",
             "details": 0.0157001019,
             "elapsed": 0.0762839317,
@@ -42,7 +42,7 @@ RESULT2 = {
     "startTestRunTime": 1420819327.9003059864,
     "description": "<not given>",
     "results": {
-        "performance.perf_database.TestDatabase.testAdd10KSubjects": {
+        "performance.perf_database.TestDatabase.testAddSubjects": {
             "status": "success",
             "details": 0.1606100559,
             "elapsed": 0.1608661175,
@@ -52,7 +52,7 @@ RESULT2 = {
             "details": 0.1000140667,
             "elapsed": 0.100054121,
         },
-        "performance.perf_findSelf.TestFindSelf.testFindIdenticalSequenced": {
+        "performance.perf_findSelf.TestFindSelf.testFindIdentical": {
             "status": "success",
             "details": {
                 "score": 48,
@@ -64,7 +64,12 @@ RESULT2 = {
             "status": "success",
             "elapsed": 0.100043869
         },
-        "performance.perf_database.TestDatabase.testChecksum10K": {
+        "performance.perf_database.TestDatabase.testChecksum": {
+            "status": "success",
+            "details": 0.1157001019,
+            "elapsed": 0.1762839317,
+        },
+        "performance.perf_database.TestDatabase.testSomething": {
             "status": "success",
             "details": 0.1157001019,
             "elapsed": 0.1762839317,

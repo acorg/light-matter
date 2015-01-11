@@ -4,14 +4,16 @@ from dark.reads import AARead
 
 from light.database import Database
 from light.landmarks import (
-    AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, BetaStrand, BetaTurn)
+    AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, BetaStrand, BetaTurn,
+    ALL_LANDMARK_FINDER_CLASSES)
 from light.trig import (
-    AminoAcids, Peaks, Troughs, IndividualPeaks, IndividualTroughs)
+    AminoAcids, Peaks, Troughs, IndividualPeaks, IndividualTroughs,
+    ALL_TRIG_FINDER_CLASSES)
 
 
 class _FindSelfMixin(object):
     """
-    Test if a database build from a sequence finds itself.
+    Test if a database built from a sequence finds itself.
     """
     ID = 'gi|460111557|Oropouche virus TRVL-9760, glycoprotein, Segment M'
     SEQUENCE = ('DEDCLSKDIKITYQELHNCIGPKIMGDTCVSKSELYSDLFSKNLVTEYDKKYFEPDTVNDQ'
@@ -30,6 +32,10 @@ class _FindSelfMixin(object):
                 'CKTNCEDFINNIVFSPQIKNYNIKVHCKSKVEKITAHICGRDIDLQLTVKPYNQKIDLSQL'
                 'DESNYIREEDLQCGTWLCKVQKEGIDIMFKGLFSGLGRYWTILIYSIIGVVIIVILVYILL'
                 'PIGRLLKAFLIRHEIEYAMEQKIK')
+
+    MAXDISTANCE = None
+    MINDISTANCE = None
+    LIMITPERLANDMARK = None
 
     def testFindSelf(self):
         """
@@ -59,13 +65,8 @@ class TestFindSelfAllFinders(_FindSelfMixin, TestCase):
     """
     A class for testing if a sequence matches itself using all finders.
     """
-    LANDMARKS = [AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, BetaStrand,
-                 BetaTurn]
-    TRIG_POINTS = [AminoAcids, Peaks, Troughs, IndividualPeaks,
-                   IndividualTroughs]
-    MAXDISTANCE = None
-    MINDISTANCE = None
-    LIMITPERLANDMARK = None
+    LANDMARKS = [ALL_LANDMARK_FINDER_CLASSES]
+    TRIG_POINTS = [ALL_TRIG_FINDER_CLASSES]
 
 
 class TestFindSelfAHAllTrig(_FindSelfMixin, TestCase):
@@ -74,11 +75,7 @@ class TestFindSelfAHAllTrig(_FindSelfMixin, TestCase):
     landmarks and all trig point finders.
     """
     LANDMARKS = [AlphaHelix]
-    TRIG_POINTS = [AminoAcids, Peaks, Troughs, IndividualPeaks,
-                   IndividualTroughs]
-    MAXDISTANCE = None
-    MINDISTANCE = None
-    LIMITPERLANDMARK = None
+    TRIG_POINTS = [ALL_TRIG_FINDER_CLASSES]
 
 
 class TestFindSelfAH310AllTrig(_FindSelfMixin, TestCase):
@@ -87,11 +84,7 @@ class TestFindSelfAH310AllTrig(_FindSelfMixin, TestCase):
     landmarks and all trig point finders.
     """
     LANDMARKS = [AlphaHelix_3_10]
-    TRIG_POINTS = [AminoAcids, Peaks, Troughs, IndividualPeaks,
-                   IndividualTroughs]
-    MAXDISTANCE = None
-    MINDISTANCE = None
-    LIMITPERLANDMARK = None
+    TRIG_POINTS = [ALL_TRIG_FINDER_CLASSES]
 
 
 class TestFindSelfAHpiAllTrig(_FindSelfMixin, TestCase):
@@ -100,11 +93,7 @@ class TestFindSelfAHpiAllTrig(_FindSelfMixin, TestCase):
     landmarks and all trig point finders.
     """
     LANDMARKS = [AlphaHelix_pi]
-    TRIG_POINTS = [AminoAcids, Peaks, Troughs, IndividualPeaks,
-                   IndividualTroughs]
-    MAXDISTANCE = None
-    MINDISTANCE = None
-    LIMITPERLANDMARK = None
+    TRIG_POINTS = [ALL_TRIG_FINDER_CLASSES]
 
 
 class TestFindSelfBetaStrandAllTrig(_FindSelfMixin, TestCase):
@@ -113,11 +102,7 @@ class TestFindSelfBetaStrandAllTrig(_FindSelfMixin, TestCase):
     landmarks and all trig point finders.
     """
     LANDMARKS = [BetaStrand]
-    TRIG_POINTS = [AminoAcids, Peaks, Troughs, IndividualPeaks,
-                   IndividualTroughs]
-    MAXDISTANCE = None
-    MINDISTANCE = None
-    LIMITPERLANDMARK = None
+    TRIG_POINTS = [ALL_TRIG_FINDER_CLASSES]
 
 
 class TestFindSelfBetaTurnAllTrig(_FindSelfMixin, TestCase):
@@ -126,11 +111,7 @@ class TestFindSelfBetaTurnAllTrig(_FindSelfMixin, TestCase):
     landmarks and all trig point finders.
     """
     LANDMARKS = [BetaTurn]
-    TRIG_POINTS = [AminoAcids, Peaks, Troughs, IndividualPeaks,
-                   IndividualTroughs]
-    MAXDISTANCE = None
-    MINDISTANCE = None
-    LIMITPERLANDMARK = None
+    TRIG_POINTS = [ALL_TRIG_FINDER_CLASSES]
 
 
 class TestFindSelfAllLandmarkAA(_FindSelfMixin, TestCase):
@@ -138,12 +119,8 @@ class TestFindSelfAllLandmarkAA(_FindSelfMixin, TestCase):
     A class for testing if a sequence matches itself using all landmark
     finders and AminoAcid trig points.
     """
-    LANDMARKS = [AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, BetaStrand,
-                 BetaTurn]
+    LANDMARKS = [ALL_LANDMARK_FINDER_CLASSES]
     TRIG_POINTS = [AminoAcids]
-    MAXDISTANCE = None
-    MINDISTANCE = None
-    LIMITPERLANDMARK = None
 
 
 class TestFindSelfAllLandmarkPeaks(_FindSelfMixin, TestCase):
@@ -151,12 +128,8 @@ class TestFindSelfAllLandmarkPeaks(_FindSelfMixin, TestCase):
     A class for testing if a sequence matches itself using all landmark
     finders and Peaks trig points.
     """
-    LANDMARKS = [AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, BetaStrand,
-                 BetaTurn]
+    LANDMARKS = [ALL_LANDMARK_FINDER_CLASSES]
     TRIG_POINTS = [Peaks]
-    MAXDISTANCE = None
-    MINDISTANCE = None
-    LIMITPERLANDMARK = None
 
 
 class TestFindSelfAllLandmarkTroughs(_FindSelfMixin, TestCase):
@@ -164,12 +137,8 @@ class TestFindSelfAllLandmarkTroughs(_FindSelfMixin, TestCase):
     A class for testing if a sequence matches itself using all landmark
     finders and Troughs trig points.
     """
-    LANDMARKS = [AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, BetaStrand,
-                 BetaTurn]
+    LANDMARKS = [ALL_LANDMARK_FINDER_CLASSES]
     TRIG_POINTS = [Troughs]
-    MAXDISTANCE = None
-    MINDISTANCE = None
-    LIMITPERLANDMARK = None
 
 
 class TestFindSelfAllLandmarkIndividualPeaks(_FindSelfMixin, TestCase):
@@ -177,12 +146,8 @@ class TestFindSelfAllLandmarkIndividualPeaks(_FindSelfMixin, TestCase):
     A class for testing if a sequence matches itself using all landmark
     finders and IndividualPeaks trig points.
     """
-    LANDMARKS = [AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, BetaStrand,
-                 BetaTurn]
+    LANDMARKS = [ALL_LANDMARK_FINDER_CLASSES]
     TRIG_POINTS = [IndividualPeaks]
-    MAXDISTANCE = None
-    MINDISTANCE = None
-    LIMITPERLANDMARK = None
 
 
 class TestFindSelfAllLandmarkIndividualTroughs(_FindSelfMixin, TestCase):
@@ -190,12 +155,8 @@ class TestFindSelfAllLandmarkIndividualTroughs(_FindSelfMixin, TestCase):
     A class for testing if a sequence matches itself using all landmark
     finders and IndividualTroughs trig points.
     """
-    LANDMARKS = [AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, BetaStrand,
-                 BetaTurn]
+    LANDMARKS = [ALL_LANDMARK_FINDER_CLASSES]
     TRIG_POINTS = [IndividualTroughs]
-    MAXDISTANCE = None
-    MINDISTANCE = None
-    LIMITPERLANDMARK = None
 
 
 class TestFindSelfAllLandmarksAllTrigLowMinDistance(_FindSelfMixin, TestCase):
@@ -203,13 +164,9 @@ class TestFindSelfAllLandmarksAllTrigLowMinDistance(_FindSelfMixin, TestCase):
     A class for testing if a sequence matches itself using all finders and a
     low minDistance.
     """
-    LANDMARKS = [AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, BetaStrand,
-                 BetaTurn]
-    TRIG_POINTS = [AminoAcids, Peaks, Troughs, IndividualPeaks,
-                   IndividualTroughs]
-    MAXDISTANCE = None
+    LANDMARKS = [ALL_LANDMARK_FINDER_CLASSES]
+    TRIG_POINTS = [ALL_TRIG_FINDER_CLASSES]
     MINDISTANCE = 2
-    LIMITPERLANDMARK = None
 
 
 class TestFindSelfAllLandmarksAllTrigHighMinDistance(_FindSelfMixin, TestCase):
@@ -217,13 +174,9 @@ class TestFindSelfAllLandmarksAllTrigHighMinDistance(_FindSelfMixin, TestCase):
     A class for testing if a sequence matches itself using all finders and a
     high minDistance.
     """
-    LANDMARKS = [AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, BetaStrand,
-                 BetaTurn]
-    TRIG_POINTS = [AminoAcids, Peaks, Troughs, IndividualPeaks,
-                   IndividualTroughs]
-    MAXDISTANCE = None
+    LANDMARKS = [ALL_LANDMARK_FINDER_CLASSES]
+    TRIG_POINTS = [ALL_TRIG_FINDER_CLASSES]
     MINDISTANCE = 30
-    LIMITPERLANDMARK = None
 
 
 class TestFindSelfAllLandmarksAllTrigHighMaxDistance(_FindSelfMixin, TestCase):
@@ -231,13 +184,9 @@ class TestFindSelfAllLandmarksAllTrigHighMaxDistance(_FindSelfMixin, TestCase):
     A class for testing if a sequence matches itself using all finders and a
     high maxDistance.
     """
-    LANDMARKS = [AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, BetaStrand,
-                 BetaTurn]
-    TRIG_POINTS = [AminoAcids, Peaks, Troughs, IndividualPeaks,
-                   IndividualTroughs]
+    LANDMARKS = [ALL_LANDMARK_FINDER_CLASSES]
+    TRIG_POINTS = [ALL_TRIG_FINDER_CLASSES]
     MAXDISTANCE = 300
-    MINDISTANCE = None
-    LIMITPERLANDMARK = None
 
 
 class TestFindSelfAllLandmarksAllTrigLowMaxDistance(_FindSelfMixin, TestCase):
@@ -245,13 +194,9 @@ class TestFindSelfAllLandmarksAllTrigLowMaxDistance(_FindSelfMixin, TestCase):
     A class for testing if a sequence matches itself using all finders and a
     low maxDistance.
     """
-    LANDMARKS = [AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, BetaStrand,
-                 BetaTurn]
-    TRIG_POINTS = [AminoAcids, Peaks, Troughs, IndividualPeaks,
-                   IndividualTroughs]
+    LANDMARKS = [ALL_LANDMARK_FINDER_CLASSES]
+    TRIG_POINTS = [ALL_TRIG_FINDER_CLASSES]
     MAXDISTANCE = 10
-    MINDISTANCE = None
-    LIMITPERLANDMARK = None
 
 
 class TestFindSelfAllLandmarksAllTrigLowLimitPerLandmark(_FindSelfMixin,
@@ -260,12 +205,8 @@ class TestFindSelfAllLandmarksAllTrigLowLimitPerLandmark(_FindSelfMixin,
     A class for testing if a sequence matches itself using all finders and a
     low limitPerLandmark.
     """
-    LANDMARKS = [AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, BetaStrand,
-                 BetaTurn]
-    TRIG_POINTS = [AminoAcids, Peaks, Troughs, IndividualPeaks,
-                   IndividualTroughs]
-    MAXDISTANCE = None
-    MINDISTANCE = None
+    LANDMARKS = [ALL_LANDMARK_FINDER_CLASSES]
+    TRIG_POINTS = [ALL_TRIG_FINDER_CLASSES]
     LIMITPERLANDMARK = 10
 
 
@@ -275,10 +216,6 @@ class TestFindSelfAllLandmarksAllTrigHighLimitPerLandmark(_FindSelfMixin,
     A class for testing if a sequence matches itself using all finders and a
     high limitPerLandmark.
     """
-    LANDMARKS = [AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, BetaStrand,
-                 BetaTurn]
-    TRIG_POINTS = [AminoAcids, Peaks, Troughs, IndividualPeaks,
-                   IndividualTroughs]
-    MAXDISTANCE = None
-    MINDISTANCE = None
+    LANDMARKS = [ALL_LANDMARK_FINDER_CLASSES]
+    TRIG_POINTS = [ALL_TRIG_FINDER_CLASSES]
     LIMITPERLANDMARK = 100

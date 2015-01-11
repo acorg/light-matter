@@ -1,8 +1,9 @@
 import matplotlib.pyplot as plt
 
 from light.reads import ScannedRead
-from light.landmarks import findLandmark
+from light.database import Database
 from light.trig import findTrigPoint
+from light.landmarks import findLandmark
 
 COLORS = {'A': 'blue',
           'B': 'cyan',
@@ -14,6 +15,75 @@ COLORS = {'A': 'blue',
           'J': 'black',
           'I': 'black',
           'O': 'black'}
+
+
+def plotHistogram(query, subject, landmarks=None, trigPoints=None,
+                  limitPerLandmark=None, maxDistance=None, minDistance=None,
+                  aboveMeanTreshold=None, readsAx=None):
+    """
+    A function which plots a histogram of matching hash distances.
+
+    @param query: an AARead instance of the sequence of the query.
+    @param subject: an AARead instance of the sequence of the subject.
+    @param landmarks: a C{list} of C{str} of landmark finder names.
+    @param trigPoints: a C{list} of C{str} of trig finder names.
+    @param limitPerLandmark: An C{int} limit on the number of pairs to
+        yield per landmark.
+    @param maxDistance: The C{int} maximum distance permitted between
+        yielded pairs.
+    @param minDistance: The C{int} minimum distance permitted between
+        yielded pairs.
+    @param aboveMeanThreshold: A numeric amount by which the maximum delta
+        count in a bucket must exceed the mean bucket count for that
+        maximum bucket count to be considered significant.
+    @param readsAx: If not None, use this as the subplot for displaying reads.
+    """
+    fig = plt.figure()
+    readsAx = readsAx or fig.add_subplot(111)
+
+    landmarks = landmarks or []
+    trigs = trigPoints or []
+
+    if len(landmarks) + len(trigs) == 0:
+        raise ValueError('You must specify either landmarks or trig points to '
+                         'find.')
+
+    landmarkFinderClasses = []
+    for landmarkFinderName in landmarks:
+        landmarkFinderClass = findLandmark(landmarkFinderName)
+        if landmarkFinderClass:
+            landmarkFinderClasses.append(landmarkFinderClass)
+        else:
+            print 'Could not find landmark finder %r.' % (
+                landmarkFinderName)
+
+    # Make sure all trig point finders requested exist.
+    trigFinderClasses = []
+    for trigFinderName in trigs:
+        trigFinderClass = findTrigPoint(trigFinderName)
+        if trigFinderClass:
+            trigFinderClasses.append(trigFinderClass)
+        else:
+            print 'Could not find trig point finder %r.' % (
+                trigFinderName)
+
+    database = Database(landmarkFinderClasses, trigFinderClasses,
+                        limitPerLandmark, maxDistance, minDistance)
+    database.addSubject(subject)
+
+    result = database.find(query, aboveMeanTreshold, storeAnalysis=True)
+    hist = result.analysis[0]['histogram']
+    bins = result.analysis[0]['histogramBuckets']
+
+    width = 0.7 * (bins[1] - bins[0])
+    center = (bins[:-1] + bins[1:]) / 2
+    readsAx.bar(center, hist, align='center', width=width)
+
+    readsAx.set_title('%s against %s' % (query.id, subject.id))
+
+    readsAx.set_xlabel("Offsets (database-read)")
+
+    readsAx.xaxis.tick_bottom()
 
 
 def plotFeatures(read, landmarks=None, trigs=None, limitPerLandmark=None,

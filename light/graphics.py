@@ -23,8 +23,8 @@ def plotHistogram(query, subject, landmarks=None, trigPoints=None,
     """
     A function which plots a histogram of matching hash distances.
 
-    @param querySequence: an AARead instance of the sequence of the query.
-    @param databaseSequence: an AARead instance of the sequence of the query.
+    @param query: an AARead instance of the sequence of the query.
+    @param subject: an AARead instance of the sequence of the subject.
     @param landmarks: a C{list} of C{str} of landmark finder names.
     @param trigPoints: a C{list} of C{str} of trig finder names.
     @param limitPerLandmark: An C{int} limit on the number of pairs to

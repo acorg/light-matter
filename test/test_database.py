@@ -62,22 +62,20 @@ class TestDatabase(TestCase):
         """
         The database key function must return the expected value.
         """
-        distance = 10
         db = Database([], [])
         landmark = Landmark('name', 'A', 20, 0)
         trigPoint = TrigPoint('name', 'B', 10)
-        self.assertEqual('A1:B:10', db.key(landmark, trigPoint, distance))
+        self.assertEqual('A1:B:10', db.key(landmark, trigPoint))
 
     def testKeyWithRepeatCount(self):
         """
         The database key function must return the expected value when the
         landmark it is passed has a repeat count.
         """
-        distance = 10
         db = Database([], [])
         landmark = Landmark('name', 'A', 20, 0, 5)
         trigPoint = TrigPoint('name', 'B', 10)
-        self.assertEqual('A5:B:10', db.key(landmark, trigPoint, distance))
+        self.assertEqual('A5:B:10', db.key(landmark, trigPoint))
 
     def testInitialDatabaseHasNoReadInfo(self):
         """
@@ -212,8 +210,8 @@ class TestDatabase(TestCase):
         """
         If a bucketFactor is used, the right distance needs to be calculated.
         """
-        db = Database([AlphaHelix], [Peaks])
-        db.addSubject(AARead('id', 'FRRRFRRRFASA'), bucketFactor=5)
+        db = Database([AlphaHelix], [Peaks], bucketFactor=5)
+        db.addSubject(AARead('id', 'FRRRFRRRFASA'))
         self.assertEqual({'A2:P:-2': [{'subjectIndex': 0,
                                        'offset': 0}]},
                          db.d)

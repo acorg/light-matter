@@ -32,12 +32,16 @@ class Database(object):
     ABOVE_MEAN_THRESHOLD_DEFAULT = 15
 
     def __init__(self, landmarkFinderClasses, trigPointFinderClasses,
-                 limitPerLandmark=None, maxDistance=None, minDistance=None):
+                 limitPerLandmark=None, maxDistance=None, minDistance=None,
+                 bucketFactor=1):
         self.landmarkFinderClasses = landmarkFinderClasses
         self.trigPointFinderClasses = trigPointFinderClasses
         self.limitPerLandmark = limitPerLandmark
         self.maxDistance = maxDistance
         self.minDistance = minDistance
+        # The factor by which the distance of landmark and trigpoint pairs is
+        # divided, to influence sensitivity.
+        self.bucketFactor = bucketFactor
         # It may look like self.d should be a defaultdict(list). But that
         # will not work because a database JSON save followed by a load
         # will restore the defaultdict as a vanilla dict.
@@ -47,9 +51,6 @@ class Database(object):
         self.totalCoveredResidues = 0
         self.subjectInfo = []
         self._checksum = None
-        # The factor by which the distance of landmark and trigpoint pairs is
-        # divided, to influence sensitivity.
-        self.bucketFactor = 1
         # Create instances of the landmark and trig point finder classes.
         self.landmarkFinders = []
         for landmarkFinderClass in self.landmarkFinderClasses:
@@ -58,23 +59,22 @@ class Database(object):
         for trigPointFinderClass in self.trigPointFinderClasses:
             self.trigPointFinders.append(trigPointFinderClass())
 
-    @staticmethod
-    def key(landmark, trigPoint, distance):
+    def key(self, landmark, trigPoint):
         """
         Compute a key to store information about a landmark / trig point
         association for a read.
 
         @param landmark: A C{light.features.Landmark} instance.
         @param trigPoint: A C{light.features.TrigPoint} instance.
-        @param distance: the optionally bucketed distance between the landmark
-            and the trig point.
         @return: A C{str} key based on the landmark, the trig point,
             and the distance between them.
         """
+        distance = ((landmark.offset - trigPoint.offset)
+                    // self.bucketFactor)
         return '%s:%s:%s' % (landmark.hashkey(), trigPoint.hashkey(),
                              distance)
 
-    def addSubject(self, subject, bucketFactor=None):
+    def addSubject(self, subject):
         """
         Examine a sequence for features and add its (landmark, trig point)
         pairs to the search dictionary.
@@ -93,9 +93,6 @@ class Database(object):
         self.totalResidues += len(subject)
         self.subjectInfo.append((subject.id, subject.sequence))
 
-        if bucketFactor is not None:
-            self.bucketFactor = bucketFactor
-
         for landmarkFinder in self.landmarkFinders:
             for landmark in landmarkFinder.find(subject):
                 scannedSubject.landmarks.append(landmark)
@@ -109,9 +106,7 @@ class Database(object):
         for landmark, trigPoint in scannedSubject.getPairs(
                 limitPerLandmark=self.limitPerLandmark,
                 maxDistance=self.maxDistance, minDistance=self.minDistance):
-            distance = ((landmark.offset - trigPoint.offset)
-                        // self.bucketFactor)
-            key = self.key(landmark, trigPoint, distance)
+            key = self.key(landmark, trigPoint)
             value = {
                 'subjectIndex': subjectIndex,
                 'offset': landmark.offset,
@@ -182,9 +177,7 @@ class Database(object):
         for landmark, trigPoint in scannedRead.getPairs(
                 limitPerLandmark=self.limitPerLandmark,
                 maxDistance=self.maxDistance, minDistance=self.minDistance):
-            distance = ((landmark.offset - trigPoint.offset)
-                        // self.bucketFactor)
-            key = self.key(landmark, trigPoint, distance)
+            key = self.key(landmark, trigPoint)
             try:
                 subjects = self.d[key]
             except KeyError:

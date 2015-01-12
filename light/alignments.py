@@ -198,7 +198,7 @@ class JSONRecordsReader(object):
                 'Could not convert first line of %r to JSON (%s). '
                 'Line is %r.' % (self._filename, e, line[:-1]))
 
-        if self.params['checksum'] != self._database.checksum():
+        if self.params['checksum'] != self._database.checksum:
             raise ValueError(
                 'Database and output file have different checksums.')
 

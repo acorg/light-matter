@@ -1,7 +1,7 @@
 import sys
 from collections import defaultdict
 from ujson import dump, dumps, load
-from hashlib import sha256
+from binascii import crc32
 from operator import attrgetter
 
 
@@ -52,7 +52,6 @@ class Database(object):
         self.totalResidues = 0
         self.totalCoveredResidues = 0
         self.subjectInfo = []
-        self._checksum = None
         # Create instances of the landmark and trig point finder classes.
         self.landmarkFinders = []
         for landmarkFinderClass in self.landmarkFinderClasses:
@@ -60,6 +59,29 @@ class Database(object):
         self.trigPointFinders = []
         for trigPointFinderClass in self.trigPointFinderClasses:
             self.trigPointFinders.append(trigPointFinderClass())
+        self._initializeChecksum()
+
+    def _initializeChecksum(self):
+        """
+        Set the initial checksum, based on the database parameters.
+        """
+        self.checksum = 0x0  # An arbitrary starting checksum.
+        key = attrgetter('NAME')
+        self._updateChecksum(
+            [f.NAME for f in sorted(self.landmarkFinders, key=key)] +
+            [f.NAME for f in sorted(self.trigPointFinders, key=key)] +
+            map(str, (self.limitPerLandmark, self.maxDistance,
+                      self.minDistance, self.bucketFactor)))
+
+    def _updateChecksum(self, strings):
+        """
+        Update the checksum for this database.
+
+        @param strings: A C{list} of strings to update the current checksum
+            with.
+        """
+        update = '\0'.join(strings) + '\0'
+        self.checksum = crc32(update, self.checksum) & 0xFFFFFFFF
 
     def key(self, landmark, trigPoint):
         """
@@ -85,13 +107,13 @@ class Database(object):
             is passed as a read instance even though in many cases it will not
             be an actual read from a sequencing run.
         """
-        # Invalidate the stored checksum (if any).
-        self._checksum = None
+        subjectInfo = (subject.id, subject.sequence)
+        self._updateChecksum(subjectInfo)
+        self.subjectInfo.append(subjectInfo)
         scannedSubject = ScannedSubject(subject)
         subjectIndex = self.subjectCount
         self.subjectCount += 1
         self.totalResidues += len(subject)
-        self.subjectInfo.append((subject.id, subject.sequence))
 
         for landmarkFinder in self.landmarkFinders:
             for landmark in landmarkFinder.find(subject):
@@ -130,7 +152,7 @@ class Database(object):
         @return: The C{fp} we were passed (this is useful in testing).
         """
         print >>fp, dumps({
-            'checksum': self.checksum(),
+            'checksum': self.checksum,
             'landmarkFinderClasses': [
                 klass.NAME for klass in self.landmarkFinderClasses],
             'trigPointFinderClasses': [
@@ -203,7 +225,7 @@ class Database(object):
         @param fp: A file pointer.
         """
         state = {
-            '_checksum': self.checksum(),
+            'checksum': self.checksum,
             'landmarkFinderClassNames': [klass.NAME for klass in
                                          self.landmarkFinderClasses],
             'trigPointFinderClassNames': [klass.NAME for klass in
@@ -258,73 +280,8 @@ class Database(object):
                             minDistance=state['minDistance'])
 
         # Monkey-patch the new database instance to restore its state.
-        for attr in ('_checksum', 'd', 'subjectCount', 'totalResidues',
+        for attr in ('checksum', 'd', 'subjectCount', 'totalResidues',
                      'totalCoveredResidues', 'subjectInfo'):
             setattr(database, attr, state[attr])
 
         return database
-
-    def checksum(self):
-        """
-        Compute a checksum for the specification and contents of this database.
-
-        @return: A C{str} checksum.
-        """
-        # If the checksum is already known, return it.
-        if self._checksum is not None:
-            return self._checksum
-
-        result = sha256()
-
-        def update(s):
-            """
-            Add the string representation of an object to the checksum,
-            followed by a NUL.
-
-            @param s: Anything that can be converted to a C{str} to be added to
-                the checksum.
-            """
-            result.update(str(s) + '\0')
-
-        # Add the (sorted) names of all landmark and trig point finder classes.
-        key = attrgetter('NAME')
-        for finder in sorted(self.landmarkFinders, key=key):
-            update(finder.NAME)
-        for finder in sorted(self.trigPointFinders, key=key):
-            update(finder.NAME)
-
-        # Add other initialization parameters.
-        update(self.limitPerLandmark)
-        update(self.maxDistance)
-        update(self.minDistance)
-        update(self.bucketFactor)
-
-        # Add all subject info.
-        for subjectId, subjectSequence in self.subjectInfo:
-            update(subjectId)
-            update(subjectSequence)
-
-        # Add all hash keys and their content. We do this in sorted order
-        # for the keys of self.d and then within each dict in the self.d
-        # values we make sure we have the sorted order of those keys
-        # too. This makes sure the checksum is invariant with respect to
-        # the order in which Python enumerates its dictionary keys.
-        for key in sorted(self.d.keys()):
-            update(key)
-            for details in self.d[key]:
-                for detailKey in sorted(details.keys()):
-                    update(detailKey)
-                    update(details[detailKey])
-
-        self._checksum = result.hexdigest()
-        return self._checksum
-
-    def checksumDirty(self):
-        """
-        Check if the database has an up-to-date checksum stored.
-
-        @return: A C{bool}, C{True} if the in-memory checksum is valid,
-            C{False} if not.
-        """
-        # This function exists for testing purposes.
-        return self._checksum is None

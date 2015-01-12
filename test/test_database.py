@@ -209,6 +209,7 @@ class TestDatabase(TestCase):
     def testOneReadOneLandmarkOnePeakBucketFactor(self):
         """
         If a bucketFactor is used, the right distance needs to be calculated.
+        The offsets are 10 aa apart, the bucketFactor should make that 2.
         """
         db = Database([AlphaHelix], [Peaks], bucketFactor=5)
         db.addSubject(AARead('id', 'FRRRFRRRFASA'))

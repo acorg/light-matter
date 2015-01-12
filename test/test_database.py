@@ -1,7 +1,7 @@
 from unittest import TestCase
 from json import loads
 from cStringIO import StringIO
-from hashlib import sha256
+from binascii import crc32
 
 from light.features import Landmark, TrigPoint
 from light.landmarks.alpha_helix import AlphaHelix
@@ -17,16 +17,17 @@ class TestDatabase(TestCase):
     Tests for the light.database.Database class.
     """
     @staticmethod
-    def _update(s, checksum):
+    def _checksum(strings):
         """
-        Add the string representation of an object to a checksum,
-        followed by a NUL.
+        Compute a database checksum.
 
-        @param s: Anything that can be converted to a C{str} to be added to
-            the checksum.
-        @param checksum: Any hashlib sum instance with an update method.
+        Note that this function knows the details of the database checksum
+        algorithm, which is not ideal.
+
+        @param strings: A C{list} of strings to compute the checksum for.
+        @return: An C{int} checksum.
         """
-        checksum.update(str(s) + '\0')
+        return crc32('\0'.join(map(str, strings)) + '\0', 0x0) & 0xFFFFFFFF
 
     def testAboveMeanThresholdDefault(self):
         """
@@ -363,6 +364,30 @@ class TestDatabase(TestCase):
         self.assertEqual(db.trigPointFinderClasses,
                          result.trigPointFinderClasses)
         self.assertEqual(db.totalResidues, result.totalResidues)
+        self.assertEqual(db.checksum, result.checksum)
+
+    def testChecksumAfterSaveLoad(self):
+        """
+        A database that has a sequence added to it, which is then saved and
+        then re-loaded, and then has a second sequence is added to it must have
+        the same checksum as a database that simply has the two sequences added
+        to it without interruption.
+        """
+        seq1 = 'FRRRFRRRFASAASA'
+        seq2 = 'MMMMMMMMMFRRRFR'
+        db1 = Database([AlphaHelix, BetaStrand], [Peaks, Troughs])
+        db1.addSubject(AARead('id1', seq1))
+        fp = StringIO()
+        db1.save(fp)
+        fp.seek(0)
+        db1 = Database.load(fp)
+        db1.addSubject(AARead('id2', seq2))
+
+        db2 = Database([AlphaHelix, BetaStrand], [Peaks, Troughs])
+        db2.addSubject(AARead('id1', seq1))
+        db2.addSubject(AARead('id2', seq2))
+
+        self.assertEqual(db1.checksum, db2.checksum)
 
     def testFindNotMatching(self):
         """
@@ -501,35 +526,19 @@ class TestDatabase(TestCase):
                       maxDistance=10, minDistance=5)
         db.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
 
-        checksum = sha256()
-        self._update(AlphaHelix.NAME, checksum)
-        self._update(Peaks.NAME, checksum)
-        self._update(3, checksum)  # Limit per landmark value.
-        self._update(10, checksum)  # Max distance value.
-        self._update(5, checksum)  # Min distance value.
-        self._update(1, checksum)  # bucketFactor value.
-        self._update('id', checksum)
-        self._update('FRRRFRRRFASAASA', checksum)
-
-        # The database dictionary now contains
-        #
-        # {
-        #     'A2:P:-10': [{'subjectIndex': 0, 'offset': 0}]}
-        # }
-        #
-        # We have to add the keys in order and the keys and values of the
-        # values in order.
-
-        self._update('A2:P:-10', checksum)
-        self._update('offset', checksum)
-        self._update(0, checksum)
-        self._update('subjectIndex', checksum)
-        self._update(0, checksum)
+        checksum = self._checksum([
+            AlphaHelix.NAME, Peaks.NAME,
+            3,  # Limit per landmark.
+            10,  # Max distance.
+            5,  # Min distance.
+            1,  # Bucket factor.
+            'id', 'FRRRFRRRFASAASA',
+            ])
 
         out = StringIO()
         db.saveParamsAsJSON(out)
         expected = {
-            'checksum': checksum.hexdigest(),
+            'checksum': checksum,
             'landmarkFinderClasses': ['AlphaHelix'],
             'trigPointFinderClasses': ['Peaks'],
             'limitPerLandmark': 3,
@@ -542,44 +551,19 @@ class TestDatabase(TestCase):
         }
         self.assertEqual(expected, loads(out.getvalue()))
 
-    def testChecksumDirtyOnEmptyDatabase(self):
-        """
-        The database checksum status must be dirty on creation.
-        """
-        db = Database([], [])
-        self.assertTrue(db.checksumDirty())
-
-    def testChecksumCleanAfterCallingChecksum(self):
-        """
-        The database checksum status must be non-dirty once the checksum()
-        function has been called.
-        """
-        db = Database([], [])
-        db.checksum()
-        self.assertFalse(db.checksumDirty())
-
-    def testChecksumCDirtyAfterCallingChecksumThenAddingSubject(self):
-        """
-        The database checksum status must be dirty if a new subject is added
-        after the checksum() function has been called.
-        """
-        db = Database([], [])
-        db.checksum()
-        db.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
-        self.assertTrue(db.checksumDirty())
-
     def testChecksumEmptyDatabase(self):
         """
         The database checksum must be as expected when the database has no
         finders and no subjects.
         """
         db = Database([], [])
-        expected = sha256()
-        self._update(None, expected)  # Limit per landmark value.
-        self._update(None, expected)  # Max distance value.
-        self._update(None, expected)  # Min distance value.
-        self._update(1, expected)  # bucketFactor
-        self.assertEqual(expected.hexdigest(), db.checksum())
+        checksum = self._checksum([
+            None,  # Limit per landmark.
+            None,  # Max distance.
+            None,  # Min distance.
+            1,  # Bucket factor.
+        ])
+        self.assertEqual(checksum, db.checksum)
 
     def testChecksumEmptyDatabaseWithNonDefaultParams(self):
         """
@@ -588,12 +572,13 @@ class TestDatabase(TestCase):
         """
         db = Database([], [], limitPerLandmark=3, maxDistance=10,
                       minDistance=1)
-        expected = sha256()
-        self._update(3, expected)
-        self._update(10, expected)
-        self._update(1, expected)
-        self._update(1, expected)  # bucketFactor
-        self.assertEqual(expected.hexdigest(), db.checksum())
+        checksum = self._checksum([
+            3,  # Limit per landmark.
+            10,  # Max distance.
+            1,  # Min distance.
+            1,  # Bucket factor.
+            ])
+        self.assertEqual(checksum, db.checksum)
 
     def testChecksumEmptyDatabaseWithFinders(self):
         """
@@ -601,16 +586,14 @@ class TestDatabase(TestCase):
         finders.
         """
         db = Database([AlphaHelix, BetaStrand], [Peaks, Troughs])
-        expected = sha256()
-        self._update(AlphaHelix.NAME, expected)
-        self._update(BetaStrand.NAME, expected)
-        self._update(Peaks.NAME, expected)
-        self._update(Troughs.NAME, expected)
-        self._update(None, expected)  # Limit per landmark value.
-        self._update(None, expected)  # Max distance value.
-        self._update(None, expected)  # Min distance value.
-        self._update(1, expected)  # bucketFactor
-        self.assertEqual(expected.hexdigest(), db.checksum())
+        checksum = self._checksum([
+            AlphaHelix.NAME, BetaStrand.NAME, Peaks.NAME, Troughs.NAME,
+            None,  # Limit per landmark.
+            None,  # Max distance.
+            None,  # Min distance.
+            1,  # Bucket factor.
+            ])
+        self.assertEqual(checksum, db.checksum)
 
     def testChecksumEmptyDatabaseWithFinderOrderInvariant(self):
         """
@@ -619,7 +602,7 @@ class TestDatabase(TestCase):
         """
         db1 = Database([AlphaHelix, BetaStrand], [Peaks, Troughs])
         db2 = Database([BetaStrand, AlphaHelix], [Troughs, Peaks])
-        self.assertEqual(db1.checksum(), db2.checksum())
+        self.assertEqual(db1.checksum, db2.checksum)
 
     def testChecksumOneSubjectNoLandmarks(self):
         """
@@ -627,18 +610,18 @@ class TestDatabase(TestCase):
         subject but no landmarks are found.
         """
         db = Database([AlphaHelix], [])
-        subject = AARead('subject', 'FRRRFRRRFASAASA')
+        subject = AARead('id', 'FRRRFRRRFASAASA')
         db.addSubject(subject)
 
-        expected = sha256()
-        self._update(AlphaHelix.NAME, expected)
-        self._update(None, expected)  # Limit per landmark value.
-        self._update(None, expected)  # Max distance value.
-        self._update(None, expected)  # Min distance value.
-        self._update(1, expected)  # bucketFactor
-        self._update('subject', expected)
-        self._update('FRRRFRRRFASAASA', expected)
-        self.assertEqual(expected.hexdigest(), db.checksum())
+        checksum = self._checksum([
+            AlphaHelix.NAME,
+            None,  # Limit per landmark.
+            None,  # Max distance.
+            None,  # Min distance.
+            1,  # Bucket factor.
+            'id', 'FRRRFRRRFASAASA',
+        ])
+        self.assertEqual(checksum, db.checksum)
 
     def testChecksumOneSubjectTwoLandmarks(self):
         """
@@ -649,39 +632,15 @@ class TestDatabase(TestCase):
         db = Database([AlphaHelix], [])
         subject = AARead('id', sequence)
         db.addSubject(subject)
-
-        expected = sha256()
-        self._update(AlphaHelix.NAME, expected)
-        self._update(None, expected)  # Limit per landmark value.
-        self._update(None, expected)  # Max distance value.
-        self._update(None, expected)  # Min distance value.
-        self._update(1, expected)  # bucketFactor
-        self._update('id', expected)
-        self._update(sequence, expected)
-
-        # The database dictionary now contains
-        #
-        # {
-        #     'A3:A2:31': [{'subjectIndex': 0, 'offset': 31}],
-        #     'A2:A3:-31': [{'subjectIndex': 0, 'offset': 0}]
-        # }
-        #
-        # We have to add the keys in order and the keys and values of the
-        # values in order.
-
-        self._update('A2:A3:-31', expected)
-        self._update('offset', expected)
-        self._update(0, expected)
-        self._update('subjectIndex', expected)
-        self._update(0, expected)
-
-        self._update('A3:A2:31', expected)
-        self._update('offset', expected)
-        self._update(31, expected)
-        self._update('subjectIndex', expected)
-        self._update(0, expected)
-
-        self.assertEqual(expected.hexdigest(), db.checksum())
+        checksum = self._checksum([
+            AlphaHelix.NAME,
+            None,  # Limit per landmark.
+            None,  # Max distance.
+            None,  # Min distance.
+            1,  # Bucket factor.
+            'id', sequence,
+        ])
+        self.assertEqual(checksum, db.checksum)
 
     def testSaveLoadWithNonDefaultParameters(self):
         """

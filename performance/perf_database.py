@@ -23,36 +23,6 @@ class TestDatabaseCreation(TestCase):
         Database([], [])
 
 
-class TestDatabaseChecksum(TestCase):
-    """
-    Test database checksum performance.
-    """
-
-    def testChecksumEmpty(self):
-        """
-        How long does it take to compute a checksum on an empty database?
-        """
-        database = Database([], [])
-        startTime = time.time()
-        database.checksum()
-        elapsed = time.time() - startTime
-        self.details = elapsed
-
-    def testChecksum10K(self):
-        """
-        How long does it take to compute a checksum on a database that has 10K
-        sequences added to it?
-        """
-        read = AARead('id', 'MTMTSTTSNLPGILSQPSSELLTNWYAEQVVQGHIL')
-        database = Database([], [])
-        for _ in xrange(10000):
-            database.addSubject(read)
-        startTime = time.time()
-        database.checksum()
-        elapsed = time.time() - startTime
-        self.details = elapsed
-
-
 class _SubjectAddMixin(object):
     """
     Test database subject adding performance.

@@ -23,8 +23,7 @@ class TestParams(TestCase):
             {
                 'subjectCount': 5,
                 'totalCoveredResidues': 61,
-                'checksum': ('81fb1ab161405a52c4ee675bfda8b807'
-                             '6a592c2df38a20ab82a462beaaadd78d'),
+                'checksum': 1497708326,
                 'limitPerLandmark': None,
                 'trigPointFinderClasses': [
                     'AminoAcids',

@@ -208,6 +208,16 @@ class TestDatabase(TestCase):
                                         'offset': 0}]},
                          db.d)
 
+    def testOneReadOneLandmarkOnePeakBucketFactor(self):
+        """
+        If a bucketFactor is used, the right distance needs to be calculated.
+        """
+        db = Database([AlphaHelix], [Peaks])
+        db.addSubject(AARead('id', 'FRRRFRRRFASA'), bucketFactor=5)
+        self.assertEqual({'A2:P:-2': [{'subjectIndex': 0,
+                                       'offset': 0}]},
+                         db.d)
+
     def testOneReadOneLandmarkOnePeakNoTrigFinders(self):
         """
         If one read is added and it has one landmark and one peak, but no trig

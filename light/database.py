@@ -47,6 +47,9 @@ class Database(object):
         self.totalCoveredResidues = 0
         self.subjectInfo = []
         self._checksum = None
+        # The factor by which the distance of landmark and trigpoint pairs is
+        # divided, to influence sensitivity.
+        self.bucketFactor = 1
         # Create instances of the landmark and trig point finder classes.
         self.landmarkFinders = []
         for landmarkFinderClass in self.landmarkFinderClasses:
@@ -56,27 +59,31 @@ class Database(object):
             self.trigPointFinders.append(trigPointFinderClass())
 
     @staticmethod
-    def key(landmark, trigPoint):
+    def key(landmark, trigPoint, distance):
         """
         Compute a key to store information about a landmark / trig point
         association for a read.
 
         @param landmark: A C{light.features.Landmark} instance.
         @param trigPoint: A C{light.features.TrigPoint} instance.
+        @param distance: the optionally bucketed distance between the landmark
+            and the trig point.
         @return: A C{str} key based on the landmark, the trig point,
             and the distance between them.
         """
         return '%s:%s:%s' % (landmark.hashkey(), trigPoint.hashkey(),
-                             landmark.offset - trigPoint.offset)
+                             distance)
 
-    def addSubject(self, subject):
+    def addSubject(self, subject, bucketFactor=None):
         """
         Examine a sequence for features and add its (landmark, trig point)
         pairs to the search dictionary.
 
         @param subject: a C{dark.read.AARead} instance. The subject sequence
-        is passed as a read instance even though in many cases it will not be
-        an actual read from a sequencing run.
+            is passed as a read instance even though in many cases it will not
+            be an actual read from a sequencing run.
+        @param bucketFactor: A C{int} factor by which the distance between
+            landmark and trig point is divided, to influence sensitivity.
         """
         # Invalidate the stored checksum (if any).
         self._checksum = None
@@ -85,6 +92,9 @@ class Database(object):
         self.subjectCount += 1
         self.totalResidues += len(subject)
         self.subjectInfo.append((subject.id, subject.sequence))
+
+        if bucketFactor is not None:
+            self.bucketFactor = bucketFactor
 
         for landmarkFinder in self.landmarkFinders:
             for landmark in landmarkFinder.find(subject):
@@ -99,7 +109,9 @@ class Database(object):
         for landmark, trigPoint in scannedSubject.getPairs(
                 limitPerLandmark=self.limitPerLandmark,
                 maxDistance=self.maxDistance, minDistance=self.minDistance):
-            key = self.key(landmark, trigPoint)
+            distance = ((landmark.offset - trigPoint.offset)
+                        // self.bucketFactor)
+            key = self.key(landmark, trigPoint, distance)
             value = {
                 'subjectIndex': subjectIndex,
                 'offset': landmark.offset,
@@ -134,6 +146,7 @@ class Database(object):
             'subjectCount': self.subjectCount,
             'totalResidues': self.totalResidues,
             'totalCoveredResidues': self.totalCoveredResidues,
+            'bucketFactor': self.bucketFactor,
         })
 
         return fp
@@ -169,7 +182,9 @@ class Database(object):
         for landmark, trigPoint in scannedRead.getPairs(
                 limitPerLandmark=self.limitPerLandmark,
                 maxDistance=self.maxDistance, minDistance=self.minDistance):
-            key = self.key(landmark, trigPoint)
+            distance = ((landmark.offset - trigPoint.offset)
+                        // self.bucketFactor)
+            key = self.key(landmark, trigPoint, distance)
             try:
                 subjects = self.d[key]
             except KeyError:
@@ -208,6 +223,7 @@ class Database(object):
             'totalResidues': self.totalResidues,
             'totalCoveredResidues': self.totalCoveredResidues,
             'subjectInfo': self.subjectInfo,
+            'bucketFactor': self.bucketFactor
         }
         dump(state, fp)
 
@@ -288,6 +304,7 @@ class Database(object):
         update(self.limitPerLandmark)
         update(self.maxDistance)
         update(self.minDistance)
+        update(self.bucketFactor)
 
         # Add all subject info.
         for subjectId, subjectSequence in self.subjectInfo:

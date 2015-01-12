@@ -23,8 +23,8 @@ class TestParams(TestCase):
             {
                 'subjectCount': 5,
                 'totalCoveredResidues': 61,
-                'checksum': ('86b07e251aea4e7277e574affdbbb534'
-                             'e5f4f37c38f234d09297e0dce5c00c44'),
+                'checksum': ('81fb1ab161405a52c4ee675bfda8b807'
+                             '6a592c2df38a20ab82a462beaaadd78d'),
                 'limitPerLandmark': None,
                 'trigPointFinderClasses': [
                     'AminoAcids',
@@ -39,6 +39,7 @@ class TestParams(TestCase):
                 ],
                 'maxDistance': None,
                 'minDistance': None,
+                'bucketFactor': 1
             },
             loads(PARAMS))
 

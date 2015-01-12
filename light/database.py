@@ -43,7 +43,10 @@ class Database(object):
         self.minDistance = minDistance
         # The factor by which the distance of landmark and trigpoint pairs is
         # divided, to influence sensitivity.
-        self.bucketFactor = bucketFactor
+        if bucketFactor <= 0:
+            raise ValueError('bucketFactor must be > 0.')
+        else:
+            self.bucketFactor = bucketFactor
         # It may look like self.d should be a defaultdict(list). But that
         # will not work because a database JSON save followed by a load
         # will restore the defaultdict as a vanilla dict.
@@ -206,16 +209,19 @@ class Database(object):
                 pass
             else:
                 for subject in subjects:
-                    matches[subject['subjectIndex']].append({
+                    subjectIndex = subject['subjectIndex']
+                    subjectLength = len(self.subjectInfo[subjectIndex][1])
+                    matches[subjectIndex].append({
                         'distance': trigPoint.offset - landmark.offset,
                         'landmarkLength': landmark.length,
                         'landmarkName': landmark.name,
                         'readOffset': landmark.offset,
                         'subjectOffset': subject['offset'],
                         'trigPointName': trigPoint.name,
+                        'subjectLength': subjectLength,
                     })
 
-        return Result(read, matches, aboveMeanThreshold,
+        return Result(read, matches, aboveMeanThreshold, self.bucketFactor,
                       storeAnalysis=storeAnalysis)
 
     def save(self, fp=sys.stdout):
@@ -277,7 +283,8 @@ class Database(object):
         database = Database(landmarkFinderClasses, trigPointFinderClasses,
                             limitPerLandmark=state['limitPerLandmark'],
                             maxDistance=state['maxDistance'],
-                            minDistance=state['minDistance'])
+                            minDistance=state['minDistance'],
+                            bucketFactor=state['bucketFactor'])
 
         # Monkey-patch the new database instance to restore its state.
         for attr in ('checksum', 'd', 'subjectCount', 'totalResidues',

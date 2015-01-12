@@ -20,7 +20,7 @@ COLORS = {'A': 'blue',
 
 def plotHistogram(query, subject, landmarks=None, trigPoints=None,
                   limitPerLandmark=None, maxDistance=None, minDistance=None,
-                  aboveMeanTreshold=None, readsAx=None):
+                  aboveMeanTreshold=None, bucketFactor=1, readsAx=None):
     """
     A function which plots a histogram of matching hash distances.
 
@@ -37,6 +37,8 @@ def plotHistogram(query, subject, landmarks=None, trigPoints=None,
     @param aboveMeanThreshold: A numeric amount by which the maximum delta
         count in a bucket must exceed the mean bucket count for that
         maximum bucket count to be considered significant.
+    @para bucketFactor: A C{int} factor by which the distance between landmark
+        and trig point is divided.
     @param readsAx: If not None, use this as the subplot for displaying reads.
     """
     fig = plt.figure()
@@ -69,7 +71,8 @@ def plotHistogram(query, subject, landmarks=None, trigPoints=None,
                 trigFinderName)
 
     database = Database(landmarkFinderClasses, trigFinderClasses,
-                        limitPerLandmark, maxDistance, minDistance)
+                        limitPerLandmark, maxDistance, minDistance,
+                        bucketFactor)
     database.addSubject(subject)
 
     result = database.find(query, aboveMeanTreshold, storeAnalysis=True)

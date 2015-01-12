@@ -29,12 +29,9 @@ class Result(object):
         for subjectIndex in matches:
             offsets = [match['subjectOffset'] - match['readOffset']
                        for match in matches[subjectIndex]]
-            if bucketFactor != 1:
-                maxLen = max([len(read.sequence),
-                              matches[subjectIndex][0]['subjectLength']])
-                bins = maxLen // bucketFactor
-            else:
-                bins = 10
+            maxLen = max([len(read.sequence),
+                          matches[subjectIndex][0]['subjectLength']])
+            bins = maxLen // bucketFactor
             histogram, histogramBuckets = np.histogram(offsets, bins=bins)
             maxCount = np.max(histogram)
             meanCount = np.mean(histogram)

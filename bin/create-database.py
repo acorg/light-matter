@@ -99,7 +99,7 @@ if __name__ == '__main__':
     # Create the database, add reads to it, print statistics, save to stdout.
     database = Database(landmarkFinderClasses, trigFinderClasses,
                         args.limitPerLandmark, args.maxDistance,
-                        args.minDistance, bucketFactor=args.bucketFactor)
+                        args.minDistance, args.bucketFactor)
 
     # Arrange to read AA subject sequences from a FASTA file, if given.
     if args.fastaFile:

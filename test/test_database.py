@@ -395,6 +395,7 @@ class TestDatabase(TestCase):
                         'readOffset': 0,
                         'subjectOffset': 1,
                         'landmarkName': 'AlphaHelix',
+                        'subjectLength': 16
                     },
                 ],
             },
@@ -421,6 +422,7 @@ class TestDatabase(TestCase):
                         'readOffset': 0,
                         'subjectOffset': 1,
                         'landmarkName': 'AlphaHelix',
+                        'subjectLength': 16
                     },
                 ],
             },
@@ -467,6 +469,7 @@ class TestDatabase(TestCase):
                         'readOffset': 0,
                         'subjectOffset': 0,
                         'trigPointName': 'Peaks',
+                        'subjectLength': 15,
                     },
                     {
                         'distance': 13,
@@ -475,6 +478,7 @@ class TestDatabase(TestCase):
                         'readOffset': 0,
                         'subjectOffset': 0,
                         'trigPointName': 'Peaks',
+                        'subjectLength': 15,
                     }
                 ],
             },

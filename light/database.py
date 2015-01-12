@@ -184,16 +184,19 @@ class Database(object):
                 pass
             else:
                 for subject in subjects:
-                    matches[subject['subjectIndex']].append({
+                    subjectIndex = subject['subjectIndex']
+                    subjectLength = len(self.subjectInfo[subjectIndex][1])
+                    matches[subjectIndex].append({
                         'distance': trigPoint.offset - landmark.offset,
                         'landmarkLength': landmark.length,
                         'landmarkName': landmark.name,
                         'readOffset': landmark.offset,
                         'subjectOffset': subject['offset'],
                         'trigPointName': trigPoint.name,
+                        'subjectLength': subjectLength,
                     })
 
-        return Result(read, matches, aboveMeanThreshold,
+        return Result(read, matches, aboveMeanThreshold, self.bucketFactor,
                       storeAnalysis=storeAnalysis)
 
     def save(self, fp=sys.stdout):

@@ -660,10 +660,8 @@ class TestDatabase(TestCase):
 
     def testBucketFactorValueError(self):
         """
-        If the bucketFactor is below or equal to 0, a ValueError must be
-        raised.
+        If the bucketFactor is <= 0, a ValueError must be raised.
         """
-        error = 'bucketFactor must be > 0.'
+        error = 'bucketFactor must be > 0\\.'
         self.assertRaisesRegexp(ValueError, error, Database, [], [],
-                                limitPerLandmark=16, maxDistance=17,
-                                minDistance=18, bucketFactor=0)
+                                bucketFactor=0)

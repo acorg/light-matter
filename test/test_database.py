@@ -395,6 +395,7 @@ class TestDatabase(TestCase):
                         'readOffset': 0,
                         'subjectOffset': 1,
                         'landmarkName': 'AlphaHelix',
+                        'subjectLength': 16
                     },
                 ],
             },
@@ -421,6 +422,7 @@ class TestDatabase(TestCase):
                         'readOffset': 0,
                         'subjectOffset': 1,
                         'landmarkName': 'AlphaHelix',
+                        'subjectLength': 16
                     },
                 ],
             },
@@ -467,6 +469,7 @@ class TestDatabase(TestCase):
                         'readOffset': 0,
                         'subjectOffset': 0,
                         'trigPointName': 'Peaks',
+                        'subjectLength': 15,
                     },
                     {
                         'distance': 13,
@@ -475,6 +478,7 @@ class TestDatabase(TestCase):
                         'readOffset': 0,
                         'subjectOffset': 0,
                         'trigPointName': 'Peaks',
+                        'subjectLength': 15,
                     }
                 ],
             },
@@ -678,3 +682,29 @@ class TestDatabase(TestCase):
         self._update(0, expected)
 
         self.assertEqual(expected.hexdigest(), db.checksum())
+
+    def testSaveLoadWithNonDefaultParameters(self):
+        """
+        When asked to save and then load a database with non-default
+        parameters, a database with the correct parameters must result.
+        """
+        db = Database([], [], limitPerLandmark=16, maxDistance=17,
+                      minDistance=18, bucketFactor=19)
+        fp = StringIO()
+        db.save(fp)
+        fp.seek(0)
+        result = db.load(fp)
+        self.assertEqual(16, result.limitPerLandmark)
+        self.assertEqual(17, result.maxDistance)
+        self.assertEqual(18, result.minDistance)
+        self.assertEqual(19, result.bucketFactor)
+
+    def testBucketFactorValueError(self):
+        """
+        If the bucketFactor is below or equal to 0, a ValueError must be
+        raised.
+        """
+        error = 'bucketFactor must be > 0.'
+        self.assertRaisesRegexp(ValueError, error, Database, [], [],
+                                limitPerLandmark=16, maxDistance=17,
+                                minDistance=18, bucketFactor=0)

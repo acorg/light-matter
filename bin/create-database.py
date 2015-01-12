@@ -56,6 +56,11 @@ if __name__ == '__main__':
         '--minDistance', type=int, default=None,
         help='The minimum distance permitted between yielded pairs.')
 
+    parser.add_argument(
+        '--bucketFactor', type=int, default=1,
+        help=('A factor by which the distance between landmark and trig point '
+              'is divided.'))
+
     args = parser.parse_args()
 
     landmarkFinderNames = (args.landmarkFinderNames or
@@ -94,7 +99,7 @@ if __name__ == '__main__':
     # Create the database, add reads to it, print statistics, save to stdout.
     database = Database(landmarkFinderClasses, trigFinderClasses,
                         args.limitPerLandmark, args.maxDistance,
-                        args.minDistance)
+                        args.minDistance, args.bucketFactor)
 
     # Arrange to read AA subject sequences from a FASTA file, if given.
     if args.fastaFile:

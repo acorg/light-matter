@@ -16,7 +16,7 @@ class TestResult(TestCase):
         A result with no matches added to it must have the expected attributes.
         """
         read = AARead('read', 'AGTARFSDDD')
-        result = Result(read, {}, 0)
+        result = Result(read, {}, 0, bucketFactor=1)
         self.assertEqual({}, result.matches)
         self.assertEqual([], list(result.significant()))
         self.assertIs(read, result.read)
@@ -36,10 +36,11 @@ class TestResult(TestCase):
                     'landmarkName': 'AlphaHelix',
                     'subjectOffset': 2,
                     'readOffset': 1,
+                    'subjectLength': 100,
                 },
             ],
         }
-        result = Result(read, matches, 0)
+        result = Result(read, matches, 0, bucketFactor=1)
         self.assertEqual(matches, result.matches)
 
     def testNoSignificantMatches(self):
@@ -57,6 +58,7 @@ class TestResult(TestCase):
                     'landmarkName': 'AlphaHelix',
                     'subjectOffset': 2,
                     'readOffset': 1,
+                    'subjectLength': 100,
                 },
                 {
                     'trigPointName': 'Peaks',
@@ -65,10 +67,11 @@ class TestResult(TestCase):
                     'landmarkName': 'AlphaHelix',
                     'subjectOffset': 2,
                     'readOffset': 1,
+                    'subjectLength': 100,
                 },
             ],
         }
-        result = Result(read, matches, 5)
+        result = Result(read, matches, 5, bucketFactor=1)
         self.assertEqual([], list(result.significant()))
 
     def testOneSignificantMatch(self):
@@ -86,6 +89,7 @@ class TestResult(TestCase):
                     'landmarkName': 'AlphaHelix',
                     'subjectOffset': 0,
                     'readOffset': 0,
+                    'subjectLength': 100,
                 },
                 {
                     'trigPointName': 'Peaks',
@@ -94,6 +98,7 @@ class TestResult(TestCase):
                     'landmarkName': 'AlphaHelix',
                     'subjectOffset': 0,
                     'readOffset': 0,
+                    'subjectLength': 100,
                 },
                 {
                     'trigPointName': 'Peaks',
@@ -102,11 +107,12 @@ class TestResult(TestCase):
                     'landmarkName': 'AlphaHelix',
                     'subjectOffset': 10,
                     'readOffset': 0,
+                    'subjectLength': 100,
                 },
             ],
         }
 
-        result = Result(read, matches, aboveMeanThreshold=0.1)
+        result = Result(read, matches, aboveMeanThreshold=0.1, bucketFactor=1)
         self.assertEqual([0], list(result.significant()))
         self.assertEqual(2, result.analysis[0]['score'])
 
@@ -125,6 +131,7 @@ class TestResult(TestCase):
                     'landmarkName': 'AlphaHelix',
                     'subjectOffset': 0,
                     'readOffset': 0,
+                    'subjectLength': 100,
                 },
                 {
                     'trigPointName': 'Peaks',
@@ -133,6 +140,7 @@ class TestResult(TestCase):
                     'landmarkName': 'AlphaHelix',
                     'subjectOffset': 0,
                     'readOffset': 0,
+                    'subjectLength': 100,
                 },
                 {
                     'trigPointName': 'Peaks',
@@ -141,6 +149,7 @@ class TestResult(TestCase):
                     'landmarkName': 'AlphaHelix',
                     'subjectOffset': 10,
                     'readOffset': 0,
+                    'subjectLength': 100,
                 },
             ],
 
@@ -152,6 +161,7 @@ class TestResult(TestCase):
                     'landmarkName': 'AlphaHelix',
                     'subjectOffset': 0,
                     'readOffset': 0,
+                    'subjectLength': 1000,
                 },
                 {
                     'trigPointName': 'Peaks',
@@ -160,11 +170,13 @@ class TestResult(TestCase):
                     'landmarkName': 'AlphaHelix',
                     'subjectOffset': 0,
                     'readOffset': 0,
+                    'subjectLength': 1000,
                 },
             ],
         }
 
-        result = Result(read, matches, aboveMeanThreshold=0.1)
+        result = Result(read, matches, aboveMeanThreshold=0.1,
+                        bucketFactor=1)
         self.assertEqual([0, 1], sorted(list(result.significant())))
         self.assertEqual(2, result.analysis[0]['score'])
         self.assertEqual(2, result.analysis[1]['score'])
@@ -174,7 +186,7 @@ class TestResult(TestCase):
         If self.matches is empty, return an empty output.
         """
         read = AARead('read', 'AGTARFSDDD')
-        result = Result(read, [], 0)
+        result = Result(read, [], 0, bucketFactor=1)
         fp = StringIO()
         result.save(fp=fp)
         result = loads(fp.getvalue())
@@ -190,7 +202,8 @@ class TestResult(TestCase):
         """
         The save function must return its (fp) argument.
         """
-        result = Result(AARead('id', 'A'), {}, aboveMeanThreshold=0)
+        result = Result(AARead('id', 'A'), {}, aboveMeanThreshold=0,
+                        bucketFactor=1)
         fp = StringIO()
         self.assertIs(fp, result.save(fp))
 
@@ -208,6 +221,7 @@ class TestResult(TestCase):
                     'readOffset': 0,
                     'subjectOffset': 0,
                     'landmarkName': 'AlphaHelix',
+                    'subjectLength': 1000,
                 },
             ],
 
@@ -219,10 +233,11 @@ class TestResult(TestCase):
                     'readOffset': 27,
                     'subjectOffset': 27,
                     'landmarkName': 'AlphaHelix',
+                    'subjectLength': 100,
                 },
             ],
         }
-        result = Result(read, matches, aboveMeanThreshold=0.1)
+        result = Result(read, matches, aboveMeanThreshold=0.1, bucketFactor=1)
         fp = StringIO()
         result.save(fp=fp)
         result = loads(fp.getvalue())
@@ -237,7 +252,8 @@ class TestResult(TestCase):
                                 'landmarkName': 'AlphaHelix',
                                 'readOffset': 0,
                                 'subjectOffset': 0,
-                                'trigPointName': 'AlphaHelix'
+                                'trigPointName': 'AlphaHelix',
+                                'subjectLength': 1000,
                             },
                         ],
                         'matchScore': 1,
@@ -252,6 +268,7 @@ class TestResult(TestCase):
                                 'readOffset': 27,
                                 'subjectOffset': 27,
                                 'trigPointName': 'AlphaHelix',
+                                'subjectLength': 100,
                             },
                         ],
                         'matchScore': 1,
@@ -262,3 +279,47 @@ class TestResult(TestCase):
                 'querySequence': 'FRRRFRRRFRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF',
             },
             result)
+
+    def testRightNumberOfBucketsDefault(self):
+        """
+        If no bucket factor is given, the number of bins must be 11.
+        """
+        read = AARead('read', 'AGTARFSDDD')
+        matches = {
+            0: [
+                {
+                    'trigPointName': 'Peaks',
+                    'distance': -13,
+                    'landmarkLength': 9,
+                    'landmarkName': 'AlphaHelix',
+                    'subjectOffset': 2,
+                    'readOffset': 1,
+                    'subjectLength': 20,
+                },
+            ],
+        }
+        result = Result(read, matches, 0, bucketFactor=1, storeAnalysis=True)
+        self.assertEqual(20, len(result.analysis[0]['histogram']))
+
+    def testRightNumberOfBuckets(self):
+        """
+        If a bucketFactor of 5 is given and the length of the longer sequence
+        (out of subject and query) is 20, there should be 4 buckets.
+        """
+        read = AARead('read', 'AGTARFSDDD')
+        matches = {
+            0: [
+                {
+                    'trigPointName': 'Peaks',
+                    'distance': -13,
+                    'landmarkLength': 9,
+                    'landmarkName': 'AlphaHelix',
+                    'subjectOffset': 2,
+                    'readOffset': 1,
+                    'subjectLength': 20,
+                },
+            ],
+        }
+        result = Result(read, matches, 0, bucketFactor=5, storeAnalysis=True)
+        print result.analysis[0]['histogramBuckets']
+        self.assertEqual(4, len(result.analysis[0]['histogram']))

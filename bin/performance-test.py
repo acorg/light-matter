@@ -216,7 +216,7 @@ class WriteMarkdownFile(object):
         self.openedFile = open(self.outputFile, 'w')
 
     def writeHeader(self, landmark, trig, maxDistance, minDistance,
-                    limitPerLandmark):
+                    limitPerLandmark, bucketFactor):
         self.openedFile.write('Title:\nDate:\nCategory: light-matter\nTags: '
                               'light-matter, benchmarking\nSummary: '
                               'Performance and sensitivity testing\n\n'
@@ -227,7 +227,7 @@ class WriteMarkdownFile(object):
                               ([i.NAME for i in landmarkFinderClasses],
                                [i.NAME for i in trigFinderClasses],
                                args.maxDistance, args.minDistance,
-                               args.limitPerLandmark))
+                               args.limitPerLandmark, args.bucketFactor))
 
     def writeTest(self, testName, testResult, time, readNr):
         """
@@ -296,6 +296,11 @@ if __name__ == '__main__':
         help='The minimum distance permitted between yielded pairs.')
 
     parser.add_argument(
+        '--bucketFactor', type=int, default=1,
+        help=('A factor by which the distance between landmark and trig point '
+              'is divided.'))
+
+    parser.add_argument(
         '--verbose', default=False, action='store_true',
         help='If True, information about each matching read will be written '
         'out.')
@@ -340,7 +345,7 @@ if __name__ == '__main__':
     writer.open()
     writer.writeHeader(landmarkFinderNames, trigFinderNames,
                        args.maxDistance, args.minDistance,
-                       args.limitPerLandmark)
+                       args.limitPerLandmark, args.bucketFactor)
 
     # run tests
     # 1) A complete sequence must match itself:
@@ -348,7 +353,8 @@ if __name__ == '__main__':
     print >>sys.stderr, '1) A complete sequence must find itself.'
     oneResult = queryDatabase(T1DB, T1READ, landmarkFinderClasses,
                               trigFinderClasses, args.limitPerLandmark,
-                              args.maxDistance, args.minDistance)
+                              args.maxDistance, args.minDistance,
+                              args.bucketFactor)
     oneTime = time() - oneStart
     writer.writeTest('1) A complete sequence must match itself', oneResult,
                      oneTime, 1)
@@ -358,7 +364,8 @@ if __name__ == '__main__':
     print >>sys.stderr, '2) Reads made from a sequence must match itself.'
     twoResult = queryDatabase(T2DB, T2READ, landmarkFinderClasses,
                               trigFinderClasses, args.limitPerLandmark,
-                              args.maxDistance, args.minDistance)
+                              args.maxDistance, args.minDistance,
+                              args.bucketFactor)
     twoTime = time() - twoStart
     writer.writeTest('2) Reads made from a sequence must match itself',
                      twoResult, twoTime, 9)
@@ -368,7 +375,8 @@ if __name__ == '__main__':
     print >>sys.stderr, '3) A sequence must match related sequences.'
     threeResult = queryDatabase(T3DB, T3READ, landmarkFinderClasses,
                                 trigFinderClasses, args.limitPerLandmark,
-                                args.maxDistance, args.minDistance)
+                                args.maxDistance, args.minDistance,
+                                args.bucketFactor)
     threeTime = time() - threeStart
     writer.writeTest('3) A sequence must find related sequences', threeResult,
                      threeTime, 1)
@@ -379,7 +387,8 @@ if __name__ == '__main__':
                          'sequences.')
     fourResult = queryDatabase(T4DB, T4READ, landmarkFinderClasses,
                                trigFinderClasses, args.limitPerLandmark,
-                               args.maxDistance, args.minDistance)
+                               args.maxDistance, args.minDistance,
+                               args.bucketFactor)
     fourTime = time() - fourStart
     fourTitle = '4) Reads made from a sequence must match related sequences'
     writer.writeTest(fourTitle, fourResult, fourTime, 7)
@@ -393,7 +402,8 @@ if __name__ == '__main__':
                          'must correlate.')
     fiveSixResult = queryDatabase(T56DB, T56READ, landmarkFinderClasses,
                                   trigFinderClasses, args.limitPerLandmark,
-                                  args.maxDistance, args.minDistance)
+                                  args.maxDistance, args.minDistance,
+                                  args.bucketFactor)
     fiveSixTime = time() - fiveSixStart
     sTitle = '6) The BLASTp bit scores and light matter scores must correlate'
     writer.writeTest('5) The Z-scores and light matter score must correlate',

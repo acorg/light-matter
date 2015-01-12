@@ -16,17 +16,23 @@ class Result(object):
     @param aboveMeanThreshold: A numeric amount by which the maximum count
         across all buckets must exceed the mean bucket count for the
         maximum bucket count to be considered significant.
+    @param bucketFactor: A C{int} factor by which the distance between
+        landmark and trig point is divided, to influence sensitivity.
     @param storeAnalysis: A C{bool}. If C{True} the intermediate significance
         analysis of each matched subject will be stored. Else it is discarded.
     """
-    def __init__(self, read, matches, aboveMeanThreshold, storeAnalysis=False):
+    def __init__(self, read, matches, aboveMeanThreshold, bucketFactor,
+                 storeAnalysis=False):
         self.matches = matches
         self.read = read
         self.analysis = defaultdict(dict)
         for subjectIndex in matches:
             offsets = [match['subjectOffset'] - match['readOffset']
                        for match in matches[subjectIndex]]
-            histogram, histogramBuckets = np.histogram(offsets)
+            maxLen = max([len(read.sequence),
+                          matches[subjectIndex][0]['subjectLength']])
+            bins = maxLen // bucketFactor
+            histogram, histogramBuckets = np.histogram(offsets, bins=bins)
             maxCount = np.max(histogram)
             meanCount = np.mean(histogram)
             significant = (maxCount >= meanCount + aboveMeanThreshold)

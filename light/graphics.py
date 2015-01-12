@@ -8,6 +8,7 @@ from light.landmarks import findLandmark
 COLORS = {'A': 'blue',
           'B': 'cyan',
           'C': '#00BFFF',
+          'T': '#08298A',
           'S': '#819FF7',
           'P': 'red',
           'T': 'orange',

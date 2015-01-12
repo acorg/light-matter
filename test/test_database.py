@@ -206,6 +206,17 @@ class TestDatabase(TestCase):
                                         'offset': 0}]},
                          db.d)
 
+    def testOneReadOneLandmarkOnePeakBucketFactor(self):
+        """
+        If a bucketFactor is used, the right distance needs to be calculated.
+        The offsets are 10 aa apart, the bucketFactor should make that 2.
+        """
+        db = Database([AlphaHelix], [Peaks], bucketFactor=5)
+        db.addSubject(AARead('id', 'FRRRFRRRFASA'))
+        self.assertEqual({'A2:P:-2': [{'subjectIndex': 0,
+                                       'offset': 0}]},
+                         db.d)
+
     def testOneReadOneLandmarkOnePeakNoTrigFinders(self):
         """
         If one read is added and it has one landmark and one peak, but no trig
@@ -492,6 +503,7 @@ class TestDatabase(TestCase):
         self._update(3, checksum)  # Limit per landmark value.
         self._update(10, checksum)  # Max distance value.
         self._update(5, checksum)  # Min distance value.
+        self._update(1, checksum)  # bucketFactor value.
         self._update('id', checksum)
         self._update('FRRRFRRRFASAASA', checksum)
 
@@ -522,6 +534,7 @@ class TestDatabase(TestCase):
             'subjectCount': 1,
             'totalResidues': 15,
             'totalCoveredResidues': 11,
+            'bucketFactor': 1,
         }
         self.assertEqual(expected, loads(out.getvalue()))
 
@@ -561,6 +574,7 @@ class TestDatabase(TestCase):
         self._update(None, expected)  # Limit per landmark value.
         self._update(None, expected)  # Max distance value.
         self._update(None, expected)  # Min distance value.
+        self._update(1, expected)  # bucketFactor
         self.assertEqual(expected.hexdigest(), db.checksum())
 
     def testChecksumEmptyDatabaseWithNonDefaultParams(self):
@@ -574,6 +588,7 @@ class TestDatabase(TestCase):
         self._update(3, expected)
         self._update(10, expected)
         self._update(1, expected)
+        self._update(1, expected)  # bucketFactor
         self.assertEqual(expected.hexdigest(), db.checksum())
 
     def testChecksumEmptyDatabaseWithFinders(self):
@@ -590,6 +605,7 @@ class TestDatabase(TestCase):
         self._update(None, expected)  # Limit per landmark value.
         self._update(None, expected)  # Max distance value.
         self._update(None, expected)  # Min distance value.
+        self._update(1, expected)  # bucketFactor
         self.assertEqual(expected.hexdigest(), db.checksum())
 
     def testChecksumEmptyDatabaseWithFinderOrderInvariant(self):
@@ -615,6 +631,7 @@ class TestDatabase(TestCase):
         self._update(None, expected)  # Limit per landmark value.
         self._update(None, expected)  # Max distance value.
         self._update(None, expected)  # Min distance value.
+        self._update(1, expected)  # bucketFactor
         self._update('subject', expected)
         self._update('FRRRFRRRFASAASA', expected)
         self.assertEqual(expected.hexdigest(), db.checksum())
@@ -634,6 +651,7 @@ class TestDatabase(TestCase):
         self._update(None, expected)  # Limit per landmark value.
         self._update(None, expected)  # Max distance value.
         self._update(None, expected)  # Min distance value.
+        self._update(1, expected)  # bucketFactor
         self._update('id', expected)
         self._update(sequence, expected)
 

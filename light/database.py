@@ -24,6 +24,8 @@ class Database(object):
         yielded pairs.
     @param minDistance: The C{int} minimum distance permitted between
         yielded pairs.
+    @param bucketFactor: A C{int} factor by which the distance between
+        landmark and trig point is divided, to influence sensitivity.
     """
 
     # The default amount by which the maximum delta count in a bucket must
@@ -32,12 +34,16 @@ class Database(object):
     ABOVE_MEAN_THRESHOLD_DEFAULT = 15
 
     def __init__(self, landmarkFinderClasses, trigPointFinderClasses,
-                 limitPerLandmark=None, maxDistance=None, minDistance=None):
+                 limitPerLandmark=None, maxDistance=None, minDistance=None,
+                 bucketFactor=1):
         self.landmarkFinderClasses = landmarkFinderClasses
         self.trigPointFinderClasses = trigPointFinderClasses
         self.limitPerLandmark = limitPerLandmark
         self.maxDistance = maxDistance
         self.minDistance = minDistance
+        # The factor by which the distance of landmark and trigpoint pairs is
+        # divided, to influence sensitivity.
+        self.bucketFactor = bucketFactor
         # It may look like self.d should be a defaultdict(list). But that
         # will not work because a database JSON save followed by a load
         # will restore the defaultdict as a vanilla dict.
@@ -55,8 +61,7 @@ class Database(object):
         for trigPointFinderClass in self.trigPointFinderClasses:
             self.trigPointFinders.append(trigPointFinderClass())
 
-    @staticmethod
-    def key(landmark, trigPoint):
+    def key(self, landmark, trigPoint):
         """
         Compute a key to store information about a landmark / trig point
         association for a read.
@@ -66,8 +71,10 @@ class Database(object):
         @return: A C{str} key based on the landmark, the trig point,
             and the distance between them.
         """
+        distance = ((landmark.offset - trigPoint.offset)
+                    // self.bucketFactor)
         return '%s:%s:%s' % (landmark.hashkey(), trigPoint.hashkey(),
-                             landmark.offset - trigPoint.offset)
+                             distance)
 
     def addSubject(self, subject):
         """
@@ -75,8 +82,8 @@ class Database(object):
         pairs to the search dictionary.
 
         @param subject: a C{dark.read.AARead} instance. The subject sequence
-        is passed as a read instance even though in many cases it will not be
-        an actual read from a sequencing run.
+            is passed as a read instance even though in many cases it will not
+            be an actual read from a sequencing run.
         """
         # Invalidate the stored checksum (if any).
         self._checksum = None
@@ -134,6 +141,7 @@ class Database(object):
             'subjectCount': self.subjectCount,
             'totalResidues': self.totalResidues,
             'totalCoveredResidues': self.totalCoveredResidues,
+            'bucketFactor': self.bucketFactor,
         })
 
         return fp
@@ -208,6 +216,7 @@ class Database(object):
             'totalResidues': self.totalResidues,
             'totalCoveredResidues': self.totalCoveredResidues,
             'subjectInfo': self.subjectInfo,
+            'bucketFactor': self.bucketFactor
         }
         dump(state, fp)
 
@@ -288,6 +297,7 @@ class Database(object):
         update(self.limitPerLandmark)
         update(self.maxDistance)
         update(self.minDistance)
+        update(self.bucketFactor)
 
         # Add all subject info.
         for subjectId, subjectSequence in self.subjectInfo:

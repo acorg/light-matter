@@ -24,6 +24,8 @@ class Database(object):
         yielded pairs.
     @param minDistance: The C{int} minimum distance permitted between
         yielded pairs.
+    @param bucketFactor: A C{int} factor by which the distance between
+        landmark and trig point is divided, to influence sensitivity.
     """
 
     # The default amount by which the maximum delta count in a bucket must
@@ -82,8 +84,6 @@ class Database(object):
         @param subject: a C{dark.read.AARead} instance. The subject sequence
             is passed as a read instance even though in many cases it will not
             be an actual read from a sequencing run.
-        @param bucketFactor: A C{int} factor by which the distance between
-            landmark and trig point is divided, to influence sensitivity.
         """
         # Invalidate the stored checksum (if any).
         self._checksum = None

@@ -42,9 +42,12 @@ def prositeToJSON(prositeDb, fp=sys.stdout):
     @param prositeDb: The C{str} filename of the prosite database.
     @param fp: A file pointer.
     """
+    print 'HERE'
     for record in Prosite.parse(open(prositeDb)):
+        print 'InREf', record
         accession = record.accession
         pattern = patternToRegex(record.pattern)
+        print 'PATTERN', pattern, accession
         if pattern:
             print >>fp, dumps(
                 {

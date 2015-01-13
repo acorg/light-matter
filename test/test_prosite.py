@@ -2,7 +2,7 @@ from cStringIO import StringIO
 from unittest import TestCase
 from mocking import mockOpen
 from mock import patch
-from json import loads
+from json import load
 
 from light.prosite import prositeToJSON, patternToRegex
 
@@ -12,22 +12,12 @@ class TestProsite(TestCase):
     Tests for the light.prosite.prositeToJSON and light.prosite.patternToRegex
     functions.
     """
-    def xtestEmptyRecord(self):
-        """
-        An empty prosite record must result in an empty output.
-        """
-        mockOpener = mockOpen()
-        with patch('__builtin__.open', mockOpener, create=True):
-            fp = StringIO()
-            prositeToJSON('prosite.dat', fp=fp)
-            result = loads(fp.getvalue())
-            self.assertEqual(None, result)
-
-    def xtestRecordOutput(self):
+    def testRecordOutput(self):
         """
         A valid prosite record must result in the desired JSON.
         """
-        data = '\n'.join(['ID   ASN_GLYCOSYLATION; PATTERN.',
+        data = '\n'.join(['//',
+                          'ID   ASN_GLYCOSYLATION; PATTERN.',
                           'AC   PS00001;',
                           'DT   APR-1990 (CREATED); APR-1990 (DATA UPDATE); '
                           'APR-1990 (INFO UPDATE).',
@@ -37,21 +27,17 @@ class TestProsite(TestCase):
                           'CC   /SKIP-FLAG=TRUE;',
                           'CC   /VERSION=1;'
                           'PR   PRU00498;',
-                          'DO   PDOC00001;'])
+                          'DO   PDOC00001;',
+                          '//'])
         mockOpener = mockOpen(read_data=data)
         with patch('__builtin__.open', mockOpener, create=True):
             fp = StringIO()
-            result = prositeToJSON('prosite.dat', fp=fp)
-            print 'result', result
-            result = loads(fp.getvalue())
-            self.assertEqual([], result)
-
-    def xtestJSONPatternToRegex(self):
-        """
-        The prosite pattern must be turned into the right regex and the right
-        JSON.
-        """
-        pass
+            prositeToJSON('prosite.dat', fp=fp)
+            fp.seek(0)
+            result = load(fp)
+            self.assertEqual({'pattern': 'N[^P][ST][^P]',
+                              'accession': 'PS00001'},
+                             result)
 
     def testPatternToRegex(self):
         """

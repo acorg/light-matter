@@ -340,6 +340,7 @@ class TestDatabase(TestCase):
         self.assertEqual([], result.landmarkFinderClasses)
         self.assertEqual(None, result.limitPerLandmark)
         self.assertEqual(None, result.maxDistance)
+        self.assertEqual(None, result.minDistance)
         self.assertEqual([], result.trigPointFinderClasses)
         self.assertEqual(0, result.totalResidues)
 
@@ -361,6 +362,7 @@ class TestDatabase(TestCase):
                          result.landmarkFinderClasses)
         self.assertEqual(db.limitPerLandmark, result.limitPerLandmark)
         self.assertEqual(db.maxDistance, result.maxDistance)
+        self.assertEqual(db.minDistance, result.minDistance)
         self.assertEqual(db.trigPointFinderClasses,
                          result.trigPointFinderClasses)
         self.assertEqual(db.totalResidues, result.totalResidues)
@@ -523,13 +525,13 @@ class TestDatabase(TestCase):
         Saving parameters as JSON must work correctly.
         """
         db = Database([AlphaHelix], [Peaks], limitPerLandmark=3,
-                      maxDistance=10, minDistance=5)
+                      maxDistance=9, minDistance=5)
         db.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
 
         checksum = self._checksum([
             AlphaHelix.NAME, Peaks.NAME,
             3,  # Limit per landmark.
-            10,  # Max distance.
+            9,  # Max distance.
             5,  # Min distance.
             1,  # Bucket factor.
             'id', 'FRRRFRRRFASAASA',
@@ -542,7 +544,7 @@ class TestDatabase(TestCase):
             'landmarkFinderClasses': ['AlphaHelix'],
             'trigPointFinderClasses': ['Peaks'],
             'limitPerLandmark': 3,
-            'maxDistance': 10,
+            'maxDistance': 9,
             'minDistance': 5,
             'subjectCount': 1,
             'totalResidues': 15,
@@ -570,11 +572,11 @@ class TestDatabase(TestCase):
         The database checksum must be as expected when the database is given
         non-default values for limitPerLandmark and maxDistance.
         """
-        db = Database([], [], limitPerLandmark=3, maxDistance=10,
+        db = Database([], [], limitPerLandmark=3, maxDistance=9,
                       minDistance=1)
         checksum = self._checksum([
             3,  # Limit per landmark.
-            10,  # Max distance.
+            9,  # Max distance.
             1,  # Min distance.
             1,  # Bucket factor.
             ])

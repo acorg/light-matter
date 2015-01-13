@@ -41,13 +41,13 @@ class TestBetaStrand(TestCase):
 
     def testMinimumLength(self):
         """
-        The find method must find a minimal length (7) sequence of beta strand
+        The find method must find a minimal length (6) sequence of beta strand
         amino acids.
         """
-        read = AARead('id', 'VICVICV')
+        read = AARead('id', 'VICVIC')
         landmark = BetaStrand()
         result = list(landmark.find(read))
-        self.assertEqual([Landmark('BetaStrand', 'S', 0, 7, 7)], result)
+        self.assertEqual([Landmark('BetaStrand', 'S', 0, 6, 6)], result)
 
     def testAtStartOfSequence(self):
         """

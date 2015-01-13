@@ -5,23 +5,22 @@ from light.features import Landmark
 
 class BetaStrand(object):
     """
-    Simplistic and permissive (i.e., this *will* produce false positives)
-    identification of amino acid sequences that hopefully correspond to Beta
-    strands.
+    Simplistic identification of amino acid sequences that hopefully
+    correspond to Beta strands.
 
     Note that false positives may not be a problem. Even if a long sequence of
     AAs with high beta strand propensities is not in fact a beta strand, their
-    existence may still be statistical relevant for matching purposes.
+    existence may still be statistically relevant for matching purposes.
 
     This is based on simple beta strand amino acid propensities, as described
     in "Dependence of a-helical and b-sheet amino acid propensities on the
     overall protein fold type" (Kazuo Fujiwara, Hiromi Toda and Masamichi
     Ikeguchi, 2012) at http://www.biomedcentral.com/1472-6807/12/18
 
-    The AAs permitted to occur in what we consider a beta strand (see
-    BETASTRAND, below) are quite permissive.  See Table 2 of the paper
-    mentioned above. If an AA has *either* a buried or exposed propensity of
-    1.0 (or close) it is included.
+    The AAs permitted to occur in what we consider a beta strand are in
+    BETASTRAND (below). For an AA to be included, we require its propensity to
+    be >=1.0 for both buried and exposed residues. See Table 2 of the paper
+    mentioned above.
 
     The minimal allowed length of a beta strand is 3. Taken from Figure 1 of
     "Position-specific propensities of amino acids in the b-strand" (Nicholus
@@ -33,8 +32,8 @@ class BetaStrand(object):
     """
     NAME = 'BetaStrand'
     SYMBOL = 'S'
-    BETA_STRAND_AAs = 'VILMCFYWQTHKR'
-    MIN_LENGTH = 3
+    BETA_STRAND_AAs = 'VICFYT'
+    MIN_LENGTH = 6
     _BETA_STRAND_RE = re.compile('[%s]{%d,}' % (BETA_STRAND_AAs, MIN_LENGTH))
 
     def find(self, read):

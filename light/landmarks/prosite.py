@@ -21,12 +21,9 @@ class Prosite(object):
         occurs and returns C{Landmark} instances.
 
         @param read: An instance of C{dark.reads.AARead}.
-        @param prositeJSONDb: A C{str} filename of the prosite database in
-            JSON format as obtained from light.prosite.prositeToJSON.
         @return: A generator that yields C{Landmark} instances.
         """
-        with open('/Users/barbara/dark-matter/prosite/'
-                  'prosite-20-110.json') as fp:
+        with open(TODO) as fp:
             for line in fp:
                 motif = loads(line)
                 motifRegex = re.compile(motif['pattern'])

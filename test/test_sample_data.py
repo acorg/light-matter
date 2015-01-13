@@ -22,14 +22,14 @@ class TestParams(TestCase):
         self.assertEqual(
             {
                 'subjectCount': 5,
-                'totalCoveredResidues': 61,
-                'checksum': 1497708326,
+                'totalCoveredResidues': 62,
+                'checksum': 1913172015,
                 'limitPerLandmark': None,
                 'trigPointFinderClasses': [
                     'AminoAcids',
                     'Troughs',
                 ],
-                'totalResidues': 68,
+                'totalResidues': 69,
                 'landmarkFinderClasses': [
                     'AlphaHelix',
                     'AlphaHelix_3_10',
@@ -83,7 +83,7 @@ class TestRecords(TestCase):
         self.assertEqual(1, len(alignments))
 
         self.assertEqual(COWPOX.id, alignments[0].subjectTitle)
-        self.assertEqual(HSP(36), alignments[0].hsps[0])
+        self.assertEqual(HSP(10), alignments[0].hsps[0])
 
     def testRECORD3(self):
         """
@@ -93,7 +93,7 @@ class TestRecords(TestCase):
         self.assertEqual(1, len(alignments))
 
         self.assertEqual(COWPOX.id, alignments[0].subjectTitle)
-        self.assertEqual(HSP(36), alignments[0].hsps[0])
+        self.assertEqual(HSP(10), alignments[0].hsps[0])
 
     def testRECORD4(self):
         """
@@ -103,4 +103,4 @@ class TestRecords(TestCase):
         self.assertEqual(1, len(alignments))
 
         self.assertEqual(COWPOX.id, alignments[0].subjectTitle)
-        self.assertEqual(HSP(36), alignments[0].hsps[0])
+        self.assertEqual(HSP(10), alignments[0].hsps[0])

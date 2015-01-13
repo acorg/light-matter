@@ -16,8 +16,8 @@ class TestBetaStrand(TestCase):
         """
         self.assertEqual('BetaStrand', BetaStrand.NAME)
         self.assertEqual('S', BetaStrand.SYMBOL)
-        self.assertEqual('VILMCFYWQTHKR', BetaStrand.BETA_STRAND_AAs)
-        self.assertEqual(3, BetaStrand.MIN_LENGTH)
+        self.assertEqual('VICFYT', BetaStrand.BETA_STRAND_AAs)
+        self.assertEqual(6, BetaStrand.MIN_LENGTH)
 
     def testNoBetaStrand(self):
         """
@@ -34,47 +34,47 @@ class TestBetaStrand(TestCase):
         The find method must not find a too-short (<3 AA) sequence of beta
         strand amino acids.
         """
-        read = AARead('id', 'VI')
+        read = AARead('id', 'VIVIV')
         landmark = BetaStrand()
         result = list(landmark.find(read))
         self.assertEqual([], result)
 
     def testMinimumLength(self):
         """
-        The find method must find a minimal length (3) sequence of beta strand
+        The find method must find a minimal length (7) sequence of beta strand
         amino acids.
         """
-        read = AARead('id', 'VIL')
+        read = AARead('id', 'VICVICV')
         landmark = BetaStrand()
         result = list(landmark.find(read))
-        self.assertEqual([Landmark('BetaStrand', 'S', 0, 3, 3)], result)
+        self.assertEqual([Landmark('BetaStrand', 'S', 0, 7, 7)], result)
 
     def testAtStartOfSequence(self):
         """
         The find method must find a sequence of beta strand amino acids that
         begins at the start of the sequence.
         """
-        read = AARead('id', 'VILVILP')
+        read = AARead('id', 'VICVICV')
         landmark = BetaStrand()
         result = list(landmark.find(read))
-        self.assertEqual([Landmark('BetaStrand', 'S', 0, 6, 6)], result)
+        self.assertEqual([Landmark('BetaStrand', 'S', 0, 7, 7)], result)
 
     def testAtEndOfSequence(self):
         """
         The find method must find a sequence of beta strand amino acids that
         occurs at the end of the sequence.
         """
-        read = AARead('id', 'PVILVIL')
+        read = AARead('id', 'PVICVICV')
         landmark = BetaStrand()
         result = list(landmark.find(read))
-        self.assertEqual([Landmark('BetaStrand', 'S', 1, 6, 6)], result)
+        self.assertEqual([Landmark('BetaStrand', 'S', 1, 7, 7)], result)
 
     def testInMiddleOfSequence(self):
         """
         The find method must find a sequence of beta strand amino acids that
         starts in the middle of the sequence.
         """
-        read = AARead('id', 'PAVILMCFYPA')
+        read = AARead('id', 'PAVICVCFYPA')
         landmark = BetaStrand()
         result = list(landmark.find(read))
         self.assertEqual([Landmark('BetaStrand', 'S', 2, 7, 7)], result)
@@ -84,9 +84,9 @@ class TestBetaStrand(TestCase):
         The find method must find several beta strand amino acids sequences
         in the same read.
         """
-        read = AARead('id', 'PAVILPAPAVILVILPA')
+        read = AARead('id', 'PAVICVICVPAPAVICVICVIPA')
         landmark = BetaStrand()
         result = list(landmark.find(read))
-        self.assertEqual([Landmark('BetaStrand', 'S', 2, 3, 3),
-                          Landmark('BetaStrand', 'S', 9, 6, 6)],
+        self.assertEqual([Landmark('BetaStrand', 'S', 2, 7, 7),
+                          Landmark('BetaStrand', 'S', 13, 8, 8)],
                          result)

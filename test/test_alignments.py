@@ -281,7 +281,7 @@ class TestLightReadsAlignments(TestCase):
         with patch('__builtin__.open', mockOpener, create=True):
             readsAlignments = LightReadsAlignments('file.json', DB)
             self.assertEqual(
-                sorted([HSP(5), HSP(4), HSP(3), HSP(1), HSP(36), HSP(36)]),
+                sorted([HSP(1), HSP(3), HSP(4), HSP(5), HSP(10), HSP(10)]),
                 sorted(readsAlignments.hsps()))
 
 

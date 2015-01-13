@@ -141,10 +141,10 @@ class TestTitlesAlignments(TestCase):
                              titleAlignments.subjectLength)
 
             self.assertEqual(READ2, titleAlignments[0].read)
-            self.assertEqual(HSP(36), titleAlignments[0].hsps[0])
+            self.assertEqual(HSP(10), titleAlignments[0].hsps[0])
 
             self.assertEqual(READ3, titleAlignments[1].read)
-            self.assertEqual(HSP(36), titleAlignments[1].hsps[0])
+            self.assertEqual(HSP(10), titleAlignments[1].hsps[0])
 
     def testAddTitleRepeat(self):
         """
@@ -188,7 +188,7 @@ class TestTitlesAlignments(TestCase):
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = list(titlesAlignments.hsps())
             self.assertEqual(
-                sorted([HSP(5), HSP(4), HSP(3), HSP(1), HSP(36)]),
+                sorted([HSP(5), HSP(4), HSP(3), HSP(1), HSP(10)]),
                 sorted(result))
 
 
@@ -244,7 +244,7 @@ class TestTitlesAlignmentsFiltering(TestCase):
         with patch('__builtin__.open', mockOpener, create=True):
             readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
-            result = titlesAlignments.filter(minMedianScore=22)
+            result = titlesAlignments.filter(minMedianScore=10)
             self.assertEqual(
                 [
                     COWPOX.id,
@@ -261,7 +261,7 @@ class TestTitlesAlignmentsFiltering(TestCase):
         with patch('__builtin__.open', mockOpener, create=True):
             readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
-            result = titlesAlignments.filter(withScoreBetterThan=20)
+            result = titlesAlignments.filter(withScoreBetterThan=5)
             self.assertEqual(
                 [
                     COWPOX.id,

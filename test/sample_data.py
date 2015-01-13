@@ -21,7 +21,7 @@ COWPOX = AARead('Cowpox virus 15', 'ADDDADDDAMCDCMCDCMCDC')
 MONKEYPOX = AARead('Monkeypox virus 456', 'ADDDDADDDDAMC')
 
 # A beta strand with one trig point.
-MUMMYPOX = AARead('Mummypox virus 3000 B.C.', 'VVVVVVAC')
+MUMMYPOX = AARead('Mummypox virus 3000 B.C.', 'VVVVVVVAC')
 
 # An alpha helix with one trig point.
 SQUIRRELPOX1296 = AARead('Squirrelpox virus 1296/99', 'ADDDADDDAMDCMDC')
@@ -57,15 +57,15 @@ RECORD1 = _result.save(StringIO()).getvalue()
 # aboveMeanThreshold results in the match against SQUIRRELPOX1296 (which
 # also has an alpha helix) not being significant.
 READ2 = AARead('id2', COWPOX.sequence)
-_result = DB.find(READ2)
+_result = DB.find(READ2, aboveMeanThreshold=9)
 RECORD2 = _result.save(StringIO()).getvalue()
 
 # Run find on a second read that also hits just cowpox.
 READ3 = AARead('id3', COWPOX.sequence)
-_result = DB.find(READ3)
+_result = DB.find(READ3, aboveMeanThreshold=9)
 RECORD3 = _result.save(StringIO()).getvalue()
 
 # Run find on a third read that also hits just cowpox.
 READ4 = AARead('id4', COWPOX.sequence)
-_result = DB.find(READ4)
+_result = DB.find(READ4, aboveMeanThreshold=9)
 RECORD4 = _result.save(StringIO()).getvalue()

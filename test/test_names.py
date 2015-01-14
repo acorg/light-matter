@@ -15,7 +15,7 @@ class TestNames(TestCase):
         trigNames = [name.NAME for name in ALL_TRIG_FINDER_CLASSES]
         lmNames = [name.NAME for name in ALL_LANDMARK_FINDER_CLASSES]
         names = trigNames + lmNames
-        self.assertEqual(10, len(names))
+        self.assertEqual(11, len(names))
 
     def testAllLandmarkNamesAreDifferent(self):
         """

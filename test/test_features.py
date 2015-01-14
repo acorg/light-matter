@@ -47,7 +47,7 @@ class TestLandmarks(TestCase):
         landmark2 = Landmark('name', 'L', 0, 2)
         self.assertNotEqual(landmark1, landmark2)
 
-    def testDifferingRepeatCountsNonEqual(self):
+    def testDifferingSymbolDetailsNonEqual(self):
         """
         Landmarks with different repeat counts must not compare equal.
         """

@@ -43,6 +43,6 @@ class AlphaHelix_3_10(object):
         for match in ALPHA_HELIX_3_10.finditer(hhProperties):
             start = match.start()
             end = match.end()
-            repeatCount = (end - start - 1) / 3
+            symbolDetail = (end - start - 1) / 3
             yield Landmark(self.NAME, self.SYMBOL, start, end - start,
-                           repeatCount)
+                           symbolDetail)

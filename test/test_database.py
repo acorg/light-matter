@@ -68,7 +68,7 @@ class TestDatabase(TestCase):
         trigPoint = TrigPoint('name', 'B', 10)
         self.assertEqual('A1:B:10', db.key(landmark, trigPoint))
 
-    def testKeyWithRepeatCount(self):
+    def testKeyWithSymbolDetail(self):
         """
         The database key function must return the expected value when the
         landmark it is passed has a repeat count.
@@ -535,7 +535,7 @@ class TestDatabase(TestCase):
             5,  # Min distance.
             1,  # Bucket factor.
             'id', 'FRRRFRRRFASAASA',
-            ])
+        ])
 
         out = StringIO()
         db.saveParamsAsJSON(out)
@@ -579,7 +579,7 @@ class TestDatabase(TestCase):
             9,  # Max distance.
             1,  # Min distance.
             1,  # Bucket factor.
-            ])
+        ])
         self.assertEqual(checksum, db.checksum)
 
     def testChecksumEmptyDatabaseWithFinders(self):
@@ -594,7 +594,7 @@ class TestDatabase(TestCase):
             None,  # Max distance.
             None,  # Min distance.
             1,  # Bucket factor.
-            ])
+        ])
         self.assertEqual(checksum, db.checksum)
 
     def testChecksumEmptyDatabaseWithFinderOrderInvariant(self):

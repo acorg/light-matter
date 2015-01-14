@@ -3,12 +3,13 @@ from light.landmarks.alpha_helix_3_10 import AlphaHelix_3_10
 from light.landmarks.alpha_helix_pi import AlphaHelix_pi
 from light.landmarks.beta_strand import BetaStrand
 from light.landmarks.beta_turn import BetaTurn
+from light.landmarks.prosite import Prosite
 
 ALL_LANDMARK_FINDER_CLASSES = {
-    AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, BetaStrand, BetaTurn}
+    AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, BetaStrand, BetaTurn, Prosite}
 
 DEFAULT_LANDMARK_FINDER_CLASSES = {
-    AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, BetaStrand, BetaTurn}
+    AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, BetaStrand, BetaTurn, Prosite}
 
 
 def findLandmark(name):

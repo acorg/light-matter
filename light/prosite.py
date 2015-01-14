@@ -52,5 +52,3 @@ def prositeToJSON(prositeDb, fp=sys.stdout):
                     'accession': accession[2:],
                     'pattern': pattern,
                 }, separators=(',', ':'))
-
-    return fp

@@ -27,7 +27,7 @@ class TestProsite(TestCase):
         read = AARead('id', 'EGGELGYAAAAAAAA')
         landmark = Prosite()
         result = list(landmark.find(read))
-        self.assertEqual([Landmark('Prosite', 'PS60002', 0, 7)], result)
+        self.assertEqual([Landmark('Prosite', 'PS', 0, 7, '60002')], result)
 
     def testFindOneMotifMiddle(self):
         """
@@ -36,7 +36,7 @@ class TestProsite(TestCase):
         read = AARead('id', 'AAAAAAAAEGGELGYAAAAAAAA')
         landmark = Prosite()
         result = list(landmark.find(read))
-        self.assertEqual([Landmark('Prosite', 'PS60002', 8, 7)], result)
+        self.assertEqual([Landmark('Prosite', 'PS', 8, 7, '60002')], result)
 
     def testFindOneMotifEnd(self):
         """
@@ -45,7 +45,7 @@ class TestProsite(TestCase):
         read = AARead('id', 'AAAAAAAAEGGELGY')
         landmark = Prosite()
         result = list(landmark.find(read))
-        self.assertEqual([Landmark('Prosite', 'PS60002', 8, 7)], result)
+        self.assertEqual([Landmark('Prosite', 'PS', 8, 7, '60002')], result)
 
     def testFindTwoIdenticalMotifsNotAdjacent(self):
         """
@@ -54,8 +54,8 @@ class TestProsite(TestCase):
         read = AARead('id', 'EGGELGYAAAAAAAAEGGELGY')
         landmark = Prosite()
         result = list(landmark.find(read))
-        self.assertEqual([Landmark('Prosite', 'PS60002', 0, 7),
-                          Landmark('Prosite', 'PS60002', 15, 7)], result)
+        self.assertEqual([Landmark('Prosite', 'PS', 0, 7, '60002'),
+                          Landmark('Prosite', 'PS', 15, 7, '60002')], result)
 
     def testFindTwoIdenticalMotifsAdjacent(self):
         """
@@ -64,8 +64,8 @@ class TestProsite(TestCase):
         read = AARead('id', 'EGGELGYEGGELGY')
         landmark = Prosite()
         result = list(landmark.find(read))
-        self.assertEqual([Landmark('Prosite', 'PS60002', 0, 7),
-                          Landmark('Prosite', 'PS60002', 7, 7)], result)
+        self.assertEqual([Landmark('Prosite', 'PS', 0, 7, '60002'),
+                          Landmark('Prosite', 'PS', 7, 7, '60002')], result)
 
     def testFindTwoDifferentMotifs(self):
         """
@@ -74,8 +74,8 @@ class TestProsite(TestCase):
         read = AARead('id', 'RGDFRRRFEGGELGY')
         landmark = Prosite()
         result = list(landmark.find(read))
-        self.assertEqual([Landmark('Prosite', 'PS00016', 0, 3),
-                          Landmark('Prosite', 'PS60002', 8, 7)], result)
+        self.assertEqual([Landmark('Prosite', 'PS', 0, 3, '00016'),
+                          Landmark('Prosite', 'PS', 8, 7, '60002')], result)
 
     def testTwoDifferentMotifsTwoOccurences(self):
         """
@@ -84,7 +84,7 @@ class TestProsite(TestCase):
         read = AARead('id', 'EGGELGYARGDAAARGDAAEGGELGY')
         landmark = Prosite()
         result = list(landmark.find(read))
-        self.assertEqual([Landmark('Prosite', 'PS00016', 8, 3),
-                          Landmark('Prosite', 'PS00016', 14, 3),
-                          Landmark('Prosite', 'PS60002', 0, 7),
-                          Landmark('Prosite', 'PS60002', 19, 7)], result)
+        self.assertEqual([Landmark('Prosite', 'PS', 8, 3, '00016'),
+                          Landmark('Prosite', 'PS', 14, 3, '00016'),
+                          Landmark('Prosite', 'PS', 0, 7, '60002'),
+                          Landmark('Prosite', 'PS', 19, 7, '60002')], result)

@@ -17,7 +17,7 @@ class Prosite(object):
     @param databaseFile: the C{str} name of the prosite database file.
     """
     NAME = 'Prosite'
-    SYMBOL = 'P'
+    SYMBOL = 'PS'
 
     def __init__(self, databaseFile=None):
         dbFile = databaseFile or join(dirname(light.__file__), 'data',
@@ -45,5 +45,5 @@ class Prosite(object):
                 start = match.start()
                 end = match.end()
                 length = end - start
-                yield Landmark(self.NAME, motif['accession'], start,
-                               length)
+                yield Landmark(self.NAME, self.SYMBOL, start,
+                               length, motif['accession'][2:])

@@ -27,23 +27,24 @@ class Landmark(_Feature):
     @param symbol: The C{str} symbol for this landmark feature.
     @param offset: The C{int} offset of the landmark in the sequence.
     @param length: The C{int} length of the landmark in the sequence.
-    @param repeatCount: The C{int} number of times the landmark pattern was
+    @param symbolDetail: The C{int} number of times the landmark pattern was
         found in the sequence at this offset.
     """
 
-    def __init__(self, name, symbol, offset, length, repeatCount=1):
+    def __init__(self, name, symbol, offset, length, symbolDetail=1):
         _Feature.__init__(self, name, symbol, offset, length)
-        self.repeatCount = repeatCount
+        self.symbolDetail = symbolDetail
 
     def __str__(self):
-        return '%s symbol=%s%d offset=%d len=%d' % (
-            self.name, self.symbol, self.repeatCount, self.offset, self.length)
+        return '%s symbol=%s%s offset=%d len=%d' % (
+            self.name, self.symbol, str(self.symbolDetail), self.offset,
+            self.length)
 
     def __eq__(self, other):
         return (self.symbol == other.symbol and
                 self.offset == other.offset and
                 self.length == other.length and
-                self.repeatCount == other.repeatCount)
+                self.symbolDetail == other.symbolDetail)
 
     def hashkey(self):
         """
@@ -51,7 +52,7 @@ class Landmark(_Feature):
 
         @return: a C{str} of the symbol of the respective landmark.
         """
-        return '%s%d' % (self.symbol, self.repeatCount)
+        return '%s%s' % (self.symbol, str(self.symbolDetail))
 
 
 class TrigPoint(_Feature):

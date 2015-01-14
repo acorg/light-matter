@@ -44,7 +44,7 @@ class TestProsite(TestCase):
         The prosite pattern must be translated to the right regex.
         """
         pattern = ('D-{W}-[DNS]-{ILVFYW}-[DENSTG]-[DNQGHRK]-{GP}-[LIVMC]-'
-                   '[DENQSTAGC]-x(2)-[DE]-[LIVMFYW].')
+                   '[DENQSTAGC]-x(2)-[DE]-[LIVMFYW]')
         regex = patternToRegex(pattern)
         expected = ('D[^W][DNS][^ILVFYW][DENSTG][DNQGHRK][^GP][LIVMC]'
                     '[DENQSTAGC].(2)[DE][LIVMFYW]')

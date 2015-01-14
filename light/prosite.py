@@ -18,7 +18,7 @@ def patternToRegex(pattern):
               }
     aa = set('ARNDCEQGHILKMFPSTWYVUX[](),1234567890')
     return ''.join((element if element in aa else switch[element])
-                   for element in pattern[:-1])
+                   for element in pattern)
 
 
 def prositeToJSON(prositeDb, fp=sys.stdout):
@@ -37,7 +37,7 @@ def prositeToJSON(prositeDb, fp=sys.stdout):
     """
     for record in Prosite.parse(open(prositeDb)):
         accession = record.accession
-        pattern = patternToRegex(record.pattern)
+        pattern = patternToRegex(record.pattern[:-1])
         if pattern:
             print >>fp, dumps(
                 {

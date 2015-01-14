@@ -55,7 +55,8 @@ class TestDefaultLandmarkClasses(TestCase):
         The DEFAULT_LANDMARK_FINDER_CLASSES must be as expected.
         """
         self.assertEqual(
-            {AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, BetaStrand, BetaTurn},
+            {AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, BetaStrand, BetaTurn,
+             Prosite},
             DEFAULT_LANDMARK_FINDER_CLASSES)
 
     def testDefaultClassesAreInAllClasses(self):

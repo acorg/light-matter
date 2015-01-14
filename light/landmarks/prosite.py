@@ -27,6 +27,7 @@ class Prosite(object):
             for line in fp:
                 motif = loads(line)
                 regex = re.compile(motif['pattern'])
+                assert (motif['accession'][:2] == 'PS')
                 self.database.append({
                                      'accession': motif['accession'],
                                      'regex': regex,
@@ -46,6 +47,5 @@ class Prosite(object):
                 start = match.start()
                 end = match.end()
                 length = end - start
-                assert (motif['accession'][:2] == 'PS')
                 yield Landmark(self.NAME, self.SYMBOL, start,
                                length, motif['accession'][2:])

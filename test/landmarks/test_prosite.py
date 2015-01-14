@@ -96,9 +96,8 @@ class TestProsite(TestCase):
         The find method must raise an error if the first two letters of the
         accession are not 'PS'.
         """
-        read = AARead('id', 'EGGELGYA')
         data = '{"accession": "XX00016", "pattern": "EGGELGY"}'
         mockOpener = mockOpen(read_data=data)
         with patch('__builtin__.open', mockOpener, create=True):
-            landmark = Prosite(databaseFile='database.dat')
-            self.assertRaises(AssertionError, landmark.find, read)
+            self.assertRaises(AssertionError, Prosite,
+                              'database.dat')

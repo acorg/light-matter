@@ -9,7 +9,7 @@ ALL_LANDMARK_FINDER_CLASSES = {
     AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, BetaStrand, BetaTurn, Prosite}
 
 DEFAULT_LANDMARK_FINDER_CLASSES = {
-    AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, BetaStrand, BetaTurn}
+    AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, BetaStrand, BetaTurn, Prosite}
 
 
 def findLandmark(name):

@@ -1,4 +1,6 @@
 from unittest import TestCase
+from test.mocking import mockOpen
+from mock import patch
 
 from dark.reads import AARead
 
@@ -88,3 +90,15 @@ class TestProsite(TestCase):
                           Landmark('Prosite', 'PS', 14, 3, '00016'),
                           Landmark('Prosite', 'PS', 0, 7, '60002'),
                           Landmark('Prosite', 'PS', 19, 7, '60002')], result)
+
+    def testRaise(self):
+        """
+        The find method must raise an error if the first two letters of the
+        accession are not 'PS'.
+        """
+        read = AARead('id', 'EGGELGYA')
+        data = '{"accession": "XX00016", "pattern": "EGGELGY"}'
+        mockOpener = mockOpen(read_data=data)
+        with patch('__builtin__.open', mockOpener, create=True):
+            landmark = Prosite(databaseFile='database.dat')
+            self.assertRaises(AssertionError, landmark.find, read)

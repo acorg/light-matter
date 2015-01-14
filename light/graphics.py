@@ -17,7 +17,8 @@ COLORS = {'A': 'blue',
           'M': 'magenta',
           'J': 'black',
           'I': 'black',
-          'O': 'black'}
+          'O': 'black',
+          'PS': '#A9E2F3'}
 
 
 def plotHistogram(query, subject, landmarks=None, trigPoints=None,

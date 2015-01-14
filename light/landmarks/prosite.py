@@ -15,21 +15,26 @@ class Prosite(object):
     at: http://prosite.expasy.org/prosuser.html
 
     @param databaseFile: the C{str} name of the prosite database file.
+    @raises AssertionError: if any accession string in the database does not
+        start with "PS".
     """
     NAME = 'Prosite'
     SYMBOL = 'PS'
 
     def __init__(self, databaseFile=None):
-        dbFile = databaseFile or join(dirname(light.__file__), 'data',
+        dbFile = databaseFile or join(dirname(light.__file__), '..', 'data',
                                       'prosite-20-110.json')
         self.database = []
+        seen = {}
         with open(dbFile) as fp:
             for line in fp:
                 motif = loads(line)
                 regex = re.compile(motif['pattern'])
-                assert (motif['accession'][:2] == 'PS')
+                assert motif['accession'] not in seen
+                seen[motif['accession']] = None
+                assert motif['accession'].startswith('PS')
                 self.database.append({
-                                     'accession': motif['accession'],
+                                     'accession': motif['accession'][2:],
                                      'regex': regex,
                                      })
 
@@ -48,4 +53,4 @@ class Prosite(object):
                 end = match.end()
                 length = end - start
                 yield Landmark(self.NAME, self.SYMBOL, start,
-                               length, motif['accession'][2:])
+                               length, motif['accession'])

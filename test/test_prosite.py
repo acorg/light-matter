@@ -36,7 +36,7 @@ class TestProsite(TestCase):
             fp.seek(0)
             result = load(fp)
             self.assertEqual({'pattern': 'N[^P][ST][^P]',
-                              'accession': 'PS00001'},
+                              'accession': '00001'},
                              result)
 
     def testPatternToRegex(self):

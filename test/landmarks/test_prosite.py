@@ -15,9 +15,9 @@ class TestProsite(TestCase):
 
     # A simple prosite JSON db with two patterns, to save on reading the
     # default large prosite file on every test.
-    SIMPLE_DB = ('{"accession": "PS00016", "pattern": "RGD"}'
+    SIMPLE_DB = ('{"accession": "00016", "pattern": "RGD"}'
                  '\n'
-                 '{"accession": "PS60002", "pattern": "EGGELGY"}')
+                 '{"accession": "60002", "pattern": "EGGELGY"}')
 
     def testFindWithoutMotif(self):
         """
@@ -120,28 +120,6 @@ class TestProsite(TestCase):
                               Landmark('Prosite', 'PS', 0, 7, '60002'),
                               Landmark('Prosite', 'PS', 19, 7, '60002')],
                              result)
-
-    def testAccessionPrefix(self):
-        """
-        The find method must raise an error if the first two letters of the
-        accession are not 'PS'.
-        """
-        data = '{"accession": "XX00016", "pattern": "EGGELGY"}'
-        mockOpener = mockOpen(read_data=data)
-        with patch('__builtin__.open', mockOpener, create=True):
-            self.assertRaises(AssertionError, Prosite, 'database.dat')
-
-    def testDuplicateAccession(self):
-        """
-        The find method must raise AssertionError if the database contains a
-        duplicate accession string.
-        """
-        data = ('{"accession": "XX00016", "pattern": "EGGELGY"}'
-                '\n'
-                '{"accession": "XX00016", "pattern": "EGGELGY"}')
-        mockOpener = mockOpen(read_data=data)
-        with patch('__builtin__.open', mockOpener, create=True):
-            self.assertRaises(AssertionError, Prosite, 'database.dat')
 
     def testDefaultDatabase(self):
         """

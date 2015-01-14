@@ -8,6 +8,7 @@ def patternToRegex(pattern):
     Translates the pattern of a prosite entry into a regex.
 
     @param pattern: the C{str} pattern of a prosite entry.
+    @return: A C{str} that can be used as a regex to match C{pattern}.
     """
     switch = {'{': '[^',
               '}': ']',

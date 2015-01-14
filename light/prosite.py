@@ -8,6 +8,7 @@ def patternToRegex(pattern):
     Translates the pattern of a prosite entry into a regex.
 
     @param pattern: the C{str} pattern of a prosite entry.
+    @return: A C{str} that can be used as a regex to match C{pattern}.
     """
     switch = {'{': '[^',
               '}': ']',
@@ -34,15 +35,20 @@ def prositeToJSON(prositeDb, fp=sys.stdout):
 
     @param prositeDb: The C{str} filename of the prosite database.
     @param fp: A file pointer.
+    @raises AssertionError: if any accession string in the database does not
+        start with "PS" or if the database contains a duplicate accession
+        string.
     """
+    seen = {}
     for record in Prosite.parse(open(prositeDb)):
         accession = record.accession
+        assert accession not in seen
+        assert accession.startswith('PS')
+        seen[accession] = None
         pattern = patternToRegex(record.pattern[:-1])
         if pattern:
             print >>fp, dumps(
                 {
-                    'accession': accession,
+                    'accession': accession[2:],
                     'pattern': pattern,
                 }, separators=(',', ':'))
-
-    return fp

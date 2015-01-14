@@ -5,6 +5,8 @@ from light.database import Database
 from light.trig import findTrigPoint
 from light.landmarks import findLandmark
 
+from dark.dimension import dimensionalIterator
+
 COLORS = {'A': 'blue',
           'B': 'cyan',
           'C': '#00BFFF',
@@ -168,8 +170,74 @@ def plotFeatures(read, landmarks=None, trigs=None, limitPerLandmark=None,
 
     readsAx.set_title('%s\n Length: %d, covered residues: %s' % (read.id,
                       len(read), totalCoveredResidues), fontsize=20)
-    readsAx.set_ylabel('Rank', fontsize=15)
+    readsAx.set_ylabel('Rank', fontsize=10)
 
     readsAx.set_xlim(0, len(read.sequence))
     readsAx.set_ylim(-0.5, count + 1)
     readsAx.grid()
+
+    return scannedRead, count
+
+
+def plotFeaturePanel(reads, landmarks=None, trigs=None, limitPerLandmark=None,
+                     maxDistance=None, minDistance=None):
+    """
+    Plot a panel of feature plots from plotFeatures.
+
+    @param reads: A C{dark.fasta.FastaReads} instance.
+    @param landmark: a C{list} of C{str} of landmark finder names.
+    @param trig: a C{list} of C{str} of trig finder names.
+    @param limitPerLandmark: An C{int} limit on the number of pairs to
+        yield per landmark.
+    @param maxDistance: The C{int} maximum distance permitted between
+        yielded pairs.
+    @param minDistance: The C{int} minimum distance permitted between
+        yielded pairs.
+    """
+    cols = 5
+    rows = int(len(reads) / cols) + (0 if len(reads) % cols == 0 else 1)
+    figure, ax = plt.subplots(rows, cols, squeeze=False)
+    maxY = 0
+    maxX = 0
+
+    coords = dimensionalIterator((rows, cols))
+
+    for i, read in enumerate(reads):
+        row, col = coords.next()
+        print '%d: %s' % (i, read.id)
+
+        graphInfo, y = plotFeatures(read, landmarks, trigs,
+                                    limitPerLandmark, maxDistance,
+                                    minDistance, readsAx=ax[row][col])
+
+        totalCoveredResidues = len(graphInfo.coveredIndices())
+        plotTitle = ('%s\n Length: %d, covered residues: %s' % (read.id,
+                     len(read), totalCoveredResidues))
+
+        ax[row][col].set_title(plotTitle, fontsize=10)
+        if y > maxY:
+            maxY = y
+        if len(read) > maxX:
+            maxX = len(read)
+
+    # Post-process graphs to adjust axes, etc.
+    coords = dimensionalIterator((rows, cols))
+    for read in reads:
+        row, col = coords.next()
+        a = ax[row][col]
+        a.set_ylim([-0.5, maxY + 0.5])
+        a.set_yticks([])
+        a.set_xticks([])
+        a.set_ylabel('')
+
+    # Hide the final panel graphs (if any) that have no content. We do this
+    # because the panel is a rectangular grid and some of the plots at the
+    # end of the last row may be unused.
+    for row, col in coords:
+        ax[row][col].axis('off')
+
+    plt.subplots_adjust(hspace=0.4)
+    figure.suptitle('X: 0 to %d, Y: 0 to %d (rank)' % (maxX, maxY),
+                    fontsize=20)
+    figure.set_size_inches(5 * cols, 3 * rows, forward=True)
+    figure.show()

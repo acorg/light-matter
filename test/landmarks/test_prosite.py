@@ -22,7 +22,7 @@ class TestProsite(TestCase):
 
     def testFindOneMotifBeginning(self):
         """
-        The find method must find one motif.
+        The find method must find one motif at the beginning of a sequence.
         """
         read = AARead('id', 'EGGELGYAAAAAAAA')
         landmark = Prosite()
@@ -31,7 +31,7 @@ class TestProsite(TestCase):
 
     def testFindOneMotifMiddle(self):
         """
-        The find method must find one motif.
+        The find method must find one motif in the middle of a sequence.
         """
         read = AARead('id', 'AAAAAAAAEGGELGYAAAAAAAA')
         landmark = Prosite()
@@ -40,7 +40,7 @@ class TestProsite(TestCase):
 
     def testFindOneMotifEnd(self):
         """
-        The find method must find one motif.
+        The find method must find one motif at the end of a sequence.
         """
         read = AARead('id', 'AAAAAAAAEGGELGY')
         landmark = Prosite()

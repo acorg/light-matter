@@ -1,6 +1,8 @@
 import re
 from json import loads
+from os.path import dirname, join
 
+import light
 from light.features import Landmark
 
 
@@ -18,14 +20,17 @@ class Prosite(object):
     SYMBOL = 'P'
 
     def __init__(self, databaseFile=None):
-        if databaseFile:
-            self.databaseFile = databaseFile
-        else:
-            self.databaseFile = '../data/prosite-20-110.json'
+        dbFile = databaseFile or join(dirname(light.__file__), 'data',
+                                      'prosite-20-110.json')
         self.database = []
-        with open(self.databaseFile) as fp:
+        with open(dbFile) as fp:
             for line in fp:
-                self.database.append(loads(line))
+                motif = loads(line)
+                regex = re.compile(motif['pattern'])
+                self.database.append({
+                                     'accession': motif['accession'],
+                                     'regex': regex,
+                                     })
 
     def find(self, read):
         """
@@ -36,8 +41,7 @@ class Prosite(object):
         @return: A generator that yields C{Landmark} instances.
         """
         for motif in self.database:
-            motifRegex = re.compile(motif['pattern'])
-            for match in motifRegex.finditer(read.sequence):
+            for match in motif['regex'].finditer(read.sequence):
                 start = match.start()
                 end = match.end()
                 length = end - start

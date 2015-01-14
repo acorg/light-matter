@@ -47,5 +47,5 @@ class TestProsite(TestCase):
                    '[DENQSTAGC]-x(2)-[DE]-[LIVMFYW].')
         regex = patternToRegex(pattern)
         expected = ('D[^W][DNS][^ILVFYW][DENSTG][DNQGHRK][^GP][LIVMC]'
-                    '[DENQSTAGC][A-Z](2)[DE][LIVMFYW]')
+                    '[DENQSTAGC].(2)[DE][LIVMFYW]')
         self.assertEqual(expected, regex)

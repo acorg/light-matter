@@ -11,21 +11,14 @@ def patternToRegex(pattern):
     """
     switch = {'{': '[^',
               '}': ']',
-              'x': '[A-Z]',
+              'x': '.',
               '<': '',
               '>': '',
               '-': '',
               }
-    aa = ['A', 'R', 'N', 'D', 'C', 'E', 'Q', 'G', 'H', 'I', 'L', 'K', 'M',
-          'F', 'P', 'S', 'T', 'W', 'Y', 'V', 'U', 'X', '[', ']', '(', ')',
-          ',', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
-    regex = []
-    for element in pattern[:-1]:
-        if element not in aa:
-            regex.append(switch[element])
-        else:
-            regex.append(element)
-    return ''.join(regex)
+    aa = set('ARNDCEQGHILKMFPSTWYVUX[](),1234567890')
+    return ''.join((element if element in aa else switch[element])
+                   for element in pattern[:-1])
 
 
 def prositeToJSON(prositeDb, fp=sys.stdout):

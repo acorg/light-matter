@@ -1,4 +1,4 @@
-from light.features import TrigPoint
+from light.features import Landmark
 
 
 class AminoAcids(object):
@@ -6,8 +6,8 @@ class AminoAcids(object):
     A class for computing trig points based on the position of a specific
     amino acid.
     """
-    NAME = 'AminoAcids'
-    SYMBOL = 'M'
+    NAME = 'AminoAcidsLm'
+    SYMBOL = 'N'
 
     def find(self, read, aa=None):
         """
@@ -16,10 +16,11 @@ class AminoAcids(object):
 
         @param read: An instance of C{dark.reads.AARead}.
         @param aa: A list of the single letter codes of amino acids. The
-            default is ['C', 'W'].
+            default is ['C', 'W', as cysteines do not get substituted very
+            often.
         """
-        aa = aa or ['C', 'W']
+        aa = aa or ['C']
 
         for i, base in enumerate(read.sequence):
             if base in aa:
-                yield TrigPoint(self.NAME, self.SYMBOL, i)
+                yield Landmark(self.NAME, self.SYMBOL, i, 1)

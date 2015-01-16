@@ -3,7 +3,7 @@ from unittest import TestCase
 from light.landmarks import (
     findLandmark, ALL_LANDMARK_FINDER_CLASSES, DEFAULT_LANDMARK_FINDER_CLASSES,
     AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, AminoAcids, BetaStrand,
-    BetaTurn, GOR4BetaStrand, Prosite)
+    BetaTurn, GOR4AlphaHelix, GOR4BetaStrand, Prosite)
 
 
 class TestFindLandmark(TestCase):
@@ -37,7 +37,7 @@ class TestAllLandmarkClasses(TestCase):
         """
         self.assertEqual(
             {AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, AminoAcids,
-             BetaStrand, BetaTurn, GOR4BetaStrand, Prosite},
+             BetaStrand, BetaTurn, GOR4AlphaHelix, GOR4BetaStrand, Prosite},
             ALL_LANDMARK_FINDER_CLASSES)
 
 

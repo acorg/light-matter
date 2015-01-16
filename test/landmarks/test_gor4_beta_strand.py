@@ -15,7 +15,7 @@ class TestGOR4BetaStrand(TestCase):
         The GOR4BetaStrand class attributes must be as expected.
         """
         self.assertEqual('GOR4BetaStrand', GOR4BetaStrand.NAME)
-        self.assertEqual('G', GOR4BetaStrand.SYMBOL)
+        self.assertEqual('GB', GOR4BetaStrand.SYMBOL)
 
     def testNoBetaStrands(self):
         """
@@ -37,8 +37,8 @@ class TestGOR4BetaStrand(TestCase):
         landmark = GOR4BetaStrand()
         result = list(landmark.find(read))
         # The GOR IV secondary structure prediction is 'EECEEEC'.
-        self.assertEqual([Landmark('GOR4BetaStrand', 'G', 0, 2, 2),
-                          Landmark('GOR4BetaStrand', 'G', 3, 3, 3)],
+        self.assertEqual([Landmark('GOR4BetaStrand', 'GB', 0, 2, 2),
+                          Landmark('GOR4BetaStrand', 'GB', 3, 3, 3)],
                          result)
 
     def testBetaStrandAtEnd(self):
@@ -50,7 +50,7 @@ class TestGOR4BetaStrand(TestCase):
         landmark = GOR4BetaStrand()
         result = list(landmark.find(read))
         # The GOR IV secondary structure prediction is 'CEE'.
-        self.assertEqual([Landmark('GOR4BetaStrand', 'G', 1, 2, 2)], result)
+        self.assertEqual([Landmark('GOR4BetaStrand', 'GB', 1, 2, 2)], result)
 
     def testApoamicyaninTwoBetaStrands(self):
         """
@@ -64,6 +64,6 @@ class TestGOR4BetaStrand(TestCase):
         result = list(landmark.find(read))
         # The GOR IV secondary structure prediction is
         # 'CCCCCCCCCCHHHHHHHCCHHHHHHHHHHHCCCCEEEEECCEEEEEEEEC'
-        self.assertEqual([Landmark('GOR4BetaStrand', 'G', 34, 5, 5),
-                          Landmark('GOR4BetaStrand', 'G', 41, 8, 8)],
+        self.assertEqual([Landmark('GOR4BetaStrand', 'GB', 34, 5, 5),
+                          Landmark('GOR4BetaStrand', 'GB', 41, 8, 8)],
                          result)

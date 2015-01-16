@@ -1,14 +1,9 @@
 from unittest import TestCase
 
 from light.landmarks import (
-    findLandmark, ALL_LANDMARK_FINDER_CLASSES, DEFAULT_LANDMARK_FINDER_CLASSES)
-from light.landmarks.alpha_helix import AlphaHelix
-from light.landmarks.alpha_helix_3_10 import AlphaHelix_3_10
-from light.landmarks.alpha_helix_pi import AlphaHelix_pi
-from light.landmarks.amino_acids import AminoAcids
-from light.landmarks.beta_strand import BetaStrand
-from light.landmarks.beta_turn import BetaTurn
-from light.landmarks.prosite import Prosite
+    findLandmark, ALL_LANDMARK_FINDER_CLASSES, DEFAULT_LANDMARK_FINDER_CLASSES,
+    AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, AminoAcids, BetaStrand,
+    BetaTurn, GOR4BetaStrand, Prosite)
 
 
 class TestFindLandmark(TestCase):
@@ -41,8 +36,8 @@ class TestAllLandmarkClasses(TestCase):
         The ALL_LANDMARK_FINDER_CLASSES set must be as expected.
         """
         self.assertEqual(
-            {AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, BetaStrand, BetaTurn,
-             Prosite, AminoAcids},
+            {AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, AminoAcids,
+             BetaStrand, BetaTurn, GOR4BetaStrand, Prosite},
             ALL_LANDMARK_FINDER_CLASSES)
 
 
@@ -56,8 +51,8 @@ class TestDefaultLandmarkClasses(TestCase):
         The DEFAULT_LANDMARK_FINDER_CLASSES must be as expected.
         """
         self.assertEqual(
-            {AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, BetaStrand, BetaTurn,
-             Prosite, AminoAcids},
+            {AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, AminoAcids,
+             BetaStrand, BetaTurn, Prosite},
             DEFAULT_LANDMARK_FINDER_CLASSES)
 
     def testDefaultClassesAreInAllClasses(self):

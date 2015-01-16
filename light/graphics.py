@@ -198,7 +198,7 @@ def plotFeaturePanel(reads, landmarks=None, trigs=None, limitPerLandmark=None,
     """
     cols = 5
     rows = 40
-    #rows = int(len(reads) / cols) + (0 if len(reads) % cols == 0 else 1)
+    # rows = int(len(reads) / cols) + (0 if len(reads) % cols == 0 else 1)
     figure, ax = plt.subplots(rows, cols, squeeze=False)
     maxY = 0
     maxX = 0
@@ -228,7 +228,7 @@ def plotFeaturePanel(reads, landmarks=None, trigs=None, limitPerLandmark=None,
     for read in reads:
         row, col = coords.next()
         a = ax[row][col]
-        #a.set_ylim([-0.5, maxY + 0.5])
+        # a.set_ylim([-0.5, maxY + 0.5])
         a.set_yticks([])
         a.set_xticks([])
         a.set_ylabel('')

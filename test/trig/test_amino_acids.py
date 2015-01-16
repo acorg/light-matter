@@ -34,7 +34,7 @@ class TestAminoAcids(TestCase):
         If two of the desired amino acids (C) are present, return two trig
         points.
         """
-        read = AARead('id', 'ASAACAACAAA')
+        read = AARead('id', 'ASAACAAWAAA')
         aas = AminoAcids()
         result = list(aas.find(read))
         self.assertEqual([TrigPoint('AminoAcids', 'M', 4),

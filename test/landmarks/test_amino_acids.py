@@ -8,7 +8,7 @@ from light.landmarks.amino_acids import AminoAcids
 
 class TestAminoAcids(TestCase):
     """
-    Tests for the TrigPoint.AminoAcids class.
+    Tests for the landmarks.AminoAcids class.
     """
     def testFindWithoutAA(self):
         """
@@ -52,7 +52,7 @@ class TestAminoAcids(TestCase):
 
     def testFindRightNonDefaultAA(self):
         """
-        If the default amino acid list is changed, return the right trig point.
+        If the default amino acid list is changed, return the right landmark.
         """
         read = AARead('id', 'ASAACAAWAAA')
         aas = AminoAcids()

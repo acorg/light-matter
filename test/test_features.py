@@ -49,15 +49,24 @@ class TestLandmarks(TestCase):
 
     def testDifferingSymbolDetailsNonEqual(self):
         """
-        Landmarks with different repeat counts must not compare equal.
+        Landmarks with different symbol details must not compare equal.
         """
         landmark1 = Landmark('name', 'L', 0, 1, 0)
         landmark2 = Landmark('name', 'L', 0, 1, 1)
         self.assertNotEqual(landmark1, landmark2)
 
-    def testLandmarkHashkey(self):
+    def testHashkeyNoSymbolDetail(self):
         """
-        The hashkey function must return as expected.
+        The hashkey function must return as expected when no value is given for
+        the symbol detail.
+        """
+        landmark = Landmark('name', 'L', 0, 1)
+        self.assertEqual('L', landmark.hashkey())
+
+    def testHashkeyWithSymbolDetail(self):
+        """
+        The hashkey function must return as expected when symbol detail is
+        given.
         """
         landmark = Landmark('name', 'L', 0, 1, 2)
         self.assertEqual('L2', landmark.hashkey())

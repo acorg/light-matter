@@ -6,7 +6,8 @@ from light.trig import ALL_TRIG_FINDER_CLASSES
 
 class TestNames(TestCase):
     """
-    Tests to ensure that all landmarks and trig points have different names.
+    Tests to ensure that all landmark and trig point finders have different
+    names.
     """
     def testRightNumberOfNames(self):
         """
@@ -15,25 +16,25 @@ class TestNames(TestCase):
         trigNames = [name.NAME for name in ALL_TRIG_FINDER_CLASSES]
         lmNames = [name.NAME for name in ALL_LANDMARK_FINDER_CLASSES]
         names = trigNames + lmNames
-        self.assertEqual(12, len(names))
+        self.assertEqual(13, len(names))
 
     def testAllLandmarkNamesAreDifferent(self):
         """
-        All landmark names must be different.
+        All landmark finder names must be different.
         """
         names = [name.NAME for name in ALL_LANDMARK_FINDER_CLASSES]
         self.assertEqual(len(names), len(set(names)))
 
     def testAllTrigNamesAreDifferent(self):
         """
-        All trig finder names must be different.
+        All trig point finder names must be different.
         """
         names = [name.NAME for name in ALL_TRIG_FINDER_CLASSES]
         self.assertEqual(len(names), len(set(names)))
 
     def testLandmarkAndTrigNamesAreDifferent(self):
         """
-        All landmark and trig finder names must be different.
+        All landmark and trig point finder names must be different.
         """
         trigNames = [name.NAME for name in ALL_TRIG_FINDER_CLASSES]
         lmNames = [name.NAME for name in ALL_LANDMARK_FINDER_CLASSES]

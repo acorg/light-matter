@@ -1,12 +1,8 @@
 from unittest import TestCase
 
 from light.trig import (
-    findTrigPoint, ALL_TRIG_FINDER_CLASSES, DEFAULT_TRIG_FINDER_CLASSES)
-from light.trig.peaks import Peaks
-from light.trig.troughs import Troughs
-from light.trig.amino_acids import AminoAcids
-from light.trig.individual_peaks import IndividualPeaks
-from light.trig.individual_troughs import IndividualTroughs
+    findTrigPoint, ALL_TRIG_FINDER_CLASSES, DEFAULT_TRIG_FINDER_CLASSES,
+    AminoAcids, IndividualPeaks, IndividualTroughs, Peaks, Troughs)
 
 
 class TestFindTrigPoint(TestCase):

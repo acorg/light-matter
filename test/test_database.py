@@ -66,7 +66,7 @@ class TestDatabase(TestCase):
         db = Database([], [])
         landmark = Landmark('name', 'A', 20, 0)
         trigPoint = TrigPoint('name', 'B', 10)
-        self.assertEqual('A1:B:10', db.key(landmark, trigPoint))
+        self.assertEqual('A:B:10', db.key(landmark, trigPoint))
 
     def testKeyWithSymbolDetail(self):
         """

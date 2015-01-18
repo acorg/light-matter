@@ -11,8 +11,8 @@ class Result(object):
     @param read: A C{dark.read.AARead} instance.
     @param matches: A C{dict} of matches. Keys are C{int} subject indices.
         Each value is a C{list} of C{dicts}, with each C{dict} containing the
-        following keys: 'distance', 'landmarkLength', 'landmarkName',
-        'readOffset', 'subjectOffset', and 'trigPointName'.
+        following keys: 'landmarkLength', 'landmarkName',
+        'readOffset', 'subjectOffsets', and 'trigPointName'.
     @param aboveMeanThreshold: A numeric amount by which the maximum count
         across all buckets must exceed the mean bucket count for the
         maximum bucket count to be considered significant.
@@ -27,8 +27,9 @@ class Result(object):
         self.read = read
         self.analysis = defaultdict(dict)
         for subjectIndex in matches:
-            offsets = [match['subjectOffset'] - match['readOffset']
-                       for match in matches[subjectIndex]]
+            offsets = [subjectOffset - match['readOffset']
+                       for match in matches[subjectIndex]
+                       for subjectOffset in match['subjectOffsets']]
             maxLen = max([len(read.sequence),
                           matches[subjectIndex][0]['subjectLength']])
             bins = maxLen // bucketFactor

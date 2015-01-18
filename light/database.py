@@ -132,14 +132,15 @@ class Database(object):
                 limitPerLandmark=self.limitPerLandmark,
                 maxDistance=self.maxDistance, minDistance=self.minDistance):
             key = self.key(landmark, trigPoint)
-            value = {
-                'subjectIndex': subjectIndex,
-                'offset': landmark.offset,
-            }
             try:
-                self.d[key].append(value)
+                subjectDict = self.d[key]
             except KeyError:
-                self.d[key] = [value]
+                self.d[key] = subjectDict = {}
+
+            try:
+                subjectDict[str(subjectIndex)].append(landmark.offset)
+            except KeyError:
+                subjectDict[str(subjectIndex)] = [landmark.offset]
 
     def __str__(self):
         return '%s: %d sequences, %d residues, %d hashes, %.2f%% coverage' % (
@@ -204,19 +205,20 @@ class Database(object):
                 maxDistance=self.maxDistance, minDistance=self.minDistance):
             key = self.key(landmark, trigPoint)
             try:
-                subjects = self.d[key]
+                subjectDict = self.d[key]
             except KeyError:
+                # A hash that's in the read but not in our database.
                 pass
             else:
-                for subject in subjects:
-                    subjectIndex = subject['subjectIndex']
+                for subjectIndex, subjectOffsets in subjectDict.iteritems():
+                    subjectIndex = int(subjectIndex)
                     subjectLength = len(self.subjectInfo[subjectIndex][1])
                     matches[subjectIndex].append({
-                        'distance': trigPoint.offset - landmark.offset,
+                        # 'distance': trigPoint.offset - landmark.offset,
                         'landmarkLength': landmark.length,
                         'landmarkName': landmark.name,
                         'readOffset': landmark.offset,
-                        'subjectOffset': subject['offset'],
+                        'subjectOffsets': subjectOffsets,
                         'trigPointName': trigPoint.name,
                         'subjectLength': subjectLength,
                     })

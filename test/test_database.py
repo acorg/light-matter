@@ -120,11 +120,12 @@ class TestDatabase(TestCase):
         """
         db = Database([AlphaHelix], [])
         db.addSubject(AARead('id', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
-        self.assertEqual({'A3:A2:23': [{'subjectIndex': 0,
-                                        'offset': 23}],
-                         'A2:A3:-23': [{'subjectIndex': 0,
-                                        'offset': 0}]},
-                         db.d)
+        self.assertEqual(
+            {
+                'A3:A2:23': {'0': [23]},
+                'A2:A3:-23': {'0': [0]},
+            },
+            db.d)
 
     def testOneReadTwoLandmarksStatistics(self):
         """
@@ -145,15 +146,12 @@ class TestDatabase(TestCase):
         db = Database([AlphaHelix], [])
         db.addSubject(AARead('id1', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
         db.addSubject(AARead('id2', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
-        self.assertEqual({'A3:A2:23': [{'subjectIndex': 0,
-                                        'offset': 23},
-                                       {'subjectIndex': 1,
-                                        'offset': 23}],
-                         'A2:A3:-23': [{'subjectIndex': 0,
-                                        'offset': 0},
-                                       {'subjectIndex': 1,
-                                        'offset': 0}]},
-                         db.d)
+        self.assertEqual(
+            {
+                'A3:A2:23': {'0': [23], '1': [23]},
+                'A2:A3:-23': {'0': [0], '1': [0]}
+            },
+            db.d)
 
     def testTwoReadsTwoLandmarksStatistics(self):
         """
@@ -186,15 +184,12 @@ class TestDatabase(TestCase):
         db = Database([AlphaHelix], [])
         db.addSubject(AARead('id1', 'AFRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
         db.addSubject(AARead('id2', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
-        self.assertEqual({'A3:A2:23': [{'subjectIndex': 0,
-                                        'offset': 24},
-                                       {'subjectIndex': 1,
-                                        'offset': 23}],
-                          'A2:A3:-23': [{'subjectIndex': 0,
-                                         'offset': 1},
-                                        {'subjectIndex': 1,
-                                         'offset': 0}]},
-                         db.d)
+        self.assertEqual(
+            {
+                'A3:A2:23': {'0': [24], '1': [23]},
+                'A2:A3:-23': {'0': [1], '1': [0]},
+            },
+            db.d)
 
     def testOneReadOneLandmarkOnePeak(self):
         """
@@ -203,9 +198,11 @@ class TestDatabase(TestCase):
         """
         db = Database([AlphaHelix], [Peaks])
         db.addSubject(AARead('id', 'FRRRFRRRFASA'))
-        self.assertEqual({'A2:P:-10': [{'subjectIndex': 0,
-                                        'offset': 0}]},
-                         db.d)
+        self.assertEqual(
+            {
+                'A2:P:-10': {'0': [0]},
+            },
+            db.d)
 
     def testOneReadOneLandmarkOnePeakBucketFactor(self):
         """
@@ -214,9 +211,11 @@ class TestDatabase(TestCase):
         """
         db = Database([AlphaHelix], [Peaks], bucketFactor=5)
         db.addSubject(AARead('id', 'FRRRFRRRFASA'))
-        self.assertEqual({'A2:P:-2': [{'subjectIndex': 0,
-                                       'offset': 0}]},
-                         db.d)
+        self.assertEqual(
+            {
+                'A2:P:-2': {'0': [0]},
+            },
+            db.d)
 
     def testOneReadOneLandmarkOnePeakNoTrigFinders(self):
         """
@@ -234,11 +233,12 @@ class TestDatabase(TestCase):
         """
         db = Database([AlphaHelix], [Peaks])
         db.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
-        self.assertEqual({'A2:P:-13': [{'subjectIndex': 0,
-                                        'offset': 0}],
-                          'A2:P:-10': [{'subjectIndex': 0,
-                                        'offset': 0}]},
-                         db.d)
+        self.assertEqual(
+            {
+                'A2:P:-13': {'0': [0]},
+                'A2:P:-10': {'0': [0]},
+            },
+            db.d)
 
     def testOneReadOneLandmarkTwoPeaksLimitOnePairPerLandmark(self):
         """
@@ -248,9 +248,11 @@ class TestDatabase(TestCase):
         """
         db = Database([AlphaHelix], [Peaks], limitPerLandmark=1)
         db.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
-        self.assertEqual({'A2:P:-10': [{'subjectIndex': 0,
-                                        'offset': 0}]},
-                         db.d)
+        self.assertEqual(
+            {
+                'A2:P:-10': {'0': [0]},
+            },
+            db.d)
 
     def testOneReadOneLandmarkTwoPeaksSevereMaxDistance(self):
         """
@@ -270,9 +272,11 @@ class TestDatabase(TestCase):
         """
         db = Database([AlphaHelix], [Peaks], maxDistance=11)
         db.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
-        self.assertEqual({'A2:P:-10': [{'subjectIndex': 0,
-                                        'offset': 0}]},
-                         db.d)
+        self.assertEqual(
+            {
+                'A2:P:-10': {'0': [0]},
+            },
+            db.d)
 
     def testOneReadOneLandmarkTwoPeaksLargeMaxDistance(self):
         """
@@ -282,11 +286,12 @@ class TestDatabase(TestCase):
         """
         db = Database([AlphaHelix], [Peaks], maxDistance=15)
         db.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
-        self.assertEqual({'A2:P:-13': [{'subjectIndex': 0,
-                                        'offset': 0}],
-                         'A2:P:-10': [{'subjectIndex': 0,
-                                       'offset': 0}]},
-                         db.d)
+        self.assertEqual(
+            {
+                'A2:P:-13': {'0': [0]},
+                'A2:P:-10': {'0': [0]},
+            },
+            db.d)
 
     def testOneReadOneLandmarkTwoPeaksPermissiveMinDistance(self):
         """
@@ -296,11 +301,12 @@ class TestDatabase(TestCase):
         """
         db = Database([AlphaHelix], [Peaks], minDistance=1)
         db.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
-        self.assertEqual({'A2:P:-13': [{'subjectIndex': 0,
-                                        'offset': 0}],
-                         'A2:P:-10': [{'subjectIndex': 0,
-                                       'offset': 0}]},
-                         db.d)
+        self.assertEqual(
+            {
+                'A2:P:-13': {'0': [0]},
+                'A2:P:-10': {'0': [0]},
+            },
+            db.d)
 
     def testOneReadOneLandmarkTwoPeaksIntermediateMinDistance(self):
         """
@@ -310,9 +316,11 @@ class TestDatabase(TestCase):
         """
         db = Database([AlphaHelix], [Peaks], minDistance=11)
         db.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
-        self.assertEqual({'A2:P:-13': [{'subjectIndex': 0,
-                                        'offset': 0}]},
-                         db.d)
+        self.assertEqual(
+            {
+                'A2:P:-13': {'0': [0]},
+            },
+            db.d)
 
     def testOneReadOneLandmarkTwoPeaksSevereMinDistance(self):
         """
@@ -323,6 +331,25 @@ class TestDatabase(TestCase):
         db = Database([AlphaHelix], [Peaks], minDistance=100)
         db.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
         self.assertEqual({}, db.d)
+
+    def testMultipleSubjectOffsets(self):
+        """
+        If one read is added and it has one landmark and one peak separated by
+        10 bases and then, later in the subject, the same pair with the
+        same separation, one key must be added to the database and it
+        should have two subject offsets.  Note that minDistance and
+        maxDistance are used to discard the matches some longer and shorter
+        distance pairs that only have one subject offset (i.e., that only
+        appear in the subject once).
+        """
+        seq = 'FRRRFRRRFASA'
+        db = Database([AlphaHelix], [Peaks], minDistance=5, maxDistance=10)
+        db.addSubject(AARead('id', seq + seq))
+        self.assertEqual(
+            {
+                'A2:P:-10': {'0': [0, 12]},
+            },
+            db.d)
 
     def testSaveLoadEmpty(self):
         """
@@ -417,10 +444,9 @@ class TestDatabase(TestCase):
                 0: [
                     {
                         'trigPointName': 'Peaks',
-                        'distance': 10,
                         'landmarkLength': 9,
                         'readOffset': 0,
-                        'subjectOffset': 1,
+                        'subjectOffsets': [1],
                         'landmarkName': 'AlphaHelix',
                         'subjectLength': 16
                     },
@@ -444,10 +470,9 @@ class TestDatabase(TestCase):
                 0: [
                     {
                         'trigPointName': 'Peaks',
-                        'distance': 10,
                         'landmarkLength': 9,
                         'readOffset': 0,
-                        'subjectOffset': 1,
+                        'subjectOffsets': [1],
                         'landmarkName': 'AlphaHelix',
                         'subjectLength': 16
                     },
@@ -490,20 +515,18 @@ class TestDatabase(TestCase):
             {
                 0: [
                     {
-                        'distance': 10,
                         'landmarkLength': 9,
                         'landmarkName': 'AlphaHelix',
                         'readOffset': 0,
-                        'subjectOffset': 0,
+                        'subjectOffsets': [0],
                         'trigPointName': 'Peaks',
                         'subjectLength': 15,
                     },
                     {
-                        'distance': 13,
                         'landmarkLength': 9,
                         'landmarkName': 'AlphaHelix',
                         'readOffset': 0,
-                        'subjectOffset': 0,
+                        'subjectOffsets': [0],
                         'trigPointName': 'Peaks',
                         'subjectLength': 15,
                     }

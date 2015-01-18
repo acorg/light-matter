@@ -1,25 +1,47 @@
 import matplotlib.pyplot as plt
+from matplotlib import patches
+from operator import attrgetter
 
 from light.reads import ScannedRead
 from light.database import Database
-from light.trig import findTrigPoint
-from light.landmarks import findLandmark
+from light.trig import findTrigPoint, ALL_TRIG_FINDER_CLASSES
+from light.landmarks import findLandmark, ALL_LANDMARK_FINDER_CLASSES
 
 from dark.dimension import dimensionalIterator
 
-COLORS = {'A': 'blue',
-          'B': 'cyan',
-          'C': '#00BFFF',
-          'T': '#08298A',
-          'S': '#819FF7',
-          'P': 'red',
-          'T': 'orange',
-          'M': 'magenta',
-          'J': 'black',
-          'I': 'black',
-          'O': 'black',
-          'PS': '#A9E2F3',
-          'N': '#642EFE'}
+COLORS = {
+    'A': 'blue',
+    'B': 'cyan',
+    'C': '#00BFFF',
+    'GA': 'magenta',
+    'GB': '#08298A',
+    'GC': 'green',
+    'I': 'black',
+    'J': 'black',
+    'M': 'magenta',
+    'N': '#642EFE',
+    'O': 'black',
+    'P': 'red',
+    'PS': '#A9E2F3',
+    'S': '#819FF7',
+    'T': 'orange',
+}
+
+# From http://www.randalolson.com/2014/06/28/how-to-make-beautiful-data-\
+# visualizations-in-python-with-matplotlib/
+#
+# These are the "Tableau 20" colors as RGB.
+tableau20 = [
+    (31, 119, 180), (174, 199, 232), (255, 127, 14), (255, 187, 120),
+    (44, 160, 44), (152, 223, 138), (214, 39, 40), (255, 152, 150),
+    (148, 103, 189), (197, 176, 213), (140, 86, 75), (196, 156, 148),
+    (227, 119, 194), (247, 182, 210), (127, 127, 127), (199, 199, 199),
+    (188, 189, 34), (219, 219, 141), (23, 190, 207), (158, 218, 229)]
+
+# Scale the RGB values to the [0, 1] range, the format matplotlib accepts.
+for i in range(len(tableau20)):
+    r, g, b = tableau20[i]
+    tableau20[i] = (r / 255., g / 255., b / 255.)
 
 
 def plotHistogram(query, subject, landmarks=None, trigPoints=None,
@@ -244,3 +266,118 @@ def plotFeaturePanel(reads, landmarks=None, trigs=None, limitPerLandmark=None,
                     fontsize=20)
     figure.set_size_inches(5 * cols, 3 * rows, forward=True)
     figure.show()
+
+
+def plotFeatureSquare(read, landmarks=None, trigs=None, limitPerLandmark=None,
+                      maxDistance=None, minDistance=None, readsAx=None):
+    """
+    Plot the positions of landmark and trigpoint pairs on a sequence in a
+    square.
+
+    @param read: A C{dark.reads.Read} instance.
+    @param landmark: a C{list} of C{str} of landmark finder names.
+    @param trig: a C{list} of C{str} of trig finder names.
+    @param limitPerLandmark: An C{int} limit on the number of pairs to
+        yield per landmark.
+    @param maxDistance: The C{int} maximum distance permitted between
+        yielded pairs.
+    @param minDistance: The C{int} minimum distance permitted between
+        yielded pairs.
+    @param readsAx: If not None, use this as the subplot for displaying reads.
+    """
+    fig = plt.figure(figsize=(15, 15))
+    readsAx = readsAx or fig.add_subplot(111)
+
+    landmarks = landmarks or []
+    trigs = trigs or []
+
+    if len(landmarks) + len(trigs) == 0:
+        raise ValueError('You must specify either landmarks or trig points to '
+                         'find.')
+
+    key = attrgetter('NAME')
+    allFeatures = [
+        (k.NAME, k.SYMBOL) for k in
+        sorted(ALL_LANDMARK_FINDER_CLASSES | ALL_TRIG_FINDER_CLASSES,
+               key=key)
+    ]
+
+    COL = dict(zip([feature[1] for feature in allFeatures], tableau20))
+    featuresSeen = set()
+
+    # Make sure all landmark finders requested exist.
+    landmarkFinders = []
+    for landmarkFinderName in landmarks:
+        landmarkFinderClass = findLandmark(landmarkFinderName)
+        if landmarkFinderClass:
+            landmarkFinders.append(landmarkFinderClass().find)
+        else:
+            raise ValueError('Could not find landmark finder %r.' % (
+                             landmarkFinderName))
+
+    # Make sure all trig point finders requested exist.
+    trigFinders = []
+    for trigFinderName in trigs:
+        trigFinderClass = findTrigPoint(trigFinderName)
+        if trigFinderClass:
+            trigFinders.append(trigFinderClass().find)
+        else:
+            raise ValueError('Could not find trig point finder %r.' % (
+                             trigFinderName))
+
+    # Find all landmarks and trig points on the read.
+    scannedRead = ScannedRead(read)
+
+    for trigFinder in trigFinders:
+        for trigPoint in trigFinder(read):
+            scannedRead.trigPoints.append(trigPoint)
+            # readsAx.axhline(trigPoint.offset, color='#f4f4f4')
+    for landmarkFinder in landmarkFinders:
+        for landmark in landmarkFinder(read):
+            scannedRead.landmarks.append(landmark)
+            # readsAx.axvspan(landmark.offset, landmark.offset +
+            # landmark.length, color='#cccccc')
+
+    # plot landmarks and trig point pairs.
+    totalCoveredResidues = len(scannedRead.coveredIndices())
+
+    x = []
+    y = []
+    colors = []
+    for landmark, trigPoint in scannedRead.getPairs(
+            limitPerLandmark=limitPerLandmark,
+            maxDistance=maxDistance, minDistance=minDistance):
+        trigPointColor = COL[trigPoint.symbol]
+        # readsAx.axhline(trigPoint.offset, color='#cccccc')
+        landmarkColor = COL[landmark.symbol]
+        x.append(landmark.offset)
+        y.append(trigPoint.offset)
+        colors.append(trigPointColor)
+        readsAx.scatter(x, y, c=colors, edgecolors='none')
+        # readsAx.axvspan(landmark.offset, landmark.offset + landmark.length,
+        # color=landmarkColor)
+        readsAx.plot([landmark.offset, landmark.offset + landmark.length],
+                     [landmark.offset, landmark.offset], '-',
+                     color=landmarkColor, linewidth=4)
+        featuresSeen.add(landmark.name)
+        featuresSeen.add(trigPoint.name)
+
+    readsAx.set_title('%s\n Length: %d, covered residues: %s' % (read.id,
+                      len(read), totalCoveredResidues), fontsize=20)
+    readsAx.set_xlabel('Landmark offset', fontsize=16)
+    readsAx.set_ylabel('Trig point offset', fontsize=16)
+
+    readsAx.set_xlim(0, len(read.sequence))
+    readsAx.set_ylim(0, len(read.sequence))
+
+    legendHandles = []
+    for name, symbol in allFeatures:
+        if name in featuresSeen:
+            color = COL[symbol]
+            patch = patches.Patch(color=color, label=name)
+            legendHandles.append(patch)
+
+    readsAx.legend(handles=legendHandles, loc=2)
+    readsAx.grid()
+
+    return scannedRead

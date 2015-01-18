@@ -12,8 +12,10 @@ from dark.fasta import FastaReads
 from dark.reads import AARead
 
 import light
-from light.landmarks import findLandmark, DEFAULT_LANDMARK_FINDER_CLASSES
-from light.trig import findTrigPoint, DEFAULT_TRIG_FINDER_CLASSES
+from light.landmarks import (findLandmark, DEFAULT_LANDMARK_FINDER_CLASSES,
+                             ALL_LANDMARK_FINDER_CLASSES)
+from light.trig import (findTrigPoint, DEFAULT_TRIG_FINDER_CLASSES,
+                        ALL_TRIG_FINDER_CLASSES)
 from light.database import Database
 
 
@@ -54,43 +56,48 @@ MTP = AARead(("gi|568786774|pdb|4MTP_A|Chain A, Rdrp From Japanesese "
               "DRVI"))
 
 
-def makeScatterplot(lmScores, scores, scoreType, outFile, regression=False):
+def makeScatterplot(lightScores, otherScores, scoreType, outFile, dataset,
+                    regression=False):
     """
     Make a scatterplot of the light matter score and another score.
 
-    @param lmScores: A C{list} of light matter scores.
-    @param scores: A C{list} of other scores.
+    @param lightScores: A C{list} of light matter scores.
+    @param otherScores: A C{list} of other scores.
     @param scoreType: A C{str} describing the type of scores in scores. Must be
         one of 'pid', 'z', 'rmsd'.
     @param outFile: The C{str} name of the file where the figure will be
         written to.
+    @param dataset: The C{str} name of the dataset that was used to make the
+        plot.
     @param regression: If True, a regression line will be added to the figure.
     """
     fig = plt.figure(figsize=(7, 5))
     ax = fig.add_subplot(111)
 
-    plt.plot(lm, s, 'o', markerfacecolor='blue', markeredgecolor='white')
+    plt.plot(lightScores, otherScores, 'o', markerfacecolor='blue',
+             markeredgecolor='white')
 
-    if args.regression:
-        slope, intercept, rValue, pValue, se = stats.linregress(lm, s)
-        plt.plot([0, max(lm)], [intercept, slope * max(lm) + intercept], '-',
-                 color='black')
+    if regression:
+        slope, intercept, rValue, pValue, se = stats.linregress(lightScores,
+                                                                otherScores)
+        plt.plot([0, max(lightScores)], [intercept,
+                 slope * max(lightScores) + intercept], '-', color='black')
 
     # labels
     ax.set_xlabel('Light matter score')
-    ax.set_ylabel(args.score)
-    if args.regression:
+    ax.set_ylabel(scoreType)
+    if regression:
         ax.set_title('%s, R^2: %.2f, SE: %.2f, slope: %.2f, p: %.2f' % (
-                     args.dataset, rValue, se, slope, pValue))
+                     dataset, rValue, se, slope, pValue))
     else:
-        ax.set_title(args.dataset)
+        ax.set_title(dataset)
 
     # axes
     ax.spines['top'].set_linewidth(0.5)
     ax.spines['right'].set_linewidth(0.5)
     ax.spines['bottom'].set_linewidth(0.5)
     ax.spines['left'].set_linewidth(0.5)
-    fig.savefig(args.outFile)
+    fig.savefig(outFile)
     print >>sys.stderr, 'Wrote scatterplot to %s.' % args.outFile
 
 if __name__ == '__main__':
@@ -110,13 +117,13 @@ if __name__ == '__main__':
 
     parser.add_argument(
         '--landmark', action='append', dest='landmarkFinderNames',
-        choices=sorted(cl.NAME for cl in DEFAULT_LANDMARK_FINDER_CLASSES),
+        choices=sorted(cl.NAME for cl in ALL_LANDMARK_FINDER_CLASSES),
         help='The name of a landmark finder to use. May be specified '
         'multiple times.')
 
     parser.add_argument(
         '--trig', action='append', dest='trigFinderNames',
-        choices=sorted(cl.NAME for cl in DEFAULT_TRIG_FINDER_CLASSES),
+        choices=sorted(cl.NAME for cl in ALL_TRIG_FINDER_CLASSES),
         help='The name of a trig point finder to use. May be specified '
         'multiple times.')
 
@@ -199,10 +206,7 @@ if __name__ == '__main__':
                         args.limitPerLandmark, args.maxDistance,
                         args.minDistance, args.bucketFactor)
 
-    reads = FastaReads(databaseFile)
-
-    for r in reads:
-        database.addSubject(r)
+    map(database.addSubject, FastaReads(databaseFile))
 
     print >>sys.stderr, 'Database built in %.2f seconds.' % (time() -
                                                              startTime)
@@ -220,16 +224,16 @@ if __name__ == '__main__':
                                           'pid': scores['pid'],
                                           'lm': 0}
     for subjectIndex in result.significant():
-        lmScore = result.analysis[subjectIndex]['score']
-        lmTitle = database.subjectInfo[subjectIndex][0]
-        allScores[lmTitle]['lm'] = lmScore
+        lightScore = result.analysis[subjectIndex]['score']
+        lightTitle = database.subjectInfo[subjectIndex][0]
+        allScores[lightTitle]['lm'] = lightScore
 
     # data for plotting
-    lm = []
-    s = []
+    lightScores = []
+    otherScores = []
     for t in allScores:
-        lm.append(allScores[t]['lm'])
-        s.append(allScores[t][args.score])
+        lightScores.append(allScores[t]['lm'])
+        otherScores.append(allScores[t][args.score])
 
-    makeScatterplot(lm, s, args.score, args.outFile,
+    makeScatterplot(lightScores, otherScores, args.score, args.outFile,
                     regression=args.regression)

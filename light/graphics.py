@@ -6,6 +6,7 @@ from light.reads import ScannedRead
 from light.database import Database
 from light.trig import findTrigPoint, ALL_TRIG_FINDER_CLASSES
 from light.landmarks import findLandmark, ALL_LANDMARK_FINDER_CLASSES
+from light.features import Landmark
 
 from dark.dimension import dimensionalIterator
 
@@ -341,6 +342,9 @@ def plotFeatureSquare(read, landmarks=None, trigs=None, limitPerLandmark=None,
     # plot landmarks and trig point pairs.
     totalCoveredResidues = len(scannedRead.coveredIndices())
 
+    readsAx.plot([0, len(read.sequence)], [0, len(read.sequence)], '-',
+                 color='#f0f0f0', linewidth=1)
+
     x = []
     y = []
     colors = []
@@ -352,13 +356,16 @@ def plotFeatureSquare(read, landmarks=None, trigs=None, limitPerLandmark=None,
         landmarkColor = COL[landmark.symbol]
         x.append(landmark.offset)
         y.append(trigPoint.offset)
-        colors.append(trigPointColor)
+        if isinstance(trigPoint, Landmark):
+            colors.append((0.9, 0.9, 0.9))
+        else:
+            colors.append(trigPointColor)
         readsAx.scatter(x, y, c=colors, edgecolors='none')
         # readsAx.axvspan(landmark.offset, landmark.offset + landmark.length,
         # color=landmarkColor)
         readsAx.plot([landmark.offset, landmark.offset + landmark.length],
                      [landmark.offset, landmark.offset], '-',
-                     color=landmarkColor, linewidth=4)
+                     color=landmarkColor, linewidth=2)
         featuresSeen.add(landmark.name)
         featuresSeen.add(trigPoint.name)
 

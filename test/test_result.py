@@ -31,10 +31,9 @@ class TestResult(TestCase):
             0: [
                 {
                     'trigPointName': 'Peaks',
-                    'distance': -13,
                     'landmarkLength': 9,
                     'landmarkName': 'AlphaHelix',
-                    'subjectOffset': 2,
+                    'subjectOffsets': [2],
                     'readOffset': 1,
                     'subjectLength': 100,
                 },
@@ -53,19 +52,9 @@ class TestResult(TestCase):
             0: [
                 {
                     'trigPointName': 'Peaks',
-                    'distance': -13,
                     'landmarkLength': 9,
                     'landmarkName': 'AlphaHelix',
-                    'subjectOffset': 2,
-                    'readOffset': 1,
-                    'subjectLength': 100,
-                },
-                {
-                    'trigPointName': 'Peaks',
-                    'distance': -13,
-                    'landmarkLength': 9,
-                    'landmarkName': 'AlphaHelix',
-                    'subjectOffset': 2,
+                    'subjectOffsets': [2, 10],
                     'readOffset': 1,
                     'subjectLength': 100,
                 },
@@ -84,28 +73,25 @@ class TestResult(TestCase):
             0: [
                 {
                     'trigPointName': 'Peaks',
-                    'distance': 0,
                     'landmarkLength': 9,
                     'landmarkName': 'AlphaHelix',
-                    'subjectOffset': 0,
+                    'subjectOffsets': [0],
                     'readOffset': 0,
                     'subjectLength': 100,
                 },
                 {
                     'trigPointName': 'Peaks',
-                    'distance': 0,
                     'landmarkLength': 9,
                     'landmarkName': 'AlphaHelix',
-                    'subjectOffset': 0,
+                    'subjectOffsets': [0],
                     'readOffset': 0,
                     'subjectLength': 100,
                 },
                 {
                     'trigPointName': 'Peaks',
-                    'distance': -10,
                     'landmarkLength': 9,
                     'landmarkName': 'AlphaHelix',
-                    'subjectOffset': 10,
+                    'subjectOffsets': [10],
                     'readOffset': 0,
                     'subjectLength': 100,
                 },
@@ -126,28 +112,25 @@ class TestResult(TestCase):
             0: [
                 {
                     'trigPointName': 'Peaks',
-                    'distance': 0,
                     'landmarkLength': 9,
                     'landmarkName': 'AlphaHelix',
-                    'subjectOffset': 0,
+                    'subjectOffsets': [0],
                     'readOffset': 0,
                     'subjectLength': 100,
                 },
                 {
                     'trigPointName': 'Peaks',
-                    'distance': 0,
                     'landmarkLength': 9,
                     'landmarkName': 'AlphaHelix',
-                    'subjectOffset': 0,
+                    'subjectOffsets': [0],
                     'readOffset': 0,
                     'subjectLength': 100,
                 },
                 {
                     'trigPointName': 'Peaks',
-                    'distance': -10,
                     'landmarkLength': 9,
                     'landmarkName': 'AlphaHelix',
-                    'subjectOffset': 10,
+                    'subjectOffsets': [10],
                     'readOffset': 0,
                     'subjectLength': 100,
                 },
@@ -156,19 +139,17 @@ class TestResult(TestCase):
             1: [
                 {
                     'trigPointName': 'Peaks',
-                    'distance': 0,
                     'landmarkLength': 9,
                     'landmarkName': 'AlphaHelix',
-                    'subjectOffset': 0,
+                    'subjectOffsets': [0],
                     'readOffset': 0,
                     'subjectLength': 1000,
                 },
                 {
                     'trigPointName': 'Peaks',
-                    'distance': 0,
                     'landmarkLength': 9,
                     'landmarkName': 'AlphaHelix',
-                    'subjectOffset': 0,
+                    'subjectOffsets': [0],
                     'readOffset': 0,
                     'subjectLength': 1000,
                 },
@@ -216,10 +197,9 @@ class TestResult(TestCase):
             0: [
                 {
                     'trigPointName': 'AlphaHelix',
-                    'distance': -27,
                     'landmarkLength': 9,
                     'readOffset': 0,
-                    'subjectOffset': 0,
+                    'subjectOffsets': [0],
                     'landmarkName': 'AlphaHelix',
                     'subjectLength': 1000,
                 },
@@ -228,10 +208,9 @@ class TestResult(TestCase):
             27: [
                 {
                     'trigPointName': 'AlphaHelix',
-                    'distance': 27,
                     'landmarkLength': 13,
                     'readOffset': 27,
-                    'subjectOffset': 27,
+                    'subjectOffsets': [27],
                     'landmarkName': 'AlphaHelix',
                     'subjectLength': 100,
                 },
@@ -247,11 +226,10 @@ class TestResult(TestCase):
                     {
                         'matchInfo': [
                             {
-                                'distance': -27,
                                 'landmarkLength': 9,
                                 'landmarkName': 'AlphaHelix',
                                 'readOffset': 0,
-                                'subjectOffset': 0,
+                                'subjectOffsets': [0],
                                 'trigPointName': 'AlphaHelix',
                                 'subjectLength': 1000,
                             },
@@ -262,11 +240,10 @@ class TestResult(TestCase):
                     {
                         'matchInfo': [
                             {
-                                'distance': 27,
                                 'landmarkLength': 13,
                                 'landmarkName': 'AlphaHelix',
                                 'readOffset': 27,
-                                'subjectOffset': 27,
+                                'subjectOffsets': [27],
                                 'trigPointName': 'AlphaHelix',
                                 'subjectLength': 100,
                             },
@@ -289,10 +266,9 @@ class TestResult(TestCase):
             0: [
                 {
                     'trigPointName': 'Peaks',
-                    'distance': -13,
                     'landmarkLength': 9,
                     'landmarkName': 'AlphaHelix',
-                    'subjectOffset': 2,
+                    'subjectOffsets': [2],
                     'readOffset': 1,
                     'subjectLength': 20,
                 },
@@ -311,10 +287,9 @@ class TestResult(TestCase):
             0: [
                 {
                     'trigPointName': 'Peaks',
-                    'distance': -13,
                     'landmarkLength': 9,
                     'landmarkName': 'AlphaHelix',
-                    'subjectOffset': 2,
+                    'subjectOffsets': [2],
                     'readOffset': 1,
                     'subjectLength': 20,
                 },

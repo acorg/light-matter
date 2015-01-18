@@ -15,7 +15,7 @@ class TestSymbols(TestCase):
         trigSymbols = [symbol.SYMBOL for symbol in ALL_TRIG_FINDER_CLASSES]
         lmSymbols = [symbol.SYMBOL for symbol in ALL_LANDMARK_FINDER_CLASSES]
         symbols = trigSymbols + lmSymbols
-        self.assertEqual(14, len(symbols))
+        self.assertEqual(15, len(symbols))
 
     def testAllLandmarkSymbolsAreDifferent(self):
         """

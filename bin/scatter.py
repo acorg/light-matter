@@ -55,6 +55,12 @@ MTP = AARead(("gi|568786774|pdb|4MTP_A|Chain A, Rdrp From Japanesese "
               "TDVPYVGKREDIWCGSLIGTRSRATWAENIYAAINQVRAVIGKENYVDYMTSLRRYEDVLIQE"
               "DRVI"))
 
+DATASETS = {
+    '2VQ0': VQ,
+    '3NXG': NXG,
+    '4MTP': MTP,
+}
+
 
 def makeScatterplot(lightScores, otherScores, scoreType, outFile, dataset,
                     regression=False):
@@ -98,7 +104,7 @@ def makeScatterplot(lightScores, otherScores, scoreType, outFile, dataset,
     ax.spines['bottom'].set_linewidth(0.5)
     ax.spines['left'].set_linewidth(0.5)
     fig.savefig(outFile)
-    print >>sys.stderr, 'Wrote scatterplot to %s.' % args.outFile
+    print >>sys.stderr, 'Wrote scatterplot to %s.' % outFile
 
 if __name__ == '__main__':
     startTime = time()
@@ -108,7 +114,7 @@ if __name__ == '__main__':
         'either percent sequence identity, Z-score or RMSD.')
 
     parser.add_argument(
-        '--dataset', choices=('2VQ0', '3NXG', '4MTP'),
+        '--dataset', choices=(DATASETS.keys()),
         help='The name of the dataset which should be used.')
 
     parser.add_argument(
@@ -193,12 +199,9 @@ if __name__ == '__main__':
     daliResultFile = join(dirname(light.__file__), '..', 'data',
                           '%s.json' % args.dataset)
 
-    if args.dataset == '2VQ0':
-        read = VQ
-    elif args.dataset == '3NXG':
-        read = NXG
-    elif args.dataset == '4MTP':
-        read = MTP
+    read = DATASETS.get(args.dataset.upper())
+    if read is None:
+        raise KeyError('%s is not a valid dataset.' % args.dataset)
 
     startTime = time()
     # Create the database, add reads to it.
@@ -236,4 +239,4 @@ if __name__ == '__main__':
         otherScores.append(allScores[t][args.score])
 
     makeScatterplot(lightScores, otherScores, args.score, args.outFile,
-                    regression=args.regression)
+                    args.dataset, regression=args.regression)

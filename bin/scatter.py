@@ -209,7 +209,7 @@ if __name__ == '__main__':
                         args.limitPerLandmark, args.maxDistance,
                         args.minDistance, args.bucketFactor)
 
-    map(database.addSubject, FastaReads(databaseFile))
+    map(database.addSubject, FastaReads(databaseFile, readClass=AARead))
 
     print >>sys.stderr, 'Database built in %.2f seconds.' % (time() -
                                                              startTime)

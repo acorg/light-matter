@@ -182,7 +182,7 @@ class TestScannedRead(TestCase):
 
     def testGetPairsOneLandmarkTwoTrigPoints(self):
         """
-        If a scanned read has one landmark and two trig point, its getPairs
+        If a scanned read has one landmark and two trig points, its getPairs
         method should generate two pairs.
         """
         read = ScannedRead(AARead('id', 'AAAAA'))

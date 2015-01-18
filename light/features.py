@@ -97,12 +97,13 @@ class CombinedFeatureList(object):
     @param trigPoints: An iterable of L{TrigPoint} instances.
     """
     def __init__(self, landmarks, trigPoints):
-        self._features = SortedCollection(landmarks + trigPoints,
-                                          key=attrgetter('offset'))
+        self.landmarks = landmarks
+        self.trigPoints = trigPoints
 
     def nearest(self, offset, maxDistance=None, minDistance=None):
         """
-        Find the features nearest to the given offset.
+        Find the features nearest to the given offset. The first features
+        returned will be landmarks, and then trig points.
 
         @param offset: The C{int} offset whose nearest features are wanted.
         @param maxDistance: The C{int} maximum distance a feature may be from
@@ -111,27 +112,57 @@ class CombinedFeatureList(object):
             the given offset.
         @return: A generator that yields nearby features.
         """
+        key = attrgetter('offset')
 
-        nFeatures = len(self._features)
+        # Sort the landmarks separately first and return them. We will sort
+        # the trig points only if we need to. Remember that we are returning
+        # a generator and our caller may not call next() enough times to
+        # trigger the second (trig point) sort.
+
+        features = SortedCollection(self.landmarks, key=key)
+        for feature in self._nearest(offset, features, maxDistance,
+                                     minDistance):
+            yield feature
+
+        features = SortedCollection(self.trigPoints, key=key)
+        for feature in self._nearest(offset, features, maxDistance,
+                                     minDistance):
+            yield feature
+
+    def _nearest(self, offset, features, maxDistance, minDistance):
+        """
+        Helper function for finding the features in a given sorted collection
+        nearest to a given offset.
+
+        @param offset: The C{int} offset whose nearest features are wanted.
+        @param features: An instance of C{SortedCollection}.
+        @param maxDistance: The C{int} maximum distance a feature may be from
+            the given offset to be considered.
+        @param minDistance: The C{int} minimum distance between a feature and
+            the given offset.
+        @return: A generator that yields nearby features.
+        """
+
+        nFeatures = len(features)
 
         # Set right to be the index of the first feature with offset
         # greater than or equal to the wanted offset.
         try:
-            rightFeature = self._features.find_ge(offset)
+            rightFeature = features.find_ge(offset)
         except ValueError:
             right = nFeatures
         else:
-            right = self._features.index(rightFeature)
+            right = features.index(rightFeature)
 
         left = right - 1
 
         while True:
             if left >= 0:
-                leftDelta = abs(self._features[left].offset - offset)
+                leftDelta = abs(features[left].offset - offset)
             else:
                 leftDelta = None
             if right < nFeatures:
-                rightDelta = abs(self._features[right].offset - offset)
+                rightDelta = abs(features[right].offset - offset)
             else:
                 rightDelta = None
 
@@ -143,7 +174,7 @@ class CombinedFeatureList(object):
                     # We only have a right neighboring feature.
                     if maxDistance is None or rightDelta <= maxDistance:
                         if minDistance is None or rightDelta >= minDistance:
-                            yield self._features[right]
+                            yield features[right]
                             right += 1
                         else:
                             # the offset is smaller than the minDistance,
@@ -158,7 +189,7 @@ class CombinedFeatureList(object):
                     # We only have a left neighboring feature.
                     if maxDistance is None or leftDelta <= maxDistance:
                         if minDistance is None or leftDelta >= minDistance:
-                            yield self._features[left]
+                            yield features[left]
                             left -= 1
                         else:
                             # the offset is smaller than the minDistance,
@@ -173,7 +204,7 @@ class CombinedFeatureList(object):
                     if leftDelta < rightDelta:
                         if maxDistance is None or leftDelta <= maxDistance:
                             if minDistance is None or leftDelta >= minDistance:
-                                yield self._features[left]
+                                yield features[left]
                                 left -= 1
                             else:
                                 # the offset is smaller than the minDistance,
@@ -187,7 +218,7 @@ class CombinedFeatureList(object):
                         if maxDistance is None or rightDelta <= maxDistance:
                             if (minDistance is None or
                                     rightDelta >= minDistance):
-                                yield self._features[right]
+                                yield features[right]
                                 right += 1
                             else:
                                 # the offset is smaller than the minDistance,

@@ -175,17 +175,18 @@ class TestCombinedFeatureList(TestCase):
         result = list(cfl.nearest(4))
         self.assertEqual([landmark, trigPoint], result)
 
-    def testFindTrigPointAndLandmark(self):
+    def testFindTrigPointAndLandmarkWithLandmarkFirst(self):
         """
         If a combined feature list has one landmark and one trig point within
         range, with the trig point closest to the passed offset, the nearest
-        method should yield them both, with the trig point first.
+        method should yield them both, with the landmark first (because
+        landmarks are prioritized ahead of trig points).
         """
         landmark = Landmark('name1', 'L', 0, 1)
         trigPoint = TrigPoint('name2', 'T', 10)
         cfl = CombinedFeatureList([landmark], [trigPoint])
         result = list(cfl.nearest(6))
-        self.assertEqual([trigPoint, landmark], result)
+        self.assertEqual([landmark, trigPoint], result)
 
     def testFindLandmarkAndTrigPointMaxDistance(self):
         """
@@ -215,14 +216,14 @@ class TestCombinedFeatureList(TestCase):
         """
         If a combined feature list has one landmark and one trig point and the
         passed offset is larger than both their offsets, the nearest method
-        should yield them both (trig point first, seeing as it is closest to
-        the offset).
+        should yield them both (landmarks first, due to landmark priority,
+        even though it is further away than the trig point).
         """
         landmark = Landmark('name1', 'L', 0, 1)
         trigPoint = TrigPoint('name2', 'T', 10)
         cfl = CombinedFeatureList([landmark], [trigPoint])
         result = list(cfl.nearest(20))
-        self.assertEqual([trigPoint, landmark], result)
+        self.assertEqual([landmark, trigPoint], result)
 
     def testFindMany(self):
         """
@@ -247,18 +248,19 @@ class TestCombinedFeatureList(TestCase):
 
     def testFindAllMinDistance(self):
         """
-        If a combined feature list has all landmarks and trig points inside the
-        minDistance, find all.
+        If a combined feature list has all landmarks and trig points beyond the
+        minDistance, find all, with the landmarks first.
         """
         landmark = Landmark('name1', 'L', 0, 1)
-        trigPoint = TrigPoint('name2', 'T', 10)
-        cfl = CombinedFeatureList([landmark], [trigPoint])
+        trigPoint1 = TrigPoint('name2', 'T', 10)
+        trigPoint2 = TrigPoint('name3', 'T', 11)
+        cfl = CombinedFeatureList([landmark], [trigPoint1, trigPoint2])
         result = list(cfl.nearest(6, minDistance=1))
-        self.assertEqual([trigPoint, landmark], result)
+        self.assertEqual([landmark, trigPoint1, trigPoint2], result)
 
     def testFindNoneMinDistance(self):
         """
-        If a combined feature list has no landmarks and trig points outside the
+        If a combined feature list has no landmarks and trig points beyond the
         minDistance, find none.
         """
         landmark = Landmark('name1', 'L', 0, 1)

@@ -8,8 +8,10 @@ from os.path import basename
 from dark.fasta import FastaReads
 from dark.reads import Reads, AARead
 
-from light.landmarks import findLandmark, DEFAULT_LANDMARK_FINDER_CLASSES
-from light.trig import findTrigPoint, DEFAULT_TRIG_FINDER_CLASSES
+from light.landmarks import (findLandmark, DEFAULT_LANDMARK_FINDER_CLASSES,
+                             ALL_LANDMARK_FINDER_CLASSES)
+from light.trig import (findTrigPoint, DEFAULT_TRIG_FINDER_CLASSES,
+                        ALL_TRIG_FINDER_CLASSES)
 from light.database import Database
 
 
@@ -34,13 +36,13 @@ if __name__ == '__main__':
 
     parser.add_argument(
         '--landmark', action='append', dest='landmarkFinderNames',
-        choices=sorted(cl.NAME for cl in DEFAULT_LANDMARK_FINDER_CLASSES),
+        choices=sorted(cl.NAME for cl in ALL_LANDMARK_FINDER_CLASSES),
         help='The name of a landmark finder to use. May be specified '
         'multiple times.')
 
     parser.add_argument(
         '--trig', action='append', dest='trigFinderNames',
-        choices=sorted(cl.NAME for cl in DEFAULT_TRIG_FINDER_CLASSES),
+        choices=sorted(cl.NAME for cl in ALL_TRIG_FINDER_CLASSES),
         help='The name of a trig point finder to use. May be specified '
         'multiple times.')
 

@@ -16,9 +16,9 @@ class AminoAcids(object):
 
         @param read: An instance of C{dark.reads.AARead}.
         @param aa: A list of the single letter codes of amino acids. The
-            default is ['C', 'W'].
+            default is [W'].
         """
-        aa = aa or ['C', 'W']
+        aa = aa or ['W']
 
         for i, base in enumerate(read.sequence):
             if base in aa:

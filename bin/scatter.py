@@ -99,6 +99,10 @@ def makeScatterplot(lightScores, otherScores, scoreType, outFile, dataset,
         ax.set_title(dataset)
 
     # axes
+    if scoreType == 'z':
+        ax.set_ylim(0, 70)
+    ax.set_xlim(0, 12000)
+    #ax.set_xlim(0, 3000)
     ax.spines['top'].set_linewidth(0.5)
     ax.spines['right'].set_linewidth(0.5)
     ax.spines['bottom'].set_linewidth(0.5)
@@ -162,9 +166,9 @@ if __name__ == '__main__':
 
     landmarkFinderNames = (args.landmarkFinderNames or
                            [klass.NAME for klass in
-                            DEFAULT_LANDMARK_FINDER_CLASSES])
+                            ALL_LANDMARK_FINDER_CLASSES])
     trigFinderNames = (args.trigFinderNames or
-                       [klass.NAME for klass in DEFAULT_TRIG_FINDER_CLASSES])
+                       [klass.NAME for klass in ALL_TRIG_FINDER_CLASSES])
 
     if len(landmarkFinderNames) + len(trigFinderNames) == 0:
         print >>sys.stderr, ('You must specify either landmark or trig point '

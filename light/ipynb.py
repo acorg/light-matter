@@ -8,16 +8,19 @@ from dark.html import (
     summarizeTitlesByMedianScore, summarizeTitlesByCount,
     summarizeTitlesByTitle)
 from .alignments import LightReadsAlignments
-from .graphics import plotFeatures, plotHistogram
+from .graphics import (
+    plotFeatures, plotHistogram, plotFeaturePanel, plotFeatureSquare)
 
 # Keep pyflakes quiet by pretending to make use of all our imports.
 _ = (FastaReads, LightReadsAlignments, titleCounts, TitlesAlignments,
      summarizeTitlesByLength, summarizeTitlesByMaxScore,
      summarizeTitlesByMedianScore, summarizeTitlesByCount,
-     summarizeTitlesByTitle, plotFeatures)
+     summarizeTitlesByTitle, plotFeatures, plotHistogram, plotFeaturePanel,
+     plotFeatureSquare)
 
 __all__ = [
     'FastaReads', 'LightReadsAlignments', 'titleCounts', 'TitlesAlignments',
     'summarizeTitlesByLength', 'summarizeTitlesByMaxScore',
     'summarizeTitlesByMedianScore', 'summarizeTitlesByCount',
-    'summarizeTitlesByTitle', 'plotFeatures', 'plotHistogram']
+    'summarizeTitlesByTitle', 'plotFeatures', 'plotHistogram',
+    'plotFeaturePanel', 'plotFeatureSquare']

@@ -78,7 +78,7 @@ if __name__ == '__main__':
 
     # Add AA sequences from a FASTA file, if given.
     if args.fastaFile:
-        reads = FastaReads(args.fastaFile)
+        reads = FastaReads(args.fastaFile, readClass=AARead)
     else:
         if args.sequences is None:
             print >>sys.stderr, (

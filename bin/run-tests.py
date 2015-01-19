@@ -6,6 +6,7 @@ from time import time
 from os.path import basename
 
 from dark.fasta import FastaReads
+from dark.reads import AARead
 
 from light.landmarks import findLandmark, ALL_LANDMARK_FINDER_CLASSES
 from light.trig import findTrigPoint, ALL_TRIG_FINDER_CLASSES
@@ -96,7 +97,7 @@ if __name__ == '__main__':
     database = Database(landmarkFinderClasses, trigFinderClasses,
                         args.limitPerLandmark, args.maxDistance,
                         args.minDistance, args.bucketFactor)
-    databaseReads = FastaReads(args.databaseFasta)
+    databaseReads = FastaReads(args.databaseFasta, readClass=AARead)
     for read in databaseReads:
         database.addRead(read)
 
@@ -109,7 +110,7 @@ if __name__ == '__main__':
 
     matches = 0
     readMatch = 0
-    lookupReads = FastaReads(args.sequenceFasta)
+    lookupReads = FastaReads(args.sequenceFasta, readClass=AARead)
     for read in lookupReads:
         result = database.find(read)
         if len(result.significant) > 0:

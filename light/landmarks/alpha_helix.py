@@ -8,7 +8,7 @@ ALPHAHELIX = re.compile('OIIIO(?:IIIO)+')
 
 class AlphaHelix(object):
     """
-    A class for computing statistics based on alpha helices.  Based
+    A class for computing statistics based on alpha helices. Based
     around the assumption that an alpha helix is composed of three times
     one hydrophobic and 3 hydrophilic amino acids.
 
@@ -43,6 +43,6 @@ class AlphaHelix(object):
         for match in ALPHAHELIX.finditer(hhProperties):
             start = match.start()
             end = match.end()
-            repeatCount = (end - start - 1) >> 2
+            symbolDetail = (end - start - 1) >> 2
             yield Landmark(self.NAME, self.SYMBOL, start, end - start,
-                           repeatCount)
+                           symbolDetail)

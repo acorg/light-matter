@@ -9,17 +9,16 @@ class AminoAcids(object):
     NAME = 'AminoAcids'
     SYMBOL = 'M'
 
-    def find(self, read, aa=['C', 'W']):
+    def find(self, read, aa=None):
         """
         A function that checks if and where a specific amino acid occurs in a
         sequence.
 
         @param read: An instance of C{dark.reads.AARead}.
         @param aa: A list of the single letter codes of amino acids. The
-            default is ['C', 'W', as cysteines do not get substituted very
-            often.
+            default is [W'].
         """
-        aa = aa or ['C', 'W']
+        aa = aa or ['W']
 
         for i, base in enumerate(read.sequence):
             if base in aa:

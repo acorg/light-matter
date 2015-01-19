@@ -6,10 +6,11 @@ from time import time
 from os.path import basename
 
 from dark.fasta import FastaReads
+from dark.reads import AARead
 
-from light.landmarks import find as findLandmark, ALL_LANDMARK_FINDER_CLASSES
-from light.trig import find as findTrigPoint, ALL_TRIG_FINDER_CLASSES
-from light.database import ScannedReadDatabase
+from light.landmarks import findLandmark, ALL_LANDMARK_FINDER_CLASSES
+from light.trig import findTrigPoint, ALL_TRIG_FINDER_CLASSES
+from light.database import Database
 
 if __name__ == '__main__':
     startTime = time()
@@ -48,6 +49,15 @@ if __name__ == '__main__':
         '--maxDistance', type=int, default=None,
         help='The maximum distance permitted between yielded pairs.')
 
+    parser.add_argument(
+        '--minDistance', type=int, default=None,
+        help='The minimum distance permitted between yielded pairs.')
+
+    parser.add_argument(
+        '--bucketFactor', type=int, default=1,
+        help=('A factor by which the distance between landmark and trig point '
+              'is divided.'))
+
     args = parser.parse_args()
 
     landmarkFinderNames = (args.landmarkFinderNames or
@@ -80,13 +90,14 @@ if __name__ == '__main__':
             trigFinderClasses.append(trigFinderClass)
         else:
             print '%s: Could not find trig point finder %r.' % (
-                basename(sys.argv[0]), landmarkFinderName)
+                basename(sys.argv[0]), trigFinderName)
             sys.exit(1)
 
     # Create the database, add reads to it, print statistics.
-    database = ScannedReadDatabase(landmarkFinderClasses, trigFinderClasses,
-                                   args.limitPerLandmark, args.maxDistance)
-    databaseReads = FastaReads(args.databaseFasta)
+    database = Database(landmarkFinderClasses, trigFinderClasses,
+                        args.limitPerLandmark, args.maxDistance,
+                        args.minDistance, args.bucketFactor)
+    databaseReads = FastaReads(args.databaseFasta, readClass=AARead)
     for read in databaseReads:
         database.addRead(read)
 
@@ -99,7 +110,7 @@ if __name__ == '__main__':
 
     matches = 0
     readMatch = 0
-    lookupReads = FastaReads(args.sequenceFasta)
+    lookupReads = FastaReads(args.sequenceFasta, readClass=AARead)
     for read in lookupReads:
         result = database.find(read)
         if len(result.significant) > 0:

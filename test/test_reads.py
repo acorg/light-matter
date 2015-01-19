@@ -182,7 +182,7 @@ class TestScannedRead(TestCase):
 
     def testGetPairsOneLandmarkTwoTrigPoints(self):
         """
-        If a scanned read has one landmark and two trig point, its getPairs
+        If a scanned read has one landmark and two trig points, its getPairs
         method should generate two pairs.
         """
         read = ScannedRead(AARead('id', 'AAAAA'))
@@ -286,3 +286,19 @@ class TestScannedRead(TestCase):
             [(landmark1, landmark2), (landmark1, trigPoint1),
              (landmark2, landmark1), (landmark2, trigPoint1)],
             result)
+
+    def testGetPairsTwoLandmarksTwoTrigPointsMinDistanceThree(self):
+        """
+        If a scanned read has two landmarks and two trig points, its getPairs
+        method should generate one pair if a minimum distance of 3 is
+        passed and three trig points are too close.
+        """
+        read = ScannedRead(AARead('id', 'AAAAA'))
+        landmark1 = Landmark('name', 'L1', 0, 2)
+        landmark2 = Landmark('name', 'L2', 1, 2)
+        read.landmarks.extend([landmark1, landmark2])
+        trigPoint1 = TrigPoint('name', 'T1', 3)
+        trigPoint2 = TrigPoint('name', 'T2', 5)
+        read.trigPoints.extend([trigPoint1, trigPoint2])
+        result = list(read.getPairs(minDistance=5))
+        self.assertEqual([(landmark1, trigPoint2)], result)

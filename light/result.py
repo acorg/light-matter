@@ -1,73 +1,87 @@
 import sys
 import numpy as np
 from json import dumps
+from collections import defaultdict
 
 
-class ScannedReadDatabaseResult(object):
+class Result(object):
     """
-    A class that holds the results from a database lookup.
+    Hold the result of a database look-up on a read.
 
-    @param read: a C{dark.read.AARead} instance.
+    @param read: A C{dark.read.AARead} instance.
+    @param matches: A C{dict} of matches. Keys are C{int} subject indices.
+        Each value is a C{list} of C{dicts}, with each C{dict} containing the
+        following keys: 'landmarkLength', 'landmarkName',
+        'readOffset', 'subjectOffsets', and 'trigPointName'.
+    @param aboveMeanThreshold: A numeric amount by which the maximum count
+        across all buckets must exceed the mean bucket count for the
+        maximum bucket count to be considered significant.
+    @param bucketFactor: A C{int} factor by which the distance between
+        landmark and trig point is divided, to influence sensitivity.
+    @param storeAnalysis: A C{bool}. If C{True} the intermediate significance
+        analysis of each matched subject will be stored. Else it is discarded.
     """
-    def __init__(self, read):
-        self.matches = {}
+    def __init__(self, read, matches, aboveMeanThreshold, bucketFactor,
+                 storeAnalysis=False):
+        self.matches = matches
         self.read = read
-        self._finalized = False
-        self.significant = {}
-
-    def __str__(self):
-        if self._finalized:
-            return repr(self.significant)
-        else:
-            raise RuntimeError('You must call finalize() before printing.')
-
-    def addMatch(self, offsets, subjectIndex, subjectLength):
-        """
-        Add a match.
-
-        @param offsets: a C{dict} with information about the match.
-        @param subjectIndex: a C{int} index of the subject in the database.
-        @param subjectLength: a C{int} length of the subject.
-        """
-        if subjectIndex in self.matches:
-            self.matches[subjectIndex]['offsets'].append(offsets)
-        else:
-            self.matches[subjectIndex] = {
-                'subjectLength': subjectLength,
-                'offsets': [offsets],
+        self.analysis = defaultdict(dict)
+        for subjectIndex in matches:
+            offsets = [subjectOffset - match['readOffset']
+                       for match in matches[subjectIndex]
+                       for subjectOffset in match['subjectOffsets']]
+            maxLen = max([len(read.sequence),
+                          matches[subjectIndex][0]['subjectLength']])
+            bins = maxLen // bucketFactor
+            histogram, histogramBuckets = np.histogram(offsets, bins=bins)
+            maxCount = np.max(histogram)
+            meanCount = np.mean(histogram)
+            significant = (maxCount >= meanCount + aboveMeanThreshold)
+            self.analysis[subjectIndex] = {
+                'score': maxCount,
+                'significant': significant,
             }
 
-    def finalize(self):
+            if storeAnalysis:
+                self.analysis[subjectIndex].update({
+                    'offsets': offsets,
+                    'histogram': histogram,
+                    'histogramBuckets': histogramBuckets,
+                    'maxCount': maxCount,
+                    'meanCount': meanCount,
+                })
+
+    def significant(self):
         """
-        Evaluates whether a subject is matched significantly by a read.
+        Which subject matches were significant?
+
+        @return: A generator that yields the subject indices of the
+            significant matched subjects.
         """
-        for subjectIndex in self.matches:
-            offsets = [offsets['subjectOffset'] - offsets['readOffset']
-                       for offsets in self.matches[subjectIndex]['offsets']]
-            hist, edges = np.histogram(offsets)
-            mean = np.mean(hist)
-            match = max(hist)
-            if mean + 15 < match:
-                self.matches[subjectIndex]['matchScore'] = match
-                self.significant[subjectIndex] = self.matches[subjectIndex]
-        self._finalized = True
+        return (subjectIndex for subjectIndex, analysis in
+                self.analysis.iteritems() if analysis['significant'])
 
     def save(self, fp=sys.stdout):
         """
-        Print one line of JSON output.
+        Print a line of JSON with the significant results for this read.
 
         @param fp: a file pointer.
+        @return: The C{fp} we were passed (this is useful in testing).
         """
         alignments = []
-        for subjectIndex in self.significant:
-            hsps = self.significant[subjectIndex]['offsets']
-            subjectLength = self.significant[subjectIndex]['subjectLength']
-            matchScore = self.significant[subjectIndex]['matchScore']
+        for subjectIndex in self.significant():
             alignments.append({
-                'hsps': hsps,
-                'subjectLength': subjectLength,
+                'matchInfo': self.matches[subjectIndex],
+                'matchScore': self.analysis[subjectIndex]['score'],
                 'subjectIndex': subjectIndex,
-                'matchScore': matchScore
             })
-        print >>fp, dumps({'query': self.read.id, 'alignments': alignments},
-                          separators=(',', ':'))
+
+        print >>fp, dumps(
+            {
+                'alignments': alignments,
+                'queryId': self.read.id,
+                'querySequence': self.read.sequence,
+            },
+            separators=(',', ':'))
+
+        return fp

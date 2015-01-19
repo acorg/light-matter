@@ -351,7 +351,7 @@ def plotFeatureSquare(read, landmarks=None, trigs=None, limitPerLandmark=None,
         scatterY.append(trigPoint.offset + uniform(-0.4, 0.4))
         if isinstance(trigPoint, Landmark):
             # Color the trig points that are actually landmarks a light grey.
-            scatterColors.append((0.9, 0.9, 0.9))
+            scatterColors.append((0.7, 0.7, 0.7))
         else:
             scatterColors.append(COLORS[trigPoint.symbol])
         landmarks.add((landmark.symbol, landmark.offset, landmark.length))

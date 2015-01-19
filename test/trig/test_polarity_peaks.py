@@ -34,16 +34,6 @@ class TestPolarityPeaks(TestCase):
         result = list(peaks.find(read, windowSize=43))
         self.assertEqual([TrigPoint('PolarityPeak', 'O', 33)], result)
 
-    def testPolarityPeakAtStart(self):
-        """
-        If all aa are the same, the polarity peak must be at the start of the
-        sequence.
-        """
-        read = AARead('i', 'LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL')
-        peaks = PolarityPeaks()
-        result = list(peaks.find(read, windowSize=43))
-        self.assertEqual([TrigPoint('PolarityPeak', 'O', 0)], result)
-
     def testFindOnePolarityPeaksSmallerWindow(self):
         """
         The find method must find a peak, with a windowSize smaller than

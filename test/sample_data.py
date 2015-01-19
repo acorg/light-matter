@@ -14,20 +14,20 @@ from light.trig.troughs import Troughs
 DB = Database([AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, BetaStrand],
               [AminoAcids, Troughs])
 
-# An alpha helix with many Cysteine (C) trig points.
-COWPOX = AARead('Cowpox virus 15', 'ADDDADDDAMCDCMCDCMCDC')
+# An alpha helix with many Tryptophan (W) trig points.
+COWPOX = AARead('Cowpox virus 15', 'ADDDADDDAMWDWMWDWMWDW')
 
-# An alpha helix pi with one Cysteine (C) trig point.
-MONKEYPOX = AARead('Monkeypox virus 456', 'ADDDDADDDDAMC')
+# An alpha helix pi with one Tryptophan (W) trig point.
+MONKEYPOX = AARead('Monkeypox virus 456', 'ADDDDADDDDAMW')
 
 # A beta strand with one trig point.
-MUMMYPOX = AARead('Mummypox virus 3000 B.C.', 'VVVVVVVAC')
+MUMMYPOX = AARead('Mummypox virus 3000 B.C.', 'VVVVVVVAW')
 
 # An alpha helix with one trig point.
-SQUIRRELPOX1296 = AARead('Squirrelpox virus 1296/99', 'ADDDADDDAMDCMDC')
+SQUIRRELPOX1296 = AARead('Squirrelpox virus 1296/99', 'ADDDADDDAMDWMDW')
 
 # An alpha helix 3, 10 with one trig point.
-SQUIRRELPOX55 = AARead('Squirrelpox virus 55', 'ADDADDAMCDC')
+SQUIRRELPOX55 = AARead('Squirrelpox virus 55', 'ADDADDAMWDW')
 
 DB.addSubject(COWPOX)
 DB.addSubject(MONKEYPOX)

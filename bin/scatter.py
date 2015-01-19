@@ -99,6 +99,8 @@ def makeScatterplot(lightScores, otherScores, scoreType, outFile, dataset,
         ax.set_title(dataset)
 
     # axes
+    if scoreType == 'z':
+        ax.set_ylim(0, 70)
     ax.spines['top'].set_linewidth(0.5)
     ax.spines['right'].set_linewidth(0.5)
     ax.spines['bottom'].set_linewidth(0.5)

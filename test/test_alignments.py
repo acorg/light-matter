@@ -751,7 +751,6 @@ class TestJSONDictToAlignments(TestCase):
                 {
                     'matchInfo': [
                         {
-                            'distance': 11,
                             'landmarkLength': 9,
                             'landmarkName': 'AlphaHelix',
                             'readOffset': 0,
@@ -759,7 +758,6 @@ class TestJSONDictToAlignments(TestCase):
                             'trigPointName': 'AminoAcids',
                         },
                         {
-                            'distance': 14,
                             'landmarkLength': 9,
                             'landmarkName': 'AlphaHelix',
                             'readOffset': 0,
@@ -773,7 +771,6 @@ class TestJSONDictToAlignments(TestCase):
                 {
                     'matchInfo': [
                         {
-                            'distance': 8,
                             'landmarkLength': 7,
                             'landmarkName': 'AlphaHelix_3_10',
                             'readOffset': 15,
@@ -781,7 +778,6 @@ class TestJSONDictToAlignments(TestCase):
                             'trigPointName': 'AminoAcids',
                         },
                         {
-                            'distance': 10,
                             'landmarkLength': 7,
                             'landmarkName': 'AlphaHelix_3_10',
                             'readOffset': 15,
@@ -789,7 +785,6 @@ class TestJSONDictToAlignments(TestCase):
                             'trigPointName': 'AminoAcids',
                         },
                         {
-                            'distance': 10,
                             'landmarkLength': 7,
                             'landmarkName': 'AlphaHelix_3_10',
                             'readOffset': 15,

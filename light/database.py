@@ -214,7 +214,6 @@ class Database(object):
                     subjectIndex = int(subjectIndex)
                     subjectLength = len(self.subjectInfo[subjectIndex][1])
                     matches[subjectIndex].append({
-                        # 'distance': trigPoint.offset - landmark.offset,
                         'landmarkLength': landmark.length,
                         'landmarkName': landmark.name,
                         'readOffset': landmark.offset,

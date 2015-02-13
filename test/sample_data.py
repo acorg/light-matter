@@ -39,7 +39,7 @@ PARAMS = DB.saveParamsAsJSON(StringIO()).getvalue()
 
 # Run find on a read that hits both squirrelpox subjects.
 READ0 = AARead('id0', SQUIRRELPOX1296.sequence + SQUIRRELPOX55.sequence)
-_result = DB.find(READ0, aboveMeanThreshold=3)
+_result = DB.find(READ0, significanceFraction=0.0)
 # p(0, _result)
 RECORD0 = _result.save(StringIO()).getvalue()
 
@@ -50,22 +50,22 @@ RECORD0 = _result.save(StringIO()).getvalue()
 # start a beta strand (instead of the mummypox sequence starting it 2
 # residues later).
 READ1 = AARead('id1', MUMMYPOX.sequence + MONKEYPOX.sequence)
-_result = DB.find(READ1, aboveMeanThreshold=0.0)
+_result = DB.find(READ1, significanceFraction=0.1)
 RECORD1 = _result.save(StringIO()).getvalue()
 
 # Run find on a read that hits only cowpox. Using the default value of
-# aboveMeanThreshold results in the match against SQUIRRELPOX1296 (which
+# significanceFraction results in the match against SQUIRRELPOX1296 (which
 # also has an alpha helix) not being significant.
 READ2 = AARead('id2', COWPOX.sequence)
-_result = DB.find(READ2, aboveMeanThreshold=9)
+_result = DB.find(READ2, significanceFraction=0.0)
 RECORD2 = _result.save(StringIO()).getvalue()
 
 # Run find on a second read that also hits just cowpox.
 READ3 = AARead('id3', COWPOX.sequence)
-_result = DB.find(READ3, aboveMeanThreshold=9)
+_result = DB.find(READ3, significanceFraction=0.0)
 RECORD3 = _result.save(StringIO()).getvalue()
 
 # Run find on a third read that also hits just cowpox.
 READ4 = AARead('id4', COWPOX.sequence)
-_result = DB.find(READ4, aboveMeanThreshold=9)
+_result = DB.find(READ4, significanceFraction=0)
 RECORD4 = _result.save(StringIO()).getvalue()

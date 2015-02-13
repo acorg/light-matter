@@ -16,7 +16,9 @@ class TestResult(TestCase):
         A result with no matches added to it must have the expected attributes.
         """
         read = AARead('read', 'AGTARFSDDD')
-        result = Result(read, {}, 0, bucketFactor=1)
+        hashCount = 0
+        result = Result(read, {}, hashCount, significanceFraction=0,
+                        bucketFactor=1)
         self.assertEqual({}, result.matches)
         self.assertEqual([], list(result.significant()))
         self.assertIs(read, result.read)
@@ -27,6 +29,7 @@ class TestResult(TestCase):
         being stored in the result instance.
         """
         read = AARead('read', 'AGTARFSDDD')
+        hashCount = 1
         matches = {
             0: [
                 {
@@ -39,7 +42,8 @@ class TestResult(TestCase):
                 },
             ],
         }
-        result = Result(read, matches, 0, bucketFactor=1)
+        result = Result(read, matches, hashCount, significanceFraction=0,
+                        bucketFactor=1)
         self.assertEqual(matches, result.matches)
 
     def testNoSignificantMatches(self):
@@ -48,6 +52,7 @@ class TestResult(TestCase):
         above the mean number of deltas.
         """
         read = AARead('read', 'AGTARFSDDD')
+        hashCount = 1
         matches = {
             0: [
                 {
@@ -60,7 +65,8 @@ class TestResult(TestCase):
                 },
             ],
         }
-        result = Result(read, matches, 5, bucketFactor=1)
+        result = Result(read, matches, hashCount, significanceFraction=5,
+                        bucketFactor=1)
         self.assertEqual([], list(result.significant()))
 
     def testOneSignificantMatch(self):
@@ -69,6 +75,7 @@ class TestResult(TestCase):
         (the maximum number of identical distances) must be too.
         """
         read = AARead('read', 'AGTARFSDDD')
+        hashCount = 3
         matches = {
             0: [
                 {
@@ -98,7 +105,8 @@ class TestResult(TestCase):
             ],
         }
 
-        result = Result(read, matches, aboveMeanThreshold=0.1, bucketFactor=1)
+        result = Result(read, matches, hashCount, significanceFraction=0.1,
+                        bucketFactor=1)
         self.assertEqual([0], list(result.significant()))
         self.assertEqual(2, result.analysis[0]['score'])
 
@@ -108,6 +116,7 @@ class TestResult(TestCase):
         different subjects, and their scores must be correct.
         """
         read = AARead('read', 'AGTARFSDDD')
+        hashCount = 5
         matches = {
             0: [
                 {
@@ -156,7 +165,7 @@ class TestResult(TestCase):
             ],
         }
 
-        result = Result(read, matches, aboveMeanThreshold=0.1,
+        result = Result(read, matches, hashCount, significanceFraction=0.1,
                         bucketFactor=1)
         self.assertEqual([0, 1], sorted(list(result.significant())))
         self.assertEqual(2, result.analysis[0]['score'])
@@ -167,7 +176,7 @@ class TestResult(TestCase):
         If self.matches is empty, return an empty output.
         """
         read = AARead('read', 'AGTARFSDDD')
-        result = Result(read, [], 0, bucketFactor=1)
+        result = Result(read, [], 0, 0, bucketFactor=1)
         fp = StringIO()
         result.save(fp=fp)
         result = loads(fp.getvalue())
@@ -183,7 +192,7 @@ class TestResult(TestCase):
         """
         The save function must return its (fp) argument.
         """
-        result = Result(AARead('id', 'A'), {}, aboveMeanThreshold=0,
+        result = Result(AARead('id', 'A'), {}, 0, significanceFraction=0,
                         bucketFactor=1)
         fp = StringIO()
         self.assertIs(fp, result.save(fp))
@@ -193,6 +202,7 @@ class TestResult(TestCase):
         Save must produce the right JSON format.
         """
         read = AARead('id', 'FRRRFRRRFRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF')
+        hashCount = 2
         matches = {
             0: [
                 {
@@ -216,7 +226,8 @@ class TestResult(TestCase):
                 },
             ],
         }
-        result = Result(read, matches, aboveMeanThreshold=0.1, bucketFactor=1)
+        result = Result(read, matches, hashCount, significanceFraction=0.1,
+                        bucketFactor=1)
         fp = StringIO()
         result.save(fp=fp)
         result = loads(fp.getvalue())
@@ -262,6 +273,7 @@ class TestResult(TestCase):
         If no bucket factor is given, the number of bins must be 11.
         """
         read = AARead('read', 'AGTARFSDDD')
+        hashCount = 1
         matches = {
             0: [
                 {
@@ -274,7 +286,9 @@ class TestResult(TestCase):
                 },
             ],
         }
-        result = Result(read, matches, 0, bucketFactor=1, storeAnalysis=True)
+        result = Result(read, matches, hashCount, significanceFraction=0,
+                        bucketFactor=1,
+                        storeAnalysis=True)
         self.assertEqual(20, len(result.analysis[0]['histogram']))
 
     def testRightNumberOfBuckets(self):
@@ -283,6 +297,7 @@ class TestResult(TestCase):
         (out of subject and query) is 20, there should be 4 buckets.
         """
         read = AARead('read', 'AGTARFSDDD')
+        hashCount = 1
         matches = {
             0: [
                 {
@@ -295,6 +310,8 @@ class TestResult(TestCase):
                 },
             ],
         }
-        result = Result(read, matches, 0, bucketFactor=5, storeAnalysis=True)
+        result = Result(read, matches, hashCount, significanceFraction=0,
+                        bucketFactor=5,
+                        storeAnalysis=True)
         print result.analysis[0]['histogramBuckets']
         self.assertEqual(4, len(result.analysis[0]['histogram']))

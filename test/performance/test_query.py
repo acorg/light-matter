@@ -23,20 +23,20 @@ class TestQueryDatabase(TestCase):
         queries = Reads()
         queries.add(AARead('query', 'FRRRFRRRFASAASA'))
         result = queryDatabase(subjects, queries, [AlphaHelix], [Peaks],
-                               maxDistance=11, aboveMeanThreshold=0.1)
+                               maxDistance=11, significanceFraction=0.1)
         self.assertEqual({}, result)
 
     def testFindOneMatchingSignificant(self):
         """
         One matching and significant subject must be found if the
-        aboveMeanThreshold is sufficiently low.
+        significanceFraction is sufficiently low.
         """
         subjects = Reads()
         subjects.add(AARead('subject', 'AFRRRFRRRFASAASA'))
         queries = Reads()
         queries.add(AARead('query', 'FRRRFRRRFASAASA'))
         result = queryDatabase(subjects, queries, [AlphaHelix], [Peaks],
-                               maxDistance=11, aboveMeanThreshold=0.1)
+                               maxDistance=11, significanceFraction=0)
         self.assertEqual(
             {
                 'query': {

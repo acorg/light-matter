@@ -29,11 +29,11 @@ class TestDatabase(TestCase):
         """
         return crc32('\0'.join(map(str, strings)) + '\0', 0x0) & 0xFFFFFFFF
 
-    def testAboveMeanThresholdDefault(self):
+    def testSignificanceFractionDefault(self):
         """
-        The above mean threshold default value must be as expected.
+        The significanceFraction default value must be as expected.
         """
-        self.assertEqual(15, Database.ABOVE_MEAN_THRESHOLD_DEFAULT)
+        self.assertEqual(0.25, Database.SIGNIFICANCE_FRACTION_DEFAULT)
 
     def testFindersAreStored(self):
         """
@@ -432,39 +432,42 @@ class TestDatabase(TestCase):
     def testFindOneMatchingInsignificant(self):
         """
         One matching subject should be found, but is not significant with the
-        default value of aboveMeanThreshold.
+        default value of significanceFraction.
         """
         subject = AARead('subject', 'AFRRRFRRRFASAASA')
-        query = AARead('query', 'FRRRFRRRFASAASA')
-        db = Database([AlphaHelix], [Peaks], maxDistance=11)
+        query = AARead('query', 'FRRRFRRRFASAASAFRRRFRRRFFRRRFRRRFFRRRFRRRF')
+        db = Database([AlphaHelix], [Peaks])
         db.addSubject(subject)
         result = db.find(query)
         self.assertEqual(
             {
                 0: [
-                    {
-                        'trigPointName': 'Peaks',
-                        'landmarkLength': 9,
-                        'readOffset': 0,
-                        'subjectOffsets': [1],
-                        'landmarkName': 'AlphaHelix',
-                        'subjectLength': 16
-                    },
-                ],
-            },
-            result.matches)
+                    {'trigPointName': 'Peaks',
+                     'landmarkLength': 9,
+                     'readOffset': 0,
+                     'subjectLength': 16,
+                     'subjectOffsets': [1],
+                     'landmarkName': 'AlphaHelix'},
+                    {'trigPointName': 'Peaks',
+                     'landmarkLength': 9,
+                     'readOffset': 0,
+                     'subjectLength': 16,
+                     'subjectOffsets': [1],
+                     'landmarkName': 'AlphaHelix'}
+                ]
+            }, result.matches)
         self.assertEqual(0, len(list(result.significant())))
 
     def testFindOneMatchingSignificant(self):
         """
         One matching and significant subject must be found if the
-        aboveMeanThreshold is sufficiently low.
+        significanceFraction is sufficiently low.
         """
         subject = AARead('subject', 'AFRRRFRRRFASAASA')
         query = AARead('query', 'FRRRFRRRFASAASA')
         db = Database([AlphaHelix], [Peaks], maxDistance=11)
         db.addSubject(subject)
-        result = db.find(query, aboveMeanThreshold=0.1)
+        result = db.find(query, significanceFraction=0)
         self.assertEqual(
             {
                 0: [

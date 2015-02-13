@@ -13,18 +13,20 @@ class Result(object):
         Each value is a C{list} of C{dicts}, with each C{dict} containing the
         following keys: 'landmarkLength', 'landmarkName',
         'readOffset', 'subjectOffsets', and 'trigPointName'.
-    @param aboveMeanThreshold: A numeric amount by which the maximum count
-        across all buckets must exceed the mean bucket count for the
-        maximum bucket count to be considered significant.
+    @param hashCount: The C{int} number of hashes that a scannedRead has.
+    @param significanceFraction: The fraction of all hashes in a
+        scannedRead that need to be in the largest histogram bucket for it
+        to be considered significant.
     @param bucketFactor: A C{int} factor by which the distance between
         landmark and trig point is divided, to influence sensitivity.
     @param storeAnalysis: A C{bool}. If C{True} the intermediate significance
         analysis of each matched subject will be stored. Else it is discarded.
     """
-    def __init__(self, read, matches, aboveMeanThreshold, bucketFactor,
-                 storeAnalysis=False):
-        self.matches = matches
+    def __init__(self, read, matches, hashCount, significanceFraction,
+                 bucketFactor, storeAnalysis=False):
         self.read = read
+        self.matches = matches
+        self.hashCount = hashCount
         self.analysis = defaultdict(dict)
         for subjectIndex in matches:
             offsets = [subjectOffset - match['readOffset']
@@ -35,8 +37,8 @@ class Result(object):
             bins = maxLen // bucketFactor
             histogram, histogramBuckets = np.histogram(offsets, bins=bins)
             maxCount = np.max(histogram)
-            meanCount = np.mean(histogram)
-            significant = (maxCount >= meanCount + aboveMeanThreshold)
+            maxCountFraction = maxCount / float(self.hashCount)
+            significant = (maxCountFraction >= significanceFraction)
             self.analysis[subjectIndex] = {
                 'score': maxCount,
                 'significant': significant,
@@ -48,7 +50,7 @@ class Result(object):
                     'histogram': histogram,
                     'histogramBuckets': histogramBuckets,
                     'maxCount': maxCount,
-                    'meanCount': meanCount,
+                    'maxCountFraction': maxCountFraction,
                 })
 
     def significant(self):

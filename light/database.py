@@ -31,7 +31,7 @@ class Database(object):
     # The default amount by which the maximum delta count in a bucket must
     # exceed the mean bucket count for that maximum bucket count to be
     # considered significant.
-    ABOVE_MEAN_THRESHOLD_DEFAULT = 15
+    SIGNIFICANCE_FRACTION_DEFAULT = 0.25
 
     def __init__(self, landmarkFinderClasses, trigPointFinderClasses,
                  limitPerLandmark=None, maxDistance=None, minDistance=None,
@@ -172,21 +172,21 @@ class Database(object):
 
         return fp
 
-    def find(self, read, aboveMeanThreshold=None, storeAnalysis=False):
+    def find(self, read, significanceFraction=None, storeAnalysis=False):
         """
         A function which takes a read, computes all hashes for it, looks up
         matching hashes and checks which database sequence it matches.
 
-        @param read: a C{dark.read.AARead} instance.
-        @param aboveMeanThreshold: A numeric amount by which the maximum delta
-            count in a bucket must exceed the mean bucket count for that
-            maximum bucket count to be considered significant.
+        @param read: A C{dark.read.AARead} instance.
+        @param significanceFraction: The fraction of all hashes in a
+            scannedRead that need to be in the largest histogram bucket for it
+            to be considered significant.
         @param storeAnalysis: A C{bool}. If C{True} the intermediate
             significance analysis computed in the Result will be stored.
         @return: A C{light.result.Result} instance.
         """
-        if aboveMeanThreshold is None:
-            aboveMeanThreshold = self.ABOVE_MEAN_THRESHOLD_DEFAULT
+        if significanceFraction is None:
+            significanceFraction = self.SIGNIFICANCE_FRACTION_DEFAULT
 
         scannedRead = ScannedRead(read)
 
@@ -199,10 +199,12 @@ class Database(object):
                 scannedRead.trigPoints.append(trigPoint)
 
         matches = defaultdict(list)
+        hashCount = 0
 
         for landmark, trigPoint in scannedRead.getPairs(
                 limitPerLandmark=self.limitPerLandmark,
                 maxDistance=self.maxDistance, minDistance=self.minDistance):
+            hashCount += 1
             key = self.key(landmark, trigPoint)
             try:
                 subjectDict = self.d[key]
@@ -223,8 +225,8 @@ class Database(object):
                         'subjectLength': subjectLength,
                     })
 
-        return Result(read, matches, aboveMeanThreshold, self.bucketFactor,
-                      storeAnalysis=storeAnalysis)
+        return Result(read, matches, hashCount, significanceFraction,
+                      self.bucketFactor, storeAnalysis=storeAnalysis)
 
     def save(self, fp=sys.stdout):
         """

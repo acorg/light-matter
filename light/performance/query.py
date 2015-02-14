@@ -7,7 +7,7 @@ from light.database import Database
 
 def queryDatabase(databaseFile, queryFile, landmarkFinders, trigFinders,
                   limitPerLandmark=None, maxDistance=None, minDistance=None,
-                  aboveMeanThreshold=None, bucketFactor=1):
+                  significanceFraction=None, bucketFactor=1):
     """
     Build a database, query it, return results.
 
@@ -43,7 +43,8 @@ def queryDatabase(databaseFile, queryFile, landmarkFinders, trigFinders,
     resultDict = defaultdict(dict)
 
     for query in queries:
-        result = database.find(query, aboveMeanThreshold=aboveMeanThreshold)
+        result = database.find(query,
+                               significanceFraction=significanceFraction)
         for subjectIndex in result.significant():
             subject = database.subjectInfo[subjectIndex][0]
             score = result.analysis[subjectIndex]['score']

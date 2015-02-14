@@ -31,7 +31,7 @@ class Database(object):
     # The default amount by which the maximum delta count in a bucket must
     # exceed the mean bucket count for that maximum bucket count to be
     # considered significant.
-    ABOVE_MEAN_THRESHOLD_DEFAULT = 15
+    SIGNIFICANCE_FRACTION_DEFAULT = 0.25
 
     def __init__(self, landmarkFinderClasses, trigPointFinderClasses,
                  limitPerLandmark=None, maxDistance=None, minDistance=None,
@@ -172,21 +172,22 @@ class Database(object):
 
         return fp
 
-    def find(self, read, aboveMeanThreshold=None, storeAnalysis=False):
+    def find(self, read, significanceFraction=None, storeAnalysis=False):
         """
         A function which takes a read, computes all hashes for it, looks up
         matching hashes and checks which database sequence it matches.
 
-        @param read: a C{dark.read.AARead} instance.
-        @param aboveMeanThreshold: A numeric amount by which the maximum delta
-            count in a bucket must exceed the mean bucket count for that
-            maximum bucket count to be considered significant.
+        @param read: A C{dark.read.AARead} instance.
+        @param significanceFraction: The C{float} fraction of all (landmark,
+            trig point) pairs for a scannedRead that need to fall into the
+            same histogram bucket for that bucket to be considered a
+            significant match with a database title.
         @param storeAnalysis: A C{bool}. If C{True} the intermediate
             significance analysis computed in the Result will be stored.
         @return: A C{light.result.Result} instance.
         """
-        if aboveMeanThreshold is None:
-            aboveMeanThreshold = self.ABOVE_MEAN_THRESHOLD_DEFAULT
+        if significanceFraction is None:
+            significanceFraction = self.SIGNIFICANCE_FRACTION_DEFAULT
 
         scannedRead = ScannedRead(read)
 
@@ -199,15 +200,26 @@ class Database(object):
                 scannedRead.trigPoints.append(trigPoint)
 
         matches = defaultdict(list)
+        hashCount = 0
 
         for landmark, trigPoint in scannedRead.getPairs(
                 limitPerLandmark=self.limitPerLandmark,
                 maxDistance=self.maxDistance, minDistance=self.minDistance):
+            hashCount += 1
             key = self.key(landmark, trigPoint)
             try:
                 subjectDict = self.d[key]
             except KeyError:
-                # A hash that's in the read but not in our database.
+                # A hash that's in the read but not in our database. We
+                # should eventually keep these mismatches and use them to
+                # help determine how good a match against a subject is.
+                #
+                # Note that hashCount is incremented for every pair, even
+                # ones that are not in the database. Basing significance on
+                # a fraction of that overall count does take into account
+                # the fact that some hashes may have been missed. We may
+                # want to do that at a finer level of granularity, though.
+                # E.g., consider _where_ in the read the misses were.
                 pass
             else:
                 for subjectIndex, subjectOffsets in subjectDict.iteritems():
@@ -217,13 +229,13 @@ class Database(object):
                         'landmarkLength': landmark.length,
                         'landmarkName': landmark.name,
                         'readOffset': landmark.offset,
+                        'subjectLength': subjectLength,
                         'subjectOffsets': subjectOffsets,
                         'trigPointName': trigPoint.name,
-                        'subjectLength': subjectLength,
                     })
 
-        return Result(read, matches, aboveMeanThreshold, self.bucketFactor,
-                      storeAnalysis=storeAnalysis)
+        return Result(read, matches, hashCount, significanceFraction,
+                      self.bucketFactor, storeAnalysis=storeAnalysis)
 
     def save(self, fp=sys.stdout):
         """

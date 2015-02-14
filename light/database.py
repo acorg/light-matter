@@ -28,9 +28,10 @@ class Database(object):
         landmark and trig point is divided, to influence sensitivity.
     """
 
-    # The default amount by which the maximum delta count in a bucket must
-    # exceed the mean bucket count for that maximum bucket count to be
-    # considered significant.
+    # The default fraction of all (landmark, trig point) pairs for a
+    # scannedRead that need to fall into the same offset delta histogram
+    # bucket for that bucket to be considered a significant match with a
+    # database title.
     SIGNIFICANCE_FRACTION_DEFAULT = 0.25
 
     def __init__(self, landmarkFinderClasses, trigPointFinderClasses,

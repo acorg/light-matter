@@ -54,7 +54,7 @@ def legendHandles(names):
 
 def plotHistogram(query, subject, landmarks=None, trigPoints=None,
                   limitPerLandmark=None, maxDistance=None, minDistance=None,
-                  aboveMeanTreshold=None, bucketFactor=1, readsAx=None):
+                  significanceFraction=None, bucketFactor=1, readsAx=None):
     """
     A function which plots a histogram of matching hash distances.
 
@@ -68,9 +68,10 @@ def plotHistogram(query, subject, landmarks=None, trigPoints=None,
         yielded pairs.
     @param minDistance: The C{int} minimum distance permitted between
         yielded pairs.
-    @param aboveMeanThreshold: A numeric amount by which the maximum delta
-        count in a bucket must exceed the mean bucket count for that
-        maximum bucket count to be considered significant.
+    @param significanceFraction: The C{float} fraction of all (landmark,
+        trig point) pairs for a scannedRead that need to fall into the
+        same histogram bucket for that bucket to be considered a
+        significant match with a database title.
     @para bucketFactor: A C{int} factor by which the distance between landmark
         and trig point is divided.
     @param readsAx: If not None, use this as the subplot for displaying reads.
@@ -109,7 +110,7 @@ def plotHistogram(query, subject, landmarks=None, trigPoints=None,
                         bucketFactor)
     database.addSubject(subject)
 
-    result = database.find(query, aboveMeanTreshold, storeAnalysis=True)
+    result = database.find(query, significanceFraction, storeAnalysis=True)
     hist = result.analysis[0]['histogram']
     bins = result.analysis[0]['histogramBuckets']
 

@@ -67,11 +67,11 @@ if __name__ == '__main__':
         help='The name of the file that contains the database.')
 
     parser.add_argument(
-        '--aboveMeanThreshold', type=float, default=None,
-        help='The amount by which the maximum delta '
-        'count in a bucket must exceed the mean bucket count for that '
-        'maximum bucket count to be considered significant. If not specified, '
-        'the default for the given database will be used.')
+        '--significanceFraction', type=float, default=None,
+        help='The (float) fraction of all (landmark, trig point) pairs for a '
+        'scannedRead that need to fall into the same histogram bucket for '
+        'that bucket to be considered a significant match with a database '
+        'title.')
 
     parser.add_argument(
         '--human', default=False, action='store_true',
@@ -114,13 +114,10 @@ if __name__ == '__main__':
     if not human:
         database.saveParamsAsJSON()
 
-    aboveMeanThreshold = (Database.ABOVE_MEAN_THRESHOLD_DEFAULT
-                          if args.aboveMeanThreshold is None
-                          else args.aboveMeanThreshold)
-
     # Look up each read in the database.
     for count, read in enumerate(reads):
-        result = database.find(read, aboveMeanThreshold, storeAnalysis=human)
+        result = database.find(read, args.significanceFraction,
+                               storeAnalysis=human)
         if human:
             if count:
                 print '---'

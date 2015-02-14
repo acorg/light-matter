@@ -467,7 +467,7 @@ class TestDatabase(TestCase):
         query = AARead('query', 'FRRRFRRRFASAASA')
         db = Database([AlphaHelix], [Peaks], maxDistance=11)
         db.addSubject(subject)
-        result = db.find(query, significanceFraction=0)
+        result = db.find(query, significanceFraction=0.0)
         self.assertEqual(
             {
                 0: [

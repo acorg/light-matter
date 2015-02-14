@@ -178,9 +178,10 @@ class Database(object):
         matching hashes and checks which database sequence it matches.
 
         @param read: A C{dark.read.AARead} instance.
-        @param significanceFraction: The fraction of all hashes in a
-            scannedRead that need to be in the largest histogram bucket for it
-            to be considered significant.
+        @param significanceFraction: The C{float} fraction of all (landmark,
+            trig point) pairs for a scannedRead that need to fall into the
+            same histogram bucket for that bucket to be considered a
+            significant match with a database title.
         @param storeAnalysis: A C{bool}. If C{True} the intermediate
             significance analysis computed in the Result will be stored.
         @return: A C{light.result.Result} instance.
@@ -209,20 +210,30 @@ class Database(object):
             try:
                 subjectDict = self.d[key]
             except KeyError:
-                # A hash that's in the read but not in our database.
+                # A hash that's in the read but not in our database. We
+                # should eventually keep these mismatches and use them to
+                # help determine how good a match against a subject is.
+                #
+                # Note that hashCount is incremented for every pair, even
+                # ones that are not in the database. Basing significance on
+                # a fraction of that overall count does take into account
+                # the fact that some hashes may have been missed. We may
+                # want to do that at a finer level of granularity, though.
+                # E.g., consider _where_ in the read the misses were.
+                # print 'KEY MISS', read.id, key
                 pass
             else:
+                # print 'KEY HIT', read.id, key
                 for subjectIndex, subjectOffsets in subjectDict.iteritems():
                     subjectIndex = int(subjectIndex)
                     subjectLength = len(self.subjectInfo[subjectIndex][1])
                     matches[subjectIndex].append({
-                        # 'distance': trigPoint.offset - landmark.offset,
                         'landmarkLength': landmark.length,
                         'landmarkName': landmark.name,
                         'readOffset': landmark.offset,
+                        'subjectLength': subjectLength,
                         'subjectOffsets': subjectOffsets,
                         'trigPointName': trigPoint.name,
-                        'subjectLength': subjectLength,
                     })
 
         return Result(read, matches, hashCount, significanceFraction,

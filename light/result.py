@@ -13,10 +13,12 @@ class Result(object):
         Each value is a C{list} of C{dicts}, with each C{dict} containing the
         following keys: 'landmarkLength', 'landmarkName',
         'readOffset', 'subjectOffsets', and 'trigPointName'.
-    @param hashCount: The C{int} number of hashes that a scannedRead has.
-    @param significanceFraction: The fraction of all hashes in a
-        scannedRead that need to be in the largest histogram bucket for it
-        to be considered significant.
+    @param hashCount: The C{int} number of hashes that a scannedRead has
+        (including hashes that were not found in the database).
+    @param significanceFraction: The C{float} fraction of all (landmark,
+        trig point) pairs for a scannedRead that need to fall into the
+        same histogram bucket for that bucket to be considered a
+        significant match with a database title.
     @param bucketFactor: A C{int} factor by which the distance between
         landmark and trig point is divided, to influence sensitivity.
     @param storeAnalysis: A C{bool}. If C{True} the intermediate significance
@@ -26,7 +28,6 @@ class Result(object):
                  bucketFactor, storeAnalysis=False):
         self.read = read
         self.matches = matches
-        self.hashCount = hashCount
         self.analysis = defaultdict(dict)
         for subjectIndex in matches:
             offsets = [subjectOffset - match['readOffset']
@@ -37,7 +38,7 @@ class Result(object):
             bins = maxLen // bucketFactor
             histogram, histogramBuckets = np.histogram(offsets, bins=bins)
             maxCount = np.max(histogram)
-            maxCountFraction = maxCount / float(self.hashCount)
+            maxCountFraction = maxCount / float(hashCount)
             significant = (maxCountFraction >= significanceFraction)
             self.analysis[subjectIndex] = {
                 'score': maxCount,
@@ -46,11 +47,11 @@ class Result(object):
 
             if storeAnalysis:
                 self.analysis[subjectIndex].update({
-                    'offsets': offsets,
+                    'hashCount': hashCount,
                     'histogram': histogram,
                     'histogramBuckets': histogramBuckets,
                     'maxCount': maxCount,
-                    'maxCountFraction': maxCountFraction,
+                    'offsets': offsets,
                 })
 
     def significant(self):

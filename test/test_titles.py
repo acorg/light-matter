@@ -301,10 +301,9 @@ class TestTitlesAlignmentsFiltering(TestCase):
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = titlesAlignments.filter(minNewReads=1.0)
 
-            # Either MUMMYPOX.id
-            # invalidates MONKEYPOX.id or
-            # vice-versa. It depends on Python's dict walking order. Check
-            # for both, making sure just one of them is true.
+            # Either MUMMYPOX.id invalidates MONKEYPOX.id or vice-versa. It
+            # depends on Python's dict walking order. Check for both,
+            # making sure just one of them is true.
 
             assertionCount = 0
             if MUMMYPOX.id in result:

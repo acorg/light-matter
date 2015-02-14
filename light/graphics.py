@@ -110,7 +110,7 @@ def plotHistogram(query, subject, landmarks=None, trigPoints=None,
                         bucketFactor)
     database.addSubject(subject)
 
-    result = database.find(query, significanceFraction, storeAnalysis=True)
+    result = database.find(query, significanceFraction, storeFullAnalysis=True)
     hist = result.analysis[0]['histogram']
     bins = result.analysis[0]['histogramBuckets']
 

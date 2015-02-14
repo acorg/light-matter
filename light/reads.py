@@ -1,4 +1,4 @@
-from light.features import CombinedFeatureList
+from light.features import CombinedFeatureList, Landmark
 
 
 class ScannedRead(object):
@@ -39,6 +39,12 @@ class ScannedRead(object):
         Get pairs of (landmark, trig point) for use in building a search
         dictionary that can be used to identify this read.
 
+        When considering each landmark, other landmarks to the left (with
+        smaller offset) of the current landmark will only be yielded after
+        other possible pairs have been yielded. This is to reduce the
+        redundancy that results if both (landmark1, landmark2) and
+        (landmark2, landmark1) pairs are yielded.
+
         @param limitPerLandmark: An C{int} limit on the number of pairs to
             yield per landmark.
         @param maxDistance: The C{int} maximum distance permitted between
@@ -46,6 +52,7 @@ class ScannedRead(object):
         @param minDistance: The C{int} minimum distance permitted between
             yielded pairs.
         @return: A generator that yields (landmark, trig point) pairs.
+
         """
         if limitPerLandmark is not None and limitPerLandmark < 1:
             return
@@ -54,9 +61,17 @@ class ScannedRead(object):
 
         for landmark in self.landmarks:
             count = 0
-            nearest = features.nearest(landmark.offset,
+            landmarkOffset = landmark.offset
+            landmarksOnLeft = []
+            nearest = features.nearest(landmarkOffset,
                                        maxDistance=maxDistance,
                                        minDistance=minDistance)
+
+            # Take features from the nearest iterator, but do not yield any
+            # features that are landmarks that are to the left (i.e., with
+            # smaller offset) of the current landmark. Instead, save these
+            # and only yield them after we have yielded everything else
+            # (landmarks to the right, trig points on either side).
             while limitPerLandmark is None or count < limitPerLandmark:
                 try:
                     feature = nearest.next()
@@ -64,5 +79,17 @@ class ScannedRead(object):
                     break
                 else:
                     if feature is not landmark:
-                        yield landmark, feature
-                        count += 1
+                        if (feature.offset < landmarkOffset and
+                                isinstance(feature, Landmark)):
+                            landmarksOnLeft.append(feature)
+                        else:
+                            yield landmark, feature
+                            count += 1
+
+            # Now yield landmarks to the left of the current landmark, if any.
+            for landmarkOnLeft in landmarksOnLeft:
+                if limitPerLandmark is None or count < limitPerLandmark:
+                    yield landmark, landmarkOnLeft
+                    count += 1
+                else:
+                    break

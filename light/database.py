@@ -220,10 +220,8 @@ class Database(object):
                 # the fact that some hashes may have been missed. We may
                 # want to do that at a finer level of granularity, though.
                 # E.g., consider _where_ in the read the misses were.
-                # print 'KEY MISS', read.id, key
                 pass
             else:
-                # print 'KEY HIT', read.id, key
                 for subjectIndex, subjectOffsets in subjectDict.iteritems():
                     subjectIndex = int(subjectIndex)
                     subjectLength = len(self.subjectInfo[subjectIndex][1])

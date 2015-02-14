@@ -17,7 +17,7 @@ class TestResult(TestCase):
         """
         read = AARead('read', 'AGTARFSDDD')
         hashCount = 0
-        result = Result(read, {}, hashCount, significanceFraction=0,
+        result = Result(read, {}, hashCount, significanceFraction=0.0,
                         bucketFactor=1)
         self.assertEqual({}, result.matches)
         self.assertEqual([], list(result.significant()))
@@ -42,7 +42,7 @@ class TestResult(TestCase):
                 },
             ],
         }
-        result = Result(read, matches, hashCount, significanceFraction=0,
+        result = Result(read, matches, hashCount, significanceFraction=0.0,
                         bucketFactor=1)
         self.assertEqual(matches, result.matches)
 
@@ -192,7 +192,7 @@ class TestResult(TestCase):
         """
         The save function must return its (fp) argument.
         """
-        result = Result(AARead('id', 'A'), {}, 0, significanceFraction=0,
+        result = Result(AARead('id', 'A'), {}, 0, significanceFraction=0.0,
                         bucketFactor=1)
         fp = StringIO()
         self.assertIs(fp, result.save(fp))
@@ -286,9 +286,8 @@ class TestResult(TestCase):
                 },
             ],
         }
-        result = Result(read, matches, hashCount, significanceFraction=0,
-                        bucketFactor=1,
-                        storeAnalysis=True)
+        result = Result(read, matches, hashCount, significanceFraction=0.0,
+                        bucketFactor=1, storeAnalysis=True)
         self.assertEqual(20, len(result.analysis[0]['histogram']))
 
     def testRightNumberOfBuckets(self):
@@ -310,8 +309,6 @@ class TestResult(TestCase):
                 },
             ],
         }
-        result = Result(read, matches, hashCount, significanceFraction=0,
-                        bucketFactor=5,
-                        storeAnalysis=True)
-        print result.analysis[0]['histogramBuckets']
+        result = Result(read, matches, hashCount, significanceFraction=0.0,
+                        bucketFactor=5, storeAnalysis=True)
         self.assertEqual(4, len(result.analysis[0]['histogram']))

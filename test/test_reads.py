@@ -200,7 +200,7 @@ class TestScannedRead(TestCase):
         If a scanned read has two landmarks and one trig point, its getPairs
         method should generate four pairs in the correct order of closeness,
         not yielding (landmark, landmark) pairs with the second landmark to
-        the left of the first until all other pairs have been yielded.
+        the left of the first (i.e., not yielding (landmark2, landmark1)).
         """
         read = ScannedRead(AARead('id', 'AAAAA'))
         landmark1 = Landmark('name', 'symbol', 0, 2)
@@ -211,7 +211,7 @@ class TestScannedRead(TestCase):
         result = list(read.getPairs())
         self.assertEqual(
             [(landmark1, landmark2), (landmark1, trigPoint),
-             (landmark2, trigPoint), (landmark2, landmark1)],
+             (landmark2, trigPoint)],
             result)
 
     def testGetPairsTwoLandmarksTwoTrigPoints(self):
@@ -220,6 +220,9 @@ class TestScannedRead(TestCase):
         method should generate six pairs, in the correct order of closeness,
         not yielding (landmark, landmark) pairs with the second landmark to
         the left of the first until all other pairs have been yielded.
+
+        Note that the (landmark2, landmark1) pair is not produced since
+        landmark2 is to the right of landmark1.
         """
         read = ScannedRead(AARead('id', 'AAAAA'))
         landmark1 = Landmark('name', 'symbol', 0, 2)
@@ -232,8 +235,7 @@ class TestScannedRead(TestCase):
         self.assertEqual(
             [(landmark1, landmark2), (landmark1, trigPoint1),
              (landmark1, trigPoint2),
-             (landmark2, trigPoint1), (landmark2, trigPoint2),
-             (landmark2, landmark1)],
+             (landmark2, trigPoint1), (landmark2, trigPoint2)],
             result)
 
     def testGetPairsTwoLandmarksTwoTrigPointsLimitOne(self):
@@ -242,14 +244,9 @@ class TestScannedRead(TestCase):
         method should generate two pairs if a limit of 1 nearby feature per
         landmark is passed.
 
-        The (landmark2, landmark1) pair is not produced due to the
-        limitPerLandmark=1 value. This is because the getPairs method gives
-        preference to features that occur to the right of landmarks. In this
-        case, even though landmark1 is closer to landmark2 than trigPoint1 is,
-        the (landmark2, trigPoint1) pair is yielded because trigPoint1 is to
-        the right of landmark2. The (landmark2, trigPoint2) and finally the
-        (landmark2, landmark1) pairs would be the next to be yielded, but the
-        limitPerLandmark limit has already been reached.
+        Note that even if limitPerLandmark=1 were not specified, the
+        (landmark2, landmark1) pair would not be produced since landmark2 is
+        to the right of landmark1.
         """
         read = ScannedRead(AARead('id', 'AAAAA'))
         landmark1 = Landmark('name', 'L1', 0, 2)
@@ -268,14 +265,9 @@ class TestScannedRead(TestCase):
         method should generate four pairs if a limit of 2 nearby features per
         landmark is passed.
 
-        The (landmark2, landmark1) pair is not produced due to the
-        limitPerLandmark=2 value. This is because the getPairs method gives
-        preference to features that occur to the right of landmarks. In this
-        case, even though landmark1 is closer to landmark2 than trigPoint2 is,
-        the (landmark2, trigPoint2) pair is yielded because trigPoint2 is to
-        the right of landmark2. The (landmark2, landmark1) pair would be the
-        next to be yielded, but by then the limitPerLandmark limit has been
-        reached.
+        Note that even if limitPerLandmark=2 were not specified, the
+        (landmark2, landmark1) pair would not be produced since landmark2 is
+        to the right of landmark1.
         """
         read = ScannedRead(AARead('id', 'AAAAA'))
         landmark1 = Landmark('name', 'L1', 0, 2)
@@ -293,8 +285,11 @@ class TestScannedRead(TestCase):
     def testGetPairsTwoLandmarksTwoTrigPointsMaxDistanceThree(self):
         """
         If a scanned read has two landmarks and two trig points, its getPairs
-        method should generate four pairs if a maximum distance of 3 is
+        method should generate three pairs if a maximum distance of 3 is
         passed and one trig point is too far away.
+
+        Note that the (landmark2, landmark1) pair is not produced since
+        landmark2 is to the right of landmark1.
         """
         read = ScannedRead(AARead('id', 'AAAAA'))
         landmark1 = Landmark('name', 'L1', 0, 2)
@@ -306,7 +301,7 @@ class TestScannedRead(TestCase):
         result = list(read.getPairs(maxDistance=3))
         self.assertEqual(
             [(landmark1, landmark2), (landmark1, trigPoint1),
-             (landmark2, trigPoint1), (landmark2, landmark1)],
+             (landmark2, trigPoint1)],
             result)
 
     def testGetPairsTwoLandmarksTwoTrigPointsMinDistanceThree(self):

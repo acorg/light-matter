@@ -97,7 +97,7 @@ class Database(object):
         @return: A C{str} key based on the landmark, the trig point,
             and the distance between them.
         """
-        distance = ((landmark.offset - trigPoint.offset)
+        distance = ((trigPoint.offset - landmark.offset)
                     // self.bucketFactor)
         return '%s:%s:%s' % (landmark.hashkey(), trigPoint.hashkey(),
                              distance)

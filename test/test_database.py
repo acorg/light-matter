@@ -59,13 +59,24 @@ class TestDatabase(TestCase):
         db = Database([AlphaHelix], [Peaks])
         self.assertEqual({}, db.d)
 
-    def testKey(self):
+    def testKeyWithFeatureOnLeft(self):
         """
-        The database key function must return the expected value.
+        The database key function must return the expected (negative offset)
+        key when the second feature is to the left of the first.
         """
         db = Database([], [])
         landmark = Landmark('name', 'A', 20, 0)
         trigPoint = TrigPoint('name', 'B', 10)
+        self.assertEqual('A:B:-10', db.key(landmark, trigPoint))
+
+    def testKeyWithFeatureOnRight(self):
+        """
+        The database key function must return the expected (positive offset)
+        key when the second feature is to the right of the first.
+        """
+        db = Database([], [])
+        landmark = Landmark('name', 'A', 20, 0)
+        trigPoint = TrigPoint('name', 'B', 30)
         self.assertEqual('A:B:10', db.key(landmark, trigPoint))
 
     def testKeyWithSymbolDetail(self):
@@ -75,7 +86,7 @@ class TestDatabase(TestCase):
         """
         db = Database([], [])
         landmark = Landmark('name', 'A', 20, 0, 5)
-        trigPoint = TrigPoint('name', 'B', 10)
+        trigPoint = TrigPoint('name', 'B', 30)
         self.assertEqual('A5:B:10', db.key(landmark, trigPoint))
 
     def testInitialDatabaseHasNoReadInfo(self):
@@ -115,15 +126,14 @@ class TestDatabase(TestCase):
 
     def testOneReadTwoLandmarks(self):
         """
-        If one read is added and it has two landmarks, two keys are added
+        If one read is added and it has two landmarks, one key is added
         to the database.
         """
         db = Database([AlphaHelix], [])
-        db.addSubject(AARead('id', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
+        db.addSubject(AARead('id', 'FRRRFRRRFAAAAAAAAAAAAAAFRRRFRRRFRRRF'))
         self.assertEqual(
             {
-                'A3:A2:23': {'0': [23]},
-                'A2:A3:-23': {'0': [0]},
+                'A2:A3:23': {'0': [0]},
             },
             db.d)
 
@@ -132,24 +142,27 @@ class TestDatabase(TestCase):
         If one read is added, the database statistics must be correct.
         """
         db = Database([AlphaHelix], [])
-        db.addSubject(AARead('id', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
+        db.addSubject(AARead('id', 'FRRRFRRRFAAAAAAAAAAAAAAFRRRFRRRFRRRF'))
         self.assertEqual(1, db.subjectCount)
         self.assertEqual(36, db.totalResidues)
         self.assertEqual(22, db.totalCoveredResidues)
 
-    def testTwoReadsTwoLandmarks(self):
+    def testTwoReadsTwoLandmarksSameOffsets(self):
         """
-        If two identical reads are added, both with two landmarks, two keys
-        are added to the database and both reads are listed in the dictionary
-        values for those two keys.
+        If two identical reads are added, both with two landmarks at the same
+        offsets, only one key is added to the database and both reads are
+        listed in the dictionary values for the key.
+
+        Note that A3:A2:-23 is not added to the database since that would be
+        redundant (it's the same two landmarks, with the same separation,
+        just with the sign changed).
         """
         db = Database([AlphaHelix], [])
-        db.addSubject(AARead('id1', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
-        db.addSubject(AARead('id2', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
+        db.addSubject(AARead('id1', 'FRRRFRRRFAAAAAAAAAAAAAAFRRRFRRRFRRRF'))
+        db.addSubject(AARead('id2', 'FRRRFRRRFAAAAAAAAAAAAAAFRRRFRRRFRRRF'))
         self.assertEqual(
             {
-                'A3:A2:23': {'0': [23], '1': [23]},
-                'A2:A3:-23': {'0': [0], '1': [0]}
+                'A2:A3:23': {'0': [0], '1': [0]},
             },
             db.d)
 
@@ -159,8 +172,8 @@ class TestDatabase(TestCase):
         correct.
         """
         db = Database([AlphaHelix], [])
-        db.addSubject(AARead('id1', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
-        db.addSubject(AARead('id2', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
+        db.addSubject(AARead('id1', 'FRRRFRRRFAAAAAAAAAAAAAAFRRRFRRRFRRRF'))
+        db.addSubject(AARead('id2', 'FRRRFRRRFAAAAAAAAAAAAAAFRRRFRRRFRRRF'))
         self.assertEqual(2, db.subjectCount)
         self.assertEqual(72, db.totalResidues)
         self.assertEqual(44, db.totalCoveredResidues)
@@ -171,23 +184,26 @@ class TestDatabase(TestCase):
         will be added to the dictionary if limitPerLandmark is zero.
         """
         db = Database([AlphaHelix], [], limitPerLandmark=0)
-        db.addSubject(AARead('id1', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
-        db.addSubject(AARead('id2', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
+        db.addSubject(AARead('id1', 'FRRRFRRRFAAAAAAAAAAAAAAFRRRFRRRFRRRF'))
+        db.addSubject(AARead('id2', 'FRRRFRRRFAAAAAAAAAAAAAAFRRRFRRRFRRRF'))
         self.assertEqual({}, db.d)
 
     def testTwoReadsTwoLandmarksDifferentOffsets(self):
         """
         If two reads are added, both with two landmarks separated by the same
-        distance, two keys are added to the database and both reads are listed
-        in the dictionary values for those two keys.
+        distance, only one key is added to the database and both reads are
+        listed in the dictionary values for the key.
+
+        Note that A3:A2:-23 is not added to the database since that would be
+        redundant (it's the same two landmarks, with the same separation,
+        just with the sign changed).
         """
         db = Database([AlphaHelix], [])
-        db.addSubject(AARead('id1', 'AFRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
-        db.addSubject(AARead('id2', 'FRRRFRRRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
+        db.addSubject(AARead('id1', 'AFRRRFRRRFAAAAAAAAAAAAAAFRRRFRRRFRRRF'))
+        db.addSubject(AARead('id2',  'FRRRFRRRFAAAAAAAAAAAAAAFRRRFRRRFRRRF'))
         self.assertEqual(
             {
-                'A3:A2:23': {'0': [24], '1': [23]},
-                'A2:A3:-23': {'0': [1], '1': [0]},
+                'A2:A3:23': {'0': [1], '1': [0]},
             },
             db.d)
 
@@ -200,7 +216,7 @@ class TestDatabase(TestCase):
         db.addSubject(AARead('id', 'FRRRFRRRFASA'))
         self.assertEqual(
             {
-                'A2:P:-10': {'0': [0]},
+                'A2:P:10': {'0': [0]},
             },
             db.d)
 
@@ -213,7 +229,7 @@ class TestDatabase(TestCase):
         db.addSubject(AARead('id', 'FRRRFRRRFASA'))
         self.assertEqual(
             {
-                'A2:P:-2': {'0': [0]},
+                'A2:P:2': {'0': [0]},
             },
             db.d)
 
@@ -235,8 +251,8 @@ class TestDatabase(TestCase):
         db.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
         self.assertEqual(
             {
-                'A2:P:-13': {'0': [0]},
-                'A2:P:-10': {'0': [0]},
+                'A2:P:13': {'0': [0]},
+                'A2:P:10': {'0': [0]},
             },
             db.d)
 
@@ -250,7 +266,7 @@ class TestDatabase(TestCase):
         db.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
         self.assertEqual(
             {
-                'A2:P:-10': {'0': [0]},
+                'A2:P:10': {'0': [0]},
             },
             db.d)
 
@@ -274,7 +290,7 @@ class TestDatabase(TestCase):
         db.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
         self.assertEqual(
             {
-                'A2:P:-10': {'0': [0]},
+                'A2:P:10': {'0': [0]},
             },
             db.d)
 
@@ -288,8 +304,8 @@ class TestDatabase(TestCase):
         db.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
         self.assertEqual(
             {
-                'A2:P:-13': {'0': [0]},
-                'A2:P:-10': {'0': [0]},
+                'A2:P:13': {'0': [0]},
+                'A2:P:10': {'0': [0]},
             },
             db.d)
 
@@ -303,8 +319,8 @@ class TestDatabase(TestCase):
         db.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
         self.assertEqual(
             {
-                'A2:P:-13': {'0': [0]},
-                'A2:P:-10': {'0': [0]},
+                'A2:P:13': {'0': [0]},
+                'A2:P:10': {'0': [0]},
             },
             db.d)
 
@@ -318,7 +334,7 @@ class TestDatabase(TestCase):
         db.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
         self.assertEqual(
             {
-                'A2:P:-13': {'0': [0]},
+                'A2:P:13': {'0': [0]},
             },
             db.d)
 
@@ -347,7 +363,7 @@ class TestDatabase(TestCase):
         db.addSubject(AARead('id', seq + seq))
         self.assertEqual(
             {
-                'A2:P:-10': {'0': [0, 12]},
+                'A2:P:10': {'0': [0, 12]},
             },
             db.d)
 

@@ -1,4 +1,4 @@
-from light.features import CombinedFeatureList, Landmark
+from light.features import CombinedFeatureList, TrigPoint
 
 
 class ScannedRead(object):
@@ -40,10 +40,9 @@ class ScannedRead(object):
         dictionary that can be used to identify this read.
 
         When considering each landmark, other landmarks to the left (with
-        smaller offset) of the current landmark will only be yielded after
-        other possible pairs have been yielded. This is to reduce the
-        redundancy that results if both (landmark1, landmark2) and
-        (landmark2, landmark1) pairs are yielded.
+        smaller offset) of the current landmark are ignored.  This is to
+        reduce the redundancy that results if both (landmark1, landmark2)
+        and (landmark2, landmark1) pairs are yielded.
 
         @param limitPerLandmark: An C{int} limit on the number of pairs to
             yield per landmark.
@@ -62,34 +61,20 @@ class ScannedRead(object):
         for landmark in self.landmarks:
             count = 0
             landmarkOffset = landmark.offset
-            landmarksOnLeft = []
             nearest = features.nearest(landmarkOffset,
                                        maxDistance=maxDistance,
                                        minDistance=minDistance)
 
-            # Take features from the nearest iterator, but do not yield any
-            # features that are landmarks that are to the left (i.e., with
-            # smaller offset) of the current landmark. Instead, save these
-            # and only yield them after we have yielded everything else
-            # (landmarks to the right, trig points on either side).
             while limitPerLandmark is None or count < limitPerLandmark:
                 try:
                     feature = nearest.next()
                 except StopIteration:
                     break
                 else:
-                    if feature is not landmark:
-                        if (feature.offset < landmarkOffset and
-                                isinstance(feature, Landmark)):
-                            landmarksOnLeft.append(feature)
-                        else:
-                            yield landmark, feature
-                            count += 1
-
-            # Now yield landmarks to the left of the current landmark, if any.
-            for landmarkOnLeft in landmarksOnLeft:
-                if limitPerLandmark is None or count < limitPerLandmark:
-                    yield landmark, landmarkOnLeft
-                    count += 1
-                else:
-                    break
+                    # Yield any landmark or trig point on the right (with
+                    # greater offset) of the current landmark, and all trig
+                    # points (whether left or right).
+                    if (feature.offset > landmarkOffset or
+                            isinstance(feature, TrigPoint)):
+                        yield landmark, feature
+                        count += 1

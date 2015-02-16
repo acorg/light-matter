@@ -1,8 +1,6 @@
 from json import loads
 from unittest import TestCase
 
-from dark.hsp import HSP
-
 from light.alignments import jsonDictToAlignments
 
 from sample_data import (
@@ -56,10 +54,10 @@ class TestRecords(TestCase):
         self.assertEqual(2, len(alignments))
 
         self.assertEqual(SQUIRRELPOX1296.id, alignments[0].subjectTitle)
-        self.assertEqual(HSP(5), alignments[0].hsps[0])
+        self.assertEqual(5.0 / 21.0, alignments[0].hsps[0].score.score)
 
         self.assertEqual(SQUIRRELPOX55.id, alignments[1].subjectTitle)
-        self.assertEqual(HSP(4), alignments[1].hsps[0])
+        self.assertEqual(4.0 / 21.0, alignments[1].hsps[0].score.score)
 
     def testRECORD1(self):
         """
@@ -70,10 +68,10 @@ class TestRecords(TestCase):
         self.assertEqual(2, len(alignments))
 
         self.assertEqual(MONKEYPOX.id, alignments[0].subjectTitle)
-        self.assertEqual(HSP(3), alignments[0].hsps[0])
+        self.assertEqual(3.0 / 11.0, alignments[0].hsps[0].score.score)
 
         self.assertEqual(MUMMYPOX.id, alignments[1].subjectTitle)
-        self.assertEqual(HSP(1), alignments[1].hsps[0])
+        self.assertEqual(1.0 / 11.0, alignments[1].hsps[0].score.score)
 
     def testRECORD2(self):
         """
@@ -83,7 +81,7 @@ class TestRecords(TestCase):
         self.assertEqual(1, len(alignments))
 
         self.assertEqual(COWPOX.id, alignments[0].subjectTitle)
-        self.assertEqual(HSP(10), alignments[0].hsps[0])
+        self.assertEqual(1.0, alignments[0].hsps[0].score.score)
 
     def testRECORD3(self):
         """
@@ -93,7 +91,7 @@ class TestRecords(TestCase):
         self.assertEqual(1, len(alignments))
 
         self.assertEqual(COWPOX.id, alignments[0].subjectTitle)
-        self.assertEqual(HSP(10), alignments[0].hsps[0])
+        self.assertEqual(1.0, alignments[0].hsps[0].score.score)
 
     def testRECORD4(self):
         """
@@ -103,4 +101,4 @@ class TestRecords(TestCase):
         self.assertEqual(1, len(alignments))
 
         self.assertEqual(COWPOX.id, alignments[0].subjectTitle)
-        self.assertEqual(HSP(10), alignments[0].hsps[0])
+        self.assertEqual(1.0, alignments[0].hsps[0].score.score)

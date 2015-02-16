@@ -1,7 +1,8 @@
 import sys
-import numpy as np
 from json import dumps
 from collections import defaultdict
+
+from light.histogram import Histogram
 
 
 class Result(object):
@@ -11,8 +12,7 @@ class Result(object):
     @param read: A C{dark.read.AARead} instance.
     @param matches: A C{dict} of matches. Keys are C{int} subject indices.
         Each value is a C{list} of C{dicts}, with each C{dict} containing the
-        following keys: 'landmarkLength', 'landmarkName',
-        'readOffset', 'subjectOffsets', and 'trigPointName'.
+        following keys: 'landmark', 'subjectOffsets', and 'trigPoint'.
     @param hashCount: The C{int} number of hashes that a scannedRead has
         (including hashes that were not found in the database).
     @param significanceFraction: The C{float} fraction of all (landmark,
@@ -30,30 +30,46 @@ class Result(object):
         self.matches = matches
         self._storeFullAnalysis = storeFullAnalysis
         self.analysis = defaultdict(dict)
+        significanceCutoff = significanceFraction * hashCount
         for subjectIndex in matches:
-            offsets = [subjectOffset - match['readOffset']
-                       for match in matches[subjectIndex]
-                       for subjectOffset in match['subjectOffsets']]
             maxLen = max([len(read.sequence),
                           matches[subjectIndex][0]['subjectLength']])
-            bins = maxLen // bucketFactor
-            histogram, histogramBuckets = np.histogram(offsets, bins=bins)
-            maxCount = np.max(histogram)
-            maxCountFraction = maxCount / float(hashCount)
-            significant = (maxCountFraction >= significanceFraction)
+            nBins = maxLen // bucketFactor
+            histogram = Histogram(nBins)
+
+            for match in matches[subjectIndex]:
+                readOffset = match['landmark'].offset
+                for subjectOffset in match['subjectOffsets']:
+                    delta = subjectOffset - readOffset
+                    histogram.add(match, delta)
+
+            histogram.finalizeHistogram()
+            significant = [bin_ for bin_ in histogram.bins
+                           if len(bin_) > significanceCutoff]
+
+            if significant:
+                pairs = set()
+                for bin_ in significant:
+                    for match in bin_:
+                        pairs.add((match['landmark'], match['trigPoint']))
+                score = len(pairs) / float(hashCount)
+            else:
+                score = None
+
             if storeFullAnalysis:
                 self.analysis[subjectIndex] = {
                     'hashCount': hashCount,
-                    'histogram': histogram,
-                    'histogramBuckets': histogramBuckets,
-                    'maxCount': maxCount,
-                    'offsets': offsets,
-                    'score': maxCount,
-                    'significant': significant,
+                    'histogram': {
+                        'counts': [len(b) for b in histogram.bins],
+                        'max': histogram.max,
+                        'min': histogram.min,
+                    },
+                    'score': score,
+                    'significant': len(significant) > 0,
                 }
             elif significant:
                 self.analysis[subjectIndex] = {
-                    'score': maxCount,
+                    'score': score,
                 }
 
     def significant(self):
@@ -81,8 +97,18 @@ class Result(object):
         """
         alignments = []
         for subjectIndex in self.significant():
+            matches = []
+            for match in self.matches[subjectIndex]:
+                matches.append({
+                    'landmarkLength': match['landmark'].length,
+                    'landmarkName': match['landmark'].name,
+                    'readOffset': match['landmark'].offset,
+                    'subjectLength': match['subjectLength'],
+                    'subjectOffsets': match['subjectOffsets'],
+                    'trigPointName': match['trigPoint'].name,
+                })
             alignments.append({
-                'matchInfo': self.matches[subjectIndex],
+                'matchInfo': matches,
                 'matchScore': self.analysis[subjectIndex]['score'],
                 'subjectIndex': subjectIndex,
             })

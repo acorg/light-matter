@@ -44,11 +44,20 @@ class Landmark(_Feature):
             self.name, self.symbol, self.offset, self.length,
             self.symbolDetail)
 
+    def __repr__(self):
+        return '%s symbol=%r offset=%d len=%d detail=%r' % (
+            self.name, self.symbol, self.offset, self.length,
+            self.symbolDetail)
+
     def __eq__(self, other):
         return (self.symbol == other.symbol and
                 self.offset == other.offset and
                 self.length == other.length and
                 self.symbolDetail == other.symbolDetail)
+
+    def __hash__(self):
+        return ('%s:%d:%d:%s' % (self.symbol, self.offset, self.length,
+                                 self.symbolDetail)).__hash__()
 
     def hashkey(self):
         """
@@ -74,10 +83,16 @@ class TrigPoint(_Feature):
     def __str__(self):
         return '%s symbol=%s offset=%d' % (self.name, self.symbol, self.offset)
 
+    def __repr__(self):
+        return '%s symbol=%s offset=%d' % (self.name, self.symbol, self.offset)
+
     def __eq__(self, other):
         return (self.name == other.name and
                 self.symbol == other.symbol and
                 self.offset == other.offset)
+
+    def __hash__(self):
+        return ('%s:%d' % (self.symbol, self.offset)).__hash__()
 
     def hashkey(self):
         """

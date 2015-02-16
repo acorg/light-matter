@@ -281,7 +281,8 @@ class TestLightReadsAlignments(TestCase):
         with patch('__builtin__.open', mockOpener, create=True):
             readsAlignments = LightReadsAlignments('file.json', DB)
             self.assertEqual(
-                sorted([HSP(1), HSP(3), HSP(4), HSP(5), HSP(10), HSP(10)]),
+                sorted([HSP(1.0 / 11.0), HSP(3.0 / 11.0), HSP(4.0 / 21.0),
+                        HSP(5.0 / 21.0), HSP(1.0), HSP(1.0)]),
                 sorted(readsAlignments.hsps()))
 
 
@@ -360,7 +361,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         mockOpener = mockOpen(read_data=PARAMS + RECORD0)
         with patch('__builtin__.open', mockOpener, create=True):
             readsAlignments = LightReadsAlignments('file.json', DB)
-            result = list(readsAlignments.filter(scoreCutoff=4.5))
+            result = list(readsAlignments.filter(scoreCutoff=0.23))
             self.assertEqual(1, len(result))
             self.assertEqual(1, len(result[0]))
             self.assertEqual(SQUIRRELPOX1296.id, result[0][0].subjectTitle)
@@ -664,7 +665,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
             self.assertEqual(3, len(list(readsAlignments)))
             readsAlignments.filter(minSequenceLen=14)
             readsAlignments.filter(maxSequenceLen=16)
-            readsAlignments.filter(scoreCutoff=4.5)
+            readsAlignments.filter(scoreCutoff=0.05)
             result = list(readsAlignments)
             self.assertEqual(1, len(result))
             readsAlignments.clearFilter()

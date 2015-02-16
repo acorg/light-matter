@@ -311,3 +311,28 @@ class TestCombinedFeatureList(TestCase):
         result = list(cfl.nearest(0, maxDistance=10, minDistance=4))
         self.assertEqual(
             [landmark3, landmark4, trigPoint1], result)
+
+
+class TestSets(TestCase):
+    """
+    Test set operations on the light.features.Landmark and
+    light.features.trigPoint classes.
+    """
+    def testIdentity(self):
+        """
+        A set with just one landmark in it should know that it contains that
+        landmark.
+        """
+        landmark = Landmark('name', 'n', 33, 100)
+        s = set([landmark])
+        self.assertIn(landmark, s)
+
+    def testTuple(self):
+        """
+        A set with a (landmark, trigPoint) tuple in it should know that it
+        contains that tuple.
+        """
+        landmark = Landmark('name', 'n', 33, 100)
+        trigPoint = TrigPoint('trig', 't', 44)
+        s = set([(landmark, trigPoint)])
+        self.assertIn((landmark, trigPoint), s)

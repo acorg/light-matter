@@ -51,7 +51,8 @@ def _printResult(result):
     print 'DB.find() result for read', result.read.id
     for subjectIndex in result.matches:
         print 'subjectIndex', subjectIndex
-        print result.analysis[subjectIndex]
+        print 'analysis', result.analysis[subjectIndex]
+        print 'matches', result.matches
 
 
 # Run find on a read that hits both squirrelpox subjects.

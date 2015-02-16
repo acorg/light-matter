@@ -5,6 +5,7 @@ from json import loads
 from dark.reads import AARead
 
 from light.result import Result
+from light.features import Landmark, TrigPoint
 
 
 class TestResult(TestCase):
@@ -33,11 +34,9 @@ class TestResult(TestCase):
         matches = {
             0: [
                 {
-                    'trigPointName': 'Peaks',
-                    'landmarkLength': 9,
-                    'landmarkName': 'AlphaHelix',
+                    'trigPoint': TrigPoint('Peaks', 'P', 1),
+                    'landmark': Landmark('AlphaHelix', 'A', 0, 9),
                     'subjectOffsets': [2],
-                    'readOffset': 1,
                     'subjectLength': 100,
                 },
             ],
@@ -56,11 +55,9 @@ class TestResult(TestCase):
         matches = {
             0: [
                 {
-                    'trigPointName': 'Peaks',
-                    'landmarkLength': 9,
-                    'landmarkName': 'AlphaHelix',
+                    'trigPoint': TrigPoint('Peaks', 'P', 1),
+                    'landmark': Landmark('AlphaHelix', 'A', 1, 9),
                     'subjectOffsets': [2, 10],
-                    'readOffset': 1,
                     'subjectLength': 100,
                 },
             ],
@@ -75,40 +72,34 @@ class TestResult(TestCase):
         (the maximum number of identical distances) must be too.
         """
         read = AARead('read', 'AGTARFSDDD')
-        hashCount = 3
+        hashCount = 4
         matches = {
             0: [
                 {
-                    'trigPointName': 'Peaks',
-                    'landmarkLength': 9,
-                    'landmarkName': 'AlphaHelix',
+                    'trigPoint': TrigPoint('Peaks', 'P', 1),
+                    'landmark': Landmark('AlphaHelix', 'A', 0, 9),
                     'subjectOffsets': [0],
-                    'readOffset': 0,
                     'subjectLength': 100,
                 },
                 {
-                    'trigPointName': 'Peaks',
-                    'landmarkLength': 9,
-                    'landmarkName': 'AlphaHelix',
+                    'trigPoint': TrigPoint('Peaks', 'P', 2),
+                    'landmark': Landmark('AlphaHelix', 'A', 0, 9),
                     'subjectOffsets': [0],
-                    'readOffset': 0,
                     'subjectLength': 100,
                 },
                 {
-                    'trigPointName': 'Peaks',
-                    'landmarkLength': 9,
-                    'landmarkName': 'AlphaHelix',
+                    'trigPoint': TrigPoint('Peaks', 'P', 3),
+                    'landmark': Landmark('AlphaHelix', 'A', 0, 9),
                     'subjectOffsets': [10],
-                    'readOffset': 0,
                     'subjectLength': 100,
                 },
             ],
         }
 
-        result = Result(read, matches, hashCount, significanceFraction=0.1,
+        result = Result(read, matches, hashCount, significanceFraction=0.25,
                         bucketFactor=1)
         self.assertEqual([0], list(result.significant()))
-        self.assertEqual(2, result.analysis[0]['score'])
+        self.assertEqual(0.5, result.analysis[0]['score'])
 
     def testTwoSignificantMatches(self):
         """
@@ -120,56 +111,46 @@ class TestResult(TestCase):
         matches = {
             0: [
                 {
-                    'trigPointName': 'Peaks',
-                    'landmarkLength': 9,
-                    'landmarkName': 'AlphaHelix',
+                    'trigPoint': TrigPoint('Peaks', 'P', 1),
+                    'landmark': Landmark('AlphaHelix', 'A', 0, 9),
                     'subjectOffsets': [0],
-                    'readOffset': 0,
                     'subjectLength': 100,
                 },
                 {
-                    'trigPointName': 'Peaks',
-                    'landmarkLength': 9,
-                    'landmarkName': 'AlphaHelix',
+                    'trigPoint': TrigPoint('Peaks', 'P', 2),
+                    'landmark': Landmark('AlphaHelix', 'A', 0, 9),
                     'subjectOffsets': [0],
-                    'readOffset': 0,
                     'subjectLength': 100,
                 },
                 {
-                    'trigPointName': 'Peaks',
-                    'landmarkLength': 9,
-                    'landmarkName': 'AlphaHelix',
+                    'trigPoint': TrigPoint('Peaks', 'P', 3),
+                    'landmark': Landmark('AlphaHelix', 'A', 0, 9),
                     'subjectOffsets': [10],
-                    'readOffset': 0,
                     'subjectLength': 100,
                 },
             ],
 
             1: [
                 {
-                    'trigPointName': 'Peaks',
-                    'landmarkLength': 9,
-                    'landmarkName': 'AlphaHelix',
+                    'trigPoint': TrigPoint('Peaks', 'P', 1),
+                    'landmark': Landmark('AlphaHelix', 'A', 0, 9),
                     'subjectOffsets': [0],
-                    'readOffset': 0,
                     'subjectLength': 1000,
                 },
                 {
-                    'trigPointName': 'Peaks',
-                    'landmarkLength': 9,
-                    'landmarkName': 'AlphaHelix',
+                    'trigPoint': TrigPoint('Peaks', 'P', 2),
+                    'landmark': Landmark('AlphaHelix', 'A', 0, 9),
                     'subjectOffsets': [0],
-                    'readOffset': 0,
                     'subjectLength': 1000,
                 },
             ],
         }
 
-        result = Result(read, matches, hashCount, significanceFraction=0.1,
+        result = Result(read, matches, hashCount, significanceFraction=0.3,
                         bucketFactor=1)
         self.assertEqual([0, 1], sorted(list(result.significant())))
-        self.assertEqual(2, result.analysis[0]['score'])
-        self.assertEqual(2, result.analysis[1]['score'])
+        self.assertEqual(0.4, result.analysis[0]['score'])
+        self.assertEqual(0.4, result.analysis[1]['score'])
 
     def testSaveEmpty(self):
         """
@@ -202,26 +183,22 @@ class TestResult(TestCase):
         Save must produce the right JSON format.
         """
         read = AARead('id', 'FRRRFRRRFRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF')
-        hashCount = 2
+        hashCount = 1
         matches = {
             0: [
                 {
-                    'trigPointName': 'AlphaHelix',
-                    'landmarkLength': 9,
-                    'readOffset': 0,
+                    'trigPoint': TrigPoint('Peaks', 'P', 1),
+                    'landmark': Landmark('AlphaHelix', 'A', 0, 9),
                     'subjectOffsets': [0],
-                    'landmarkName': 'AlphaHelix',
                     'subjectLength': 1000,
                 },
             ],
 
             27: [
                 {
-                    'trigPointName': 'AlphaHelix',
-                    'landmarkLength': 13,
-                    'readOffset': 27,
+                    'trigPoint': TrigPoint('Peaks', 'P', 1),
+                    'landmark': Landmark('AlphaHelix', 'A', 27, 13),
                     'subjectOffsets': [27],
-                    'landmarkName': 'AlphaHelix',
                     'subjectLength': 100,
                 },
             ],
@@ -241,11 +218,11 @@ class TestResult(TestCase):
                                 'landmarkName': 'AlphaHelix',
                                 'readOffset': 0,
                                 'subjectOffsets': [0],
-                                'trigPointName': 'AlphaHelix',
+                                'trigPointName': 'Peaks',
                                 'subjectLength': 1000,
                             },
                         ],
-                        'matchScore': 1,
+                        'matchScore': 1.0,
                         'subjectIndex': 0
                     },
                     {
@@ -255,11 +232,11 @@ class TestResult(TestCase):
                                 'landmarkName': 'AlphaHelix',
                                 'readOffset': 27,
                                 'subjectOffsets': [27],
-                                'trigPointName': 'AlphaHelix',
+                                'trigPointName': 'Peaks',
                                 'subjectLength': 100,
                             },
                         ],
-                        'matchScore': 1,
+                        'matchScore': 1.0,
                         'subjectIndex': 27,
                     },
                 ],
@@ -270,25 +247,24 @@ class TestResult(TestCase):
 
     def testRightNumberOfBucketsDefault(self):
         """
-        If no bucket factor is given, the number of bins must be 11.
+        If no bucket factor is given, the number of bins must be 20 if
+        the length of the subject is 20 and the length of the read is less.
         """
         read = AARead('read', 'AGTARFSDDD')
         hashCount = 1
         matches = {
             0: [
                 {
-                    'trigPointName': 'Peaks',
-                    'landmarkLength': 9,
-                    'landmarkName': 'AlphaHelix',
+                    'trigPoint': TrigPoint('Peaks', 'P', 1),
+                    'landmark': Landmark('AlphaHelix', 'A', 1, 9),
                     'subjectOffsets': [2],
-                    'readOffset': 1,
                     'subjectLength': 20,
                 },
             ],
         }
         result = Result(read, matches, hashCount, significanceFraction=0.0,
                         bucketFactor=1, storeFullAnalysis=True)
-        self.assertEqual(20, len(result.analysis[0]['histogram']))
+        self.assertEqual(20, len(result.analysis[0]['histogram']['counts']))
 
     def testRightNumberOfBuckets(self):
         """
@@ -300,15 +276,13 @@ class TestResult(TestCase):
         matches = {
             0: [
                 {
-                    'trigPointName': 'Peaks',
-                    'landmarkLength': 9,
-                    'landmarkName': 'AlphaHelix',
+                    'trigPoint': TrigPoint('Peaks', 'P', 1),
+                    'landmark': Landmark('AlphaHelix', 'A', 1, 9),
                     'subjectOffsets': [2],
-                    'readOffset': 1,
                     'subjectLength': 20,
                 },
             ],
         }
         result = Result(read, matches, hashCount, significanceFraction=0.0,
                         bucketFactor=5, storeFullAnalysis=True)
-        self.assertEqual(4, len(result.analysis[0]['histogram']))
+        self.assertEqual(4, len(result.analysis[0]['histogram']['counts']))

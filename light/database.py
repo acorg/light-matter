@@ -227,12 +227,10 @@ class Database(object):
                     subjectIndex = int(subjectIndex)
                     subjectLength = len(self.subjectInfo[subjectIndex][1])
                     matches[subjectIndex].append({
-                        'landmarkLength': landmark.length,
-                        'landmarkName': landmark.name,
-                        'readOffset': landmark.offset,
+                        'landmark': landmark,
                         'subjectLength': subjectLength,
                         'subjectOffsets': subjectOffsets,
-                        'trigPointName': trigPoint.name,
+                        'trigPoint': trigPoint,
                     })
 
         return Result(read, matches, hashCount, significanceFraction,

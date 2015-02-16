@@ -1,4 +1,4 @@
-from light.features import CombinedFeatureList
+from light.features import CombinedFeatureList, TrigPoint
 
 
 class ScannedRead(object):
@@ -39,6 +39,11 @@ class ScannedRead(object):
         Get pairs of (landmark, trig point) for use in building a search
         dictionary that can be used to identify this read.
 
+        When considering each landmark, other landmarks to the left (with
+        smaller offset) of the current landmark are ignored.  This is to
+        reduce the redundancy that results if both (landmark1, landmark2)
+        and (landmark2, landmark1) pairs are yielded.
+
         @param limitPerLandmark: An C{int} limit on the number of pairs to
             yield per landmark.
         @param maxDistance: The C{int} maximum distance permitted between
@@ -54,15 +59,21 @@ class ScannedRead(object):
 
         for landmark in self.landmarks:
             count = 0
-            nearest = features.nearest(landmark.offset,
+            landmarkOffset = landmark.offset
+            nearest = features.nearest(landmarkOffset,
                                        maxDistance=maxDistance,
                                        minDistance=minDistance)
+
             while limitPerLandmark is None or count < limitPerLandmark:
                 try:
                     feature = nearest.next()
                 except StopIteration:
                     break
                 else:
-                    if feature is not landmark:
+                    # Yield any landmark or trig point on the right (with
+                    # greater offset) of the current landmark, and all trig
+                    # points (whether left or right).
+                    if (feature.offset > landmarkOffset or
+                            isinstance(feature, TrigPoint)):
                         yield landmark, feature
                         count += 1

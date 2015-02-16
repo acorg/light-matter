@@ -51,7 +51,6 @@ class ScannedRead(object):
         @param minDistance: The C{int} minimum distance permitted between
             yielded pairs.
         @return: A generator that yields (landmark, trig point) pairs.
-
         """
         if limitPerLandmark is not None and limitPerLandmark < 1:
             return

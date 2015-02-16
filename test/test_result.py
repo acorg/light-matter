@@ -287,7 +287,7 @@ class TestResult(TestCase):
             ],
         }
         result = Result(read, matches, hashCount, significanceFraction=0.0,
-                        bucketFactor=1, storeAnalysis=True)
+                        bucketFactor=1, storeFullAnalysis=True)
         self.assertEqual(20, len(result.analysis[0]['histogram']))
 
     def testRightNumberOfBuckets(self):
@@ -310,5 +310,5 @@ class TestResult(TestCase):
             ],
         }
         result = Result(read, matches, hashCount, significanceFraction=0.0,
-                        bucketFactor=5, storeAnalysis=True)
+                        bucketFactor=5, storeFullAnalysis=True)
         self.assertEqual(4, len(result.analysis[0]['histogram']))

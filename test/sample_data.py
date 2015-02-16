@@ -56,7 +56,7 @@ def _printResult(result):
 
 # Run find on a read that hits both squirrelpox subjects.
 READ0 = AARead('id0', SQUIRRELPOX1296.sequence + SQUIRRELPOX55.sequence)
-_result = DB.find(READ0, storeAnalysis=True, significanceFraction=0.18)
+_result = DB.find(READ0, storeFullAnalysis=True, significanceFraction=0.18)
 RECORD0 = _result.save(StringIO()).getvalue()
 
 # Run find on a read that hits both monkeypox and mummypox. Note that if
@@ -66,20 +66,20 @@ RECORD0 = _result.save(StringIO()).getvalue()
 # start a beta strand (instead of the mummypox sequence starting it 2
 # residues later).
 READ1 = AARead('id1', MUMMYPOX.sequence + MONKEYPOX.sequence)
-_result = DB.find(READ1, storeAnalysis=True, significanceFraction=0.01)
+_result = DB.find(READ1, storeFullAnalysis=True, significanceFraction=0.01)
 RECORD1 = _result.save(StringIO()).getvalue()
 
 # Run find on a read that hits only cowpox.
 READ2 = AARead('id2', COWPOX.sequence)
-_result = DB.find(READ2, storeAnalysis=True, significanceFraction=0.4)
+_result = DB.find(READ2, storeFullAnalysis=True, significanceFraction=0.4)
 RECORD2 = _result.save(StringIO()).getvalue()
 
 # Run find on a second read that also hits just cowpox.
 READ3 = AARead('id3', COWPOX.sequence)
-_result = DB.find(READ3, storeAnalysis=True, significanceFraction=0.4)
+_result = DB.find(READ3, storeFullAnalysis=True, significanceFraction=0.4)
 RECORD3 = _result.save(StringIO()).getvalue()
 
 # Run find on a third read that also hits just cowpox.
 READ4 = AARead('id4', COWPOX.sequence)
-_result = DB.find(READ4, storeAnalysis=True, significanceFraction=0.4)
+_result = DB.find(READ4, storeFullAnalysis=True, significanceFraction=0.4)
 RECORD4 = _result.save(StringIO()).getvalue()

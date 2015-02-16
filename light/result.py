@@ -21,13 +21,14 @@ class Result(object):
         significant match with a database title.
     @param bucketFactor: A C{int} factor by which the distance between
         landmark and trig point is divided, to influence sensitivity.
-    @param storeAnalysis: A C{bool}. If C{True} the intermediate significance
-        analysis of each matched subject will be stored. Else it is discarded.
+    @param storeFullAnalysis: A C{bool}. If C{True} the full significance
+        analysis of each matched subject will be stored.
     """
     def __init__(self, read, matches, hashCount, significanceFraction,
-                 bucketFactor, storeAnalysis=False):
+                 bucketFactor, storeFullAnalysis=False):
         self.read = read
         self.matches = matches
+        self._storeFullAnalysis = storeFullAnalysis
         self.analysis = defaultdict(dict)
         for subjectIndex in matches:
             offsets = [subjectOffset - match['readOffset']
@@ -40,19 +41,20 @@ class Result(object):
             maxCount = np.max(histogram)
             maxCountFraction = maxCount / float(hashCount)
             significant = (maxCountFraction >= significanceFraction)
-            self.analysis[subjectIndex] = {
-                'score': maxCount,
-                'significant': significant,
-            }
-
-            if storeAnalysis:
-                self.analysis[subjectIndex].update({
+            if storeFullAnalysis:
+                self.analysis[subjectIndex] = {
                     'hashCount': hashCount,
                     'histogram': histogram,
                     'histogramBuckets': histogramBuckets,
                     'maxCount': maxCount,
                     'offsets': offsets,
-                })
+                    'score': maxCount,
+                    'significant': significant,
+                }
+            elif significant:
+                self.analysis[subjectIndex] = {
+                    'score': maxCount,
+                }
 
     def significant(self):
         """
@@ -61,12 +63,18 @@ class Result(object):
         @return: A generator that yields the subject indices of the
             significant matched subjects.
         """
-        return (subjectIndex for subjectIndex, analysis in
-                self.analysis.iteritems() if analysis['significant'])
+        if self._storeFullAnalysis:
+            return (subjectIndex for subjectIndex, analysis in
+                    self.analysis.iteritems() if analysis['significant'])
+        else:
+            # When the full analysis isn't being stored, all keys in
+            # self.analysis are significant.
+            return self.analysis.iterkeys()
 
     def save(self, fp=sys.stdout):
         """
-        Print a line of JSON with the significant results for this read.
+        Print a line of JSON with the significant subject matches for this
+        read.
 
         @param fp: a file pointer.
         @return: The C{fp} we were passed (this is useful in testing).

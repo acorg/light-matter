@@ -28,9 +28,10 @@ class Database(object):
         landmark and trig point is divided, to influence sensitivity.
     """
 
-    # The default amount by which the maximum delta count in a bucket must
-    # exceed the mean bucket count for that maximum bucket count to be
-    # considered significant.
+    # The default fraction of all (landmark, trig point) pairs for a
+    # scannedRead that need to fall into the same offset delta histogram
+    # bucket for that bucket to be considered a significant match with a
+    # database title.
     SIGNIFICANCE_FRACTION_DEFAULT = 0.25
 
     def __init__(self, landmarkFinderClasses, trigPointFinderClasses,
@@ -172,7 +173,7 @@ class Database(object):
 
         return fp
 
-    def find(self, read, significanceFraction=None, storeAnalysis=False):
+    def find(self, read, significanceFraction=None, storeFullAnalysis=False):
         """
         A function which takes a read, computes all hashes for it, looks up
         matching hashes and checks which database sequence it matches.
@@ -182,7 +183,7 @@ class Database(object):
             trig point) pairs for a scannedRead that need to fall into the
             same histogram bucket for that bucket to be considered a
             significant match with a database title.
-        @param storeAnalysis: A C{bool}. If C{True} the intermediate
+        @param storeFullAnalysis: A C{bool}. If C{True} the intermediate
             significance analysis computed in the Result will be stored.
         @return: A C{light.result.Result} instance.
         """
@@ -235,7 +236,7 @@ class Database(object):
                     })
 
         return Result(read, matches, hashCount, significanceFraction,
-                      self.bucketFactor, storeAnalysis=storeAnalysis)
+                      self.bucketFactor, storeFullAnalysis=storeFullAnalysis)
 
     def save(self, fp=sys.stdout):
         """

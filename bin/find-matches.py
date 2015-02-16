@@ -117,7 +117,7 @@ if __name__ == '__main__':
     # Look up each read in the database.
     for count, read in enumerate(reads):
         result = database.find(read, args.significanceFraction,
-                               storeAnalysis=human)
+                               storeFullAnalysis=human)
         if human:
             if count:
                 print '---'

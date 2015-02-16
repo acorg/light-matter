@@ -458,18 +458,18 @@ class TestDatabase(TestCase):
         self.assertEqual(
             {
                 0: [
-                    {'trigPointName': 'Peaks',
-                     'landmarkLength': 9,
-                     'readOffset': 0,
-                     'subjectLength': 16,
-                     'subjectOffsets': [1],
-                     'landmarkName': 'AlphaHelix'},
-                    {'trigPointName': 'Peaks',
-                     'landmarkLength': 9,
-                     'readOffset': 0,
-                     'subjectLength': 16,
-                     'subjectOffsets': [1],
-                     'landmarkName': 'AlphaHelix'}
+                    {
+                        'trigPoint': TrigPoint('Peaks', 'P', 10),
+                        'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
+                        'subjectLength': 16,
+                        'subjectOffsets': [1],
+                    },
+                    {
+                        'trigPoint': TrigPoint('Peaks', 'P', 13),
+                        'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
+                        'subjectLength': 16,
+                        'subjectOffsets': [1],
+                    }
                 ]
             }, result.matches)
         self.assertEqual(0, len(list(result.significant())))
@@ -488,12 +488,10 @@ class TestDatabase(TestCase):
             {
                 0: [
                     {
-                        'trigPointName': 'Peaks',
-                        'landmarkLength': 9,
-                        'readOffset': 0,
+                        'trigPoint': TrigPoint('Peaks', 'P', 10),
+                        'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
                         'subjectOffsets': [1],
-                        'landmarkName': 'AlphaHelix',
-                        'subjectLength': 16
+                        'subjectLength': 16,
                     },
                 ],
             },
@@ -526,7 +524,7 @@ class TestDatabase(TestCase):
         Two matching keys in the same subject must be found.
         """
         subject = AARead('subject', 'FRRRFRRRFASAASA')
-        query = AARead('query', 'FRRRFRRRFASAASA')
+        query = AARead('query',     'FRRRFRRRFASAASA')
         db = Database([AlphaHelix], [Peaks])
         db.addSubject(subject)
         result = db.find(query)
@@ -534,19 +532,15 @@ class TestDatabase(TestCase):
             {
                 0: [
                     {
-                        'landmarkLength': 9,
-                        'landmarkName': 'AlphaHelix',
-                        'readOffset': 0,
+                        'trigPoint': TrigPoint('Peaks', 'P', 10),
+                        'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
                         'subjectOffsets': [0],
-                        'trigPointName': 'Peaks',
                         'subjectLength': 15,
                     },
                     {
-                        'landmarkLength': 9,
-                        'landmarkName': 'AlphaHelix',
-                        'readOffset': 0,
+                        'trigPoint': TrigPoint('Peaks', 'P', 13),
+                        'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
                         'subjectOffsets': [0],
-                        'trigPointName': 'Peaks',
                         'subjectLength': 15,
                     }
                 ],

@@ -112,7 +112,7 @@ class TestTitlesAlignments(TestCase):
                              titleAlignments.subjectLength)
             self.assertEqual(1, len(titleAlignments))
             self.assertEqual(READ0, titleAlignments[0].read)
-            self.assertEqual(HSP(5), titleAlignments[0].hsps[0])
+            self.assertEqual(HSP(5.0 / 21.0), titleAlignments[0].hsps[0])
 
             titleAlignments = titlesAlignments[SQUIRRELPOX55.id]
             self.assertEqual(SQUIRRELPOX55.id, titleAlignments.subjectTitle)
@@ -120,7 +120,7 @@ class TestTitlesAlignments(TestCase):
                              titleAlignments.subjectLength)
             self.assertEqual(1, len(titleAlignments))
             self.assertEqual(READ0, titleAlignments[0].read)
-            self.assertEqual(HSP(4), titleAlignments[0].hsps[0])
+            self.assertEqual(HSP(4.0 / 21.0), titleAlignments[0].hsps[0])
 
     def testTitleCollection(self):
         """
@@ -141,10 +141,10 @@ class TestTitlesAlignments(TestCase):
                              titleAlignments.subjectLength)
 
             self.assertEqual(READ2, titleAlignments[0].read)
-            self.assertEqual(HSP(10), titleAlignments[0].hsps[0])
+            self.assertEqual(HSP(1.0), titleAlignments[0].hsps[0])
 
             self.assertEqual(READ3, titleAlignments[1].read)
-            self.assertEqual(HSP(10), titleAlignments[1].hsps[0])
+            self.assertEqual(HSP(1.0), titleAlignments[1].hsps[0])
 
     def testAddTitleRepeat(self):
         """
@@ -188,7 +188,8 @@ class TestTitlesAlignments(TestCase):
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = list(titlesAlignments.hsps())
             self.assertEqual(
-                sorted([HSP(5), HSP(4), HSP(3), HSP(1), HSP(10)]),
+                sorted([HSP(5.0 / 21.0), HSP(4.0 / 21.0), HSP(3.0 / 11.0),
+                        HSP(1.0 / 11.0), HSP(1.0)]),
                 sorted(result))
 
 
@@ -244,7 +245,7 @@ class TestTitlesAlignmentsFiltering(TestCase):
         with patch('__builtin__.open', mockOpener, create=True):
             readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
-            result = titlesAlignments.filter(minMedianScore=10)
+            result = titlesAlignments.filter(minMedianScore=0.9)
             self.assertEqual(
                 [
                     COWPOX.id,
@@ -261,7 +262,7 @@ class TestTitlesAlignmentsFiltering(TestCase):
         with patch('__builtin__.open', mockOpener, create=True):
             readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
-            result = titlesAlignments.filter(withScoreBetterThan=5)
+            result = titlesAlignments.filter(withScoreBetterThan=0.9)
             self.assertEqual(
                 [
                     COWPOX.id,
@@ -415,11 +416,11 @@ class TestTitleSorting(TestCase):
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = titlesAlignments.sortTitles('medianScore')
             self.assertEqual([
-                COWPOX.id,           # 24
-                SQUIRRELPOX1296.id,  # 2
-                SQUIRRELPOX55.id,    # 2
-                MONKEYPOX.id,        # 1
-                MUMMYPOX.id,         # 1
+                COWPOX.id,           # 1.0
+                MONKEYPOX.id,        # 0.2727 (3.0 / 11.0)
+                SQUIRRELPOX1296.id,  # 0.25 (5.0 / 21.0)
+                SQUIRRELPOX55.id,    # 0.2 (4.0 / 21.0)
+                MUMMYPOX.id,         # 0.0909 (1.0 / 11.0)
             ], result)
 
     def testMaxScore(self):
@@ -433,11 +434,11 @@ class TestTitleSorting(TestCase):
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = titlesAlignments.sortTitles('maxScore')
             self.assertEqual([
-                COWPOX.id,           # 24
-                SQUIRRELPOX1296.id,  # 2
-                SQUIRRELPOX55.id,    # 2
-                MONKEYPOX.id,        # 1
-                MUMMYPOX.id,         # 1
+                COWPOX.id,           # 1.0
+                MONKEYPOX.id,        # 0.2727
+                SQUIRRELPOX1296.id,  # 0.25
+                SQUIRRELPOX55.id,    # 0.2
+                MUMMYPOX.id,         # 0.0909
             ], result)
 
     def testReadCount(self):

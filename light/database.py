@@ -233,7 +233,7 @@ class Database(object):
                         'trigPoint': trigPoint,
                     })
 
-        return Result(read, matches, hashCount, significanceFraction,
+        return Result(scannedRead, matches, hashCount, significanceFraction,
                       self.bucketFactor, storeFullAnalysis=storeFullAnalysis)
 
     def save(self, fp=sys.stdout):

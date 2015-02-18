@@ -6,6 +6,7 @@ from dark.reads import AARead
 
 from light.result import Result
 from light.features import Landmark, TrigPoint
+from light.reads import ScannedRead
 
 
 class TestResult(TestCase):
@@ -16,20 +17,20 @@ class TestResult(TestCase):
         """
         A result with no matches added to it must have the expected attributes.
         """
-        read = AARead('read', 'AGTARFSDDD')
+        read = ScannedRead(AARead('read', 'AGTARFSDDD'))
         hashCount = 0
         result = Result(read, {}, hashCount, significanceFraction=0.0,
                         bucketFactor=1)
         self.assertEqual({}, result.matches)
         self.assertEqual([], list(result.significant()))
-        self.assertIs(read, result.read)
+        self.assertIs(read, result.scannedRead)
 
     def testAddOneMatch(self):
         """
         Adding information about one match should result in that information
         being stored in the result instance.
         """
-        read = AARead('read', 'AGTARFSDDD')
+        read = ScannedRead(AARead('read', 'AGTARFSDDD'))
         hashCount = 1
         matches = {
             0: [
@@ -50,7 +51,7 @@ class TestResult(TestCase):
         No matches are significant if there are not enough distance deltas
         above the mean number of deltas.
         """
-        read = AARead('read', 'AGTARFSDDD')
+        read = ScannedRead(AARead('read', 'AGTARFSDDD'))
         hashCount = 1
         matches = {
             0: [
@@ -71,7 +72,7 @@ class TestResult(TestCase):
         The index of a significant result must be set correctly, and its score
         (the maximum number of identical distances) must be too.
         """
-        read = AARead('read', 'AGTARFSDDD')
+        read = ScannedRead(AARead('read', 'AGTARFSDDD'))
         hashCount = 4
         matches = {
             0: [
@@ -106,7 +107,7 @@ class TestResult(TestCase):
         Two significant results must be returned, when a read matches two
         different subjects, and their scores must be correct.
         """
-        read = AARead('read', 'AGTARFSDDD')
+        read = ScannedRead(AARead('read', 'AGTARFSDDD'))
         hashCount = 5
         matches = {
             0: [
@@ -156,7 +157,7 @@ class TestResult(TestCase):
         """
         If self.matches is empty, return an empty output.
         """
-        read = AARead('read', 'AGTARFSDDD')
+        read = ScannedRead(AARead('read', 'AGTARFSDDD'))
         result = Result(read, [], 0, 0, bucketFactor=1)
         fp = StringIO()
         result.save(fp=fp)
@@ -173,8 +174,8 @@ class TestResult(TestCase):
         """
         The save function must return its (fp) argument.
         """
-        result = Result(AARead('id', 'A'), {}, 0, significanceFraction=0.0,
-                        bucketFactor=1)
+        read = ScannedRead(AARead('id', 'A'))
+        result = Result(read, {}, 0, significanceFraction=0.0, bucketFactor=1)
         fp = StringIO()
         self.assertIs(fp, result.save(fp))
 
@@ -182,7 +183,8 @@ class TestResult(TestCase):
         """
         Save must produce the right JSON format.
         """
-        read = AARead('id', 'FRRRFRRRFRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF')
+        read = ScannedRead(
+            AARead('id', 'FRRRFRRRFRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
         hashCount = 1
         matches = {
             0: [
@@ -250,7 +252,7 @@ class TestResult(TestCase):
         If no bucket factor is given, the number of bins must be 20 if
         the length of the subject is 20 and the length of the read is less.
         """
-        read = AARead('read', 'AGTARFSDDD')
+        read = ScannedRead(AARead('read', 'AGTARFSDDD'))
         hashCount = 1
         matches = {
             0: [
@@ -264,14 +266,14 @@ class TestResult(TestCase):
         }
         result = Result(read, matches, hashCount, significanceFraction=0.0,
                         bucketFactor=1, storeFullAnalysis=True)
-        self.assertEqual(20, len(result.analysis[0]['histogram']['counts']))
+        self.assertEqual(20, len(result.analysis[0]['histogram'].bins))
 
     def testRightNumberOfBuckets(self):
         """
         If a bucketFactor of 5 is given and the length of the longer sequence
         (out of subject and query) is 20, there should be 4 buckets.
         """
-        read = AARead('read', 'AGTARFSDDD')
+        read = ScannedRead(AARead('read', 'AGTARFSDDD'))
         hashCount = 1
         matches = {
             0: [
@@ -285,4 +287,4 @@ class TestResult(TestCase):
         }
         result = Result(read, matches, hashCount, significanceFraction=0.0,
                         bucketFactor=5, storeFullAnalysis=True)
-        self.assertEqual(4, len(result.analysis[0]['histogram']['counts']))
+        self.assertEqual(4, len(result.analysis[0]['histogram'].bins))

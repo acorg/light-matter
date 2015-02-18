@@ -9,7 +9,7 @@ class Result(object):
     """
     Hold the result of a database look-up on a read.
 
-    @param read: A C{dark.read.AARead} instance.
+    @param scannedRead: A C{dark.read.ScannedRead} instance.
     @param matches: A C{dict} of matches. Keys are C{int} subject indices.
         Each value is a C{list} of C{dicts}, with each C{dict} containing the
         following keys: 'landmark', 'subjectOffsets', and 'trigPoint'.
@@ -24,15 +24,15 @@ class Result(object):
     @param storeFullAnalysis: A C{bool}. If C{True} the full significance
         analysis of each matched subject will be stored.
     """
-    def __init__(self, read, matches, hashCount, significanceFraction,
+    def __init__(self, scannedRead, matches, hashCount, significanceFraction,
                  bucketFactor, storeFullAnalysis=False):
-        self.read = read
+        self.scannedRead = scannedRead
         self.matches = matches
         self._storeFullAnalysis = storeFullAnalysis
         self.analysis = defaultdict(dict)
         significanceCutoff = significanceFraction * hashCount
         for subjectIndex in matches:
-            maxLen = max([len(read.sequence),
+            maxLen = max([len(scannedRead.read.sequence),
                           matches[subjectIndex][0]['subjectLength']])
             nBins = maxLen // bucketFactor
             histogram = Histogram(nBins)
@@ -59,13 +59,10 @@ class Result(object):
             if storeFullAnalysis:
                 self.analysis[subjectIndex] = {
                     'hashCount': hashCount,
-                    'histogram': {
-                        'counts': [len(b) for b in histogram.bins],
-                        'max': histogram.max,
-                        'min': histogram.min,
-                    },
+                    'histogram': histogram,
                     'score': score,
-                    'significant': len(significant) > 0,
+                    'significanceCutoff': significanceCutoff,
+                    'significantBinCount': len(significant),
                 }
             elif significant:
                 self.analysis[subjectIndex] = {
@@ -81,7 +78,8 @@ class Result(object):
         """
         if self._storeFullAnalysis:
             return (subjectIndex for subjectIndex, analysis in
-                    self.analysis.iteritems() if analysis['significant'])
+                    self.analysis.iteritems()
+                    if analysis['significantBinCount'])
         else:
             # When the full analysis isn't being stored, all keys in
             # self.analysis are significant.
@@ -113,11 +111,12 @@ class Result(object):
                 'subjectIndex': subjectIndex,
             })
 
+        read = self.scannedRead.read
         print >>fp, dumps(
             {
                 'alignments': alignments,
-                'queryId': self.read.id,
-                'querySequence': self.read.sequence,
+                'queryId': read.id,
+                'querySequence': read.sequence,
             },
             separators=(',', ':'))
 

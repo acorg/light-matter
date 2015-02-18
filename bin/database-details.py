@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import argparse
-from operator import attrgetter
 from collections import defaultdict
 from Bio import SeqIO
 from Bio.Seq import Seq
@@ -11,13 +10,27 @@ from light.database import Database
 from light.landmarks import ALL_LANDMARK_FINDER_CLASSES
 from light.trig import ALL_TRIG_FINDER_CLASSES
 
+_SYMBOL_NAME = dict((finder.SYMBOL, finder.NAME) for finder in
+                    ALL_LANDMARK_FINDER_CLASSES | ALL_TRIG_FINDER_CLASSES)
 
-symbolName = {}
-key = attrgetter('SYMBOL')
-for finder in sorted(ALL_LANDMARK_FINDER_CLASSES, key=key):
-    symbolName[finder.SYMBOL] = finder.NAME
-for finder in sorted(ALL_TRIG_FINDER_CLASSES, key=key):
-    symbolName[finder.SYMBOL] = finder.NAME
+
+def getFinderNameFromSymbol(symbol):
+    """
+    Get the name of a finder class given a hashkey that was
+    created for it.
+
+    @param symbol: A C{str} symbol for the class.
+    @return: A C{str} symbol name.
+    """
+    # Look for the entire symbol in _SYMBOL_NAME and if that's not present,
+    # shorten it one character at a time from the right. This allows us to
+    # find the correct finder class for symbols like PS00342 (the Prosite
+    # class, whose symbol is PS).
+    while symbol:
+        try:
+            return _SYMBOL_NAME[symbol]
+        except KeyError:
+            symbol = symbol[:-1]
 
 
 if __name__ == '__main__':
@@ -45,12 +58,18 @@ if __name__ == '__main__':
 
     # print basic database information
     print 'Database file name: %s' % args.json
+    print 'Landmark finders:'
+    print '  ' + '\n  '.join(sorted(
+        finder.NAME for finder in database.landmarkFinders))
+    print 'Trig point finders:'
+    print '  ' + '\n  '.join(sorted(
+        finder.NAME for finder in database.trigPointFinders))
     print 'Sequences: %s' % database.subjectCount
     print 'Hashes: %d' % len(database.d)
     print 'Residues: %d' % database.totalResidues
     print 'Coverage: %.2f%%' % (float(database.totalCoveredResidues) /
                                 database.totalResidues * 100.0)
-    print 'Checksum: %s' % database.checksum()
+    print 'Checksum: %s' % database.checksum
     print 'Number of landmark and trigpoints found:'
 
     # print hashes and subjects
@@ -61,7 +80,8 @@ if __name__ == '__main__':
         landmarksTrigpoints[tp] += 1
 
     for f in landmarksTrigpoints:
-        print '%s (%s): %d' % (symbolName[f[0]], f, landmarksTrigpoints[f])
+        print '  %s (%s): %d' % (getFinderNameFromSymbol(f), f,
+                                 landmarksTrigpoints[f])
 
     # write subjects to file:
     if args.printSubjects:

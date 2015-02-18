@@ -29,6 +29,8 @@ class ScannedRead(object):
                 indices.add(index)
         for trigPoint in self.trigPoints:
             offset = trigPoint.offset
+            # Trig points are always length one, but use trigPoint.length
+            # in case that ever changes.
             for index in xrange(offset, offset + trigPoint.length):
                 indices.add(index)
         return indices

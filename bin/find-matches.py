@@ -18,10 +18,14 @@ def printResult(result, database):
     @param database: A C{light.database.Database} instance.
     """
     significant = set(result.significant())
+    read = result.scannedRead.read
+    coveredIndices = len(result.scannedRead.coveredIndices())
 
     print 'Read: %s' % read.id
     print '  Sequence: %s' % read.sequence
     print '  Length: %d' % len(read.sequence)
+    print '  Covered indices: %d (%.2f%%)' % (
+        coveredIndices, coveredIndices / float(len(read.sequence)) * 100.0)
     print '  Significant matches: %d' % len(significant)
     print '  Overall matches: %d' % len(result.matches)
     if result.matches:
@@ -33,16 +37,23 @@ def printResult(result, database):
     for subjectIndex in subjectIndices:
         title, sequence = database.subjectInfo[subjectIndex]
         analysis = result.analysis[subjectIndex]
+        histogram = analysis['histogram']
+        binCounts = [len(b) for b in histogram.bins]
         print '    Title: %s' % title
         print '      Score: %s' % analysis['score']
-        print '      Significant: %s' % analysis['significant']
+        print '      Hash count: %s' % analysis['hashCount']
         print '      Sequence: %s' % sequence
-        print '      Offsets: %s' % analysis['offsets']
-        print '      Histogram: %s' % analysis['histogram']
-        print '      Histogram buckets: %s' % analysis['histogramBuckets']
-        print '      Max bucket count: %d' % analysis['maxCount']
-        print '      Mean bucket count: %.3f' % analysis['meanCount']
         print '      Database subject index: %d' % subjectIndex
+        print '      Histogram'
+        print '        Number of bins: %d' % len(histogram.bins)
+        print '        Significance cutoff: %s' % (
+            analysis['significanceCutoff'])
+        print '        Significant bin count: %s' % (
+            analysis['significantBinCount'])
+        print '        Max bin count: %r' % max(binCounts)
+        print '        Counts: %r' % binCounts
+        print '        Max offset delta: %d' % histogram.max
+        print '        Min offset delta: %d' % histogram.min
 
 
 if __name__ == '__main__':
@@ -58,9 +69,9 @@ if __name__ == '__main__':
     parser.add_argument(
         '--sequence', action='append', dest='sequences',
         metavar='"id sequence"',
-        help='Amino acid sequences to add to the database. The sequence id '
-        'will be the text up to the last space, if any, otherwise will be '
-        'automatically assigned.')
+        help='Amino acid sequences to add to the set of reads to be looked up '
+        'in the database. The sequence id will be the text up to the last '
+        'space, if any, otherwise will be automatically assigned.')
 
     parser.add_argument(
         '--databaseFile', required=True,
@@ -81,7 +92,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    # Add AA sequences from a FASTA file, if given.
+    # AA sequences to look up from a FASTA file.
     if args.fastaFile:
         reads = FastaReads(args.fastaFile, readClass=AARead)
     else:

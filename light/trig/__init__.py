@@ -24,6 +24,31 @@ def findTrigPoint(name):
             return klass
 
 
+def findTrigPoints(names):
+    """
+    A function to find multiple trig point finders by name.
+
+    @param names: A C{list} of C{str} name of the trig point finder classes to
+        find, or C{None} (equivalent to an empty list of names).
+    @raise ValueError: If any name cannot be found.
+    @return: A C{list} of classes that were successfully found.
+    """
+    found = []
+    unknown = []
+    if names:
+        for name in names:
+            klass = findTrigPoint(name)
+            if klass:
+                found.append(klass)
+            else:
+                unknown.append(name)
+    if unknown:
+        raise ValueError('Unknown trig point finder%s: %s.' % (
+            's' if len(unknown) > 1 else '', ', '.join(unknown)))
+    else:
+        return found
+
+
 # Default exports for 'from light.trig import *'
-__all__ = ['findTrigPoint', 'ALL_TRIG_FINDER_CLASSES',
+__all__ = ['findTrigPoint', 'findTrigPoints', 'ALL_TRIG_FINDER_CLASSES',
            'DEFAULT_TRIG_FINDER_CLASSES']

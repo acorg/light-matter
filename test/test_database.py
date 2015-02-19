@@ -97,6 +97,14 @@ class TestDatabase(TestCase):
         db = Database([], [])
         self.assertEqual([], db.subjectInfo)
 
+    def testAddSubjectReturnsIndex(self):
+        """
+        If one read is added, addSubject must return the index (0) of the added
+        subject.
+        """
+        db = Database([AlphaHelix], [])
+        self.assertEqual(0, db.addSubject(AARead('id', 'FRRRFRRRF')))
+
     def testOneReadOneLandmark(self):
         """
         If one read is added but it only has one landmark, nothing is added

@@ -1,8 +1,9 @@
 from unittest import TestCase
 
 from light.trig import (
-    findTrigPoint, ALL_TRIG_FINDER_CLASSES, DEFAULT_TRIG_FINDER_CLASSES,
-    AminoAcids, IndividualPeaks, IndividualTroughs, Peaks, Troughs)
+    findTrigPoint, findTrigPoints, ALL_TRIG_FINDER_CLASSES,
+    DEFAULT_TRIG_FINDER_CLASSES, AminoAcids, IndividualPeaks,
+    IndividualTroughs, Peaks, Troughs)
 
 
 class TestFindTrigPoint(TestCase):
@@ -24,6 +25,36 @@ class TestFindTrigPoint(TestCase):
         """
         for klass in ALL_TRIG_FINDER_CLASSES:
             self.assertIs(klass, findTrigPoint(klass.NAME))
+
+
+class TestFindTrigPoints(TestCase):
+    """
+    Tests for the light.trig.findTrigPoints function.
+    """
+
+    def testFindFails(self):
+        """
+        The find function should raise a ValueError if asked to find unknown
+        classes.
+        """
+        error = '^Unknown trig point finders: x, y\.$'
+        self.assertRaisesRegexp(ValueError, error, findTrigPoints, ['x', 'y'])
+
+    def testFindNone(self):
+        """
+        The find function should return an empty list if passed None.
+        """
+        result = findTrigPoints(None)
+        self.assertEqual([], result)
+
+    def testFindKnownClasses(self):
+        """
+        The find function should return known classes correctly.
+        """
+        result = findTrigPoints(['Peaks', 'Troughs'])
+        self.assertEqual(2, len(result))
+        self.assertIs(Peaks, result[0])
+        self.assertIs(Troughs, result[1])
 
 
 class TestAllTrigClasses(TestCase):

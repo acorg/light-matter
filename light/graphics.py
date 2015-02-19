@@ -4,7 +4,7 @@ from matplotlib import patches
 from operator import attrgetter
 
 from light.reads import ScannedRead
-from light.database import Database
+from light.database import Database, DatabaseSpecifier
 from light.trig import findTrigPoint, ALL_TRIG_FINDER_CLASSES
 from light.landmarks import findLandmark, ALL_LANDMARK_FINDER_CLASSES
 from light.features import Landmark
@@ -52,77 +52,42 @@ def legendHandles(names):
             for (symbol, name) in ALL_FEATURES if name in names]
 
 
-def plotHistogram(query, subject, landmarks=None, trigPoints=None,
-                  limitPerLandmark=None, maxDistance=None, minDistance=None,
-                  significanceFraction=None, bucketFactor=1, readsAx=None):
+def plotHistogram(query, subject, significanceFraction=None, readsAx=None,
+                  **kwargs):
     """
-    A function which plots a histogram of matching hash distances.
+    A function to plot a histogram of matching hash offset deltas between
+    a query and a subject.
 
     @param query: an AARead instance of the sequence of the query.
     @param subject: an AARead instance of the sequence of the subject.
-    @param landmarks: a C{list} of C{str} of landmark finder names.
-    @param trigPoints: a C{list} of C{str} of trig finder names.
-    @param limitPerLandmark: An C{int} limit on the number of pairs to
-        yield per landmark.
-    @param maxDistance: The C{int} maximum distance permitted between
-        yielded pairs.
-    @param minDistance: The C{int} minimum distance permitted between
-        yielded pairs.
     @param significanceFraction: The C{float} fraction of all (landmark,
         trig point) pairs for a scannedRead that need to fall into the
         same histogram bucket for that bucket to be considered a
         significant match with a database title.
-    @para bucketFactor: A C{int} factor by which the distance between landmark
-        and trig point is divided.
     @param readsAx: If not None, use this as the subplot for displaying reads.
+    @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
+        for additional keywords, all of which are optional.
     """
-    fig = plt.figure()
-    readsAx = readsAx or fig.add_subplot(111)
-
-    landmarks = landmarks or []
-    trigs = trigPoints or []
-
-    if len(landmarks) + len(trigs) == 0:
-        raise ValueError('You must specify either landmarks or trig points to '
-                         'find.')
-
-    landmarkFinderClasses = []
-    for landmarkFinderName in landmarks:
-        landmarkFinderClass = findLandmark(landmarkFinderName)
-        if landmarkFinderClass:
-            landmarkFinderClasses.append(landmarkFinderClass)
-        else:
-            print 'Could not find landmark finder %r.' % (
-                landmarkFinderName)
-
-    # Make sure all trig point finders requested exist.
-    trigFinderClasses = []
-    for trigFinderName in trigs:
-        trigFinderClass = findTrigPoint(trigFinderName)
-        if trigFinderClass:
-            trigFinderClasses.append(trigFinderClass)
-        else:
-            print 'Could not find trig point finder %r.' % (
-                trigFinderName)
-
-    database = Database(landmarkFinderClasses, trigFinderClasses,
-                        limitPerLandmark, maxDistance, minDistance,
-                        bucketFactor)
-    database.addSubject(subject)
-
+    database = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
+    subjectIndex = database.addSubject(subject)
     result = database.find(query, significanceFraction, storeFullAnalysis=True)
-    hist = result.analysis[0]['histogram']
-    bins = result.analysis[0]['histogramBuckets']
 
-    width = 0.7 * (bins[1] - bins[0])
-    center = (bins[:-1] + bins[1:]) / 2
-    readsAx.bar(center, hist, align='center', width=width)
+    try:
+        histogram = result.analysis[subjectIndex]['histogram']
+    except KeyError:
+        print 'The query and the subject had no hashes in common.'
+    else:
+        counts = [len(bin) for bin in histogram.bins]
+        nBins = len(histogram.bins)
+        width = (histogram.max - histogram.min) / float(nBins)
+        center = [histogram.min + (i + 0.5) * width for i in xrange(nBins)]
 
-    readsAx.set_title('%s against %s' % (query.id, subject.id))
-
-    readsAx.set_xlabel("Offsets (database-read)")
-
-    readsAx.xaxis.tick_bottom()
+        fig = plt.figure()
+        readsAx = readsAx or fig.add_subplot(111)
+        readsAx.bar(center, counts, align='center', width=width)
+        readsAx.set_title('%s against %s' % (query.id, subject.id))
+        readsAx.set_xlabel("Offsets (database-read)")
+        readsAx.xaxis.tick_bottom()
 
 
 def plotFeatures(read, landmarks=None, trigs=None, limitPerLandmark=None,

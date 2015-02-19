@@ -66,6 +66,7 @@ class Result(object):
                     'score': score,
                     'significanceCutoff': significanceCutoff,
                     'significantBinCount': len(significant),
+                    'nonMatchingHashes': nonMatchingHashes,
                 }
             elif significant:
                 self.analysis[subjectIndex] = {

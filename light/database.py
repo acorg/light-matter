@@ -138,8 +138,7 @@ class Database(object):
         Makes an instance of C{light.reads.ScannedSubject}.
 
         @param subject: a C{dark.read.AARead} instance.
-
-        @ return: a C{light.reads.ScannedSubject} instance.
+        @ return: a C{light.reads.ScannedRead} instance.
         """
         scannedSubject = ScannedSubject(subject)
         for landmarkFinder in self.landmarkFinders:
@@ -156,7 +155,6 @@ class Database(object):
         Get the (landmark, trigPoint) pairs from a ScannedRead instance.
 
         @param scannedSubject: A C{light.reads.ScannedSubject} instance.
-
         @return: C{light.reads.ScannedSubject.getPairs}
         """
         return scannedSubject.getPairs(limitPerLandmark=self.limitPerLandmark,

@@ -3,13 +3,14 @@ from json import loads
 from cStringIO import StringIO
 from binascii import crc32
 
+from dark.reads import AARead
+
 from light.features import Landmark, TrigPoint
 from light.landmarks.alpha_helix import AlphaHelix
 from light.landmarks.beta_strand import BetaStrand
 from light.trig.peaks import Peaks
 from light.trig.troughs import Troughs
 from light.database import Database
-from dark.reads import AARead
 
 
 class TestDatabase(TestCase):
@@ -33,15 +34,15 @@ class TestDatabase(TestCase):
         """
         The significanceFraction default value must be as expected.
         """
-        self.assertEqual(0.25, Database.SIGNIFICANCE_FRACTION_DEFAULT)
+        self.assertEqual(0.25, Database.DEFAULT_SIGNIFICANCE_FRACTION)
 
     def testFindersAreStored(self):
         """
         The list of landmark and trig point finders must be stored correctly.
         """
         db = Database([AlphaHelix], [Peaks])
-        self.assertEqual([AlphaHelix], db.landmarkFinderClasses)
-        self.assertEqual([Peaks], db.trigPointFinderClasses)
+        self.assertEqual([AlphaHelix], db.landmarkClasses)
+        self.assertEqual([Peaks], db.trigPointClasses)
 
     def testInitialStatistics(self):
         """
@@ -96,6 +97,14 @@ class TestDatabase(TestCase):
         """
         db = Database([], [])
         self.assertEqual([], db.subjectInfo)
+
+    def testAddSubjectReturnsIndex(self):
+        """
+        If one read is added, addSubject must return the index (0) of the added
+        subject.
+        """
+        db = Database([AlphaHelix], [])
+        self.assertEqual(0, db.addSubject(AARead('id', 'FRRRFRRRF')))
 
     def testOneReadOneLandmark(self):
         """
@@ -380,11 +389,12 @@ class TestDatabase(TestCase):
         self.assertEqual(0, result.subjectCount)
         self.assertEqual(0, result.totalCoveredResidues)
         self.assertEqual({}, result.d)
-        self.assertEqual([], result.landmarkFinderClasses)
-        self.assertEqual(None, result.limitPerLandmark)
-        self.assertEqual(None, result.maxDistance)
-        self.assertEqual(None, result.minDistance)
-        self.assertEqual([], result.trigPointFinderClasses)
+        self.assertEqual([], result.landmarkClasses)
+        self.assertEqual(Database.DEFAULT_LIMIT_PER_LANDMARK,
+                         result.limitPerLandmark)
+        self.assertEqual(Database.DEFAULT_MAX_DISTANCE, result.maxDistance)
+        self.assertEqual(Database.DEFAULT_MIN_DISTANCE, result.minDistance)
+        self.assertEqual([], result.trigPointClasses)
         self.assertEqual(0, result.totalResidues)
 
     def testSaveLoadNonEmpty(self):
@@ -401,13 +411,11 @@ class TestDatabase(TestCase):
         self.assertEqual(db.subjectCount, result.subjectCount)
         self.assertEqual(db.totalCoveredResidues, result.totalCoveredResidues)
         self.assertEqual(db.d, result.d)
-        self.assertEqual(db.landmarkFinderClasses,
-                         result.landmarkFinderClasses)
+        self.assertEqual(db.landmarkClasses, result.landmarkClasses)
         self.assertEqual(db.limitPerLandmark, result.limitPerLandmark)
         self.assertEqual(db.maxDistance, result.maxDistance)
         self.assertEqual(db.minDistance, result.minDistance)
-        self.assertEqual(db.trigPointFinderClasses,
-                         result.trigPointFinderClasses)
+        self.assertEqual(db.trigPointClasses, result.trigPointClasses)
         self.assertEqual(db.totalResidues, result.totalResidues)
         self.assertEqual(db.checksum, result.checksum)
 
@@ -577,8 +585,8 @@ class TestDatabase(TestCase):
         db.saveParamsAsJSON(out)
         expected = {
             'checksum': checksum,
-            'landmarkFinderClasses': ['AlphaHelix'],
-            'trigPointFinderClasses': ['Peaks'],
+            'landmarkClasses': ['AlphaHelix'],
+            'trigPointClasses': ['Peaks'],
             'limitPerLandmark': 3,
             'maxDistance': 9,
             'minDistance': 5,
@@ -596,10 +604,10 @@ class TestDatabase(TestCase):
         """
         db = Database([], [])
         checksum = self._checksum([
-            None,  # Limit per landmark.
-            None,  # Max distance.
-            None,  # Min distance.
-            1,  # Bucket factor.
+            Database.DEFAULT_LIMIT_PER_LANDMARK,
+            Database.DEFAULT_MAX_DISTANCE,
+            Database.DEFAULT_MIN_DISTANCE,
+            Database.DEFAULT_BUCKET_FACTOR,
         ])
         self.assertEqual(checksum, db.checksum)
 
@@ -609,12 +617,12 @@ class TestDatabase(TestCase):
         non-default values for limitPerLandmark and maxDistance.
         """
         db = Database([], [], limitPerLandmark=3, maxDistance=9,
-                      minDistance=1)
+                      minDistance=1, bucketFactor=6)
         checksum = self._checksum([
             3,  # Limit per landmark.
             9,  # Max distance.
             1,  # Min distance.
-            1,  # Bucket factor.
+            6,  # Bucket factor.
         ])
         self.assertEqual(checksum, db.checksum)
 
@@ -626,10 +634,10 @@ class TestDatabase(TestCase):
         db = Database([AlphaHelix, BetaStrand], [Peaks, Troughs])
         checksum = self._checksum([
             AlphaHelix.NAME, BetaStrand.NAME, Peaks.NAME, Troughs.NAME,
-            None,  # Limit per landmark.
-            None,  # Max distance.
-            None,  # Min distance.
-            1,  # Bucket factor.
+            Database.DEFAULT_LIMIT_PER_LANDMARK,
+            Database.DEFAULT_MAX_DISTANCE,
+            Database.DEFAULT_MIN_DISTANCE,
+            Database.DEFAULT_BUCKET_FACTOR,
         ])
         self.assertEqual(checksum, db.checksum)
 
@@ -653,10 +661,10 @@ class TestDatabase(TestCase):
 
         checksum = self._checksum([
             AlphaHelix.NAME,
-            None,  # Limit per landmark.
-            None,  # Max distance.
-            None,  # Min distance.
-            1,  # Bucket factor.
+            Database.DEFAULT_LIMIT_PER_LANDMARK,
+            Database.DEFAULT_MAX_DISTANCE,
+            Database.DEFAULT_MIN_DISTANCE,
+            Database.DEFAULT_BUCKET_FACTOR,
             'id', 'FRRRFRRRFASAASA',
         ])
         self.assertEqual(checksum, db.checksum)
@@ -672,10 +680,10 @@ class TestDatabase(TestCase):
         db.addSubject(subject)
         checksum = self._checksum([
             AlphaHelix.NAME,
-            None,  # Limit per landmark.
-            None,  # Max distance.
-            None,  # Min distance.
-            1,  # Bucket factor.
+            Database.DEFAULT_LIMIT_PER_LANDMARK,
+            Database.DEFAULT_MAX_DISTANCE,
+            Database.DEFAULT_MIN_DISTANCE,
+            Database.DEFAULT_BUCKET_FACTOR,
             'id', sequence,
         ])
         self.assertEqual(checksum, db.checksum)

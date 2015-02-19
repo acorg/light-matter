@@ -1,24 +1,25 @@
 #!/usr/bin/env python
 
-import sys
 import argparse
 
-from dark.fasta import FastaReads
-from dark.reads import Reads, AARead
+from dark.fasta import combineReads
 
-from light.database import Database
+from light.database import DatabaseSpecifier
 
 
-def printResult(result, database):
+def printResult(result, database, verbose):
     """
     Print the details of trying to match a read against the database in a
     human-readable format.
 
     @param result: A C{light.result.Result} instance.
     @param database: A C{light.database.Database} instance.
+    @param verbose: If C{True}, print details of landmark and trig point
+        matches.
     """
     significant = set(result.significant())
-    read = result.scannedRead.read
+    scannedRead = result.scannedRead
+    read = scannedRead.read
     coveredIndices = len(result.scannedRead.coveredIndices())
 
     print 'Read: %s' % read.id
@@ -26,6 +27,16 @@ def printResult(result, database):
     print '  Length: %d' % len(read.sequence)
     print '  Covered indices: %d (%.2f%%)' % (
         coveredIndices, coveredIndices / float(len(read.sequence)) * 100.0)
+
+    # Print read landmarks and trig points.
+    print '  Landmark count %d, trig point count %d' % (
+        len(scannedRead.landmarks), len(scannedRead.trigPoints))
+    if verbose:
+        for landmark in scannedRead.landmarks:
+            print '    ', landmark
+        for trigPoint in scannedRead.trigPoints:
+            print '    ', trigPoint
+
     print '  Significant matches: %d' % len(significant)
     print '  Overall matches: %d' % len(result.matches)
     if result.matches:
@@ -74,10 +85,6 @@ if __name__ == '__main__':
         'space, if any, otherwise will be automatically assigned.')
 
     parser.add_argument(
-        '--databaseFile', required=True,
-        help='The name of the file that contains the database.')
-
-    parser.add_argument(
         '--significanceFraction', type=float, default=None,
         help='The (float) fraction of all (landmark, trig point) pairs for a '
         'scannedRead that need to fall into the same histogram bucket for '
@@ -90,36 +97,17 @@ if __name__ == '__main__':
         'informally examining sequences from the command line). Do not print '
         'database parameters, and show detailed information about matches.')
 
+    parser.add_argument(
+        '--verbose', default=False, action='store_true',
+        help='If True, print details of landmark and trig point matches.')
+
+    databaseSpecifier = DatabaseSpecifier()
+    databaseSpecifier.addArgsToParser(parser)
+
     args = parser.parse_args()
 
-    # AA sequences to look up from a FASTA file.
-    if args.fastaFile:
-        reads = FastaReads(args.fastaFile, readClass=AARead)
-    else:
-        if args.sequences is None:
-            print >>sys.stderr, (
-                'No reads to search for given.\n%s' % parser.format_usage()),
-            sys.exit(1)
-        reads = Reads()
-
-    # Add any manually-specified AA read sequences.
-    if args.sequences:
-        for count, sequence in enumerate(args.sequences, start=1):
-            # Try splitting the sequence on its last space and using the first
-            # part of the split as the read id. If there is no space, assign a
-            # generic id.  Note that using 'command-line-read-' as the read id
-            # prefix could collide with ids in the FASTA file, if given. So
-            # output might be ambiguous. But that seems pretty unlikely.
-            parts = sequence.rsplit(' ', 1)
-            if len(parts) > 1:
-                readId, sequence = parts
-            else:
-                readId = 'command-line-read-%d' % count
-            reads.add(AARead(readId, sequence))
-
-    # Read database from file.
-    with open(args.databaseFile) as fp:
-        database = Database.load(fp)
+    database = databaseSpecifier.getDatabaseFromArgs(args)
+    reads = combineReads(args.fastaFile, args.sequences)
 
     human = args.human
     if not human:
@@ -132,6 +120,6 @@ if __name__ == '__main__':
         if human:
             if count:
                 print '---'
-            printResult(result, database)
+            printResult(result, database, args.verbose)
         else:
             result.save()

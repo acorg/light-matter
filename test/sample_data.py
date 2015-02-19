@@ -48,7 +48,7 @@ def _printResult(result):
 
     @param result: A C{light.result.Result} instance.
     """
-    print 'DB.find() result for read', result.read.id
+    print 'DB.find() result for read', result.scannedRead.read.id
     for subjectIndex in result.matches:
         print 'subjectIndex', subjectIndex
         print 'analysis', result.analysis[subjectIndex]

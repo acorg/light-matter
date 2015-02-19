@@ -1,7 +1,7 @@
 from unittest import TestCase
 
-from light.landmarks import ALL_LANDMARK_FINDER_CLASSES
-from light.trig import ALL_TRIG_FINDER_CLASSES
+from light.landmarks import ALL_LANDMARK_CLASSES
+from light.trig import ALL_TRIG_CLASSES
 
 
 class TestSymbols(TestCase):
@@ -12,8 +12,8 @@ class TestSymbols(TestCase):
         """
         Must find the right number of symbols.
         """
-        trigSymbols = [symbol.SYMBOL for symbol in ALL_TRIG_FINDER_CLASSES]
-        lmSymbols = [symbol.SYMBOL for symbol in ALL_LANDMARK_FINDER_CLASSES]
+        trigSymbols = [symbol.SYMBOL for symbol in ALL_TRIG_CLASSES]
+        lmSymbols = [symbol.SYMBOL for symbol in ALL_LANDMARK_CLASSES]
         symbols = trigSymbols + lmSymbols
         self.assertEqual(15, len(symbols))
 
@@ -21,12 +21,12 @@ class TestSymbols(TestCase):
         """
         All landmark symbols must be different.
         """
-        symbols = [symbol.SYMBOL for symbol in ALL_LANDMARK_FINDER_CLASSES]
+        symbols = [symbol.SYMBOL for symbol in ALL_LANDMARK_CLASSES]
         self.assertEqual(len(symbols), len(set(symbols)))
 
     def testAllSymbolsAreDifferent(self):
         """
         All trig finder symbols must be different.
         """
-        symbols = [symbol.SYMBOL for symbol in ALL_TRIG_FINDER_CLASSES]
+        symbols = [symbol.SYMBOL for symbol in ALL_TRIG_CLASSES]
         self.assertEqual(len(symbols), len(set(symbols)))

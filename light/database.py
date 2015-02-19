@@ -1,14 +1,20 @@
+import argparse
 import sys
+from warnings import warn
 from collections import defaultdict
 from ujson import dump, dumps, load
 from binascii import crc32
 from operator import attrgetter
 
+from dark.fasta import combineReads
 
 from light.reads import ScannedRead, ScannedRead as ScannedSubject
 from light.result import Result
-from light.landmarks import findLandmark
-from light.trig import findTrigPoint
+from light.landmarks import (
+    findLandmark, findLandmarks, ALL_LANDMARK_CLASSES,
+    DEFAULT_LANDMARK_CLASSES)
+from light.trig import (
+    findTrigPoint, findTrigPoints, ALL_TRIG_CLASSES, DEFAULT_TRIG_CLASSES)
 
 
 class Database(object):
@@ -16,8 +22,10 @@ class Database(object):
     Maintain a collection of sequences ("subjects") and provide for database
     (index, search) operations on them.
 
-    @param landmarkFinderClasses: A C{list} of landmark classes.
-    @param trigPointFinderClasses: A C{list} of trig point classes.
+    @param landmarkClasses: A C{list} of landmark finder classes, or C{None}
+        to use the default set of landmark finder classes.
+    @param trigPointClasses: A C{list} of trig point finder classes, or C{None}
+        to use the default set of trig point finder classes.
     @param limitPerLandmark: An C{int} limit on the number of pairs to
         yield per landmark.
     @param maxDistance: The C{int} maximum distance permitted between
@@ -28,26 +36,49 @@ class Database(object):
         landmark and trig point is divided, to influence sensitivity.
     """
 
+    # Database construction and look-up defaults. See explanations in
+    # docstring above.
+    DEFAULT_LIMIT_PER_LANDMARK = 10
+    DEFAULT_MAX_DISTANCE = 200
+    DEFAULT_MIN_DISTANCE = 1
+    DEFAULT_BUCKET_FACTOR = 1  # Should be >1. Can we use a float?
+
     # The default fraction of all (landmark, trig point) pairs for a
     # scannedRead that need to fall into the same offset delta histogram
     # bucket for that bucket to be considered a significant match with a
     # database title.
-    SIGNIFICANCE_FRACTION_DEFAULT = 0.25
+    DEFAULT_SIGNIFICANCE_FRACTION = 0.25
 
-    def __init__(self, landmarkFinderClasses, trigPointFinderClasses,
+    def __init__(self, landmarkClasses, trigPointClasses,
                  limitPerLandmark=None, maxDistance=None, minDistance=None,
-                 bucketFactor=1):
-        self.landmarkFinderClasses = landmarkFinderClasses
-        self.trigPointFinderClasses = trigPointFinderClasses
-        self.limitPerLandmark = limitPerLandmark
-        self.maxDistance = maxDistance
-        self.minDistance = minDistance
-        # The factor by which the distance of landmark and trigpoint pairs is
-        # divided, to influence sensitivity.
-        if bucketFactor <= 0:
+                 bucketFactor=None):
+        self.landmarkClasses = (
+            self.DEFAULT_LANDMARK_CLASSES if landmarkClasses is None
+            else landmarkClasses)
+
+        self.trigPointClasses = (
+            self.DEFAULT_TRIG_CLASSES if trigPointClasses is None
+            else trigPointClasses)
+
+        self.limitPerLandmark = (
+            self.DEFAULT_LIMIT_PER_LANDMARK if limitPerLandmark is None
+            else limitPerLandmark)
+
+        self.maxDistance = (
+            self.DEFAULT_MAX_DISTANCE if maxDistance is None
+            else maxDistance)
+
+        self.minDistance = (
+            self.DEFAULT_MIN_DISTANCE if minDistance is None
+            else minDistance)
+
+        self.bucketFactor = (
+            self.DEFAULT_BUCKET_FACTOR if bucketFactor is None
+            else bucketFactor)
+
+        if self.bucketFactor <= 0:
             raise ValueError('bucketFactor must be > 0.')
-        else:
-            self.bucketFactor = bucketFactor
+
         # It may look like self.d should be a defaultdict(list). But that
         # will not work because a database JSON save followed by a load
         # will restore the defaultdict as a vanilla dict.
@@ -58,11 +89,11 @@ class Database(object):
         self.subjectInfo = []
         # Create instances of the landmark and trig point finder classes.
         self.landmarkFinders = []
-        for landmarkFinderClass in self.landmarkFinderClasses:
-            self.landmarkFinders.append(landmarkFinderClass())
+        for landmarkClass in self.landmarkClasses:
+            self.landmarkFinders.append(landmarkClass())
         self.trigPointFinders = []
-        for trigPointFinderClass in self.trigPointFinderClasses:
-            self.trigPointFinders.append(trigPointFinderClass())
+        for trigPointClass in self.trigPointClasses:
+            self.trigPointFinders.append(trigPointClass())
         self._initializeChecksum()
 
     def _initializeChecksum(self):
@@ -110,6 +141,7 @@ class Database(object):
         @param subject: a C{dark.read.AARead} instance. The subject sequence
             is passed as a read instance even though in many cases it will not
             be an actual read from a sequencing run.
+        @return: The C{int} subject index of the added subject.
         """
         subjectInfo = (subject.id, subject.sequence)
         self._updateChecksum(subjectInfo)
@@ -143,6 +175,8 @@ class Database(object):
             except KeyError:
                 subjectDict[str(subjectIndex)] = [landmark.offset]
 
+        return subjectIndex
+
     def __str__(self):
         return '%s: %d sequences, %d residues, %d hashes, %.2f%% coverage' % (
             self.__class__.__name__, self.subjectCount, self.totalResidues,
@@ -158,10 +192,8 @@ class Database(object):
         """
         print >>fp, dumps({
             'checksum': self.checksum,
-            'landmarkFinderClasses': [
-                klass.NAME for klass in self.landmarkFinderClasses],
-            'trigPointFinderClasses': [
-                klass.NAME for klass in self.trigPointFinderClasses],
+            'landmarkClasses': [cls.NAME for cls in self.landmarkClasses],
+            'trigPointClasses': [cls.NAME for cls in self.trigPointClasses],
             'limitPerLandmark': self.limitPerLandmark,
             'maxDistance': self.maxDistance,
             'minDistance': self.minDistance,
@@ -188,7 +220,7 @@ class Database(object):
         @return: A C{light.result.Result} instance.
         """
         if significanceFraction is None:
-            significanceFraction = self.SIGNIFICANCE_FRACTION_DEFAULT
+            significanceFraction = self.DEFAULT_SIGNIFICANCE_FRACTION
 
         scannedRead = ScannedRead(read)
 
@@ -244,10 +276,8 @@ class Database(object):
         """
         state = {
             'checksum': self.checksum,
-            'landmarkFinderClassNames': [klass.NAME for klass in
-                                         self.landmarkFinderClasses],
-            'trigPointFinderClassNames': [klass.NAME for klass in
-                                          self.trigPointFinderClasses],
+            'landmarkClassNames': [cls.NAME for cls in self.landmarkClasses],
+            'trigPointClassNames': [cls.NAME for cls in self.trigPointClasses],
             'limitPerLandmark': self.limitPerLandmark,
             'maxDistance': self.maxDistance,
             'minDistance': self.minDistance,
@@ -270,29 +300,29 @@ class Database(object):
         """
         state = load(fp)
 
-        landmarkFinderClasses = []
-        for landmarkClassName in state['landmarkFinderClassNames']:
-            klass = findLandmark(landmarkClassName)
-            if klass:
-                landmarkFinderClasses.append(klass)
+        landmarkClasses = []
+        for landmarkClassName in state['landmarkClassNames']:
+            cls = findLandmark(landmarkClassName)
+            if cls:
+                landmarkClasses.append(cls)
             else:
                 print >>sys.stderr, (
                     'Could not find landscape finder class %r! Has that '
                     'class been renamed or removed?' % landmarkClassName)
                 sys.exit(1)
 
-        trigPointFinderClasses = []
-        for trigPointClassName in state['trigPointFinderClassNames']:
-            klass = findTrigPoint(trigPointClassName)
-            if klass:
-                trigPointFinderClasses.append(klass)
+        trigPointClasses = []
+        for trigPointClassName in state['trigPointClassNames']:
+            cls = findTrigPoint(trigPointClassName)
+            if cls:
+                trigPointClasses.append(cls)
             else:
                 print >>sys.stderr, (
                     'Could not find trig point finder class %r! Has that '
                     'class been renamed or removed?' % trigPointClassName)
                 sys.exit(1)
 
-        database = Database(landmarkFinderClasses, trigPointFinderClasses,
+        database = Database(landmarkClasses, trigPointClasses,
                             limitPerLandmark=state['limitPerLandmark'],
                             maxDistance=state['maxDistance'],
                             minDistance=state['minDistance'],
@@ -304,3 +334,202 @@ class Database(object):
             setattr(database, attr, state[attr])
 
         return database
+
+
+class DatabaseSpecifier(object):
+    """
+    Helper class for creating or loading a database and populating it.
+
+    @param allowCreation: If True, add options that permit the creation
+        of a new database.
+    @param allowPopulation: If True, add options that allow the automatic
+        addition of sequences to the database.
+    @param allowExisting: If True, add the option that allows the user to
+        specify a pre-existing database.
+    @raise ValueError: If the allow options do not permit creation or loading.
+    """
+    def __init__(self, allowCreation=True, allowPopulation=True,
+                 allowExisting=True):
+        if not (allowCreation or allowExisting):
+            raise ValueError('You must either allow database creation or '
+                             'loading.')
+        self._allowCreation = allowCreation
+        self._allowPopulation = allowPopulation
+        self._allowExisting = allowExisting
+
+    def addArgsToParser(self, parser):
+        """
+        Add standard database creation arguments to an argparse parser.
+
+        @param parser: An C{argparse.ArgumentParser} instance.
+        """
+        if self._allowCreation:
+            parser.add_argument(
+                '--landmark', action='append', dest='landmarkFinderNames',
+                choices=sorted(cl.NAME for cl in ALL_LANDMARK_CLASSES),
+                help='The name of a landmark finder to use. May be specified '
+                'multiple times.')
+
+            parser.add_argument(
+                '--trig', action='append', dest='trigFinderNames',
+                choices=sorted(cl.NAME for cl in ALL_TRIG_CLASSES),
+                help='The name of a trig point finder to use. May be '
+                'specified multiple times.')
+
+            parser.add_argument(
+                '--defaultLandmarks', action='store_true', default=False,
+                help=('If specified, use the default landmark finders: %s' %
+                      sorted(cl.NAME for cl in
+                             DEFAULT_LANDMARK_CLASSES)))
+
+            parser.add_argument(
+                '--defaultTrigPoints', action='store_true', default=False,
+                help=('If specified, use the default trig point finders: %s' %
+                      sorted(cl.NAME for cl in DEFAULT_TRIG_CLASSES)))
+
+            parser.add_argument(
+                '--limitPerLandmark', type=int,
+                default=Database.DEFAULT_LIMIT_PER_LANDMARK,
+                help=('A limit on the number of pairs to yield per landmark '
+                      'per read.'))
+
+            parser.add_argument(
+                '--maxDistance', type=int,
+                default=Database.DEFAULT_MAX_DISTANCE,
+                help='The maximum distance permitted between yielded pairs.')
+
+            parser.add_argument(
+                '--minDistance', type=int,
+                default=Database.DEFAULT_MIN_DISTANCE,
+                help='The minimum distance permitted between yielded pairs.')
+
+            parser.add_argument(
+                '--bucketFactor', type=int,
+                default=Database.DEFAULT_BUCKET_FACTOR,
+                help=('A factor by which the distance between landmark and '
+                      'trig point is divided.'))
+
+        if self._allowPopulation:
+            parser.add_argument(
+                '--databaseFasta',
+                help=('The name of a FASTA file containing the sequences that '
+                      'should be added to the database.'))
+
+            parser.add_argument(
+                '--databaseSequence', action='append',
+                dest='databaseSequences', metavar='"id sequence"',
+                help=('Amino acid sequences to add to the database. The '
+                      'sequence id will be the text up to the last space, if '
+                      'any, otherwise will be automatically assigned.'))
+
+        if self._allowExisting:
+            parser.add_argument(
+                '--database',
+                help='The name of a file containing a database')
+
+    def getDatabaseFromArgs(self, args):
+        """
+        Read an existing database (if args.database is given) or create
+        one from args.
+
+        @param args: Command line arguments as returned by the C{argparse}
+            C{parse_args} method.
+        @raise ValueError: If a database cannot be found or created.
+        @return: A C{light.database.Database} instance.
+        """
+        if self._allowExisting and args.database:
+            with open(args.database) as fp:
+                database = Database.load(fp)
+
+        elif self._allowCreation:
+            landmarkClasses = (
+                DEFAULT_LANDMARK_CLASSES if args.defaultLandmarks
+                else findLandmarks(args.landmarkFinderNames))
+
+            trigClasses = (
+                DEFAULT_TRIG_CLASSES if args.defaultTrigPoints
+                else findTrigPoints(args.trigFinderNames))
+
+            if len(landmarkClasses) + len(trigClasses) == 0:
+                warn("Creating a database with no landmark or trig point "
+                     "finders. Hope you know what you're doing!")
+
+            database = Database(landmarkClasses, trigClasses,
+                                args.limitPerLandmark, args.maxDistance,
+                                args.minDistance, args.bucketFactor)
+
+        if self._allowPopulation:
+            for read in combineReads(args.databaseFasta,
+                                     args.databaseSequences):
+                database.addSubject(read)
+
+        return database
+
+    def getDatabaseFromKeywords(
+            self, database=None, landmarkNames=None, trigPointNames=None,
+            defaultLandmarks=False, defaultTrigPoints=False,
+            limitPerLandmark=Database.DEFAULT_LIMIT_PER_LANDMARK,
+            maxDistance=Database.DEFAULT_MAX_DISTANCE,
+            minDistance=Database.DEFAULT_MIN_DISTANCE,
+            bucketFactor=Database.DEFAULT_BUCKET_FACTOR,
+            databaseFasta=None, databaseSequences=None):
+        """
+        Use Python function keywords to build an argument parser that can
+        used to find or create a database using getDatabaseFromArgs
+
+        @param database: The C{str} file name containing a database.
+        @param landmarkNames: a C{list} of C{str} of landmark finder names.
+        @param trigPointNames: a C{list} of C{str} of trig finder names.
+        @param defaultLandmarks: If C{True}, use the default landmark finders.
+        @param defaultTrigPoints: If C{True}, use the default trig point
+            finders.
+        @param limitPerLandmark: An C{int} limit on the number of pairs to
+            yield per landmark.
+        @param maxDistance: The C{int} maximum distance permitted between
+            yielded pairs.
+        @param minDistance: The C{int} minimum distance permitted between
+            yielded pairs.
+        @param bucketFactor: A C{int} factor by which the distance between
+            landmark and trig point is divided.
+        @param databaseFasta: The name of a FASTA file containing the
+            sequences that should be added to the database.
+        @param databaseSequences: A C{list} of amino acid sequences to add
+            to the database. The sequence id will be the text up to the last
+            space, if any, otherwise will be automatically assigned.
+        @raise ValueError: If a database cannot be found or created.
+        @return: A C{light.database.Database} instance.
+        """
+        parser = argparse.ArgumentParser()
+        self.addArgsToParser(parser)
+        commandLine = []
+
+        if database is not None:
+            commandLine.extend(['--database', database])
+
+        if landmarkNames is not None:
+            for landmarkName in landmarkNames:
+                commandLine.extend(['--landmark', landmarkName])
+
+        if trigPointNames is not None:
+            for trigPointName in trigPointNames:
+                commandLine.extend(['--trig', trigPointName])
+
+        if defaultLandmarks:
+            commandLine.append('--defaultLandmarks')
+
+        if defaultTrigPoints:
+            commandLine.append('--defaultTrigPoints')
+
+        commandLine.extend(['--limitPerLandmark', str(limitPerLandmark),
+                            '--maxDistance', str(maxDistance),
+                            '--minDistance', str(minDistance),
+                            '--bucketFactor', str(bucketFactor)])
+
+        if databaseFasta is not None:
+            commandLine.extend(['--databaseFasta', databaseFasta])
+
+        if databaseSequences is not None:
+            for databaseSequence in databaseSequences:
+                commandLine.extend(['--databaseSequence', databaseSequence])
+
+        return self.getDatabaseFromArgs(parser.parse_args(commandLine))

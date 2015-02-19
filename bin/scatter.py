@@ -4,7 +4,7 @@ import sys
 import argparse
 from time import time
 from json import loads
-from os.path import dirname, join, basename
+from os.path import dirname, join
 import matplotlib.pyplot as plt
 from scipy import stats
 
@@ -12,11 +12,7 @@ from dark.fasta import FastaReads
 from dark.reads import AARead
 
 import light
-from light.landmarks import (findLandmark, DEFAULT_LANDMARK_FINDER_CLASSES,
-                             ALL_LANDMARK_FINDER_CLASSES)
-from light.trig import (findTrigPoint, DEFAULT_TRIG_FINDER_CLASSES,
-                        ALL_TRIG_FINDER_CLASSES)
-from light.database import Database
+from light.database import DatabaseSpecifier
 
 
 # Data
@@ -124,35 +120,6 @@ if __name__ == '__main__':
         help='The name of the output file.')
 
     parser.add_argument(
-        '--landmark', action='append', dest='landmarkFinderNames',
-        choices=sorted(cl.NAME for cl in ALL_LANDMARK_FINDER_CLASSES),
-        help='The name of a landmark finder to use. May be specified '
-        'multiple times.')
-
-    parser.add_argument(
-        '--trig', action='append', dest='trigFinderNames',
-        choices=sorted(cl.NAME for cl in ALL_TRIG_FINDER_CLASSES),
-        help='The name of a trig point finder to use. May be specified '
-        'multiple times.')
-
-    parser.add_argument(
-        '--limitPerLandmark', type=int, default=None,
-        help='A limit on the number of pairs to yield per landmark per read.')
-
-    parser.add_argument(
-        '--maxDistance', type=int, default=None,
-        help='The maximum distance permitted between yielded pairs.')
-
-    parser.add_argument(
-        '--minDistance', type=int, default=None,
-        help='The minimum distance permitted between yielded pairs.')
-
-    parser.add_argument(
-        '--bucketFactor', type=int, default=1,
-        help=('A factor by which the distance between landmark and trig point '
-              'is divided.'))
-
-    parser.add_argument(
         '--score', choices=('pid', 'rmsd', 'z'),
         help='The name of the dataset which should be used.')
 
@@ -160,40 +127,10 @@ if __name__ == '__main__':
         '--regression', default=False, action='store_true',
         help='If True, add a regression line to the plot.')
 
+    databaseSpecifier = DatabaseSpecifier()
+    databaseSpecifier.addArgsToParser(parser)
+
     args = parser.parse_args()
-
-    landmarkFinderNames = (args.landmarkFinderNames or
-                           [klass.NAME for klass in
-                            DEFAULT_LANDMARK_FINDER_CLASSES])
-    trigFinderNames = (args.trigFinderNames or
-                       [klass.NAME for klass in DEFAULT_TRIG_FINDER_CLASSES])
-
-    if len(landmarkFinderNames) + len(trigFinderNames) == 0:
-        print >>sys.stderr, ('You must specify either landmark or trig point '
-                             'finders to find.\n%s') % parser.format_usage()
-        sys.exit(1)
-
-    # Make sure all landmark finders requested exist.
-    landmarkFinderClasses = []
-    for landmarkFinderName in landmarkFinderNames:
-        landmarkFinderClass = findLandmark(landmarkFinderName)
-        if landmarkFinderClass:
-            landmarkFinderClasses.append(landmarkFinderClass)
-        else:
-            print >>sys.stderr, '%s: Could not find landmark finder %r.' % (
-                basename(sys.argv[0]), landmarkFinderName)
-            sys.exit(1)
-
-    # Make sure all trig point finders requested exist.
-    trigFinderClasses = []
-    for trigFinderName in trigFinderNames:
-        trigFinderClass = findTrigPoint(trigFinderName)
-        if trigFinderClass:
-            trigFinderClasses.append(trigFinderClass)
-        else:
-            print >>sys.stderr, '%s: Could not find trig point finder %r.' % (
-                basename(sys.argv[0]), trigFinderName)
-            sys.exit(1)
 
     # Get the names of the data files
     databaseFile = join(dirname(light.__file__), '..', 'data',
@@ -205,21 +142,14 @@ if __name__ == '__main__':
     if read is None:
         raise KeyError('%s is not a valid dataset.' % args.dataset)
 
-    startTime = time()
-    # Create the database, add reads to it.
-    database = Database(landmarkFinderClasses, trigFinderClasses,
-                        args.limitPerLandmark, args.maxDistance,
-                        args.minDistance, args.bucketFactor)
-
+    database = databaseSpecifier.getDatabase(args)
     map(database.addSubject, FastaReads(databaseFile, readClass=AARead))
 
-    print >>sys.stderr, 'Database built in %.2f seconds.' % (time() -
-                                                             startTime)
     lookupTime = time()
     result = database.find(read)
     print >>sys.stderr, 'Look up done in %.2f seconds.' % (time() - lookupTime)
 
-    # read the daliResultFile
+    # Read the daliResultFile
     allScores = {}
     with open(daliResultFile) as fp:
         for line in fp:

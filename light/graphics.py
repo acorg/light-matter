@@ -3,10 +3,9 @@ import matplotlib.pyplot as plt
 from matplotlib import patches
 from operator import attrgetter
 
-from light.reads import ScannedRead
 from light.database import DatabaseSpecifier
-from light.trig import findTrigPoint, ALL_TRIG_CLASSES
-from light.landmarks import findLandmark, ALL_LANDMARK_CLASSES
+from light.trig import ALL_TRIG_CLASSES
+from light.landmarks import ALL_LANDMARK_CLASSES
 from light.features import Landmark
 
 from dark.dimension import dimensionalIterator
@@ -90,72 +89,38 @@ def plotHistogram(query, subject, significanceFraction=None, readsAx=None,
         readsAx.xaxis.tick_bottom()
 
 
-def plotFeatures(read, landmarks=None, trigs=None, limitPerLandmark=None,
-                 maxDistance=None, minDistance=None, readsAx=None):
+def plotFeatures(read, significanceFraction=None, readsAx=None, **kwargs):
     """
     A function which plots the positions of landmark and trigpoint pairs on a
     sequence.
 
-    @param read: A C{dark.reads.Read} instance.
-    @param landmark: a C{list} of C{str} of landmark finder names.
-    @param trig: a C{list} of C{str} of trig finder names.
-    @param limitPerLandmark: An C{int} limit on the number of pairs to
-        yield per landmark.
-    @param maxDistance: The C{int} maximum distance permitted between
-        yielded pairs.
-    @param minDistance: The C{int} minimum distance permitted between
-        yielded pairs.
-    @param readsAx: If not None, use this as the subplot for displaying reads.
+    @param read: A C{dark.reads.AARead} instance.
+    @param significanceFraction: The C{float} fraction of all (landmark,
+        trig point) pairs for a scannedRead that need to fall into the
+        same histogram bucket for that bucket to be considered a
+        significant match with a database title.
+    @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
+        for additional keywords, all of which are optional.
     """
     width = 20
     fig = plt.figure(figsize=(width, 20))
     readsAx = readsAx or fig.add_subplot(111)
 
-    landmarks = landmarks or []
-    trigs = trigs or []
-
-    if len(landmarks) + len(trigs) == 0:
-        raise ValueError('You must specify either landmarks or trig points to '
-                         'find.')
-
-    # Make sure all landmark finders requested exist.
-    landmarkFinders = []
-    for landmarkFinderName in landmarks:
-        landmarkClass = findLandmark(landmarkFinderName)
-        if landmarkClass:
-            landmarkFinders.append(landmarkClass().find)
-        else:
-            raise ValueError('Could not find landmark finder %r.' % (
-                             landmarkFinderName))
-
-    # Make sure all trig point finders requested exist.
-    trigFinders = []
-    for trigFinderName in trigs:
-        trigClass = findTrigPoint(trigFinderName)
-        if trigClass:
-            trigFinders.append(trigClass().find)
-        else:
-            raise ValueError('Could not find trig point finder %r.' % (
-                             trigFinderName))
-
-    # Find all landmarks and trig points on the read.
-    scannedRead = ScannedRead(read)
-
-    for landmarkFinder in landmarkFinders:
-        for landmark in landmarkFinder(read):
-            scannedRead.landmarks.append(landmark)
-
-    for trigFinder in trigFinders:
-        for trigPoint in trigFinder(read):
-            scannedRead.trigPoints.append(trigPoint)
+    database = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
+    result = database.find(read, significanceFraction, storeFullAnalysis=True)
+    scannedRead = result.scannedRead
 
     # plot landmarks and trig point pairs.
     totalCoveredResidues = len(scannedRead.coveredIndices())
     count = 0
 
+    # TODO: Replace the scannedRead.getPairs with database.getPairs (called
+    # with no args) once https://github.com/acorg/light-matter/issues/182
+    # is done.
     for landmark, trigPoint in scannedRead.getPairs(
-            limitPerLandmark=limitPerLandmark,
-            maxDistance=maxDistance, minDistance=minDistance):
+            limitPerLandmark=kwargs.get('limitPerLandmark'),
+            maxDistance=kwargs.get('maxDistance'),
+            minDistance=kwargs.get('minDistance')):
         readsAx.plot([landmark.offset, trigPoint.offset], [count, count], '-',
                      color='grey')
         landmarkColor = COLORS[landmark.symbol]
@@ -177,20 +142,13 @@ def plotFeatures(read, landmarks=None, trigs=None, limitPerLandmark=None,
     return scannedRead, count
 
 
-def plotFeaturePanel(reads, landmarks=None, trigs=None, limitPerLandmark=None,
-                     maxDistance=None, minDistance=None):
+def plotFeaturePanel(reads, **kwargs):
     """
     Plot a panel of feature plots from plotFeatures.
 
     @param reads: A C{dark.fasta.FastaReads} instance.
-    @param landmark: a C{list} of C{str} of landmark finder names.
-    @param trig: a C{list} of C{str} of trig finder names.
-    @param limitPerLandmark: An C{int} limit on the number of pairs to
-        yield per landmark.
-    @param maxDistance: The C{int} maximum distance permitted between
-        yielded pairs.
-    @param minDistance: The C{int} minimum distance permitted between
-        yielded pairs.
+    @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
+        for additional keywords, all of which are optional.
     """
     cols = 5
     rows = 40
@@ -205,9 +163,7 @@ def plotFeaturePanel(reads, landmarks=None, trigs=None, limitPerLandmark=None,
         row, col = coords.next()
         print '%d: %s' % (i, read.id)
 
-        graphInfo, y = plotFeatures(read, landmarks, trigs,
-                                    limitPerLandmark, maxDistance,
-                                    minDistance, readsAx=ax[row][col])
+        graphInfo, y = plotFeatures(read, readsAx=ax[row][col], **kwargs)
 
         totalCoveredResidues = len(graphInfo.coveredIndices())
         plotTitle = ('%s\n Length: %d, covered residues: %s' % (read.id,
@@ -242,61 +198,26 @@ def plotFeaturePanel(reads, landmarks=None, trigs=None, limitPerLandmark=None,
     figure.show()
 
 
-def plotFeatureSquare(read, landmarks=None, trigs=None, limitPerLandmark=None,
-                      maxDistance=None, minDistance=None, readsAx=None):
+def plotFeatureSquare(read, significanceFraction=None, readsAx=None, **kwargs):
     """
     Plot the positions of landmark and trigpoint pairs on a sequence in a
     square.
 
     @param read: A C{dark.reads.Read} instance.
-    @param landmark: a C{list} of C{str} of landmark finder names.
-    @param trig: a C{list} of C{str} of trig finder names.
-    @param limitPerLandmark: An C{int} limit on the number of pairs to
-        yield per landmark.
-    @param maxDistance: The C{int} maximum distance permitted between
-        yielded pairs.
-    @param minDistance: The C{int} minimum distance permitted between
-        yielded pairs.
+    @param significanceFraction: The C{float} fraction of all (landmark,
+        trig point) pairs for a scannedRead that need to fall into the
+        same histogram bucket for that bucket to be considered a
+        significant match with a database title.
     @param readsAx: If not None, use this as the subplot for displaying reads.
+    @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
+        for additional keywords, all of which are optional.
     """
     fig = plt.figure(figsize=(15, 15))
     readsAx = readsAx or fig.add_subplot(111)
-    landmarks = landmarks or []
-    trigs = trigs or []
 
-    if len(landmarks) + len(trigs) == 0:
-        raise ValueError('You must specify either landmarks or trig points to '
-                         'find.')
-
-    # Make sure all landmark finders requested exist.
-    landmarkFinders = []
-    for landmarkFinderName in landmarks:
-        landmarkClass = findLandmark(landmarkFinderName)
-        if landmarkClass:
-            landmarkFinders.append(landmarkClass().find)
-        else:
-            raise ValueError('Could not find landmark finder %r.' % (
-                             landmarkFinderName))
-
-    # Make sure all trig point finders requested exist.
-    trigFinders = []
-    for trigFinderName in trigs:
-        trigClass = findTrigPoint(trigFinderName)
-        if trigClass:
-            trigFinders.append(trigClass().find)
-        else:
-            raise ValueError('Could not find trig point finder %r.' % (
-                             trigFinderName))
-
-    # Find all landmarks and trig points on the read.
-    scannedRead = ScannedRead(read)
-
-    for trigFinder in trigFinders:
-        for trigPoint in trigFinder(read):
-            scannedRead.trigPoints.append(trigPoint)
-    for landmarkFinder in landmarkFinders:
-        for landmark in landmarkFinder(read):
-            scannedRead.landmarks.append(landmark)
+    database = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
+    result = database.find(read, significanceFraction, storeFullAnalysis=True)
+    scannedRead = result.scannedRead
 
     # Plot a light grey diagonal line, bottom left to top right.
     readsAx.plot([0, len(read.sequence)], [0, len(read.sequence)], '-',
@@ -308,9 +229,13 @@ def plotFeatureSquare(read, landmarks=None, trigs=None, limitPerLandmark=None,
     namesSeen = set()
     landmarks = set()
 
+    # TODO: Replace the scannedRead.getPairs with database.getPairs (called
+    # with no args) once https://github.com/acorg/light-matter/issues/182
+    # is done.
     for landmark, trigPoint in scannedRead.getPairs(
-            limitPerLandmark=limitPerLandmark,
-            maxDistance=maxDistance, minDistance=minDistance):
+            limitPerLandmark=kwargs.get('limitPerLandmark'),
+            maxDistance=kwargs.get('maxDistance'),
+            minDistance=kwargs.get('minDistance')):
         # Add jitter to the Y offset so we can see more trig points that
         # occur at the same offset.
         scatterX.append(landmark.offset)

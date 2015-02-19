@@ -56,14 +56,20 @@ if __name__ == '__main__':
     with open(args.json) as fp:
         database = Database.load(fp)
 
-    # print basic database information
+    # Print basic database information.
     print 'Database file name: %s' % args.json
-    print 'Landmark finders:'
-    print '  ' + '\n  '.join(sorted(
-        finder.NAME for finder in database.landmarkFinders))
-    print 'Trig point finders:'
-    print '  ' + '\n  '.join(sorted(
-        finder.NAME for finder in database.trigPointFinders))
+    if database.landmarkFinders:
+        print 'Landmark finders:'
+        print '  ' + '\n  '.join(sorted(
+            finder.NAME for finder in database.landmarkFinders))
+    else:
+        print 'Landmark finders: none'
+    if database.trigPointFinders:
+        print 'Trig point finders:'
+        print '  ' + '\n  '.join(sorted(
+            finder.NAME for finder in database.trigPointFinders))
+    else:
+        print 'Trig point finders: none'
     print 'Sequences: %s' % database.subjectCount
     print 'Hashes: %d' % len(database.d)
     print 'Residues: %d' % database.totalResidues
@@ -72,18 +78,19 @@ if __name__ == '__main__':
     print 'Checksum: %s' % database.checksum
     print 'Number of landmark and trigpoints found:'
 
-    # print hashes and subjects
-    landmarksTrigpoints = defaultdict(int)
-    for key in database.d:
-        lm, tp, dist = key.split(':')
-        landmarksTrigpoints[lm] += 1
-        landmarksTrigpoints[tp] += 1
+    if database.d:
+        # Print hash counts.
+        landmarksTrigpoints = defaultdict(int)
+        for key in database.d:
+            lm, tp, dist = key.split(':')
+            landmarksTrigpoints[lm] += 1
+            landmarksTrigpoints[tp] += 1
 
-    for f in landmarksTrigpoints:
-        print '  %s (%s): %d' % (getFinderNameFromSymbol(f), f,
-                                 landmarksTrigpoints[f])
+        for f in landmarksTrigpoints:
+            print '  %s (%s): %d' % (getFinderNameFromSymbol(f), f,
+                                     landmarksTrigpoints[f])
 
-    # write subjects to file:
+    # Write subjects to file.
     if args.printSubjects:
         subjects = []
         for sb in database.subjectInfo:
@@ -92,7 +99,7 @@ if __name__ == '__main__':
             SeqIO.write(subjects, fp, 'fasta')
         print 'Wrote %d subjects to %s' % (len(database.subjectInfo),
                                            args.printSubjects)
-    # print hashes
+    # Print hashes.
     if args.printHashes:
         for key, subjects in database.d.iteritems():
             print key

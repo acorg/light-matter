@@ -51,7 +51,19 @@ class TestPlotHashesInSubjectAndRead(TestCase):
         If all hashes in the query also occur in the subject, queryHashes must
         be empty.
         """
-        pass
+        subject = AARead('subject', 'FRRFRRFRRFAAAAAAAAAAAASARRRRFRRFRRFAAASA')
+        query = AARead('query', 'ASARRRRFRRFRRFAAASA')
+        hashes = PlotHashesInSubjectAndRead(query, subject,
+                                            landmarkNames=['AlphaHelix',
+                                                           'AlphaHelix_3_10'],
+                                            trigPointNames=['Peaks'],
+                                            significanceFraction=0.25,
+                                            maxDistance=50, minDistance=1,
+                                            limitPerLandmark=10,
+                                            bucketFactor=1)
+        self.assertEqual(0, len(hashes.matchingHashes))
+        self.assertEqual(1, len(hashes.queryHashes))
+        self.assertEqual(1, len(hashes.subjectHashes))
 
     def testNoSubjectHashes(self):
         """

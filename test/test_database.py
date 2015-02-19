@@ -726,7 +726,7 @@ class TestDatabase(TestCase):
 
     def testGetSubjectPairs(self):
         """
-        The getSubjectPairs must return pairs of (landmark, trigPoints).
+        The getSubjectPairs method must return pairs of (landmark, trigPoints).
         """
         subject = AARead('subject', 'FRRRFRRRFASAASA')
         db = Database([AlphaHelix], [Peaks], limitPerLandmark=16,
@@ -734,5 +734,8 @@ class TestDatabase(TestCase):
         db.addSubject(subject)
         scannedSubject = db.makeScannedSubject(subject)
         pairs = list(db.getSubjectPairs(scannedSubject))
-        self.assertEqual('A', pairs[0][0].symbol)
+        landmark, trigPoint = pairs[0]
+        self.assertEqual(Landmark(AlphaHelix.NAME, AlphaHelix.SYMBOL,
+                                  0, 9, 2), landmark)
+        self.assertEqual(TrigPoint(Peaks.NAME, Peaks.SYMBOL, 10), trigPoint)
         self.assertEqual(1, len(pairs))

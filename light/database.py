@@ -53,11 +53,11 @@ class Database(object):
                  limitPerLandmark=None, maxDistance=None, minDistance=None,
                  bucketFactor=None):
         self.landmarkClasses = (
-            self.DEFAULT_LANDMARK_CLASSES if landmarkClasses is None
+            DEFAULT_LANDMARK_CLASSES if landmarkClasses is None
             else landmarkClasses)
 
         self.trigPointClasses = (
-            self.DEFAULT_TRIG_CLASSES if trigPointClasses is None
+            DEFAULT_TRIG_CLASSES if trigPointClasses is None
             else trigPointClasses)
 
         self.limitPerLandmark = (

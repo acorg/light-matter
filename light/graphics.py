@@ -309,14 +309,10 @@ class PlotHashesInSubjectAndRead(object):
         else:
             self.matchingHashes = []
             scannedQuery = database.makeScannedSubject(query)
-            self.queryHashes = []
-            for landmark, trigPoint in database.getSubjectPairs(scannedQuery):
-                self.queryHashes.append((landmark, trigPoint))
+            self.queryHashes = list(database.getSubjectPairs(scannedQuery))
 
         scannedSubject = database.makeScannedSubject(subject)
-        self.subjectHashes = []
-        for landmark, trigPoint in database.getSubjectPairs(scannedSubject):
-            self.subjectHashes.append((landmark, trigPoint))
+        self.subjectHashes = list(database.getSubjectPairs(scannedSubject))
         for bin_ in self.matchingHashes:
             for hash_ in bin_:
                 try:

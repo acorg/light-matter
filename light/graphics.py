@@ -271,3 +271,79 @@ def plotFeatureSquare(read, significanceFraction=None, readsAx=None, **kwargs):
     readsAx.grid()
 
     return scannedRead
+
+
+class PlotHashesInSubjectAndRead(object):
+    """
+    A class which plots a visualisation of the hashes in subject and query.
+    It will return three types of hashes: 1) Hashes in the query that don't
+    match in the subject. 2) Hashes in the subject that don't match in the
+    query. 3) Hashes that match in subject and query. These will subsequently
+    be plotted.
+
+    @param query: an AARead instance of the sequence of the query.
+    @param subject: an AARead instance of the sequence of the subject.
+    @param significanceFraction: The C{float} fraction of all (landmark,
+        trig point) pairs for a scannedRead that need to fall into the
+        same histogram bucket for that bucket to be considered a
+        significant match with a database title.
+    @param readsAx: If not None, use this as the subplot for displaying reads.
+    @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
+        for additional keywords, all of which are optional.
+    """
+    def __init__(self, query, subject, significanceFraction=None,
+                 readsAx=None, **kwargs):
+        self.subjectHashes = []
+        self.query = query
+        self.subject = subject
+        self.readsAx = readsAx
+
+        database = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
+        database.addSubject(self.subject)
+
+        result = database.find(self.query, significanceFraction,
+                               storeFullAnalysis=True)
+        if result.analysis:
+            self.matchingHashes = result.analysis[0]['histogram'].bins
+            self.queryHashes = result.analysis[0]['nonMatchingHashes']
+        else:
+            self.matchingHashes = []
+            scannedQuery = database.makeScannedSubject(query)
+            self.queryHashes = []
+            for landmark, trigPoint in database.getSubjectPairs(scannedQuery):
+                self.queryHashes.append((landmark, trigPoint))
+
+        scannedSubject = database.makeScannedSubject(subject)
+        self.subjectHashes = []
+        for landmark, trigPoint in database.getSubjectPairs(scannedSubject):
+            self.subjectHashes.append((landmark, trigPoint))
+        for bin_ in self.matchingHashes:
+            for hash_ in bin_:
+                if hash_ in self.subjectHashes:
+                    self.subjectHashes.remove(hash_)
+
+    def plot(self):
+        """
+        Plots the graph.
+        """
+        fig = plt.figure(figsize=(15, 15))
+        readsAx = self.readsAx or fig.add_subplot(111)
+        cm = plt.cm.get_cmap('gist_rainbow')
+
+        for pair in self.queryHashes:
+            plt.plot(pair[0].offset, 0, 'o', markerFaceColor='black',
+                     markerEdgeColor='white')
+
+        for pair in self.subjectHashes:
+            plt.plot(0, pair[0].offset, 'o', markerFaceColor='black',
+                     markerEdgeColor='white')
+
+        for bin_ in self.matchingHashes:
+            for pair in bin_:
+                plt.plot(pair['subjectOffset'], pair['landmark'].offset, 'o',
+                         markerFaceColor=cm, markerEdgeColor='white')
+
+        readsAx.set_title('%s vs. %s' % (self.subject.id, self.read.id))
+        readsAx.set_ylabel('Read: %s', self.read.id)
+        readsAx.set_xlabel('Subject: %s', self.subject.id)
+        readsAx.grid()

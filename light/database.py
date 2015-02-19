@@ -135,7 +135,7 @@ class Database(object):
 
     def makeScannedSubject(self, subject):
         """
-        Makes an instance of C{light.reads.ScannedSubject}.
+        Makes an instance of C{light.reads.ScannedRead}.
 
         @param subject: a C{dark.read.AARead} instance.
         @ return: a C{light.reads.ScannedRead} instance.
@@ -154,8 +154,8 @@ class Database(object):
         """
         Get the (landmark, trigPoint) pairs from a ScannedRead instance.
 
-        @param scannedSubject: A C{light.reads.ScannedSubject} instance.
-        @return: C{light.reads.ScannedSubject.getPairs}
+        @param scannedSubject: A C{light.reads.ScannedRead} instance.
+        @return: C{light.reads.ScannedRead.getPairs}
         """
         return scannedSubject.getPairs(limitPerLandmark=self.limitPerLandmark,
                                        maxDistance=self.maxDistance,

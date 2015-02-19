@@ -11,6 +11,7 @@ from light.landmarks.beta_strand import BetaStrand
 from light.trig.peaks import Peaks
 from light.trig.troughs import Troughs
 from light.database import Database
+from light.reads import ScannedRead
 
 
 class TestDatabase(TestCase):
@@ -209,7 +210,7 @@ class TestDatabase(TestCase):
         """
         db = Database([AlphaHelix], [])
         db.addSubject(AARead('id1', 'AFRRRFRRRFAAAAAAAAAAAAAAFRRRFRRRFRRRF'))
-        db.addSubject(AARead('id2',  'FRRRFRRRFAAAAAAAAAAAAAAFRRRFRRRFRRRF'))
+        db.addSubject(AARead('id2', 'FRRRFRRRFAAAAAAAAAAAAAAFRRRFRRRFRRRF'))
         self.assertEqual(
             {
                 'A2:A3:23': {'0': [1], '1': [0]},
@@ -532,7 +533,7 @@ class TestDatabase(TestCase):
         Two matching keys in the same subject must be found.
         """
         subject = AARead('subject', 'FRRRFRRRFASAASA')
-        query = AARead('query',     'FRRRFRRRFASAASA')
+        query = AARead('query', 'FRRRFRRRFASAASA')
         db = Database([AlphaHelix], [Peaks])
         db.addSubject(subject)
         result = db.find(query)
@@ -711,3 +712,27 @@ class TestDatabase(TestCase):
         error = 'bucketFactor must be > 0\\.'
         self.assertRaisesRegexp(ValueError, error, Database, [], [],
                                 bucketFactor=0)
+
+    def testMakeScannedSubject(self):
+        """
+        The makeScannedSubject method must return a scanned subject.
+        """
+        subject = AARead('subject', 'FRRRFRRRFASAASA')
+        db = Database([AlphaHelix], [Peaks], limitPerLandmark=16,
+                      maxDistance=10, minDistance=0, bucketFactor=1)
+        db.addSubject(subject)
+        scannedSubject = db.makeScannedSubject(subject)
+        self.assertIsInstance(scannedSubject, ScannedRead)
+
+    def testGetSubjectPairs(self):
+        """
+        The getSubjectPairs must return pairs of (landmark, trigPoints).
+        """
+        subject = AARead('subject', 'FRRRFRRRFASAASA')
+        db = Database([AlphaHelix], [Peaks], limitPerLandmark=16,
+                      maxDistance=10, minDistance=0, bucketFactor=1)
+        db.addSubject(subject)
+        scannedSubject = db.makeScannedSubject(subject)
+        pairs = list(db.getSubjectPairs(scannedSubject))
+        self.assertEqual('A', pairs[0][0].symbol)
+        self.assertEqual(1, len(pairs))

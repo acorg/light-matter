@@ -21,11 +21,14 @@ class Result(object):
         significant match with a database title.
     @param bucketFactor: A C{int} factor by which the distance between
         landmark and trig point is divided, to influence sensitivity.
+    @param nonMatchingHashes: A C{set} of hashes in scannedRead that does not
+        match a subject.
     @param storeFullAnalysis: A C{bool}. If C{True} the full significance
         analysis of each matched subject will be stored.
     """
     def __init__(self, scannedRead, matches, hashCount, significanceFraction,
-                 bucketFactor, storeFullAnalysis=False):
+                 bucketFactor, nonMatchingHashes=None,
+                 storeFullAnalysis=False):
         self.scannedRead = scannedRead
         self.matches = matches
         self._storeFullAnalysis = storeFullAnalysis

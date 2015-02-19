@@ -4,10 +4,10 @@ from light.trig.amino_acids import AminoAcids
 from light.trig.individual_peaks import IndividualPeaks
 from light.trig.individual_troughs import IndividualTroughs
 
-ALL_TRIG_FINDER_CLASSES = {
+ALL_TRIG_CLASSES = {
     Peaks, Troughs, AminoAcids, IndividualPeaks, IndividualTroughs}
 
-DEFAULT_TRIG_FINDER_CLASSES = {
+DEFAULT_TRIG_CLASSES = {
     Peaks, Troughs, AminoAcids}
 
 
@@ -19,7 +19,7 @@ def findTrigPoint(name):
     @return: The found class, or C{None}.
     """
 
-    for klass in ALL_TRIG_FINDER_CLASSES:
+    for klass in ALL_TRIG_CLASSES:
         if name == klass.NAME:
             return klass
 
@@ -50,5 +50,5 @@ def findTrigPoints(names):
 
 
 # Default exports for 'from light.trig import *'
-__all__ = ['findTrigPoint', 'findTrigPoints', 'ALL_TRIG_FINDER_CLASSES',
-           'DEFAULT_TRIG_FINDER_CLASSES']
+__all__ = ['findTrigPoint', 'findTrigPoints', 'ALL_TRIG_CLASSES',
+           'DEFAULT_TRIG_CLASSES']

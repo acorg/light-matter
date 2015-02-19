@@ -4,16 +4,16 @@ from matplotlib import patches
 from operator import attrgetter
 
 from light.reads import ScannedRead
-from light.database import Database, DatabaseSpecifier
-from light.trig import findTrigPoint, ALL_TRIG_FINDER_CLASSES
-from light.landmarks import findLandmark, ALL_LANDMARK_FINDER_CLASSES
+from light.database import DatabaseSpecifier
+from light.trig import findTrigPoint, ALL_TRIG_CLASSES
+from light.landmarks import findLandmark, ALL_LANDMARK_CLASSES
 from light.features import Landmark
 
 from dark.dimension import dimensionalIterator
 
 ALL_FEATURES = [
     (feature.SYMBOL, feature.NAME) for feature in
-    sorted(ALL_LANDMARK_FINDER_CLASSES | ALL_TRIG_FINDER_CLASSES,
+    sorted(ALL_LANDMARK_CLASSES | ALL_TRIG_CLASSES,
            key=attrgetter('NAME'))]
 
 # From http://www.randalolson.com/2014/06/28/how-to-make-beautiful-data-\
@@ -121,9 +121,9 @@ def plotFeatures(read, landmarks=None, trigs=None, limitPerLandmark=None,
     # Make sure all landmark finders requested exist.
     landmarkFinders = []
     for landmarkFinderName in landmarks:
-        landmarkFinderClass = findLandmark(landmarkFinderName)
-        if landmarkFinderClass:
-            landmarkFinders.append(landmarkFinderClass().find)
+        landmarkClass = findLandmark(landmarkFinderName)
+        if landmarkClass:
+            landmarkFinders.append(landmarkClass().find)
         else:
             raise ValueError('Could not find landmark finder %r.' % (
                              landmarkFinderName))
@@ -131,9 +131,9 @@ def plotFeatures(read, landmarks=None, trigs=None, limitPerLandmark=None,
     # Make sure all trig point finders requested exist.
     trigFinders = []
     for trigFinderName in trigs:
-        trigFinderClass = findTrigPoint(trigFinderName)
-        if trigFinderClass:
-            trigFinders.append(trigFinderClass().find)
+        trigClass = findTrigPoint(trigFinderName)
+        if trigClass:
+            trigFinders.append(trigClass().find)
         else:
             raise ValueError('Could not find trig point finder %r.' % (
                              trigFinderName))
@@ -271,9 +271,9 @@ def plotFeatureSquare(read, landmarks=None, trigs=None, limitPerLandmark=None,
     # Make sure all landmark finders requested exist.
     landmarkFinders = []
     for landmarkFinderName in landmarks:
-        landmarkFinderClass = findLandmark(landmarkFinderName)
-        if landmarkFinderClass:
-            landmarkFinders.append(landmarkFinderClass().find)
+        landmarkClass = findLandmark(landmarkFinderName)
+        if landmarkClass:
+            landmarkFinders.append(landmarkClass().find)
         else:
             raise ValueError('Could not find landmark finder %r.' % (
                              landmarkFinderName))
@@ -281,9 +281,9 @@ def plotFeatureSquare(read, landmarks=None, trigs=None, limitPerLandmark=None,
     # Make sure all trig point finders requested exist.
     trigFinders = []
     for trigFinderName in trigs:
-        trigFinderClass = findTrigPoint(trigFinderName)
-        if trigFinderClass:
-            trigFinders.append(trigFinderClass().find)
+        trigClass = findTrigPoint(trigFinderName)
+        if trigClass:
+            trigFinders.append(trigClass().find)
         else:
             raise ValueError('Could not find trig point finder %r.' % (
                              trigFinderName))

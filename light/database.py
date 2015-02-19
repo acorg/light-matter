@@ -22,8 +22,10 @@ class Database(object):
     Maintain a collection of sequences ("subjects") and provide for database
     (index, search) operations on them.
 
-    @param landmarkClasses: A C{list} of landmark finder classes.
-    @param trigPointClasses: A C{list} of trig point finder classes.
+    @param landmarkClasses: A C{list} of landmark finder classes, or C{None}
+        to use the default set of landmark finder classes.
+    @param trigPointClasses: A C{list} of trig point finder classes, or C{None}
+        to use the default set of trig point finder classes.
     @param limitPerLandmark: An C{int} limit on the number of pairs to
         yield per landmark.
     @param maxDistance: The C{int} maximum distance permitted between
@@ -34,25 +36,27 @@ class Database(object):
         landmark and trig point is divided, to influence sensitivity.
     """
 
+    # Database construction and look-up defaults. See explanations in
+    # docstring above.
+    DEFAULT_LIMIT_PER_LANDMARK = 10
+    DEFAULT_MAX_DISTANCE = 200
+    DEFAULT_MIN_DISTANCE = 1
+    DEFAULT_BUCKET_FACTOR = 1  # Should be >1. Can we use a float?
+
     # The default fraction of all (landmark, trig point) pairs for a
     # scannedRead that need to fall into the same offset delta histogram
     # bucket for that bucket to be considered a significant match with a
     # database title.
     DEFAULT_SIGNIFICANCE_FRACTION = 0.25
 
-    DEFAULT_LIMIT_PER_LANDMARK = 10
-    DEFAULT_MAX_DISTANCE = 200
-    DEFAULT_MIN_DISTANCE = 1
-    DEFAULT_BUCKET_FACTOR = 1  # Should be >1. Can we use a float?
-
-    def __init__(self, landmarkClasses=None, trigPointClasses=None,
+    def __init__(self, landmarkClasses, trigPointClasses,
                  limitPerLandmark=None, maxDistance=None, minDistance=None,
                  bucketFactor=None):
         self.landmarkClasses = (
             self.DEFAULT_LANDMARK_CLASSES if landmarkClasses is None
             else landmarkClasses)
 
-        self.trigPointFinderClasses = (
+        self.trigPointClasses = (
             self.DEFAULT_TRIG_CLASSES if trigPointClasses is None
             else trigPointClasses)
 
@@ -72,7 +76,7 @@ class Database(object):
             self.DEFAULT_BUCKET_FACTOR if bucketFactor is None
             else bucketFactor)
 
-        if bucketFactor <= 0:
+        if self.bucketFactor <= 0:
             raise ValueError('bucketFactor must be > 0.')
 
         # It may look like self.d should be a defaultdict(list). But that
@@ -85,11 +89,11 @@ class Database(object):
         self.subjectInfo = []
         # Create instances of the landmark and trig point finder classes.
         self.landmarkFinders = []
-        for landmarkFinderClass in self.landmarkFinderClasses:
-            self.landmarkFinders.append(landmarkFinderClass())
+        for landmarkClass in self.landmarkClasses:
+            self.landmarkFinders.append(landmarkClass())
         self.trigPointFinders = []
-        for trigPointFinderClass in self.trigPointFinderClasses:
-            self.trigPointFinders.append(trigPointFinderClass())
+        for trigPointClass in self.trigPointClasses:
+            self.trigPointFinders.append(trigPointClass())
         self._initializeChecksum()
 
     def _initializeChecksum(self):
@@ -188,10 +192,8 @@ class Database(object):
         """
         print >>fp, dumps({
             'checksum': self.checksum,
-            'landmarkFinderClasses': [
-                klass.NAME for klass in self.landmarkFinderClasses],
-            'trigPointFinderClasses': [
-                klass.NAME for klass in self.trigPointFinderClasses],
+            'landmarkClasses': [cls.NAME for cls in self.landmarkClasses],
+            'trigPointClasses': [cls.NAME for cls in self.trigPointClasses],
             'limitPerLandmark': self.limitPerLandmark,
             'maxDistance': self.maxDistance,
             'minDistance': self.minDistance,
@@ -274,10 +276,8 @@ class Database(object):
         """
         state = {
             'checksum': self.checksum,
-            'landmarkFinderClassNames': [klass.NAME for klass in
-                                         self.landmarkFinderClasses],
-            'trigPointFinderClassNames': [klass.NAME for klass in
-                                          self.trigPointFinderClasses],
+            'landmarkClassNames': [cls.NAME for cls in self.landmarkClasses],
+            'trigPointClassNames': [cls.NAME for cls in self.trigPointClasses],
             'limitPerLandmark': self.limitPerLandmark,
             'maxDistance': self.maxDistance,
             'minDistance': self.minDistance,
@@ -300,29 +300,29 @@ class Database(object):
         """
         state = load(fp)
 
-        landmarkFinderClasses = []
-        for landmarkClassName in state['landmarkFinderClassNames']:
-            klass = findLandmark(landmarkClassName)
-            if klass:
-                landmarkFinderClasses.append(klass)
+        landmarkClasses = []
+        for landmarkClassName in state['landmarkClassNames']:
+            cls = findLandmark(landmarkClassName)
+            if cls:
+                landmarkClasses.append(cls)
             else:
                 print >>sys.stderr, (
                     'Could not find landscape finder class %r! Has that '
                     'class been renamed or removed?' % landmarkClassName)
                 sys.exit(1)
 
-        trigPointFinderClasses = []
-        for trigPointClassName in state['trigPointFinderClassNames']:
-            klass = findTrigPoint(trigPointClassName)
-            if klass:
-                trigPointFinderClasses.append(klass)
+        trigPointClasses = []
+        for trigPointClassName in state['trigPointClassNames']:
+            cls = findTrigPoint(trigPointClassName)
+            if cls:
+                trigPointClasses.append(cls)
             else:
                 print >>sys.stderr, (
                     'Could not find trig point finder class %r! Has that '
                     'class been renamed or removed?' % trigPointClassName)
                 sys.exit(1)
 
-        database = Database(landmarkFinderClasses, trigPointFinderClasses,
+        database = Database(landmarkClasses, trigPointClasses,
                             limitPerLandmark=state['limitPerLandmark'],
                             maxDistance=state['maxDistance'],
                             minDistance=state['minDistance'],
@@ -366,13 +366,13 @@ class DatabaseSpecifier(object):
         if self._allowCreation:
             parser.add_argument(
                 '--landmark', action='append', dest='landmarkFinderNames',
-                choices=sorted(cl.NAME for cl in ALL_LANDMARK_FINDER_CLASSES),
+                choices=sorted(cl.NAME for cl in ALL_LANDMARK_CLASSES),
                 help='The name of a landmark finder to use. May be specified '
                 'multiple times.')
 
             parser.add_argument(
                 '--trig', action='append', dest='trigFinderNames',
-                choices=sorted(cl.NAME for cl in ALL_TRIG_FINDER_CLASSES),
+                choices=sorted(cl.NAME for cl in ALL_TRIG_CLASSES),
                 help='The name of a trig point finder to use. May be '
                 'specified multiple times.')
 
@@ -380,12 +380,12 @@ class DatabaseSpecifier(object):
                 '--defaultLandmarks', action='store_true', default=False,
                 help=('If specified, use the default landmark finders: %s' %
                       sorted(cl.NAME for cl in
-                             DEFAULT_LANDMARK_FINDER_CLASSES)))
+                             DEFAULT_LANDMARK_CLASSES)))
 
             parser.add_argument(
                 '--defaultTrigPoints', action='store_true', default=False,
                 help=('If specified, use the default trig point finders: %s' %
-                      sorted(cl.NAME for cl in DEFAULT_TRIG_FINDER_CLASSES)))
+                      sorted(cl.NAME for cl in DEFAULT_TRIG_CLASSES)))
 
             parser.add_argument(
                 '--limitPerLandmark', type=int,
@@ -442,19 +442,19 @@ class DatabaseSpecifier(object):
                 database = Database.load(fp)
 
         elif self._allowCreation:
-            landmarkFinderClasses = (
-                DEFAULT_LANDMARK_FINDER_CLASSES if args.defaultLandmarks
+            landmarkClasses = (
+                DEFAULT_LANDMARK_CLASSES if args.defaultLandmarks
                 else findLandmarks(args.landmarkFinderNames))
 
-            trigFinderClasses = (
-                DEFAULT_TRIG_FINDER_CLASSES if args.defaultTrigPoints
+            trigClasses = (
+                DEFAULT_TRIG_CLASSES if args.defaultTrigPoints
                 else findTrigPoints(args.trigFinderNames))
 
-            if len(landmarkFinderClasses) + len(trigFinderClasses) == 0:
+            if len(landmarkClasses) + len(trigClasses) == 0:
                 warn("Creating a database with no landmark or trig point "
                      "finders. Hope you know what you're doing!")
 
-            database = Database(landmarkFinderClasses, trigFinderClasses,
+            database = Database(landmarkClasses, trigClasses,
                                 args.limitPerLandmark, args.maxDistance,
                                 args.minDistance, args.bucketFactor)
 

@@ -7,11 +7,11 @@ from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
 from light.database import Database
-from light.landmarks import ALL_LANDMARK_FINDER_CLASSES
-from light.trig import ALL_TRIG_FINDER_CLASSES
+from light.landmarks import ALL_LANDMARK_CLASSES
+from light.trig import ALL_TRIG_CLASSES
 
 _SYMBOL_NAME = dict((finder.SYMBOL, finder.NAME) for finder in
-                    ALL_LANDMARK_FINDER_CLASSES | ALL_TRIG_FINDER_CLASSES)
+                    ALL_LANDMARK_CLASSES | ALL_TRIG_CLASSES)
 
 
 def getFinderNameFromSymbol(symbol):

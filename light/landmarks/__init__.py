@@ -9,11 +9,11 @@ from light.landmarks.gor4_beta_strand import GOR4BetaStrand
 from light.landmarks.gor4_coil import GOR4Coil
 from light.landmarks.prosite import Prosite
 
-ALL_LANDMARK_FINDER_CLASSES = {
+ALL_LANDMARK_CLASSES = {
     AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, AminoAcids, BetaStrand,
     BetaTurn, GOR4AlphaHelix, GOR4BetaStrand, GOR4Coil, Prosite}
 
-DEFAULT_LANDMARK_FINDER_CLASSES = {
+DEFAULT_LANDMARK_CLASSES = {
     AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, AminoAcids, BetaStrand,
     BetaTurn, Prosite}
 
@@ -26,7 +26,7 @@ def findLandmark(name):
     @return: The found class, or C{None}.
     """
 
-    for klass in ALL_LANDMARK_FINDER_CLASSES:
+    for klass in ALL_LANDMARK_CLASSES:
         if name == klass.NAME:
             return klass
 
@@ -57,5 +57,5 @@ def findLandmarks(names):
 
 
 # Default exports for 'from light.landmarks import *'
-__all__ = ['findLandmark', 'findLandmarks', 'ALL_LANDMARK_FINDER_CLASSES',
-           'DEFAULT_LANDMARK_FINDER_CLASSES']
+__all__ = ['findLandmark', 'findLandmarks', 'ALL_LANDMARK_CLASSES',
+           'DEFAULT_LANDMARK_CLASSES']

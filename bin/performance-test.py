@@ -8,8 +8,8 @@ from os.path import basename
 import matplotlib.pyplot as plt
 from collections import defaultdict
 
-from light.landmarks import findLandmark, ALL_LANDMARK_FINDER_CLASSES
-from light.trig import findTrigPoint, ALL_TRIG_FINDER_CLASSES
+from light.landmarks import findLandmark, ALL_LANDMARK_CLASSES
+from light.trig import findTrigPoint, ALL_TRIG_CLASSES
 from light.performance.query import queryDatabase
 
 """
@@ -224,8 +224,8 @@ class WriteMarkdownFile(object):
                               'trig points: %s, maxDistance: %s, '
                               'minDistance: %s '
                               'limitPerLandmark: %s \n\n' %
-                              ([i.NAME for i in landmarkFinderClasses],
-                               [i.NAME for i in trigFinderClasses],
+                              ([i.NAME for i in landmarkClasses],
+                               [i.NAME for i in trigClasses],
                                args.maxDistance, args.minDistance,
                                args.limitPerLandmark, args.bucketFactor))
 
@@ -274,13 +274,13 @@ if __name__ == '__main__':
 
     parser.add_argument(
         '--landmark', action='append', type=str, dest='landmarkFinderNames',
-        choices=sorted(klass.NAME for klass in ALL_LANDMARK_FINDER_CLASSES),
+        choices=sorted(klass.NAME for klass in ALL_LANDMARK_CLASSES),
         help='The name of a landmark finder to use. May be specified '
         'multiple times.')
 
     parser.add_argument(
         '--trig', action='append', type=str, dest='trigFinderNames',
-        choices=sorted(klass.NAME for klass in ALL_TRIG_FINDER_CLASSES),
+        choices=sorted(klass.NAME for klass in ALL_TRIG_CLASSES),
         help='The name of a trig point finder to use. May be specified '
         'multiple times.')
 
@@ -309,9 +309,9 @@ if __name__ == '__main__':
 
     landmarkFinderNames = (args.landmarkFinderNames or
                            [klass.NAME for klass in
-                            ALL_LANDMARK_FINDER_CLASSES])
+                            ALL_LANDMARK_CLASSES])
     trigFinderNames = (args.trigFinderNames or
-                       [klass.NAME for klass in ALL_TRIG_FINDER_CLASSES])
+                       [klass.NAME for klass in ALL_TRIG_CLASSES])
 
     if len(landmarkFinderNames) + len(trigFinderNames) == 0:
         print >>sys.stderr, ('You must specify either landmark or trig point '
@@ -319,22 +319,22 @@ if __name__ == '__main__':
         sys.exit(1)
 
     # Make sure all landmark finders requested exist.
-    landmarkFinderClasses = []
+    landmarkClasses = []
     for landmarkFinderName in landmarkFinderNames:
-        landmarkFinderClass = findLandmark(landmarkFinderName)
-        if landmarkFinderClass:
-            landmarkFinderClasses.append(landmarkFinderClass)
+        landmarkClass = findLandmark(landmarkFinderName)
+        if landmarkClass:
+            landmarkClasses.append(landmarkClass)
         else:
             print >>sys.stderr, '%s: Could not find landmark finder %r.' % (
                 basename(sys.argv[0]), landmarkFinderName)
             sys.exit(1)
 
     # Make sure all trig point finders requested exist.
-    trigFinderClasses = []
+    trigClasses = []
     for trigFinderName in trigFinderNames:
-        trigFinderClass = findTrigPoint(trigFinderName)
-        if trigFinderClass:
-            trigFinderClasses.append(trigFinderClass)
+        trigClass = findTrigPoint(trigFinderName)
+        if trigClass:
+            trigClasses.append(trigClass)
         else:
             print '%s: Could not find trig point finder %r.' % (
                 basename(sys.argv[0]), trigFinderName)
@@ -351,8 +351,8 @@ if __name__ == '__main__':
     # 1) A complete sequence must match itself:
     oneStart = time()
     print >>sys.stderr, '1) A complete sequence must find itself.'
-    oneResult = queryDatabase(T1DB, T1READ, landmarkFinderClasses,
-                              trigFinderClasses, args.limitPerLandmark,
+    oneResult = queryDatabase(T1DB, T1READ, landmarkClasses,
+                              trigClasses, args.limitPerLandmark,
                               args.maxDistance, args.minDistance,
                               args.bucketFactor)
     oneTime = time() - oneStart
@@ -362,8 +362,8 @@ if __name__ == '__main__':
     # 2) Reads made from a sequence must match itself:
     twoStart = time()
     print >>sys.stderr, '2) Reads made from a sequence must match itself.'
-    twoResult = queryDatabase(T2DB, T2READ, landmarkFinderClasses,
-                              trigFinderClasses, args.limitPerLandmark,
+    twoResult = queryDatabase(T2DB, T2READ, landmarkClasses,
+                              trigClasses, args.limitPerLandmark,
                               args.maxDistance, args.minDistance,
                               args.bucketFactor)
     twoTime = time() - twoStart
@@ -373,8 +373,8 @@ if __name__ == '__main__':
     # 3) A sequence must find related sequences:
     threeStart = time()
     print >>sys.stderr, '3) A sequence must match related sequences.'
-    threeResult = queryDatabase(T3DB, T3READ, landmarkFinderClasses,
-                                trigFinderClasses, args.limitPerLandmark,
+    threeResult = queryDatabase(T3DB, T3READ, landmarkClasses,
+                                trigClasses, args.limitPerLandmark,
                                 args.maxDistance, args.minDistance,
                                 args.bucketFactor)
     threeTime = time() - threeStart
@@ -385,8 +385,8 @@ if __name__ == '__main__':
     fourStart = time()
     print >>sys.stderr, ('4) Reads made from a sequence must match related '
                          'sequences.')
-    fourResult = queryDatabase(T4DB, T4READ, landmarkFinderClasses,
-                               trigFinderClasses, args.limitPerLandmark,
+    fourResult = queryDatabase(T4DB, T4READ, landmarkClasses,
+                               trigClasses, args.limitPerLandmark,
                                args.maxDistance, args.minDistance,
                                args.bucketFactor)
     fourTime = time() - fourStart
@@ -400,8 +400,8 @@ if __name__ == '__main__':
                          'correlate.')
     print >>sys.stderr, ('6) The BLASTp bit scores and light matter scores '
                          'must correlate.')
-    fiveSixResult = queryDatabase(T56DB, T56READ, landmarkFinderClasses,
-                                  trigFinderClasses, args.limitPerLandmark,
+    fiveSixResult = queryDatabase(T56DB, T56READ, landmarkClasses,
+                                  trigClasses, args.limitPerLandmark,
                                   args.maxDistance, args.minDistance,
                                   args.bucketFactor)
     fiveSixTime = time() - fiveSixStart

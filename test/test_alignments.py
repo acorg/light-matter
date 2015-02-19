@@ -232,7 +232,7 @@ class TestLightReadsAlignments(TestCase):
                      "parameters in file2.json.bz2 differ from those "
                      "originally found in file1.json.bz2. Summary of "
                      "differences:\n\tParam u'limitPerLandmark' initial value "
-                     "None differs from later value 100")
+                     "10 differs from later value 100")
             readsAlignments = LightReadsAlignments(
                 ['file1.json.bz2', 'file2.json.bz2'], DB)
             self.assertRaisesRegexp(ValueError, error, list, readsAlignments)
@@ -281,8 +281,8 @@ class TestLightReadsAlignments(TestCase):
         with patch('__builtin__.open', mockOpener, create=True):
             readsAlignments = LightReadsAlignments('file.json', DB)
             self.assertEqual(
-                sorted([HSP(1.0 / 11.0), HSP(3.0 / 11.0), HSP(4.0 / 21.0),
-                        HSP(5.0 / 21.0), HSP(1.0), HSP(1.0)]),
+                sorted([HSP(1.0 / 11.0), HSP(3.0 / 11.0), HSP(0.2),
+                        HSP(0.25), HSP(1.0), HSP(1.0)]),
                 sorted(readsAlignments.hsps()))
 
 

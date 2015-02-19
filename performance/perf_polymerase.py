@@ -14,8 +14,8 @@ class _TestPolymerase(object):
     Test look-up of polymerase sequences.
     """
 
-    landmarkFinderClasses = None  # Must be set in a subclass.
-    trigFinderClasses = None  # Must be set in a subclass.
+    landmarkClasses = None  # Must be set in a subclass.
+    trigClasses = None  # Must be set in a subclass.
     limitPerLandmark = None
     maxDistance = None
     minDistance = None
@@ -27,7 +27,7 @@ class _TestPolymerase(object):
         self.details = queryDatabase(
             'performance/database/polymerase-db.fasta',
             'performance/read/polymerase-queries.fasta',
-            self.landmarkFinderClasses, self.trigFinderClasses,
+            self.landmarkClasses, self.trigClasses,
             self.limitPerLandmark, self.maxDistance, self.minDistance)
 
 
@@ -35,72 +35,72 @@ class TestAlphaHelix(_TestPolymerase, TestCase):
     """
     Test looking up polymerases with just an AlphaHelix landmark finder.
     """
-    landmarkFinderClasses = [AlphaHelix]
-    trigFinderClasses = []
+    landmarkClasses = [AlphaHelix]
+    trigClasses = []
 
 
 class TestAlphaHelix_3_10(_TestPolymerase, TestCase):
     """
     Test looking up polymerases with just an AlphaHelix_3_10 landmark finder.
     """
-    landmarkFinderClasses = [AlphaHelix_3_10]
-    trigFinderClasses = []
+    landmarkClasses = [AlphaHelix_3_10]
+    trigClasses = []
 
 
 class TestAlphaHelix_pi(_TestPolymerase, TestCase):
     """
     Test looking up polymerases with just an AlphaHelix_pi landmark finder.
     """
-    landmarkFinderClasses = [AlphaHelix_pi]
-    trigFinderClasses = []
+    landmarkClasses = [AlphaHelix_pi]
+    trigClasses = []
 
 
 class TestBetaStrand(_TestPolymerase, TestCase):
     """
     Test looking up polymerases with just a BetaStrand landmark finder.
     """
-    landmarkFinderClasses = [BetaStrand]
-    trigFinderClasses = []
+    landmarkClasses = [BetaStrand]
+    trigClasses = []
 
 
 class TestBetaTurn(_TestPolymerase, TestCase):
     """
     Test looking up polymerases with just a BetaTurn landmark finder.
     """
-    landmarkFinderClasses = [BetaTurn]
-    trigFinderClasses = []
+    landmarkClasses = [BetaTurn]
+    trigClasses = []
 
 
 class TestAminoAcids(_TestPolymerase, TestCase):
     """
     Test looking up polymerases with just an AminoAcids trig point finder.
     """
-    landmarkFinderClasses = []
-    trigFinderClasses = [AminoAcids]
+    landmarkClasses = []
+    trigClasses = [AminoAcids]
 
 
 class TestPeaks(_TestPolymerase, TestCase):
     """
     Test looking up polymerases with just a Peaks trig point finder.
     """
-    landmarkFinderClasses = []
-    trigFinderClasses = [Peaks]
+    landmarkClasses = []
+    trigClasses = [Peaks]
 
 
 class TestTroughs(_TestPolymerase, TestCase):
     """
     Test looking up polymerases with just a Troughs trig point finder.
     """
-    landmarkFinderClasses = []
-    trigFinderClasses = [Troughs]
+    landmarkClasses = []
+    trigClasses = [Troughs]
 
 
 class TestIndividualPeaks(_TestPolymerase, TestCase):
     """
     Test looking up polymerases with just an IndividualPeaks trig point finder.
     """
-    landmarkFinderClasses = []
-    trigFinderClasses = [IndividualPeaks]
+    landmarkClasses = []
+    trigClasses = [IndividualPeaks]
 
 
 class TestIndividualTroughs(_TestPolymerase, TestCase):
@@ -108,5 +108,5 @@ class TestIndividualTroughs(_TestPolymerase, TestCase):
     Test looking up polymerases with just an IndividualTroughs trig point
     finder.
     """
-    landmarkFinderClasses = []
-    trigFinderClasses = [IndividualTroughs]
+    landmarkClasses = []
+    trigClasses = [IndividualTroughs]

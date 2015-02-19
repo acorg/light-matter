@@ -114,13 +114,7 @@ def plotFeatures(read, significanceFraction=None, readsAx=None, **kwargs):
     totalCoveredResidues = len(scannedRead.coveredIndices())
     count = 0
 
-    # TODO: Replace the scannedRead.getPairs with database.getPairs (called
-    # with no args) once https://github.com/acorg/light-matter/issues/182
-    # is done.
-    for landmark, trigPoint in scannedRead.getPairs(
-            limitPerLandmark=kwargs.get('limitPerLandmark'),
-            maxDistance=kwargs.get('maxDistance'),
-            minDistance=kwargs.get('minDistance')):
+    for landmark, trigPoint in database.getSubjectPairs(scannedRead):
         readsAx.plot([landmark.offset, trigPoint.offset], [count, count], '-',
                      color='grey')
         landmarkColor = COLORS[landmark.symbol]
@@ -229,13 +223,7 @@ def plotFeatureSquare(read, significanceFraction=None, readsAx=None, **kwargs):
     namesSeen = set()
     landmarks = set()
 
-    # TODO: Replace the scannedRead.getPairs with database.getPairs (called
-    # with no args) once https://github.com/acorg/light-matter/issues/182
-    # is done.
-    for landmark, trigPoint in scannedRead.getPairs(
-            limitPerLandmark=kwargs.get('limitPerLandmark'),
-            maxDistance=kwargs.get('maxDistance'),
-            minDistance=kwargs.get('minDistance')):
+    for landmark, trigPoint in database.getSubjectPairs(scannedRead):
         # Add jitter to the Y offset so we can see more trig points that
         # occur at the same offset.
         scatterX.append(landmark.offset)

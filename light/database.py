@@ -133,6 +133,34 @@ class Database(object):
         return '%s:%s:%s' % (landmark.hashkey(), trigPoint.hashkey(),
                              distance)
 
+    def makeScannedSubject(self, subject):
+        """
+        Makes an instance of C{light.reads.ScannedRead}.
+
+        @param subject: a C{dark.read.AARead} instance.
+        @return: a C{light.reads.ScannedRead} instance.
+        """
+        scannedSubject = ScannedSubject(subject)
+        for landmarkFinder in self.landmarkFinders:
+            for landmark in landmarkFinder.find(subject):
+                scannedSubject.landmarks.append(landmark)
+
+        for trigFinder in self.trigPointFinders:
+            for trigPoint in trigFinder.find(subject):
+                scannedSubject.trigPoints.append(trigPoint)
+        return scannedSubject
+
+    def getSubjectPairs(self, scannedSubject):
+        """
+        Get the (landmark, trigPoint) pairs from a ScannedRead instance.
+
+        @param scannedSubject: A C{light.reads.ScannedRead} instance.
+        @return: C{light.reads.ScannedRead.getPairs}
+        """
+        return scannedSubject.getPairs(limitPerLandmark=self.limitPerLandmark,
+                                       maxDistance=self.maxDistance,
+                                       minDistance=self.minDistance)
+
     def addSubject(self, subject):
         """
         Examine a sequence for features and add its (landmark, trig point)
@@ -146,24 +174,15 @@ class Database(object):
         subjectInfo = (subject.id, subject.sequence)
         self._updateChecksum(subjectInfo)
         self.subjectInfo.append(subjectInfo)
-        scannedSubject = ScannedSubject(subject)
         subjectIndex = self.subjectCount
         self.subjectCount += 1
         self.totalResidues += len(subject)
 
-        for landmarkFinder in self.landmarkFinders:
-            for landmark in landmarkFinder.find(subject):
-                scannedSubject.landmarks.append(landmark)
-
-        for trigFinder in self.trigPointFinders:
-            for trigPoint in trigFinder.find(subject):
-                scannedSubject.trigPoints.append(trigPoint)
+        scannedSubject = self.makeScannedSubject(subject)
 
         self.totalCoveredResidues += len(scannedSubject.coveredIndices())
 
-        for landmark, trigPoint in scannedSubject.getPairs(
-                limitPerLandmark=self.limitPerLandmark,
-                maxDistance=self.maxDistance, minDistance=self.minDistance):
+        for landmark, trigPoint in self.getSubjectPairs(scannedSubject):
             key = self.key(landmark, trigPoint)
             try:
                 subjectDict = self.d[key]
@@ -233,6 +252,7 @@ class Database(object):
                 scannedRead.trigPoints.append(trigPoint)
 
         matches = defaultdict(list)
+        nonMatchingHashes = set()
         hashCount = 0
 
         for landmark, trigPoint in scannedRead.getPairs(
@@ -253,7 +273,8 @@ class Database(object):
                 # the fact that some hashes may have been missed. We may
                 # want to do that at a finer level of granularity, though.
                 # E.g., consider _where_ in the read the misses were.
-                pass
+                if storeFullAnalysis:
+                    nonMatchingHashes.add((landmark, trigPoint))
             else:
                 for subjectIndex, subjectOffsets in subjectDict.iteritems():
                     subjectIndex = int(subjectIndex)
@@ -266,7 +287,8 @@ class Database(object):
                     })
 
         return Result(scannedRead, matches, hashCount, significanceFraction,
-                      self.bucketFactor, storeFullAnalysis=storeFullAnalysis)
+                      self.bucketFactor, nonMatchingHashes,
+                      storeFullAnalysis=storeFullAnalysis)
 
     def save(self, fp=sys.stdout):
         """

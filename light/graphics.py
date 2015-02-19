@@ -319,31 +319,36 @@ class PlotHashesInSubjectAndRead(object):
             self.subjectHashes.append((landmark, trigPoint))
         for bin_ in self.matchingHashes:
             for hash_ in bin_:
-                if hash_ in self.subjectHashes:
-                    self.subjectHashes.remove(hash_)
+                try:
+                    self.subjectHashes.remove((hash_['landmark'],
+                                               hash_['trigPoint']))
+                except ValueError:
+                    continue
 
-    def plot(self):
+    def plotGraph(self):
         """
         Plots the graph.
         """
-        fig = plt.figure(figsize=(15, 15))
+        height = (len(self.query) * 15) / len(self.subject)
+        fig = plt.figure(figsize=(15, height))
         readsAx = self.readsAx or fig.add_subplot(111)
-        cm = plt.cm.get_cmap('gist_rainbow')
 
         for pair in self.queryHashes:
-            plt.plot(pair[0].offset, 0, 'o', markerFaceColor='black',
-                     markerEdgeColor='white')
+            readsAx.plot(pair[0].offset + uniform(-0.4, 0.4), 0, 'o',
+                         markerfacecolor='black', markeredgecolor='white')
 
         for pair in self.subjectHashes:
-            plt.plot(0, pair[0].offset, 'o', markerFaceColor='black',
-                     markerEdgeColor='white')
+            readsAx.plot(0, pair[0].offset + uniform(-0.4, 0.4), 'o',
+                         markerfacecolor='black', markeredgecolor='white')
 
-        for bin_ in self.matchingHashes:
+        for index, bin_ in enumerate(self.matchingHashes):
+            col = plt.cm.jet(index)
             for pair in bin_:
-                plt.plot(pair['subjectOffset'], pair['landmark'].offset, 'o',
-                         markerFaceColor=cm, markerEdgeColor='white')
+                for subjectOffset in pair['subjectOffsets']:
+                    readsAx.plot(subjectOffset + uniform(-0.4, 0.4), pair['landmark'].offset + uniform(-0.4, 0.4),
+                                 'o', markerfacecolor=col,
+                                 markeredgecolor='white')
 
-        readsAx.set_title('%s vs. %s' % (self.subject.id, self.read.id))
-        readsAx.set_ylabel('Read: %s', self.read.id)
-        readsAx.set_xlabel('Subject: %s', self.subject.id)
+        readsAx.set_ylabel('Query: %s' % self.query.id)
+        readsAx.set_xlabel('Subject: %s' % self.subject.id)
         readsAx.grid()

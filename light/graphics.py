@@ -345,7 +345,8 @@ class PlotHashesInSubjectAndRead(object):
             col = plt.cm.jet(index)
             for pair in bin_:
                 for subjectOffset in pair['subjectOffsets']:
-                    readsAx.plot(subjectOffset + uniform(-0.4, 0.4), pair['landmark'].offset + uniform(-0.4, 0.4),
+                    readsAx.plot(subjectOffset + uniform(-0.4, 0.4),
+                                 pair['landmark'].offset + uniform(-0.4, 0.4),
                                  'o', markerfacecolor=col,
                                  markeredgecolor='white')
 

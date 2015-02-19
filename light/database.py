@@ -138,7 +138,7 @@ class Database(object):
         Makes an instance of C{light.reads.ScannedRead}.
 
         @param subject: a C{dark.read.AARead} instance.
-        @ return: a C{light.reads.ScannedRead} instance.
+        @return: a C{light.reads.ScannedRead} instance.
         """
         scannedSubject = ScannedSubject(subject)
         for landmarkFinder in self.landmarkFinders:

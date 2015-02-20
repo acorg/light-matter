@@ -1,3 +1,4 @@
+from cStringIO import StringIO
 from unittest import TestCase
 
 from dark.reads import AARead
@@ -319,3 +320,49 @@ class TestScannedRead(TestCase):
         read.trigPoints.extend([trigPoint1, trigPoint2])
         result = list(read.getPairs(minDistance=5))
         self.assertEqual([(landmark1, trigPoint2)], result)
+
+    def testPrint(self):
+        """
+        Check that the print_ method of a scanned read produces the
+        expected result.
+        """
+        fp = StringIO()
+        read = ScannedRead(AARead('id', 'AAAAA'))
+        landmark1 = Landmark('name', 'L1', 0, 2)
+        landmark2 = Landmark('name', 'L2', 1, 2)
+        read.landmarks.extend([landmark1, landmark2])
+        trigPoint1 = TrigPoint('name', 'T1', 3)
+        trigPoint2 = TrigPoint('name', 'T2', 5)
+        read.trigPoints.extend([trigPoint1, trigPoint2])
+        read.print_(fp)
+        expected = ("Read: id\n"
+                    "  Sequence: AAAAA\n"
+                    "  Length: 5\n"
+                    "  Covered indices: 5 (100.00%)\n"
+                    "  Landmark count 2, trig point count 2\n")
+        self.assertEqual(expected, fp.getvalue())
+
+    def testPrintVerbose(self):
+        """
+        Check that the print_ method of a scanned read produces the
+        expected result when asked to print verbosely.
+        """
+        fp = StringIO()
+        read = ScannedRead(AARead('id', 'AAAAA'))
+        landmark1 = Landmark('name', 'L1', 0, 2)
+        landmark2 = Landmark('name', 'L2', 1, 2)
+        read.landmarks.extend([landmark1, landmark2])
+        trigPoint1 = TrigPoint('name', 'T1', 3)
+        trigPoint2 = TrigPoint('name', 'T2', 5)
+        read.trigPoints.extend([trigPoint1, trigPoint2])
+        read.print_(fp, verbose=True)
+        expected = ("Read: id\n"
+                    "  Sequence: AAAAA\n"
+                    "  Length: 5\n"
+                    "  Covered indices: 5 (100.00%)\n"
+                    "  Landmark count 2, trig point count 2\n"
+                    "     name symbol='L1' offset=0 len=2 detail=''\n"
+                    "     name symbol='L2' offset=1 len=2 detail=''\n"
+                    "     name symbol=T1 offset=3\n"
+                    "     name symbol=T2 offset=5\n")
+        self.assertEqual(expected, fp.getvalue())

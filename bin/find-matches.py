@@ -101,7 +101,7 @@ if __name__ == '__main__':
         '--verbose', default=False, action='store_true',
         help='If True, print details of landmark and trig point matches.')
 
-    databaseSpecifier = DatabaseSpecifier()
+    databaseSpecifier = DatabaseSpecifier(allowInMemory=False)
     databaseSpecifier.addArgsToParser(parser)
 
     args = parser.parse_args()

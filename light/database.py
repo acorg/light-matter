@@ -8,7 +8,7 @@ from operator import attrgetter
 
 from dark.fasta import combineReads
 
-from light.reads import ScannedRead, ScannedRead as ScannedSubject
+from light.reads import ScannedRead
 from light.result import Result
 from light.landmarks import (
     findLandmark, findLandmarks, ALL_LANDMARK_CLASSES,
@@ -133,33 +133,33 @@ class Database(object):
         return '%s:%s:%s' % (landmark.hashkey(), trigPoint.hashkey(),
                              distance)
 
-    def makeScannedSubject(self, subject):
+    def scan(self, sequence):
         """
         Makes an instance of C{light.reads.ScannedRead}.
 
-        @param subject: a C{dark.read.AARead} instance.
+        @param sequence: a C{dark.read.AARead} instance.
         @return: a C{light.reads.ScannedRead} instance.
         """
-        scannedSubject = ScannedSubject(subject)
+        scannedSequence = ScannedRead(sequence)
         for landmarkFinder in self.landmarkFinders:
-            for landmark in landmarkFinder.find(subject):
-                scannedSubject.landmarks.append(landmark)
+            for landmark in landmarkFinder.find(sequence):
+                scannedSequence.landmarks.append(landmark)
 
         for trigFinder in self.trigPointFinders:
-            for trigPoint in trigFinder.find(subject):
-                scannedSubject.trigPoints.append(trigPoint)
-        return scannedSubject
+            for trigPoint in trigFinder.find(sequence):
+                scannedSequence.trigPoints.append(trigPoint)
+        return scannedSequence
 
-    def getSubjectPairs(self, scannedSubject):
+    def getScannedPairs(self, scannedSequence):
         """
         Get the (landmark, trigPoint) pairs from a ScannedRead instance.
 
-        @param scannedSubject: A C{light.reads.ScannedRead} instance.
+        @param scannedSequence: A C{light.reads.ScannedRead} instance.
         @return: C{light.reads.ScannedRead.getPairs}
         """
-        return scannedSubject.getPairs(limitPerLandmark=self.limitPerLandmark,
-                                       maxDistance=self.maxDistance,
-                                       minDistance=self.minDistance)
+        return scannedSequence.getPairs(limitPerLandmark=self.limitPerLandmark,
+                                        maxDistance=self.maxDistance,
+                                        minDistance=self.minDistance)
 
     def addSubject(self, subject):
         """
@@ -178,11 +178,11 @@ class Database(object):
         self.subjectCount += 1
         self.totalResidues += len(subject)
 
-        scannedSubject = self.makeScannedSubject(subject)
+        scannedSubject = self.scan(subject)
 
         self.totalCoveredResidues += len(scannedSubject.coveredIndices())
 
-        for landmark, trigPoint in self.getSubjectPairs(scannedSubject):
+        for landmark, trigPoint in self.getScannedPairs(scannedSubject):
             key = self.key(landmark, trigPoint)
             try:
                 subjectDict = self.d[key]
@@ -241,23 +241,13 @@ class Database(object):
         if significanceFraction is None:
             significanceFraction = self.DEFAULT_SIGNIFICANCE_FRACTION
 
-        scannedRead = ScannedRead(read)
-
-        for landmarkFinder in self.landmarkFinders:
-            for landmark in landmarkFinder.find(read):
-                scannedRead.landmarks.append(landmark)
-
-        for trigFinder in self.trigPointFinders:
-            for trigPoint in trigFinder.find(read):
-                scannedRead.trigPoints.append(trigPoint)
+        scannedRead = self.scan(read)
 
         matches = defaultdict(list)
         nonMatchingHashes = set()
         hashCount = 0
 
-        for landmark, trigPoint in scannedRead.getPairs(
-                limitPerLandmark=self.limitPerLandmark,
-                maxDistance=self.maxDistance, minDistance=self.minDistance):
+        for landmark, trigPoint in self.getScannedPairs(scannedRead):
             hashCount += 1
             key = self.key(landmark, trigPoint)
             try:

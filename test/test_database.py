@@ -713,18 +713,18 @@ class TestDatabase(TestCase):
         self.assertRaisesRegexp(ValueError, error, Database, [], [],
                                 bucketFactor=0)
 
-    def testMakeScannedSubject(self):
+    def testScan(self):
         """
-        The makeScannedSubject method must return a scanned subject.
+        The scan method must return a scanned subject.
         """
         subject = AARead('subject', 'FRRRFRRRFASAASA')
         db = Database([AlphaHelix], [Peaks], limitPerLandmark=16,
                       maxDistance=10, minDistance=0, bucketFactor=1)
         db.addSubject(subject)
-        scannedSubject = db.makeScannedSubject(subject)
+        scannedSubject = db.scan(subject)
         self.assertIsInstance(scannedSubject, ScannedRead)
 
-    def testGetSubjectPairs(self):
+    def testGetScannedPairs(self):
         """
         The getSubjectPairs method must return pairs of (landmark, trigPoints).
         """
@@ -732,8 +732,8 @@ class TestDatabase(TestCase):
         db = Database([AlphaHelix], [Peaks], limitPerLandmark=16,
                       maxDistance=10, minDistance=0, bucketFactor=1)
         db.addSubject(subject)
-        scannedSubject = db.makeScannedSubject(subject)
-        pairs = list(db.getSubjectPairs(scannedSubject))
+        scannedSubject = db.scan(subject)
+        pairs = list(db.getScannedPairs(scannedSubject))
         landmark, trigPoint = pairs[0]
         self.assertEqual(Landmark(AlphaHelix.NAME, AlphaHelix.SYMBOL,
                                   0, 9, 2), landmark)

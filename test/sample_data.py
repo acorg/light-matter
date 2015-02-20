@@ -37,24 +37,6 @@ DB.addSubject(SQUIRRELPOX55)
 PARAMS = DB.saveParamsAsJSON(StringIO()).getvalue()
 
 
-# The following function is currently unused. It's useful when debugging
-# when we change the way we do scoring, significance, etc. For now I'm
-# leaving it in as those things are going to change again soon. Eventually
-# we can delete it. To use it, add a call to it below after you compute one
-# of the _result variables.
-def _printResult(result):
-    """
-    Print information about a database find() result.
-
-    @param result: A C{light.result.Result} instance.
-    """
-    print 'DB.find() result for read', result.scannedRead.read.id
-    for subjectIndex in result.matches:
-        print 'subjectIndex', subjectIndex
-        print 'analysis', result.analysis[subjectIndex]
-        print 'matches', result.matches
-
-
 # Run find on a read that hits both squirrelpox subjects.
 READ0 = AARead('id0', SQUIRRELPOX1296.sequence + SQUIRRELPOX55.sequence)
 _result = DB.find(READ0, storeFullAnalysis=True, significanceFraction=0.18)

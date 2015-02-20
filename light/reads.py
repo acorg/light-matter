@@ -1,3 +1,5 @@
+import sys
+
 from light.features import CombinedFeatureList, TrigPoint
 
 
@@ -79,3 +81,29 @@ class ScannedRead(object):
                             isinstance(feature, TrigPoint)):
                         yield landmark, feature
                         count += 1
+
+    def print_(self, fp=sys.stdout, verbose=False):
+        """
+        Print the details of a scanned read.
+
+        @param fp: A file pointer to print to.
+        @param verbose: If C{True}, print details of landmark and trig
+            point matches.
+        """
+        read = self.read
+        coveredIndices = len(self.coveredIndices())
+
+        print >>fp, 'Read: %s' % read.id
+        print >>fp, '  Sequence: %s' % read.sequence
+        print >>fp, '  Length: %d' % len(read.sequence)
+        print >>fp, '  Covered indices: %d (%.2f%%)' % (
+            coveredIndices, coveredIndices / float(len(read.sequence)) * 100.0)
+
+        # Print read landmarks and trig points.
+        print >>fp, '  Landmark count %d, trig point count %d' % (
+            len(self.landmarks), len(self.trigPoints))
+        if verbose:
+            for landmark in self.landmarks:
+                print >>fp, '    ', landmark
+            for trigPoint in self.trigPoints:
+                print >>fp, '    ', trigPoint

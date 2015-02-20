@@ -8,7 +8,7 @@ from light.result import Result
 from light.features import Landmark, TrigPoint
 from light.reads import ScannedRead
 from light.database import Database
-from light.landmarks import AlphaHelix
+from light.landmarks import AlphaHelix, BetaStrand
 
 
 class TestResult(TestCase):
@@ -291,7 +291,7 @@ class TestResult(TestCase):
                         bucketFactor=5, storeFullAnalysis=True)
         self.assertEqual(4, len(result.analysis[0]['histogram'].bins))
 
-    def testPrintWithReadWithNoMatches(self):
+    def testPrintWithReadWithNoMatchesDueToNoFinders(self):
         """
         Check that the print_ method of a result produces the expected result
         when asked to print the read and when there are no matches (in this
@@ -313,7 +313,7 @@ class TestResult(TestCase):
                     "Significant matches: 0\nOverall matches: 0\n")
         self.assertEqual(expected, fp.getvalue())
 
-    def testPrintWithoutReadWithNoMatches(self):
+    def testPrintWithoutReadWithNoMatchesDueToNoFinders(self):
         """
         Check that the print_ method of a result produces the expected result
         when asked to not print the read and when there are no matches (in this
@@ -325,6 +325,24 @@ class TestResult(TestCase):
         database.addSubject(read)
         result = database.find(read, significanceFraction=0.0,
                                storeFullAnalysis=True)
+
+        result.print_(database, fp, printRead=False)
+        expected = ("Significant matches: 0\n"
+                    "Overall matches: 0\n")
+        self.assertEqual(expected, fp.getvalue())
+
+    def testPrintWithoutReadWithNoMatchingSubjects(self):
+        """
+        Check that the print_ method of a result produces the expected result
+        when asked to not print the read and when there are no matches (in this
+        case due to the database having no finders).
+        """
+        fp = StringIO()
+        read = AARead('read', 'FRRRFRRRFRFRFRFRFRFRFFRRRFRRRFRRRF')
+        database = Database([AlphaHelix, BetaStrand], [])
+        subject = AARead('subject', 'VICVICV')
+        database.addSubject(subject)
+        result = database.find(read, storeFullAnalysis=True)
 
         result.print_(database, fp, printRead=False)
         expected = ("Significant matches: 0\n"

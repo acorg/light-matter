@@ -146,31 +146,31 @@ class Result(object):
         print >>fp, 'Overall matches: %d' % len(self.matches)
         if self.matches:
             print >>fp, 'Subject matches:'
+            # Print matched subjects in order of decreasing score.
+            subjectIndices = sorted(
+                self.analysis.iterkeys(), reverse=True,
+                key=lambda index: self.analysis[index]['score'])
 
-        # Print matched subjects in order of decreasing score.
-        subjectIndices = sorted(
-            self.analysis.iterkeys(), reverse=True,
-            key=lambda index: self.analysis[index]['score'])
+            for subjectIndex in subjectIndices:
+                title, sequence = database.subjectInfo[subjectIndex]
+                analysis = self.analysis[subjectIndex]
+                print >>fp, '  Title: %s' % title
+                print >>fp, '    Score: %s' % analysis['score']
+                print >>fp, '    Sequence: %s' % sequence
+                print >>fp, '    Database subject index: %d' % subjectIndex
 
-        for subjectIndex in subjectIndices:
-            title, sequence = database.subjectInfo[subjectIndex]
-            analysis = self.analysis[subjectIndex]
-            print >>fp, '  Title: %s' % title
-            print >>fp, '    Score: %s' % analysis['score']
-            print >>fp, '    Sequence: %s' % sequence
-            print >>fp, '    Database subject index: %d' % subjectIndex
-
-            if self._storeFullAnalysis:
-                histogram = analysis['histogram']
-                binCounts = [len(b) for b in histogram.bins]
-                print >>fp, '    Hash count: %s' % analysis['hashCount']
-                print >>fp, '    Histogram'
-                print >>fp, '      Number of bins: %d' % len(histogram.bins)
-                print >>fp, '      Significance cutoff: %s' % (
-                    analysis['significanceCutoff'])
-                print >>fp, '      Significant bin count: %s' % (
-                    analysis['significantBinCount'])
-                print >>fp, '      Max bin count: %r' % max(binCounts)
-                print >>fp, '      Counts: %r' % binCounts
-                print >>fp, '      Max offset delta: %d' % histogram.max
-                print >>fp, '      Min offset delta: %d' % histogram.min
+                if self._storeFullAnalysis:
+                    histogram = analysis['histogram']
+                    binCounts = [len(b) for b in histogram.bins]
+                    print >>fp, '    Hash count: %s' % analysis['hashCount']
+                    print >>fp, '    Histogram'
+                    print >>fp, '      Number of bins: %d' % (
+                        len(histogram.bins))
+                    print >>fp, '      Significance cutoff: %s' % (
+                        analysis['significanceCutoff'])
+                    print >>fp, '      Significant bin count: %s' % (
+                        analysis['significantBinCount'])
+                    print >>fp, '      Max bin count: %r' % max(binCounts)
+                    print >>fp, '      Counts: %r' % binCounts
+                    print >>fp, '      Max offset delta: %d' % histogram.max
+                    print >>fp, '      Min offset delta: %d' % histogram.min

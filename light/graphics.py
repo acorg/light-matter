@@ -292,11 +292,11 @@ class PlotHashesInSubjectAndRead(object):
             self.queryHashes = result.analysis[sbjctIndex]['nonMatchingHashes']
         else:
             self.matchingHashes = []
-            scannedQuery = database.makeScannedSubject(query)
-            self.queryHashes = database.getSubjectPairs(scannedQuery)
+            scannedQuery = database.scan(query)
+            self.queryHashes = database.getScannedPairs(scannedQuery)
 
-        scannedSubject = database.makeScannedSubject(subject)
-        self.subjectHashes = set(database.getSubjectPairs(scannedSubject))
+        scannedSubject = database.scan(subject)
+        self.subjectHashes = set(database.getScannedPairs(scannedSubject))
         self.subjectHashes.difference_update(set(
             (hash_['landmark'], hash_['trigPoint'])
             for bin_ in self.matchingHashes for hash_ in bin_))
@@ -307,7 +307,6 @@ class PlotHashesInSubjectAndRead(object):
 
         @param readsAx: If not None, use this as the subplot for displaying
         reads.
-
         """
         height = (len(self.query) * 15) / len(self.subject)
         fig = plt.figure(figsize=(15, height))

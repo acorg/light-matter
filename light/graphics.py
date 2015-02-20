@@ -7,6 +7,7 @@ from light.database import DatabaseSpecifier
 from light.trig import ALL_TRIG_CLASSES
 from light.landmarks import ALL_LANDMARK_CLASSES
 from light.features import Landmark
+from light.colors import colors
 
 from dark.dimension import dimensionalIterator
 
@@ -311,6 +312,7 @@ class PlotHashesInSubjectAndRead(object):
         height = (len(self.query) * 15) / len(self.subject)
         fig = plt.figure(figsize=(15, height))
         readsAx = readsAx or fig.add_subplot(111)
+        cols = colors.color_palette('hls', len(self.matchingHashes))
 
         for landmark, trigPoint in self.queryHashes:
             readsAx.plot(landmark.offset + uniform(-0.4, 0.4), 0, 'o',
@@ -321,7 +323,7 @@ class PlotHashesInSubjectAndRead(object):
                          markerfacecolor='black', markeredgecolor='white')
 
         for index, bin_ in enumerate(self.matchingHashes):
-            col = plt.cm.jet(index)
+            col = cols[index]
             for match in bin_:
                 for subjectOffset in match['subjectOffsets']:
                     readsAx.plot(subjectOffset + uniform(-0.4, 0.4),

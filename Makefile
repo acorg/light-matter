@@ -6,6 +6,9 @@ check:
 tcheck:
 	trial --rterrors test
 
+colcheck:
+	nosetests
+
 pep8:
 	find . -name '*.py' -print0 | xargs -0 pep8
 

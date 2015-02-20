@@ -246,7 +246,7 @@ class Module_six_moves_urllib_parse(_LazyModule):
     """Lazy loading of moved objects in six.moves.urllib_parse"""
 
 
-_urllib_parse_moved_attributes = [
+_urllib_parse_moved_attrs = [
     MovedAttribute("ParseResult", "urlparse", "urllib.parse"),
     MovedAttribute("parse_qs", "urlparse", "urllib.parse"),
     MovedAttribute("parse_qsl", "urlparse", "urllib.parse"),
@@ -262,38 +262,41 @@ _urllib_parse_moved_attributes = [
     MovedAttribute("unquote_plus", "urllib", "urllib.parse"),
     MovedAttribute("urlencode", "urllib", "urllib.parse"),
 ]
-for attr in _urllib_parse_moved_attributes:
+for attr in _urllib_parse_moved_attrs:
     setattr(Module_six_moves_urllib_parse, attr.name, attr)
 del attr
 
-Module_six_moves_urllib_parse._moved_attributes = _urllib_parse_moved_attributes
-
-sys.modules[__name__ + ".moves.urllib_parse"] = sys.modules[__name__ + ".moves.urllib.parse"] = Module_six_moves_urllib_parse(__name__ + ".moves.urllib_parse")
+Module_six_moves_urllib_parse._moved_attributes = _urllib_parse_moved_attrs
+u_p = __name__ + ".moves.urllib_parse"
+up = __name__ + ".moves.urllib.parse"
+sys.modules[u_p] = sys.modules[up] = Module_six_moves_urllib_parse(u_p)
 
 
 class Module_six_moves_urllib_error(_LazyModule):
     """Lazy loading of moved objects in six.moves.urllib_error"""
 
 
-_urllib_error_moved_attributes = [
+_urllib_error_moved_attrs = [
     MovedAttribute("URLError", "urllib2", "urllib.error"),
     MovedAttribute("HTTPError", "urllib2", "urllib.error"),
     MovedAttribute("ContentTooShortError", "urllib", "urllib.error"),
 ]
-for attr in _urllib_error_moved_attributes:
+for attr in _urllib_error_moved_attrs:
     setattr(Module_six_moves_urllib_error, attr.name, attr)
 del attr
 
-Module_six_moves_urllib_error._moved_attributes = _urllib_error_moved_attributes
+Module_six_moves_urllib_error._moved_attributes = _urllib_error_moved_attrs
 
-sys.modules[__name__ + ".moves.urllib_error"] = sys.modules[__name__ + ".moves.urllib.error"] = Module_six_moves_urllib_error(__name__ + ".moves.urllib.error")
+u_e = __name__ + ".moves.urllib_error"
+ue = __name__ + ".moves.urllib.error"
+sys.modules[u_e] = sys.modules[ue] = Module_six_moves_urllib_error(ue)
 
 
 class Module_six_moves_urllib_request(_LazyModule):
     """Lazy loading of moved objects in six.moves.urllib_request"""
 
 
-_urllib_request_moved_attributes = [
+_urllib_request_moved_attrs = [
     MovedAttribute("urlopen", "urllib2", "urllib.request"),
     MovedAttribute("install_opener", "urllib2", "urllib.request"),
     MovedAttribute("build_opener", "urllib2", "urllib.request"),
@@ -329,48 +332,54 @@ _urllib_request_moved_attributes = [
     MovedAttribute("FancyURLopener", "urllib", "urllib.request"),
     MovedAttribute("proxy_bypass", "urllib", "urllib.request"),
 ]
-for attr in _urllib_request_moved_attributes:
+for attr in _urllib_request_moved_attrs:
     setattr(Module_six_moves_urllib_request, attr.name, attr)
 del attr
 
-Module_six_moves_urllib_request._moved_attributes = _urllib_request_moved_attributes
+Module_six_moves_urllib_request._moved_attributes = _urllib_request_moved_attrs
 
-sys.modules[__name__ + ".moves.urllib_request"] = sys.modules[__name__ + ".moves.urllib.request"] = Module_six_moves_urllib_request(__name__ + ".moves.urllib.request")
+u_r = __name__ + ".moves.urllib_request"
+ur = __name__ + ".moves.urllib.request"
+sys.modules[u_r] = sys.modules[ur] = Module_six_moves_urllib_request(ur)
 
 
 class Module_six_moves_urllib_response(_LazyModule):
     """Lazy loading of moved objects in six.moves.urllib_response"""
 
 
-_urllib_response_moved_attributes = [
+_urllib_resp_moved_attrs = [
     MovedAttribute("addbase", "urllib", "urllib.response"),
     MovedAttribute("addclosehook", "urllib", "urllib.response"),
     MovedAttribute("addinfo", "urllib", "urllib.response"),
     MovedAttribute("addinfourl", "urllib", "urllib.response"),
 ]
-for attr in _urllib_response_moved_attributes:
+for attr in _urllib_resp_moved_attrs:
     setattr(Module_six_moves_urllib_response, attr.name, attr)
 del attr
 
-Module_six_moves_urllib_response._moved_attributes = _urllib_response_moved_attributes
+Module_six_moves_urllib_response._moved_attributes = _urllib_resp_moved_attrs
 
-sys.modules[__name__ + ".moves.urllib_response"] = sys.modules[__name__ + ".moves.urllib.response"] = Module_six_moves_urllib_response(__name__ + ".moves.urllib.response")
+u_re = __name__ + ".moves.urllib_response"
+ure = __name__ + ".moves.urllib.response"
+sys.modules[u_re] = sys.modules[ure] = Module_six_moves_urllib_response(ure)
 
 
 class Module_six_moves_urllib_robotparser(_LazyModule):
     """Lazy loading of moved objects in six.moves.urllib_robotparser"""
 
 
-_urllib_robotparser_moved_attributes = [
+_urllib_rp_moved_attrs = [
     MovedAttribute("RobotFileParser", "robotparser", "urllib.robotparser"),
 ]
-for attr in _urllib_robotparser_moved_attributes:
+for attr in _urllib_rp_moved_attrs:
     setattr(Module_six_moves_urllib_robotparser, attr.name, attr)
 del attr
 
-Module_six_moves_urllib_robotparser._moved_attributes = _urllib_robotparser_moved_attributes
+Module_six_moves_urllib_robotparser._moved_attributes = _urllib_rp_moved_attrs
 
-sys.modules[__name__ + ".moves.urllib_robotparser"] = sys.modules[__name__ + ".moves.urllib.robotparser"] = Module_six_moves_urllib_robotparser(__name__ + ".moves.urllib.robotparser")
+u_ro = __name__ + ".moves.urllib_robotparser"
+uro = __name__ + ".moves.urllib.robotparser"
+sys.modules[u_ro] = sys.modules[uro] = Module_six_moves_urllib_robotparser(uro)
 
 
 class Module_six_moves_urllib(types.ModuleType):
@@ -385,8 +394,8 @@ class Module_six_moves_urllib(types.ModuleType):
     def __dir__(self):
         return ['parse', 'error', 'request', 'response', 'robotparser']
 
-
-sys.modules[__name__ + ".moves.urllib"] = Module_six_moves_urllib(__name__ + ".moves.urllib")
+var11 = Module_six_moves_urllib(__name__ + ".moves.urllib")
+sys.modules[__name__ + ".moves.urllib"] = var11
 
 
 def add_move(move):

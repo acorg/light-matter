@@ -381,12 +381,6 @@ class DatabaseSpecifier(object):
 
         @param parser: An C{argparse.ArgumentParser} instance.
         """
-        if self._allowInMemory:
-            parser.add_argument(
-                '--database',
-                help=('An in-memory database (e.g., as created in ipython or '
-                      'iPythonNotebook'))
-
         if self._allowFromFile:
             parser.add_argument(
                 '--databaseFile',
@@ -457,22 +451,19 @@ class DatabaseSpecifier(object):
         one from args.
 
         There is an order of preference in examining the arguments used to
-        specify a database: pre-existing in memory (via --database),
-        pre-existing in a file (via --databaseFile), and lastly via the
-        creation of a new database (many args). There are currently no checks
-        to make sure the user isn't trying to do more than one of these at
-        the same time (e.g., using both --database and --databaseFile), the
-        one with the highest priority is silently acted on first.
+        specify a database: pre-existing in a file (via --databaseFile),
+        and then via the creation of a new database (many args). There are
+        currently no checks to make sure the user isn't trying to do more
+        than one of these at the same time (e.g., using both --databaseFile
+        and --defaultLandmarks), the one with the highest priority is silently
+        acted on first.
 
         @param args: Command line arguments as returned by the C{argparse}
             C{parse_args} method.
         @raise ValueError: If a database cannot be found or created.
         @return: A C{light.database.Database} instance.
         """
-        if self._allowInMemory and args.database:
-            database = args.database
-
-        elif self._allowFromFile and args.databaseFile:
+        if self._allowFromFile and args.databaseFile:
             with open(args.databaseFile) as fp:
                 database = Database.load(fp)
 
@@ -540,8 +531,16 @@ class DatabaseSpecifier(object):
         self.addArgsToParser(parser)
         commandLine = []
 
+        # An in-memory database gets returned immediately, after adding any
+        # optional sequences to it.
         if database is not None:
-            commandLine.extend(['--database', database])
+            assert self._allowInMemory, (
+                'In-memory database specification not enabled')
+            if (self._allowPopulation and (databaseFasta is not None or
+                                           databaseSequences is not None)):
+                for read in combineReads(databaseFasta, databaseSequences):
+                    database.addSubject(read)
+            return database
 
         if databaseFile is not None:
             commandLine.extend(['--databaseFile', databaseFile])

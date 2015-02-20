@@ -726,7 +726,8 @@ class TestDatabase(TestCase):
 
     def testGetScannedPairs(self):
         """
-        The getSubjectPairs method must return pairs of (landmark, trigPoints).
+        The getSequencePairs method must return pairs of
+        (landmark, trigPoints).
         """
         subject = AARead('subject', 'FRRRFRRRFASAASA')
         db = Database([AlphaHelix], [Peaks], limitPerLandmark=16,

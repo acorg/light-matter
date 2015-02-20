@@ -114,7 +114,7 @@ def plotFeatures(read, significanceFraction=None, readsAx=None, **kwargs):
     totalCoveredResidues = len(scannedRead.coveredIndices())
     count = 0
 
-    for landmark, trigPoint in database.getSubjectPairs(scannedRead):
+    for landmark, trigPoint in database.getScannedPairs(scannedRead):
         readsAx.plot([landmark.offset, trigPoint.offset], [count, count], '-',
                      color='grey')
         landmarkColor = COLORS[landmark.symbol]
@@ -223,7 +223,7 @@ def plotFeatureSquare(read, significanceFraction=None, readsAx=None, **kwargs):
     namesSeen = set()
     landmarks = set()
 
-    for landmark, trigPoint in database.getSubjectPairs(scannedRead):
+    for landmark, trigPoint in database.getScannedPairs(scannedRead):
         # Add jitter to the Y offset so we can see more trig points that
         # occur at the same offset.
         scatterX.append(landmark.offset)

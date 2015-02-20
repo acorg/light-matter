@@ -127,7 +127,7 @@ if __name__ == '__main__':
         '--regression', default=False, action='store_true',
         help='If True, add a regression line to the plot.')
 
-    databaseSpecifier = DatabaseSpecifier()
+    databaseSpecifier = DatabaseSpecifier(allowInMemory=False)
     databaseSpecifier.addArgsToParser(parser)
 
     args = parser.parse_args()

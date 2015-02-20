@@ -8,7 +8,7 @@ from operator import attrgetter
 
 from dark.fasta import combineReads
 
-from light.reads import ScannedRead, ScannedRead as ScannedSubject
+from light.reads import ScannedRead
 from light.result import Result
 from light.landmarks import (
     findLandmark, findLandmarks, ALL_LANDMARK_CLASSES,
@@ -133,33 +133,33 @@ class Database(object):
         return '%s:%s:%s' % (landmark.hashkey(), trigPoint.hashkey(),
                              distance)
 
-    def makeScannedSubject(self, subject):
+    def scan(self, sequence):
         """
         Makes an instance of C{light.reads.ScannedRead}.
 
-        @param subject: a C{dark.read.AARead} instance.
+        @param sequence: a C{dark.read.AARead} instance.
         @return: a C{light.reads.ScannedRead} instance.
         """
-        scannedSubject = ScannedSubject(subject)
+        scannedSequence = ScannedRead(sequence)
         for landmarkFinder in self.landmarkFinders:
-            for landmark in landmarkFinder.find(subject):
-                scannedSubject.landmarks.append(landmark)
+            for landmark in landmarkFinder.find(sequence):
+                scannedSequence.landmarks.append(landmark)
 
         for trigFinder in self.trigPointFinders:
-            for trigPoint in trigFinder.find(subject):
-                scannedSubject.trigPoints.append(trigPoint)
-        return scannedSubject
+            for trigPoint in trigFinder.find(sequence):
+                scannedSequence.trigPoints.append(trigPoint)
+        return scannedSequence
 
-    def getSubjectPairs(self, scannedSubject):
+    def getScannedPairs(self, scannedSequence):
         """
         Get the (landmark, trigPoint) pairs from a ScannedRead instance.
 
-        @param scannedSubject: A C{light.reads.ScannedRead} instance.
+        @param scannedSequence: A C{light.reads.ScannedRead} instance.
         @return: C{light.reads.ScannedRead.getPairs}
         """
-        return scannedSubject.getPairs(limitPerLandmark=self.limitPerLandmark,
-                                       maxDistance=self.maxDistance,
-                                       minDistance=self.minDistance)
+        return scannedSequence.getPairs(limitPerLandmark=self.limitPerLandmark,
+                                        maxDistance=self.maxDistance,
+                                        minDistance=self.minDistance)
 
     def addSubject(self, subject):
         """
@@ -178,11 +178,11 @@ class Database(object):
         self.subjectCount += 1
         self.totalResidues += len(subject)
 
-        scannedSubject = self.makeScannedSubject(subject)
+        scannedSubject = self.scan(subject)
 
         self.totalCoveredResidues += len(scannedSubject.coveredIndices())
 
-        for landmark, trigPoint in self.getSubjectPairs(scannedSubject):
+        for landmark, trigPoint in self.getScannedPairs(scannedSubject):
             key = self.key(landmark, trigPoint)
             try:
                 subjectDict = self.d[key]
@@ -241,23 +241,13 @@ class Database(object):
         if significanceFraction is None:
             significanceFraction = self.DEFAULT_SIGNIFICANCE_FRACTION
 
-        scannedRead = ScannedRead(read)
-
-        for landmarkFinder in self.landmarkFinders:
-            for landmark in landmarkFinder.find(read):
-                scannedRead.landmarks.append(landmark)
-
-        for trigFinder in self.trigPointFinders:
-            for trigPoint in trigFinder.find(read):
-                scannedRead.trigPoints.append(trigPoint)
+        scannedRead = self.scan(read)
 
         matches = defaultdict(list)
         nonMatchingHashes = set()
         hashCount = 0
 
-        for landmark, trigPoint in scannedRead.getPairs(
-                limitPerLandmark=self.limitPerLandmark,
-                maxDistance=self.maxDistance, minDistance=self.minDistance):
+        for landmark, trigPoint in self.getScannedPairs(scannedRead):
             hashCount += 1
             key = self.key(landmark, trigPoint)
             try:
@@ -366,37 +356,54 @@ class DatabaseSpecifier(object):
         of a new database.
     @param allowPopulation: If True, add options that allow the automatic
         addition of sequences to the database.
-    @param allowExisting: If True, add the option that allows the user to
+    @param allowInMemory: If True, add the option that allows the user to
+        pass an in-memory database (e.g., as constructed in ipython or
+        iPythonNotebook or programmatically).
+    @param allowFromFile: If True, add the option that allows the user to
         specify a pre-existing database.
     @raise ValueError: If the allow options do not permit creation or loading.
     """
     def __init__(self, allowCreation=True, allowPopulation=True,
-                 allowExisting=True):
-        if not (allowCreation or allowExisting):
-            raise ValueError('You must either allow database creation or '
-                             'loading.')
+                 allowInMemory=True, allowFromFile=True):
+        if not (allowCreation or allowFromFile or allowInMemory):
+            raise ValueError('You must either allow database creation, or '
+                             'loading a database from a file, or passing an '
+                             'in-memory database.')
         self._allowCreation = allowCreation
         self._allowPopulation = allowPopulation
-        self._allowExisting = allowExisting
+        self._allowInMemory = allowInMemory
+        self._allowFromFile = allowFromFile
 
     def addArgsToParser(self, parser):
         """
-        Add standard database creation arguments to an argparse parser.
+        Add standard database creation or loading arguments to an argparse
+        parser, depending on the allowable ways of specifying a database.
 
         @param parser: An C{argparse.ArgumentParser} instance.
         """
+        if self._allowInMemory:
+            parser.add_argument(
+                '--database',
+                help=('An in-memory database (e.g., as created in ipython or '
+                      'iPythonNotebook'))
+
+        if self._allowFromFile:
+            parser.add_argument(
+                '--databaseFile',
+                help='The name of a file containing a saved database')
+
         if self._allowCreation:
             parser.add_argument(
                 '--landmark', action='append', dest='landmarkFinderNames',
                 choices=sorted(cl.NAME for cl in ALL_LANDMARK_CLASSES),
-                help='The name of a landmark finder to use. May be specified '
-                'multiple times.')
+                help=('The name of a landmark finder to use. May be specified '
+                      'multiple times.'))
 
             parser.add_argument(
                 '--trig', action='append', dest='trigFinderNames',
                 choices=sorted(cl.NAME for cl in ALL_TRIG_CLASSES),
-                help='The name of a trig point finder to use. May be '
-                'specified multiple times.')
+                help=('The name of a trig point finder to use. May be '
+                      'specified multiple times.'))
 
             parser.add_argument(
                 '--defaultLandmarks', action='store_true', default=False,
@@ -444,23 +451,29 @@ class DatabaseSpecifier(object):
                       'sequence id will be the text up to the last space, if '
                       'any, otherwise will be automatically assigned.'))
 
-        if self._allowExisting:
-            parser.add_argument(
-                '--database',
-                help='The name of a file containing a database')
-
     def getDatabaseFromArgs(self, args):
         """
         Read an existing database (if args.database is given) or create
         one from args.
+
+        There is an order of preference in examining the arguments used to
+        specify a database: pre-existing in memory (via --database),
+        pre-existing in a file (via --databaseFile), and lastly via the
+        creation of a new database (many args). There are currently no checks
+        to make sure the user isn't trying to do more than one of these at
+        the same time (e.g., using both --database and --databaseFile), the
+        one with the highest priority is silently acted on first.
 
         @param args: Command line arguments as returned by the C{argparse}
             C{parse_args} method.
         @raise ValueError: If a database cannot be found or created.
         @return: A C{light.database.Database} instance.
         """
-        if self._allowExisting and args.database:
-            with open(args.database) as fp:
+        if self._allowInMemory and args.database:
+            database = args.database
+
+        elif self._allowFromFile and args.databaseFile:
+            with open(args.databaseFile) as fp:
                 database = Database.load(fp)
 
         elif self._allowCreation:
@@ -488,18 +501,18 @@ class DatabaseSpecifier(object):
         return database
 
     def getDatabaseFromKeywords(
-            self, database=None, landmarkNames=None, trigPointNames=None,
+            self, landmarkNames=None, trigPointNames=None,
             defaultLandmarks=False, defaultTrigPoints=False,
             limitPerLandmark=Database.DEFAULT_LIMIT_PER_LANDMARK,
             maxDistance=Database.DEFAULT_MAX_DISTANCE,
             minDistance=Database.DEFAULT_MIN_DISTANCE,
             bucketFactor=Database.DEFAULT_BUCKET_FACTOR,
+            database=None, databaseFile=None,
             databaseFasta=None, databaseSequences=None):
         """
         Use Python function keywords to build an argument parser that can
         used to find or create a database using getDatabaseFromArgs
 
-        @param database: The C{str} file name containing a database.
         @param landmarkNames: a C{list} of C{str} of landmark finder names.
         @param trigPointNames: a C{list} of C{str} of trig finder names.
         @param defaultLandmarks: If C{True}, use the default landmark finders.
@@ -513,6 +526,8 @@ class DatabaseSpecifier(object):
             yielded pairs.
         @param bucketFactor: A C{int} factor by which the distance between
             landmark and trig point is divided.
+        @param database: An instance of C{light.database.Database}.
+        @param databaseFile: The C{str} file name containing a database.
         @param databaseFasta: The name of a FASTA file containing the
             sequences that should be added to the database.
         @param databaseSequences: A C{list} of amino acid sequences to add
@@ -527,6 +542,9 @@ class DatabaseSpecifier(object):
 
         if database is not None:
             commandLine.extend(['--database', database])
+
+        if databaseFile is not None:
+            commandLine.extend(['--databaseFile', databaseFile])
 
         if landmarkNames is not None:
             for landmarkName in landmarkNames:

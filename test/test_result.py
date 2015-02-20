@@ -7,6 +7,8 @@ from dark.reads import AARead
 from light.result import Result
 from light.features import Landmark, TrigPoint
 from light.reads import ScannedRead
+from light.database import Database
+from light.landmarks import AlphaHelix, BetaStrand
 
 
 class TestResult(TestCase):
@@ -288,3 +290,123 @@ class TestResult(TestCase):
         result = Result(read, matches, hashCount, significanceFraction=0.0,
                         bucketFactor=5, storeFullAnalysis=True)
         self.assertEqual(4, len(result.analysis[0]['histogram'].bins))
+
+    def testPrintWithReadWithNoMatchesDueToNoFinders(self):
+        """
+        Check that the print_ method of a result produces the expected result
+        when asked to print the read and when there are no matches (in this
+        case due to the database having no finders).
+        """
+        fp = StringIO()
+        read = AARead('read', 'AGTARFSDDD')
+        database = Database([], [])
+        database.addSubject(read)
+        result = database.find(read, significanceFraction=0.0,
+                               storeFullAnalysis=True)
+
+        result.print_(database, fp)
+        expected = ("Read: read\n"
+                    "  Sequence: AGTARFSDDD\n"
+                    "  Length: 10\n"
+                    "  Covered indices: 0 (0.00%)\n"
+                    "  Landmark count 0, trig point count 0\n"
+                    "Significant matches: 0\nOverall matches: 0\n")
+        self.assertEqual(expected, fp.getvalue())
+
+    def testPrintWithoutReadWithNoMatchesDueToNoFinders(self):
+        """
+        Check that the print_ method of a result produces the expected result
+        when asked to not print the read and when there are no matches (in this
+        case due to the database having no finders).
+        """
+        fp = StringIO()
+        read = AARead('read', 'AGTARFSDDD')
+        database = Database([], [])
+        database.addSubject(read)
+        result = database.find(read, significanceFraction=0.0,
+                               storeFullAnalysis=True)
+
+        result.print_(database, fp, printRead=False)
+        expected = ("Significant matches: 0\n"
+                    "Overall matches: 0\n")
+        self.assertEqual(expected, fp.getvalue())
+
+    def testPrintWithoutReadWithNoMatchingSubjects(self):
+        """
+        Check that the print_ method of a result produces the expected result
+        when asked to not print the read and when there are no matches (in this
+        case due to the database having no finders).
+        """
+        fp = StringIO()
+        read = AARead('read', 'FRRRFRRRFRFRFRFRFRFRFFRRRFRRRFRRRF')
+        database = Database([AlphaHelix, BetaStrand], [])
+        subject = AARead('subject', 'VICVICV')
+        database.addSubject(subject)
+        result = database.find(read, storeFullAnalysis=True)
+
+        result.print_(database, fp, printRead=False)
+        expected = ("Significant matches: 0\n"
+                    "Overall matches: 0\n")
+        self.assertEqual(expected, fp.getvalue())
+
+    def testPrintWithoutReadWithMatchesFullAnalysis(self):
+        """
+        Check that the print_ method of a result produces the expected result
+        when asked to not print the read and when there are matches and the
+        full analysis is stored.
+        """
+        fp = StringIO()
+        sequence = 'FRRRFRRRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'
+        database = Database([AlphaHelix], [])
+        subject = AARead('subject', sequence)
+        database.addSubject(subject)
+        read = AARead('read', sequence)
+        result = database.find(read, significanceFraction=0.0,
+                               storeFullAnalysis=True)
+
+        result.print_(database, fp, printRead=False)
+        expected = ("Significant matches: 1\n"
+                    "Overall matches: 1\n"
+                    "Subject matches:\n"
+                    "  Title: subject\n"
+                    "    Score: 1.0\n"
+                    "    Sequence: FRRRFRRRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF\n"
+                    "    Database subject index: 0\n"
+                    "    Hash count: 1\n"
+                    "    Histogram\n"
+                    "      Number of bins: 38\n"
+                    "      Significance cutoff: 0.0\n"
+                    "      Significant bin count: 1\n"
+                    "      Max bin count: 1\n"
+                    "      Counts: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "
+                    "0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "
+                    "0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]\n"
+                    "      Max offset delta: 0\n"
+                    "      Min offset delta: 0\n")
+
+        self.assertEqual(expected, fp.getvalue())
+
+    def testPrintWithoutReadWithMatchesWithoutFullAnalysis(self):
+        """
+        Check that the print_ method of a result produces the expected result
+        when asked to not print the read and when there are matches and the
+        full analysis is not stored.
+        """
+        fp = StringIO()
+        sequence = 'FRRRFRRRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'
+        database = Database([AlphaHelix], [])
+        subject = AARead('subject', sequence)
+        database.addSubject(subject)
+        read = AARead('read', sequence)
+        result = database.find(read, significanceFraction=0.0)
+
+        result.print_(database, fp, printRead=False)
+        expected = ("Significant matches: 1\n"
+                    "Overall matches: 1\n"
+                    "Subject matches:\n"
+                    "  Title: subject\n"
+                    "    Score: 1.0\n"
+                    "    Sequence: FRRRFRRRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF\n"
+                    "    Database subject index: 0\n")
+
+        self.assertEqual(expected, fp.getvalue())

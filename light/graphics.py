@@ -114,7 +114,7 @@ def plotFeatures(read, significanceFraction=None, readsAx=None, **kwargs):
     totalCoveredResidues = len(scannedRead.coveredIndices())
     count = 0
 
-    for landmark, trigPoint in database.getSubjectPairs(scannedRead):
+    for landmark, trigPoint in database.getScannedPairs(scannedRead):
         readsAx.plot([landmark.offset, trigPoint.offset], [count, count], '-',
                      color='grey')
         landmarkColor = COLORS[landmark.symbol]
@@ -223,7 +223,7 @@ def plotFeatureSquare(read, significanceFraction=None, readsAx=None, **kwargs):
     namesSeen = set()
     landmarks = set()
 
-    for landmark, trigPoint in database.getSubjectPairs(scannedRead):
+    for landmark, trigPoint in database.getScannedPairs(scannedRead):
         # Add jitter to the Y offset so we can see more trig points that
         # occur at the same offset.
         scatterX.append(landmark.offset)
@@ -259,3 +259,76 @@ def plotFeatureSquare(read, significanceFraction=None, readsAx=None, **kwargs):
     readsAx.grid()
 
     return scannedRead
+
+
+class PlotHashesInSubjectAndRead(object):
+    """
+    A class which plots a visualisation of the hashes in subject and query.
+    It will return three types of hashes: 1) Hashes in the query that don't
+    match in the subject. 2) Hashes in the subject that don't match in the
+    query. 3) Hashes that match in subject and query. These will subsequently
+    be plotted.
+
+    @param query: an AARead instance of the sequence of the query.
+    @param subject: an AARead instance of the sequence of the subject.
+    @param significanceFraction: The C{float} fraction of all (landmark,
+        trig point) pairs for a scannedRead that need to fall into the
+        same histogram bucket for that bucket to be considered a
+        significant match with a database title.
+    @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
+        for additional keywords, all of which are optional.
+    """
+    def __init__(self, query, subject, significanceFraction=None, **kwargs):
+        self.query = query
+        self.subject = subject
+
+        database = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
+        sbjctIndex = database.addSubject(self.subject)
+
+        result = database.find(self.query, significanceFraction,
+                               storeFullAnalysis=True)
+        if sbjctIndex in result.analysis:
+            self.matchingHashes = result.analysis[sbjctIndex]['histogram'].bins
+            self.queryHashes = result.analysis[sbjctIndex]['nonMatchingHashes']
+        else:
+            self.matchingHashes = []
+            scannedQuery = database.scan(query)
+            self.queryHashes = database.getScannedPairs(scannedQuery)
+
+        scannedSubject = database.scan(subject)
+        self.subjectHashes = set(database.getScannedPairs(scannedSubject))
+        self.subjectHashes.difference_update(set(
+            (hash_['landmark'], hash_['trigPoint'])
+            for bin_ in self.matchingHashes for hash_ in bin_))
+
+    def plotGraph(self, readsAx=None):
+        """
+        Plots the graph.
+
+        @param readsAx: If not None, use this as the subplot for displaying
+        reads.
+        """
+        height = (len(self.query) * 15) / len(self.subject)
+        fig = plt.figure(figsize=(15, height))
+        readsAx = readsAx or fig.add_subplot(111)
+
+        for landmark, trigPoint in self.queryHashes:
+            readsAx.plot(landmark.offset + uniform(-0.4, 0.4), 0, 'o',
+                         markerfacecolor='black', markeredgecolor='white')
+
+        for landmark, trigPoint in self.subjectHashes:
+            readsAx.plot(0, landmark.offset + uniform(-0.4, 0.4), 'o',
+                         markerfacecolor='black', markeredgecolor='white')
+
+        for index, bin_ in enumerate(self.matchingHashes):
+            col = plt.cm.jet(index)
+            for match in bin_:
+                for subjectOffset in match['subjectOffsets']:
+                    readsAx.plot(subjectOffset + uniform(-0.4, 0.4),
+                                 match['landmark'].offset + uniform(-0.4, 0.4),
+                                 'o', markerfacecolor=col,
+                                 markeredgecolor='white')
+
+        readsAx.set_ylabel('Query: %s' % self.query.id)
+        readsAx.set_xlabel('Subject: %s' % self.subject.id)
+        readsAx.grid()

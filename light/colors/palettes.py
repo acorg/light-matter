@@ -6,13 +6,13 @@ import numpy as np
 import matplotlib as mpl
 from matplotlib.colors import LinearSegmentedColormap
 
-from .external import husl
-from .external.six import string_types
-from .external.six.moves import range
+from light.colors import husl
+from light.colors.six import string_types
+from light.colors.six.moves import range
 
-from .utils import desaturate, set_hls_values
-from .xkcd_rgb import xkcd_rgb
-from .miscplot import palplot
+from light.colors.utils import desaturate, set_hls_values
+from light.colors.xkcd_rgb import xkcd_rgb
+from light.colors.miscplot import palplot
 
 
 class _ColorPalette(list):
@@ -352,7 +352,7 @@ def diverging_palette(h_neg, h_pos, s=75, l=50, sep=10, n=6, center="light",
     midpoint = dict(light=[(.95, .95, .95, 1.)],
                     dark=[(.133, .133, .133, 1.)])[center]
     mid = midpoint * sep
-    pal = blend_palette(np.concatenate([neg, mid,  pos]), n, as_cmap=as_cmap)
+    pal = blend_palette(np.concatenate([neg, mid, pos]), n, as_cmap=as_cmap)
     return pal
 
 

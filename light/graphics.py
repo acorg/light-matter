@@ -287,62 +287,58 @@ class PlotHashesInSubjectAndRead(object):
         trig point) pairs for a scannedRead that need to fall into the
         same histogram bucket for that bucket to be considered a
         significant match with a database title.
-    @param readsAx: If not None, use this as the subplot for displaying reads.
     @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
         for additional keywords, all of which are optional.
     """
-    def __init__(self, query, subject, significanceFraction=None,
-                 readsAx=None, **kwargs):
-        self.subjectHashes = []
+    def __init__(self, query, subject, significanceFraction=None, **kwargs):
         self.query = query
         self.subject = subject
-        self.readsAx = readsAx
 
         database = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
-        database.addSubject(self.subject)
+        sbjctIndex = database.addSubject(self.subject)
 
         result = database.find(self.query, significanceFraction,
                                storeFullAnalysis=True)
-        if result.analysis:
-            self.matchingHashes = result.analysis[0]['histogram'].bins
-            self.queryHashes = result.analysis[0]['nonMatchingHashes']
+        if sbjctIndex in result.analysis:
+            self.matchingHashes = result.analysis[sbjctIndex]['histogram'].bins
+            self.queryHashes = result.analysis[sbjctIndex]['nonMatchingHashes']
         else:
             self.matchingHashes = []
             scannedQuery = database.makeScannedSubject(query)
-            self.queryHashes = list(database.getSubjectPairs(scannedQuery))
+            self.queryHashes = database.getSubjectPairs(scannedQuery)
 
         scannedSubject = database.makeScannedSubject(subject)
-        self.subjectHashes = list(database.getSubjectPairs(scannedSubject))
-        for bin_ in self.matchingHashes:
-            for hash_ in bin_:
-                try:
-                    self.subjectHashes.remove((hash_['landmark'],
-                                               hash_['trigPoint']))
-                except ValueError:
-                    continue
+        self.subjectHashes = set(database.getSubjectPairs(scannedSubject))
+        self.subjectHashes.difference_update(set(
+            (hash_['landmark'], hash_['trigPoint'])
+            for bin_ in self.matchingHashes for hash_ in bin_))
 
-    def plotGraph(self):
+    def plotGraph(self, readsAx=None):
         """
         Plots the graph.
+
+        @param readsAx: If not None, use this as the subplot for displaying
+        reads.
+
         """
         height = (len(self.query) * 15) / len(self.subject)
         fig = plt.figure(figsize=(15, height))
-        readsAx = self.readsAx or fig.add_subplot(111)
+        readsAx = readsAx or fig.add_subplot(111)
 
-        for pair in self.queryHashes:
-            readsAx.plot(pair[0].offset + uniform(-0.4, 0.4), 0, 'o',
+        for landmark, trigPoint in self.queryHashes:
+            readsAx.plot(landmark.offset + uniform(-0.4, 0.4), 0, 'o',
                          markerfacecolor='black', markeredgecolor='white')
 
-        for pair in self.subjectHashes:
-            readsAx.plot(0, pair[0].offset + uniform(-0.4, 0.4), 'o',
+        for landmark, trigPoint in self.subjectHashes:
+            readsAx.plot(0, landmark.offset + uniform(-0.4, 0.4), 'o',
                          markerfacecolor='black', markeredgecolor='white')
 
         for index, bin_ in enumerate(self.matchingHashes):
             col = plt.cm.jet(index)
-            for pair in bin_:
-                for subjectOffset in pair['subjectOffsets']:
+            for match in bin_:
+                for subjectOffset in match['subjectOffsets']:
                     readsAx.plot(subjectOffset + uniform(-0.4, 0.4),
-                                 pair['landmark'].offset + uniform(-0.4, 0.4),
+                                 match['landmark'].offset + uniform(-0.4, 0.4),
                                  'o', markerfacecolor=col,
                                  markeredgecolor='white')
 

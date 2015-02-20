@@ -23,9 +23,9 @@ class TestPlotHashesInSubjectAndRead(TestCase):
                                             maxDistance=10, minDistance=1,
                                             limitPerLandmark=10,
                                             bucketFactor=1)
-        self.assertEqual(0, len(hashes.matchingHashes))
-        self.assertEqual(0, len(hashes.queryHashes))
-        self.assertEqual(0, len(hashes.subjectHashes))
+        self.assertEqual(0, len(list(hashes.matchingHashes)))
+        self.assertEqual(0, len(list(hashes.queryHashes)))
+        self.assertEqual(0, len(list(hashes.subjectHashes)))
 
     def testNoMatchingHashes(self):
         """
@@ -42,9 +42,9 @@ class TestPlotHashesInSubjectAndRead(TestCase):
                                             maxDistance=50, minDistance=1,
                                             limitPerLandmark=10,
                                             bucketFactor=1)
-        self.assertEqual(0, len(hashes.matchingHashes))
-        self.assertEqual(1, len(hashes.queryHashes))
-        self.assertEqual(1, len(hashes.subjectHashes))
+        self.assertEqual(0, len(list(hashes.matchingHashes)))
+        self.assertEqual(1, len(list(hashes.queryHashes)))
+        self.assertEqual(1, len(list(hashes.subjectHashes)))
 
     def testNoQueryHashes(self):
         """

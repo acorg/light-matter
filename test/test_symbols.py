@@ -12,21 +12,14 @@ class TestSymbols(TestCase):
         """
         Must find the right number of symbols.
         """
-        trigSymbols = [symbol.SYMBOL for symbol in ALL_TRIG_CLASSES]
-        lmSymbols = [symbol.SYMBOL for symbol in ALL_LANDMARK_CLASSES]
-        symbols = trigSymbols + lmSymbols
+        symbols = ([cls.SYMBOL for cls in ALL_LANDMARK_CLASSES] +
+                   [cls.SYMBOL for cls in ALL_TRIG_CLASSES])
         self.assertEqual(15, len(symbols))
-
-    def testAllLandmarkSymbolsAreDifferent(self):
-        """
-        All landmark symbols must be different.
-        """
-        symbols = [symbol.SYMBOL for symbol in ALL_LANDMARK_CLASSES]
-        self.assertEqual(len(symbols), len(set(symbols)))
 
     def testAllSymbolsAreDifferent(self):
         """
-        All trig finder symbols must be different.
+        All landmark and trig finder symbols must be different.
         """
-        symbols = [symbol.SYMBOL for symbol in ALL_TRIG_CLASSES]
+        symbols = ([cls.SYMBOL for cls in ALL_LANDMARK_CLASSES] +
+                   [cls.SYMBOL for cls in ALL_TRIG_CLASSES])
         self.assertEqual(len(symbols), len(set(symbols)))

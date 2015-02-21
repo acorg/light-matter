@@ -574,7 +574,10 @@ class TestDatabase(TestCase):
         db.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
 
         checksum = self._checksum([
-            AlphaHelix.NAME, Peaks.NAME,
+            AlphaHelix.NAME,
+            AlphaHelix.SYMBOL,
+            Peaks.NAME,
+            Peaks.SYMBOL,
             3,  # Limit per landmark.
             9,  # Max distance.
             5,  # Min distance.
@@ -634,7 +637,14 @@ class TestDatabase(TestCase):
         """
         db = Database([AlphaHelix, BetaStrand], [Peaks, Troughs])
         checksum = self._checksum([
-            AlphaHelix.NAME, BetaStrand.NAME, Peaks.NAME, Troughs.NAME,
+            AlphaHelix.NAME,
+            BetaStrand.NAME,
+            AlphaHelix.SYMBOL,
+            BetaStrand.SYMBOL,
+            Peaks.NAME,
+            Troughs.NAME,
+            Peaks.SYMBOL,
+            Troughs.SYMBOL,
             Database.DEFAULT_LIMIT_PER_LANDMARK,
             Database.DEFAULT_MAX_DISTANCE,
             Database.DEFAULT_MIN_DISTANCE,
@@ -662,6 +672,7 @@ class TestDatabase(TestCase):
 
         checksum = self._checksum([
             AlphaHelix.NAME,
+            AlphaHelix.SYMBOL,
             Database.DEFAULT_LIMIT_PER_LANDMARK,
             Database.DEFAULT_MAX_DISTANCE,
             Database.DEFAULT_MIN_DISTANCE,
@@ -681,6 +692,7 @@ class TestDatabase(TestCase):
         db.addSubject(subject)
         checksum = self._checksum([
             AlphaHelix.NAME,
+            AlphaHelix.SYMBOL,
             Database.DEFAULT_LIMIT_PER_LANDMARK,
             Database.DEFAULT_MAX_DISTANCE,
             Database.DEFAULT_MIN_DISTANCE,

@@ -98,13 +98,21 @@ class Database(object):
 
     def _initializeChecksum(self):
         """
-        Set the initial checksum, based on the database parameters.
+        Set the initial checksum, based on the database finders (their names
+        and symbols) and parameters.
         """
         self.checksum = 0x0  # An arbitrary starting checksum.
+        # Add landmark and trig point finders in sorted order so databases
+        # with the same finders will have identical checksums (all else
+        # bing equal).
         key = attrgetter('NAME')
+        landmarkFinders = sorted(self.landmarkFinders, key=key)
+        trigPointFinders = sorted(self.trigPointFinders, key=key)
         self._updateChecksum(
-            [f.NAME for f in sorted(self.landmarkFinders, key=key)] +
-            [f.NAME for f in sorted(self.trigPointFinders, key=key)] +
+            [f.NAME for f in landmarkFinders] +
+            [f.SYMBOL for f in landmarkFinders] +
+            [f.NAME for f in trigPointFinders] +
+            [f.SYMBOL for f in trigPointFinders] +
             map(str, (self.limitPerLandmark, self.maxDistance,
                       self.minDistance, self.bucketFactor)))
 

@@ -22,7 +22,7 @@ class TestParams(TestCase):
             {
                 'subjectCount': 5,
                 'totalCoveredResidues': 62,
-                'checksum': 843719817,
+                'checksum': 3807596652,
                 'limitPerLandmark': Database.DEFAULT_LIMIT_PER_LANDMARK,
                 'trigPointClasses': [
                     'AminoAcids',

@@ -1,7 +1,7 @@
-from light.features import Landmark
+from light.features import Landmark, Finder
 
 
-class GOR4AlphaHelix(object):
+class GOR4AlphaHelix(Finder):
     """
     Use the GOR IV algorithm to do probabilistic identification of amino acid
     sequences that are (hopefully!) likely to correspond to Alpha helices.
@@ -34,9 +34,12 @@ class GOR4AlphaHelix(object):
             else:
                 if count:
                     # We were in a string of H's, but it has just ended.
-                    yield Landmark(self.NAME, self.SYMBOL, start, count, count)
+                    length = int(count // self.bucketFactor)
+                    yield Landmark(self.NAME, self.SYMBOL, start, length,
+                                   length)
                     count = 0
 
         if count:
             # We reached the end of the string still in an alpha helix.
-            yield Landmark(self.NAME, self.SYMBOL, start, count, count)
+            length = int(count // self.bucketFactor)
+            yield Landmark(self.NAME, self.SYMBOL, start, length, length)

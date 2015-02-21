@@ -1,9 +1,9 @@
 import re
 
-from light.features import Landmark
+from light.features import Landmark, Finder
 
 
-class BetaStrand(object):
+class BetaStrand(Finder):
     """
     Simplistic identification of amino acid sequences that hopefully
     correspond to Beta strands.

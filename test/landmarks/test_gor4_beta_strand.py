@@ -67,3 +67,20 @@ class TestGOR4BetaStrand(TestCase):
         self.assertEqual([Landmark('GOR4BetaStrand', 'GB', 34, 5, 5),
                           Landmark('GOR4BetaStrand', 'GB', 41, 8, 8)],
                          result)
+
+    def testApoamicyaninTwoBetaStrandsWithBucketFactor(self):
+        """
+        The GOR4BetaStrand landmark finder must find the two expected landmarks
+        in a fragment of the APOAMICYANIN sequence from the GOR IV reference
+        database. It must return the right length of the landmark, after a
+        bucketFactor was applied.
+        """
+        seq = 'DKATIPSESPFAAAEVADGAIVVDIAKMKYETPELHVKVGDTVTWINREA'
+        read = AARead('id', seq)
+        landmark = GOR4BetaStrand(bucketFactor=1.5)
+        result = list(landmark.find(read))
+        # The GOR IV secondary structure prediction is
+        # 'CCCCCCCCCCHHHHHHHCCHHHHHHHHHHHCCCCEEEEECCEEEEEEEEC'
+        self.assertEqual([Landmark('GOR4BetaStrand', 'GB', 34, 3, 3),
+                          Landmark('GOR4BetaStrand', 'GB', 41, 5, 5)],
+                         result)

@@ -1,9 +1,9 @@
 import re
 
-from light.features import Landmark
+from light.features import Landmark, Finder
 
 
-class BetaTurn(object):
+class BetaTurn(Finder):
     """
     A class for computing statistics based on turns. Data is from:
     http://www.sciencedirect.com/science/article/pii/0022283677900948, Chou and

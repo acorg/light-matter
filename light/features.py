@@ -242,3 +242,15 @@ class CombinedFeatureList(object):
                         else:
                             # The smallest available delta is too large.
                             return
+
+
+class Finder(object):
+    """
+    Holds information about landmark or trigPoint finders.
+
+    @param bucketFactor: A C{float} by which the length of the landmark or
+        trigPoint will be divided.
+    """
+
+    def __init__(self, bucketFactor=1.0):
+        self.bucketFactor = bucketFactor

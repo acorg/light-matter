@@ -10,7 +10,7 @@ class BetaTurn(object):
     Fasman (1977), Journal of Molecular Biology.
     """
     NAME = 'BetaTurn'
-    SYMBOL = 'T'
+    SYMBOL = 'BT'
     BETA_TURN = re.compile('[NCD][PSK][NDG][WGY]')
 
     def find(self, read):

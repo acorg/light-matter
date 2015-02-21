@@ -15,7 +15,7 @@ class TestBetaTurn(TestCase):
         The BetaTurn class attributes must be as expected.
         """
         self.assertEqual('BetaTurn', BetaTurn.NAME)
-        self.assertEqual('T', BetaTurn.SYMBOL)
+        self.assertEqual('BT', BetaTurn.SYMBOL)
 
     def testNoBetaTurn(self):
         """
@@ -35,7 +35,7 @@ class TestBetaTurn(TestCase):
         read = AARead('id', 'NPGYAAAAAA')
         landmark = BetaTurn()
         result = list(landmark.find(read))
-        self.assertEqual([Landmark('BetaTurn', 'T', 0, 4)], result)
+        self.assertEqual([Landmark('BetaTurn', 'BT', 0, 4)], result)
 
     def testAtEndOfSequence(self):
         """
@@ -45,7 +45,7 @@ class TestBetaTurn(TestCase):
         read = AARead('id', 'AAAADPDG')
         landmark = BetaTurn()
         result = list(landmark.find(read))
-        self.assertEqual([Landmark('BetaTurn', 'T', 4, 4)], result)
+        self.assertEqual([Landmark('BetaTurn', 'BT', 4, 4)], result)
 
     def testInMiddleOfSequence(self):
         """
@@ -55,7 +55,7 @@ class TestBetaTurn(TestCase):
         read = AARead('id', 'AADPDGAA')
         landmark = BetaTurn()
         result = list(landmark.find(read))
-        self.assertEqual([Landmark('BetaTurn', 'T', 2, 4)], result)
+        self.assertEqual([Landmark('BetaTurn', 'BT', 2, 4)], result)
 
     def testMultipleMatches(self):
         """
@@ -64,8 +64,8 @@ class TestBetaTurn(TestCase):
         read = AARead('id', 'NPNWAACSDYAADKAY')
         landmark = BetaTurn()
         result = list(landmark.find(read))
-        self.assertEqual([Landmark('BetaTurn', 'T', 0, 4),
-                          Landmark('BetaTurn', 'T', 6, 4)],
+        self.assertEqual([Landmark('BetaTurn', 'BT', 0, 4),
+                          Landmark('BetaTurn', 'BT', 6, 4)],
                          result)
 
     def testNoLongTurn(self):
@@ -75,4 +75,4 @@ class TestBetaTurn(TestCase):
         read = AARead('id', 'NPGYNPAAAAAA')
         landmark = BetaTurn()
         result = list(landmark.find(read))
-        self.assertEqual([Landmark('BetaTurn', 'T', 0, 4)], result)
+        self.assertEqual([Landmark('BetaTurn', 'BT', 0, 4)], result)

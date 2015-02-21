@@ -1,8 +1,8 @@
 from unittest import TestCase
 
 from light.trig import (
-    findTrigPoint, findTrigPoints, ALL_TRIG_CLASSES,
-    DEFAULT_TRIG_CLASSES, AminoAcids, IndividualPeaks,
+    findTrigPoint, findTrigPoints, trigNameFromHashkey,
+    ALL_TRIG_CLASSES, DEFAULT_TRIG_CLASSES, AminoAcids, IndividualPeaks,
     IndividualTroughs, Peaks, Troughs)
 
 
@@ -55,6 +55,27 @@ class TestFindTrigPoints(TestCase):
         self.assertEqual(2, len(result))
         self.assertIs(Peaks, result[0])
         self.assertIs(Troughs, result[1])
+
+
+class TestTrigNameFromHashkey(TestCase):
+    """
+    Tests for the light.trigs.trigNameFromHashkey function.
+    """
+
+    def testFail(self):
+        """
+        The trigNameFromHashkey function should return None if asked to
+        find a hashkey that no class created.
+        """
+        self.assertIs(None, trigNameFromHashkey('unknown'))
+
+    def testAll(self):
+        """
+        The trigNameFromHashkey function should correctly identify the
+        symbol from all trig classes.
+        """
+        for cls in ALL_TRIG_CLASSES:
+            self.assertEqual(cls.NAME, trigNameFromHashkey(cls.SYMBOL))
 
 
 class TestAllTrigClasses(TestCase):

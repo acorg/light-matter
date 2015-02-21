@@ -16,14 +16,16 @@ parser.add_argument(
 args = parser.parse_args()
 key = attrgetter('NAME')
 
-print 'Landmark finders:'
+maxLen = max(len(cls.NAME) for cls in ALL_LANDMARK_CLASSES | ALL_TRIG_CLASSES)
+
+print '%d landmark finders:' % len(ALL_LANDMARK_CLASSES)
 for finder in sorted(ALL_LANDMARK_CLASSES, key=key):
-    print' %s (symbol: %s)' % (finder.NAME, finder.SYMBOL)
+    print'  %-*s (%s)' % (maxLen, finder.NAME, finder.SYMBOL)
     if args.verbose:
         print finder.__doc__
 
-print 'Trig point finders:'
+print '%d trig point finders:' % len(ALL_TRIG_CLASSES)
 for finder in sorted(ALL_TRIG_CLASSES, key=key):
-    print ' %s (symbol: %s)' % (finder.NAME, finder.SYMBOL)
+    print '  %-*s (%s)' % (maxLen, finder.NAME, finder.SYMBOL)
     if args.verbose:
         print finder.__doc__

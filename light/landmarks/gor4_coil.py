@@ -1,7 +1,7 @@
-from light.features import Landmark
+from light.features import Landmark, Finder
 
 
-class GOR4Coil(object):
+class GOR4Coil(Finder):
     """
     Use the GOR IV algorithm to do probabilistic identification of amino acid
     sequences that are (hopefully!) likely to correspond to coils.
@@ -34,9 +34,12 @@ class GOR4Coil(object):
             else:
                 if count:
                     # We were in a string of C's, but it has just ended.
-                    yield Landmark(self.NAME, self.SYMBOL, start, count, count)
+                    length = int(count // self._bucketFactor)
+                    yield Landmark(self.NAME, self.SYMBOL, start, length,
+                                   length)
                     count = 0
 
         if count:
             # We reached the end of the string still in a coil.
-            yield Landmark(self.NAME, self.SYMBOL, start, count, count)
+            length = int(count // self._bucketFactor)
+            yield Landmark(self.NAME, self.SYMBOL, start, length, length)

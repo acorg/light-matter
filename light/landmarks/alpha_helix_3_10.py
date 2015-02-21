@@ -1,12 +1,12 @@
 import re
 
 from dark.aa import PROPERTIES, HYDROPHOBIC
-from light.features import Landmark
+from light.features import Landmark, Finder
 
 ALPHA_HELIX_3_10 = re.compile('OIIO(?:IIO)+')
 
 
-class AlphaHelix_3_10(object):
+class AlphaHelix_3_10(Finder):
     """
     A class for computing statistics based on 3-10 alpha helices.  Based
     around the assumption that a 3-10 alpha helix is composed of at least two

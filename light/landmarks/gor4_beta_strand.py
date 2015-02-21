@@ -1,7 +1,7 @@
-from light.features import Landmark
+from light.features import Landmark, Finder
 
 
-class GOR4BetaStrand(object):
+class GOR4BetaStrand(Finder):
     """
     Use the GOR IV algorithm to do probabilistic identification of amino acid
     sequences that are (hopefully!) likely to correspond to Beta strands.
@@ -34,9 +34,12 @@ class GOR4BetaStrand(object):
             else:
                 if count:
                     # We were in a string of E's, but it has just ended.
-                    yield Landmark(self.NAME, self.SYMBOL, start, count, count)
+                    length = int(count // self._bucketFactor)
+                    yield Landmark(self.NAME, self.SYMBOL, start, length,
+                                   length)
                     count = 0
 
         if count:
+            length = int(count // self._bucketFactor)
             # We reached the end of the string still in a beta strand.
-            yield Landmark(self.NAME, self.SYMBOL, start, count, count)
+            yield Landmark(self.NAME, self.SYMBOL, start, length, length)

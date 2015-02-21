@@ -1,12 +1,12 @@
 import re
 
 from dark.aa import PROPERTIES, HYDROPHOBIC
-from light.features import Landmark
+from light.features import Landmark, Finder
 
 ALPHA_HELIX_PI = re.compile('OIIIIO(?:IIIIO)+')
 
 
-class AlphaHelix_pi(object):
+class AlphaHelix_pi(Finder):
     """
     A class for computing statistics based on Pi alpha helices.  Based
     around the assumption that a pi alpha helix is composed of at least two

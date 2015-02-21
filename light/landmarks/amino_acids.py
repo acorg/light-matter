@@ -1,7 +1,7 @@
-from light.features import Landmark
+from light.features import Landmark, Finder
 
 
-class AminoAcids(object):
+class AminoAcids(Finder):
     """
     A class for computing Landmarks based on the position of a specific
     amino acid.

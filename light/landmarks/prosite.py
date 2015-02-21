@@ -3,10 +3,10 @@ from json import loads
 from os.path import dirname, join
 
 import light
-from light.features import Landmark
+from light.features import Landmark, Finder
 
 
-class Prosite(object):
+class Prosite(Finder):
     """
     A class for computing statistics based on prosite motifs. The prosite
     database is available at:

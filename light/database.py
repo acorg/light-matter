@@ -92,10 +92,10 @@ class Database(object):
         # Create instances of the landmark and trig point finder classes.
         self.landmarkFinders = []
         for landmarkClass in self.landmarkClasses:
-            self.landmarkFinders.append(landmarkClass())
+            self.landmarkFinders.append(landmarkClass(self.bucketFactor))
         self.trigPointFinders = []
         for trigPointClass in self.trigPointClasses:
-            self.trigPointFinders.append(trigPointClass())
+            self.trigPointFinders.append(trigPointClass(self.bucketFactor))
         self._initializeChecksum()
 
     def _initializeChecksum(self):

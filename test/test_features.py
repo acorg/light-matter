@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from light.features import Landmark, TrigPoint, CombinedFeatureList
+from light.features import Landmark, TrigPoint, CombinedFeatureList, Finder
 
 
 class TestLandmarks(TestCase):
@@ -336,3 +336,23 @@ class TestSets(TestCase):
         trigPoint = TrigPoint('trig', 't', 44)
         s = set([(landmark, trigPoint)])
         self.assertIn((landmark, trigPoint), s)
+
+
+class TestFinder(TestCase):
+    """
+    Tests for the light.features.Finder class.
+    """
+    def testDefaultBucketFactor(self):
+        """
+        An instance must have the right default bucketFactor.
+        """
+        finder = Finder()
+        self.assertEqual(1.0, finder._bucketFactor)
+
+    def testNonDefaultBucketFactor(self):
+        """
+        An instance made with a non-default bucketFactor must have the right
+        bucketFactor set.
+        """
+        finder = Finder(bucketFactor=1.5)
+        self.assertEqual(1.5, finder._bucketFactor)

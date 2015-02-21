@@ -10,6 +10,8 @@ ALL_TRIG_CLASSES = {
 DEFAULT_TRIG_CLASSES = {
     Peaks, Troughs, AminoAcids}
 
+_HASHKEY_TO_NAME = dict((cls.SYMBOL, cls.NAME) for cls in ALL_TRIG_CLASSES)
+
 
 def findTrigPoint(name):
     """
@@ -49,6 +51,18 @@ def findTrigPoints(names):
         return found
 
 
+def trigNameFromHashkey(hashkey):
+    """
+    Get the name of a trig point class given part of a hashkey that was
+    created for it (in features.TrigPoint.hashkey).
+
+    @param hashkey: A C{str} hashkey for the class.
+    @return: A C{str} trig point class name, or C{None} if the hashkey
+        cannot be found.
+    """
+    return _HASHKEY_TO_NAME.get(hashkey)
+
+
 # Default exports for 'from light.trig import *'
-__all__ = ['findTrigPoint', 'findTrigPoints', 'ALL_TRIG_CLASSES',
-           'DEFAULT_TRIG_CLASSES']
+__all__ = ['findTrigPoint', 'findTrigPoints', 'trigNameFromHashkey',
+           'ALL_TRIG_CLASSES', 'DEFAULT_TRIG_CLASSES']

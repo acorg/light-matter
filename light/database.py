@@ -11,10 +11,11 @@ from dark.fasta import combineReads
 from light.reads import ScannedRead
 from light.result import Result
 from light.landmarks import (
-    findLandmark, findLandmarks, ALL_LANDMARK_CLASSES,
-    DEFAULT_LANDMARK_CLASSES)
+    findLandmark, findLandmarks, landmarkNameFromHashkey,
+    ALL_LANDMARK_CLASSES, DEFAULT_LANDMARK_CLASSES)
 from light.trig import (
-    findTrigPoint, findTrigPoints, ALL_TRIG_CLASSES, DEFAULT_TRIG_CLASSES)
+    findTrigPoint, findTrigPoints, trigNameFromHashkey,
+    ALL_TRIG_CLASSES, DEFAULT_TRIG_CLASSES)
 
 
 class Database(object):
@@ -346,6 +347,63 @@ class Database(object):
             setattr(database, attr, state[attr])
 
         return database
+
+    def print_(self, fp=sys.stdout, printHashes=False):
+        """
+        Print information about the database.
+
+        @param fp: A file pointer to write to.
+        @param printHashes: If C{True}, print all hashes and associated
+            subjects.
+        """
+        # Print basic database information.
+        if self.landmarkFinders:
+            print >>fp, 'Landmark finders:'
+            print >>fp, '  ' + '\n  '.join(sorted(
+                finder.NAME for finder in self.landmarkFinders))
+        else:
+            print >>fp, 'Landmark finders: none'
+
+        if self.trigPointFinders:
+            print >>fp, 'Trig point finders:'
+            print >>fp, '  ' + '\n  '.join(sorted(
+                finder.NAME for finder in self.trigPointFinders))
+        else:
+            print >>fp, 'Trig point finders: none'
+
+        print >>fp, 'Subject count: %s' % self.subjectCount
+        print >>fp, 'Hash count: %d' % len(self.d)
+        print >>fp, 'Total residues: %d' % self.totalResidues
+        print >>fp, 'Coverage: %.2f%%' % (float(self.totalCoveredResidues) /
+                                          self.totalResidues * 100.0)
+        print >>fp, 'Checksum: %s' % self.checksum
+
+        # Print hashes.
+        if printHashes and self.d:
+            print >>fp, 'Subjects (with offsets) by hash:'
+            landmarkCount = defaultdict(int)
+            trigCount = defaultdict(int)
+            for hashkey, subjects in self.d.iteritems():
+                print >>fp, '  ', hashkey
+                # The split on ':' corresponds to the use of ':' above in
+                # self.key() to make a hash key.
+                landmarkHashkey, trigHashkey, distance = hashkey.split(':')
+                landmarkCount[landmarkHashkey] += 1
+                trigCount[trigHashkey] += 1
+                for subjectIndex, offsets in subjects.iteritems():
+                    subjectIndex = int(subjectIndex)
+                    print >>fp, '    %s %r' % (
+                        self.subjectInfo[subjectIndex][0], offsets)
+
+            print >>fp, 'Landmark symbol counts:'
+            for hashkey, count in landmarkCount.iteritems():
+                print >>fp, '  %s (%s): %d' % (
+                    landmarkNameFromHashkey(hashkey), hashkey, count)
+
+            print >>fp, 'Trig point symbol counts:'
+            for hashkey, count in trigCount.iteritems():
+                print >>fp, '  %s (%s): %d' % (
+                    trigNameFromHashkey(hashkey), hashkey, count)
 
 
 class DatabaseSpecifier(object):

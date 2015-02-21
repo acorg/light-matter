@@ -6,10 +6,8 @@ from binascii import crc32
 from dark.reads import AARead
 
 from light.features import Landmark, TrigPoint
-from light.landmarks.alpha_helix import AlphaHelix
-from light.landmarks.beta_strand import BetaStrand
-from light.trig.peaks import Peaks
-from light.trig.troughs import Troughs
+from light.landmarks import AlphaHelix, BetaStrand
+from light.trig import Peaks, Troughs
 from light.database import Database
 from light.reads import ScannedRead
 
@@ -740,3 +738,66 @@ class TestDatabase(TestCase):
                                   0, 9, 2), landmark)
         self.assertEqual(TrigPoint(Peaks.NAME, Peaks.SYMBOL, 10), trigPoint)
         self.assertEqual(1, len(pairs))
+
+    def testPrint(self):
+        """
+        The print_ function should produce the expected output.
+        """
+        fp = StringIO()
+        subject = AARead('subject', 'FRRRFRRRFASAASA')
+        db = Database([AlphaHelix, BetaStrand], [Peaks, Troughs],
+                      limitPerLandmark=16, maxDistance=10, minDistance=0,
+                      bucketFactor=1)
+        db.addSubject(subject)
+        db.print_(fp)
+        expected = (
+            'Landmark finders:\n'
+            '  AlphaHelix\n'
+            '  BetaStrand\n'
+            'Trig point finders:\n'
+            '  Peaks\n'
+            '  Troughs\n'
+            'Subject count: 1\n'
+            'Hash count: 3\n'
+            'Total residues: 15\n'
+            'Coverage: 73.33%\n'
+            'Checksum: 396210371\n')
+        self.assertEqual(expected, fp.getvalue())
+
+    def testPrintWithHashes(self):
+        """
+        The print_ function should produce the expected output when asked to
+        print hash information.
+        """
+        fp = StringIO()
+        subject = AARead('id', 'FRRRFRRRFASAASA')
+        db = Database([AlphaHelix, BetaStrand], [Peaks, Troughs],
+                      limitPerLandmark=16, maxDistance=10, minDistance=0,
+                      bucketFactor=1)
+        db.addSubject(subject)
+        db.print_(fp, printHashes=True)
+        expected = (
+            'Landmark finders:\n'
+            '  AlphaHelix\n'
+            '  BetaStrand\n'
+            'Trig point finders:\n'
+            '  Peaks\n'
+            '  Troughs\n'
+            'Subject count: 1\n'
+            'Hash count: 3\n'
+            'Total residues: 15\n'
+            'Coverage: 73.33%\n'
+            'Checksum: 2714260318\n'
+            'Subjects (with offsets) by hash:\n'
+            '   A2:P:10\n'
+            '    id [0]\n'
+            '   A2:T:8\n'
+            '    id [0]\n'
+            '   A2:T:4\n'
+            '    id [0]\n'
+            'Landmark symbol counts:\n'
+            '  AlphaHelix (A2): 3\n'
+            'Trig point symbol counts:\n'
+            '  Peaks (P): 1\n'
+            '  Troughs (T): 2\n')
+        self.assertEqual(expected, fp.getvalue())

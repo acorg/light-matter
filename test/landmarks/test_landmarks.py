@@ -1,10 +1,10 @@
 from unittest import TestCase
 
 from light.landmarks import (
-    findLandmark, findLandmarks, ALL_LANDMARK_CLASSES,
-    DEFAULT_LANDMARK_CLASSES, AlphaHelix, AlphaHelix_3_10,
-    AlphaHelix_pi, AminoAcids, BetaStrand, BetaTurn, GOR4AlphaHelix,
-    GOR4BetaStrand, GOR4Coil, Prosite)
+    findLandmark, findLandmarks, landmarkNameFromHashkey,
+    ALL_LANDMARK_CLASSES, DEFAULT_LANDMARK_CLASSES, AlphaHelix,
+    AlphaHelix_3_10, AlphaHelix_pi, AminoAcids, BetaStrand, BetaTurn,
+    GOR4AlphaHelix, GOR4BetaStrand, GOR4Coil, Prosite)
 
 
 class TestFindLandmark(TestCase):
@@ -55,6 +55,36 @@ class TestFindLandmarks(TestCase):
         self.assertEqual(2, len(result))
         self.assertIs(AlphaHelix, result[0])
         self.assertIs(BetaStrand, result[1])
+
+
+class TestLandmarkNameFromHashkey(TestCase):
+    """
+    Tests for the light.landmarks.landmarkNameFromHashkey function.
+    """
+
+    def testFail(self):
+        """
+        The landmarkNameFromHashkey function should return None if asked to
+        find a hashkey that no class created.
+        """
+        self.assertIs(None, landmarkNameFromHashkey('unknown'))
+
+    def testAll(self):
+        """
+        The landmarkNameFromHashkey function should correctly identify the
+        symbol from all landmark classes.
+        """
+        for cls in ALL_LANDMARK_CLASSES:
+            self.assertEqual(cls.NAME, landmarkNameFromHashkey(cls.SYMBOL))
+
+    def testProsite(self):
+        """
+        The landmarkNameFromHashkey function should correctly identify hashkeys
+        created by the Prosite landmark class. The Prosite hashkeys are longer
+        than just the class symbol.
+        """
+        self.assertEqual(Prosite.NAME,
+                         landmarkNameFromHashkey(Prosite.SYMBOL + '00342'))
 
 
 class TestAllLandmarkClasses(TestCase):

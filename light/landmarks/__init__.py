@@ -17,6 +17,8 @@ DEFAULT_LANDMARK_CLASSES = {
     AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, AminoAcids, BetaStrand,
     BetaTurn, Prosite}
 
+_HASHKEY_TO_NAME = dict((cls.SYMBOL, cls.NAME) for cls in ALL_LANDMARK_CLASSES)
+
 
 def findLandmark(name):
     """
@@ -56,6 +58,26 @@ def findLandmarks(names):
         return found
 
 
+def landmarkNameFromHashkey(hashkey):
+    """
+    Get the name of a landmark class given part of a hashkey that was
+    created for it (in features.Landmark.hashkey).
+
+    @param hashkey: A C{str} hashkey for the class.
+    @return: A C{str} landmark class name, or C{None} if the hashkey
+        cannot be found.
+    """
+    # Look for the entire hashkey in _HASHKEY_TO_NAME and if that's not
+    # present, shorten it one character at a time from the right. This
+    # allows us to find the correct finder class for hashkeys like PS00342
+    # (the Prosite class, whose symbol is PS).
+    while hashkey:
+        try:
+            return _HASHKEY_TO_NAME[hashkey]
+        except KeyError:
+            hashkey = hashkey[:-1]
+
+
 # Default exports for 'from light.landmarks import *'
-__all__ = ['findLandmark', 'findLandmarks', 'ALL_LANDMARK_CLASSES',
-           'DEFAULT_LANDMARK_CLASSES']
+__all__ = ['findLandmark', 'findLandmarks', 'landmarkNameFromHashkey',
+           'ALL_LANDMARK_CLASSES', 'DEFAULT_LANDMARK_CLASSES']

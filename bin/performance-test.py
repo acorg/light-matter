@@ -223,7 +223,7 @@ class WriteMarkdownFile(object):
                               '#####Database arguments:</b> Landmarks: %s, '
                               'trig points: %s, maxDistance: %s, '
                               'minDistance: %s '
-                              'limitPerLandmark: %s \n\n' %
+                              'limitPerLandmark: %s, bucketFactor %f\n\n' %
                               ([i.NAME for i in landmarkClasses],
                                [i.NAME for i in trigClasses],
                                args.maxDistance, args.minDistance,
@@ -296,9 +296,10 @@ if __name__ == '__main__':
         help='The minimum distance permitted between yielded pairs.')
 
     parser.add_argument(
-        '--bucketFactor', type=int, default=1,
-        help=('A factor by which the distance between landmark and trig point '
-              'is divided.'))
+        '--bucketFactor', type=float, default=1.1,
+        help=('A factor by which the distance between a landmark and a trig '
+              'point is divided, to reduce sensitivity to small differences '
+              'in distance.'))
 
     parser.add_argument(
         '--verbose', default=False, action='store_true',

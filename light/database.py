@@ -33,8 +33,9 @@ class Database(object):
         yielded pairs.
     @param minDistance: The C{int} minimum distance permitted between
         yielded pairs.
-    @param bucketFactor: A C{int} factor by which the distance between
-        landmark and trig point is divided, to influence sensitivity.
+    @param bucketFactor: A C{float} factor by which the distance between
+        a landmark and a trig point is divided, to reduce sensitivity to small
+        differences in distance.
     """
 
     # Database construction and look-up defaults. See explanations in
@@ -137,8 +138,8 @@ class Database(object):
         @return: A C{str} key based on the landmark, the trig point,
             and the distance between them.
         """
-        distance = ((trigPoint.offset - landmark.offset)
-                    // self.bucketFactor)
+        distance = int(((trigPoint.offset - landmark.offset)
+                        // self.bucketFactor))
         return '%s:%s:%s' % (landmark.hashkey(), trigPoint.hashkey(),
                              distance)
 
@@ -493,10 +494,11 @@ class DatabaseSpecifier(object):
                 help='The minimum distance permitted between yielded pairs.')
 
             parser.add_argument(
-                '--bucketFactor', type=int,
+                '--bucketFactor', type=float,
                 default=Database.DEFAULT_BUCKET_FACTOR,
-                help=('A factor by which the distance between landmark and '
-                      'trig point is divided.'))
+                help=('A factor by which the distance between a landmark and '
+                      'a trig point is divided, to reduce sensitivity to small'
+                      'differences in distance.'))
 
         if self._allowPopulation:
             parser.add_argument(
@@ -581,8 +583,9 @@ class DatabaseSpecifier(object):
             yielded pairs.
         @param minDistance: The C{int} minimum distance permitted between
             yielded pairs.
-        @param bucketFactor: A C{int} factor by which the distance between
-            landmark and trig point is divided.
+        @param bucketFactor: A C{float} factor by which the distance between
+            a landmark and a trig point is divided, to reduce sensitivity to
+            small differences in distance.
         @param database: An instance of C{light.database.Database}.
         @param databaseFile: The C{str} file name containing a database.
         @param databaseFasta: The name of a FASTA file containing the

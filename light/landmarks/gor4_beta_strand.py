@@ -34,12 +34,12 @@ class GOR4BetaStrand(Finder):
             else:
                 if count:
                     # We were in a string of E's, but it has just ended.
-                    length = int(count // self.bucketFactor)
+                    length = int(count // self._bucketFactor)
                     yield Landmark(self.NAME, self.SYMBOL, start, length,
                                    length)
                     count = 0
 
         if count:
-            length = int(count // self.bucketFactor)
+            length = int(count // self._bucketFactor)
             # We reached the end of the string still in a beta strand.
             yield Landmark(self.NAME, self.SYMBOL, start, length, length)

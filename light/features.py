@@ -253,4 +253,4 @@ class Finder(object):
     """
 
     def __init__(self, bucketFactor=1.0):
-        self.bucketFactor = bucketFactor
+        self._bucketFactor = bucketFactor

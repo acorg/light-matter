@@ -347,7 +347,7 @@ class TestFinder(TestCase):
         An instance must have the right default bucketFactor.
         """
         finder = Finder()
-        self.assertEqual(1.0, finder.bucketFactor)
+        self.assertEqual(1.0, finder._bucketFactor)
 
     def testNonDefaultBucketFactor(self):
         """
@@ -355,4 +355,4 @@ class TestFinder(TestCase):
         bucketFactor set.
         """
         finder = Finder(bucketFactor=1.5)
-        self.assertEqual(1.5, finder.bucketFactor)
+        self.assertEqual(1.5, finder._bucketFactor)

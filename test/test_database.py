@@ -803,7 +803,7 @@ class TestDatabase(TestCase):
             'Hash count: 3\n'
             'Total residues: 15\n'
             'Coverage: 73.33%\n'
-            'Checksum: 396210371\n')
+            'Checksum: 99889531\n')
         self.assertEqual(expected, fp.getvalue())
 
     def testPrintWithHashes(self):
@@ -829,7 +829,7 @@ class TestDatabase(TestCase):
             'Hash count: 3\n'
             'Total residues: 15\n'
             'Coverage: 73.33%\n'
-            'Checksum: 2714260318\n'
+            'Checksum: 2294967298\n'
             'Subjects (with offsets) by hash:\n'
             '   A2:P:10\n'
             '    id [0]\n'

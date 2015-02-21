@@ -64,11 +64,11 @@ class TestGOR4Coil(TestCase):
         The GOR4Coil landmark finder must find the five expected landmarks
         in a fragment of the APOAMICYANIN sequence from the GOR IV reference
         database. It must return the right lenght of the landmark after a
-        bucketFactor has been applied.
+        distanceScale has been applied.
         """
         seq = 'DKATIPSESPFAAAEVADGAIVVDIAKMKYETPELHVKVGDTVTWINREA'
         read = AARead('id', seq)
-        landmark = GOR4Coil(bucketFactor=1.5)
+        landmark = GOR4Coil(distanceScale=1.5)
         result = list(landmark.find(read))
         # The GOR IV secondary structure prediction is
         # 'CCCCCCCCCCHHHHHHHCCHHHHHHHHHHHCCCCEEEEECCEEEEEEEEC'.

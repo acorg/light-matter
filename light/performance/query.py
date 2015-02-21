@@ -7,7 +7,7 @@ from light.database import Database
 
 def queryDatabase(databaseFile, queryFile, landmarkFinders, trigFinders,
                   limitPerLandmark=None, maxDistance=None, minDistance=None,
-                  significanceFraction=None, bucketFactor=None):
+                  significanceFraction=None, distanceScale=None):
     """
     Build a database, query it, return results.
 
@@ -21,7 +21,7 @@ def queryDatabase(databaseFile, queryFile, landmarkFinders, trigFinders,
         landmark per read.
     @param maxDistance: The maximum distance permitted between yielded pairs.
     @param minDistance: The minimum distance permitted between yielded pairs.
-    @param bucketFactor: A C{float} factor by which the distance between
+    @param distanceScale: A C{float} factor by which the distance between
         a landmark and a trig point is divided, to reduce sensitivity to small
         differences in distance.
     @return: A C{dict} whose keys are query ids and whose values are C{dict}s
@@ -31,7 +31,7 @@ def queryDatabase(databaseFile, queryFile, landmarkFinders, trigFinders,
     database = Database(landmarkFinders, trigFinders,
                         limitPerLandmark=limitPerLandmark,
                         maxDistance=maxDistance, minDistance=minDistance,
-                        bucketFactor=bucketFactor)
+                        distanceScale=distanceScale)
     if isinstance(queryFile, Reads):
         queries = queryFile
     else:

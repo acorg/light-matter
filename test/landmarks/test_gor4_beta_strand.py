@@ -73,11 +73,11 @@ class TestGOR4BetaStrand(TestCase):
         The GOR4BetaStrand landmark finder must find the two expected landmarks
         in a fragment of the APOAMICYANIN sequence from the GOR IV reference
         database. It must return the right length of the landmark, after a
-        bucketFactor was applied.
+        distanceScale was applied.
         """
         seq = 'DKATIPSESPFAAAEVADGAIVVDIAKMKYETPELHVKVGDTVTWINREA'
         read = AARead('id', seq)
-        landmark = GOR4BetaStrand(bucketFactor=1.5)
+        landmark = GOR4BetaStrand(distanceScale=1.5)
         result = list(landmark.find(read))
         # The GOR IV secondary structure prediction is
         # 'CCCCCCCCCCHHHHHHHCCHHHHHHHHHHHCCCCEEEEECCEEEEEEEEC'

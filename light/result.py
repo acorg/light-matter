@@ -19,7 +19,7 @@ class Result(object):
         trig point) pairs for a scannedRead that need to fall into the
         same histogram bucket for that bucket to be considered a
         significant match with a database title.
-    @param bucketFactor: A C{float} factor by which the distance between
+    @param distanceScale: A C{float} factor by which the distance between
         a landmark and a trig point is divided, to reduce sensitivity to small
         differences in distance.
     @param nonMatchingHashes: A C{set} of hashes in scannedRead that does not
@@ -28,7 +28,7 @@ class Result(object):
         analysis of each matched subject will be stored.
     """
     def __init__(self, scannedRead, matches, hashCount, significanceFraction,
-                 bucketFactor, nonMatchingHashes=None,
+                 distanceScale, nonMatchingHashes=None,
                  storeFullAnalysis=False):
         self.scannedRead = scannedRead
         self.matches = matches
@@ -38,7 +38,7 @@ class Result(object):
         for subjectIndex in matches:
             maxLen = max([len(scannedRead.read.sequence),
                           matches[subjectIndex][0]['subjectLength']])
-            nBins = int(maxLen // bucketFactor)
+            nBins = int(maxLen // distanceScale)
             histogram = Histogram(nBins)
 
             for match in matches[subjectIndex]:

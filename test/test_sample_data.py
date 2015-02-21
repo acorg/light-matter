@@ -37,7 +37,7 @@ class TestParams(TestCase):
                 ],
                 'maxDistance': Database.DEFAULT_MAX_DISTANCE,
                 'minDistance': Database.DEFAULT_MIN_DISTANCE,
-                'bucketFactor': Database.DEFAULT_BUCKET_FACTOR,
+                'distanceScale': Database.DEFAULT_BUCKET_FACTOR,
             },
             loads(PARAMS))
 

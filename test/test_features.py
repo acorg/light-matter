@@ -344,15 +344,15 @@ class TestFinder(TestCase):
     """
     def testDefaultBucketFactor(self):
         """
-        An instance must have the right default bucketFactor.
+        An instance must have the right default distanceScale.
         """
         finder = Finder()
-        self.assertEqual(1.0, finder._bucketFactor)
+        self.assertEqual(1.0, finder._distanceScale)
 
     def testNonDefaultBucketFactor(self):
         """
-        An instance made with a non-default bucketFactor must have the right
-        bucketFactor set.
+        An instance made with a non-default distanceScale must have the right
+        distanceScale set.
         """
-        finder = Finder(bucketFactor=1.5)
-        self.assertEqual(1.5, finder._bucketFactor)
+        finder = Finder(distanceScale=1.5)
+        self.assertEqual(1.5, finder._distanceScale)

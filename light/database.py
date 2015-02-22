@@ -33,7 +33,7 @@ class Database(object):
         yielded pairs.
     @param minDistance: The C{int} minimum distance permitted between
         yielded pairs.
-    @param bucketFactor: A C{float} factor by which the distance between
+    @param distanceScale: A C{float} factor by which the distance between
         a landmark and a trig point is divided, to reduce sensitivity to small
         differences in distance.
     """
@@ -53,7 +53,7 @@ class Database(object):
 
     def __init__(self, landmarkClasses, trigPointClasses,
                  limitPerLandmark=None, maxDistance=None, minDistance=None,
-                 bucketFactor=None):
+                 distanceScale=None):
         self.landmarkClasses = (
             DEFAULT_LANDMARK_CLASSES if landmarkClasses is None
             else landmarkClasses)
@@ -74,12 +74,12 @@ class Database(object):
             self.DEFAULT_MIN_DISTANCE if minDistance is None
             else minDistance)
 
-        self.bucketFactor = (
-            self.DEFAULT_BUCKET_FACTOR if bucketFactor is None
-            else bucketFactor)
+        self.distanceScale = (
+            self.DEFAULT_BUCKET_FACTOR if distanceScale is None
+            else distanceScale)
 
-        if self.bucketFactor <= 0:
-            raise ValueError('bucketFactor must be > 0.')
+        if self.distanceScale <= 0:
+            raise ValueError('distanceScale must be > 0.')
 
         # It may look like self.d should be a defaultdict(list). But that
         # will not work because a database JSON save followed by a load
@@ -92,10 +92,10 @@ class Database(object):
         # Create instances of the landmark and trig point finder classes.
         self.landmarkFinders = []
         for landmarkClass in self.landmarkClasses:
-            self.landmarkFinders.append(landmarkClass(self.bucketFactor))
+            self.landmarkFinders.append(landmarkClass(self.distanceScale))
         self.trigPointFinders = []
         for trigPointClass in self.trigPointClasses:
-            self.trigPointFinders.append(trigPointClass(self.bucketFactor))
+            self.trigPointFinders.append(trigPointClass(self.distanceScale))
         self._initializeChecksum()
 
     def _initializeChecksum(self):
@@ -116,7 +116,7 @@ class Database(object):
             [f.NAME for f in trigPointFinders] +
             [f.SYMBOL for f in trigPointFinders] +
             map(str, (self.limitPerLandmark, self.maxDistance,
-                      self.minDistance, self.bucketFactor)))
+                      self.minDistance, self.distanceScale)))
 
     def _updateChecksum(self, strings):
         """
@@ -139,7 +139,7 @@ class Database(object):
             and the distance between them.
         """
         distance = int(((trigPoint.offset - landmark.offset)
-                        // self.bucketFactor))
+                        // self.distanceScale))
         return '%s:%s:%s' % (landmark.hashkey(), trigPoint.hashkey(),
                              distance)
 
@@ -229,7 +229,7 @@ class Database(object):
             'subjectCount': self.subjectCount,
             'totalResidues': self.totalResidues,
             'totalCoveredResidues': self.totalCoveredResidues,
-            'bucketFactor': self.bucketFactor,
+            'distanceScale': self.distanceScale,
         })
 
         return fp
@@ -287,7 +287,7 @@ class Database(object):
                     })
 
         return Result(scannedRead, matches, hashCount, significanceFraction,
-                      self.bucketFactor, nonMatchingHashes,
+                      self.distanceScale, nonMatchingHashes,
                       storeFullAnalysis=storeFullAnalysis)
 
     def save(self, fp=sys.stdout):
@@ -308,7 +308,7 @@ class Database(object):
             'totalResidues': self.totalResidues,
             'totalCoveredResidues': self.totalCoveredResidues,
             'subjectInfo': self.subjectInfo,
-            'bucketFactor': self.bucketFactor
+            'distanceScale': self.distanceScale
         }
         dump(state, fp)
 
@@ -348,7 +348,7 @@ class Database(object):
                             limitPerLandmark=state['limitPerLandmark'],
                             maxDistance=state['maxDistance'],
                             minDistance=state['minDistance'],
-                            bucketFactor=state['bucketFactor'])
+                            distanceScale=state['distanceScale'])
 
         # Monkey-patch the new database instance to restore its state.
         for attr in ('checksum', 'd', 'subjectCount', 'totalResidues',
@@ -494,7 +494,7 @@ class DatabaseSpecifier(object):
                 help='The minimum distance permitted between yielded pairs.')
 
             parser.add_argument(
-                '--bucketFactor', type=float,
+                '--distanceScale', type=float,
                 default=Database.DEFAULT_BUCKET_FACTOR,
                 help=('A factor by which the distance between a landmark and '
                       'a trig point is divided, to reduce sensitivity to small'
@@ -550,7 +550,7 @@ class DatabaseSpecifier(object):
 
             database = Database(landmarkClasses, trigClasses,
                                 args.limitPerLandmark, args.maxDistance,
-                                args.minDistance, args.bucketFactor)
+                                args.minDistance, args.distanceScale)
 
         if self._allowPopulation:
             for read in combineReads(args.databaseFasta,
@@ -565,7 +565,7 @@ class DatabaseSpecifier(object):
             limitPerLandmark=Database.DEFAULT_LIMIT_PER_LANDMARK,
             maxDistance=Database.DEFAULT_MAX_DISTANCE,
             minDistance=Database.DEFAULT_MIN_DISTANCE,
-            bucketFactor=Database.DEFAULT_BUCKET_FACTOR,
+            distanceScale=Database.DEFAULT_BUCKET_FACTOR,
             database=None, databaseFile=None,
             databaseFasta=None, databaseSequences=None):
         """
@@ -583,7 +583,7 @@ class DatabaseSpecifier(object):
             yielded pairs.
         @param minDistance: The C{int} minimum distance permitted between
             yielded pairs.
-        @param bucketFactor: A C{float} factor by which the distance between
+        @param distanceScale: A C{float} factor by which the distance between
             a landmark and a trig point is divided, to reduce sensitivity to
             small differences in distance.
         @param database: An instance of C{light.database.Database}.
@@ -631,7 +631,7 @@ class DatabaseSpecifier(object):
         commandLine.extend(['--limitPerLandmark', str(limitPerLandmark),
                             '--maxDistance', str(maxDistance),
                             '--minDistance', str(minDistance),
-                            '--bucketFactor', str(bucketFactor)])
+                            '--distanceScale', str(distanceScale)])
 
         if databaseFasta is not None:
             commandLine.extend(['--databaseFasta', databaseFasta])

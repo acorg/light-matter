@@ -48,11 +48,11 @@ class TestGOR4AlphaHelix(TestCase):
         The GOR4AlphaHelix landmark finder must find the two expected landmarks
         in a fragment of the APOAMICYANIN sequence from the GOR IV reference
         database. It must return the right length of the landmark, after a
-        bucketFactor has been applied
+        distanceScale has been applied
         """
         seq = 'DKATIPSESPFAAAEVADGAIVVDIAKMKYETPELHVKVGDTVTWINREA'
         read = AARead('id', seq)
-        landmark = GOR4AlphaHelix(bucketFactor=1.5)
+        landmark = GOR4AlphaHelix(distanceScale=1.5)
         result = list(landmark.find(read))
         # The GOR IV secondary structure prediction is
         # 'CCCCCCCCCCHHHHHHHCCHHHHHHHHHHHCCCCEEEEECCEEEEEEEEC'

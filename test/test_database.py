@@ -85,7 +85,7 @@ class TestDatabase(TestCase):
         database has a non-integer floating point bucket factor and the
         second feature is to the left of the first.
         """
-        db = Database([], [], bucketFactor=1.5)
+        db = Database([], [], distanceScale=1.5)
         landmark = Landmark('name', 'A', 20, 0)
         trigPoint = TrigPoint('name', 'B', 10)
         self.assertEqual('A:B:-7', db.key(landmark, trigPoint))
@@ -96,7 +96,7 @@ class TestDatabase(TestCase):
         database has a non-integer floating point bucket factor and the
         second feature is to the right of the first.
         """
-        db = Database([], [], bucketFactor=1.5)
+        db = Database([], [], distanceScale=1.5)
         landmark = Landmark('name', 'A', 20, 0)
         trigPoint = TrigPoint('name', 'B', 30)
         self.assertEqual('A:B:6', db.key(landmark, trigPoint))
@@ -252,10 +252,10 @@ class TestDatabase(TestCase):
 
     def testOneReadOneLandmarkOnePeakBucketFactor(self):
         """
-        If a bucketFactor is used, the right distance needs to be calculated.
-        The offsets are 10 AA apart, the bucketFactor should make that 2.
+        If a distanceScale is used, the right distance needs to be calculated.
+        The offsets are 10 AA apart, the distanceScale should make that 2.
         """
-        db = Database([AlphaHelix], [Peaks], bucketFactor=5.0)
+        db = Database([AlphaHelix], [Peaks], distanceScale=5.0)
         db.addSubject(AARead('id', 'FRRRFRRRFASA'))
         self.assertEqual(
             {
@@ -617,7 +617,7 @@ class TestDatabase(TestCase):
             'subjectCount': 1,
             'totalResidues': 15,
             'totalCoveredResidues': 11,
-            'bucketFactor': 1,
+            'distanceScale': 1,
         }
         self.assertEqual(expected, loads(out.getvalue()))
 
@@ -641,7 +641,7 @@ class TestDatabase(TestCase):
         non-default values for limitPerLandmark and maxDistance.
         """
         db = Database([], [], limitPerLandmark=3, maxDistance=9,
-                      minDistance=1, bucketFactor=6.0)
+                      minDistance=1, distanceScale=6.0)
         checksum = self._checksum([
             3,  # Limit per landmark.
             9,  # Max distance.
@@ -727,7 +727,7 @@ class TestDatabase(TestCase):
         parameters, a database with the correct parameters must result.
         """
         db = Database([], [], limitPerLandmark=16, maxDistance=17,
-                      minDistance=18, bucketFactor=19.0)
+                      minDistance=18, distanceScale=19.0)
         fp = StringIO()
         db.save(fp)
         fp.seek(0)
@@ -735,23 +735,23 @@ class TestDatabase(TestCase):
         self.assertEqual(16, result.limitPerLandmark)
         self.assertEqual(17, result.maxDistance)
         self.assertEqual(18, result.minDistance)
-        self.assertEqual(19.0, result.bucketFactor)
+        self.assertEqual(19.0, result.distanceScale)
 
     def testBucketFactorZeroValueError(self):
         """
-        If the bucketFactor is zero, a ValueError must be raised.
+        If the distanceScale is zero, a ValueError must be raised.
         """
-        error = 'bucketFactor must be > 0\\.'
+        error = 'distanceScale must be > 0\\.'
         self.assertRaisesRegexp(ValueError, error, Database, [], [],
-                                bucketFactor=0.0)
+                                distanceScale=0.0)
 
     def testBucketFactorLessThanZeroValueError(self):
         """
-        If the bucketFactor is < 0, a ValueError must be raised.
+        If the distanceScale is < 0, a ValueError must be raised.
         """
-        error = 'bucketFactor must be > 0\\.'
+        error = 'distanceScale must be > 0\\.'
         self.assertRaisesRegexp(ValueError, error, Database, [], [],
-                                bucketFactor=-1.0)
+                                distanceScale=-1.0)
 
     def testScan(self):
         """
@@ -759,7 +759,7 @@ class TestDatabase(TestCase):
         """
         subject = AARead('subject', 'FRRRFRRRFASAASA')
         db = Database([AlphaHelix], [Peaks], limitPerLandmark=16,
-                      maxDistance=10, minDistance=0, bucketFactor=1.0)
+                      maxDistance=10, minDistance=0, distanceScale=1.0)
         db.addSubject(subject)
         scannedSubject = db.scan(subject)
         self.assertIsInstance(scannedSubject, ScannedRead)
@@ -771,7 +771,7 @@ class TestDatabase(TestCase):
         """
         subject = AARead('subject', 'FRRRFRRRFASAASA')
         db = Database([AlphaHelix], [Peaks], limitPerLandmark=16,
-                      maxDistance=10, minDistance=0, bucketFactor=1.0)
+                      maxDistance=10, minDistance=0, distanceScale=1.0)
         db.addSubject(subject)
         scannedSubject = db.scan(subject)
         pairs = list(db.getScannedPairs(scannedSubject))
@@ -789,7 +789,7 @@ class TestDatabase(TestCase):
         subject = AARead('subject', 'FRRRFRRRFASAASA')
         db = Database([AlphaHelix, BetaStrand], [Peaks, Troughs],
                       limitPerLandmark=16, maxDistance=10, minDistance=0,
-                      bucketFactor=1)
+                      distanceScale=1)
         db.addSubject(subject)
         db.print_(fp)
         expected = (
@@ -815,7 +815,7 @@ class TestDatabase(TestCase):
         subject = AARead('id', 'FRRRFRRRFASAASA')
         db = Database([AlphaHelix, BetaStrand], [Peaks, Troughs],
                       limitPerLandmark=16, maxDistance=10, minDistance=0,
-                      bucketFactor=1)
+                      distanceScale=1)
         db.addSubject(subject)
         db.print_(fp, printHashes=True)
         expected = (

@@ -2,6 +2,7 @@
 
 import sys
 import argparse
+from os.path import dirname, join
 from time import time
 from scipy import stats
 import matplotlib.pyplot as plt
@@ -159,13 +160,14 @@ BITSCORES = {'2J7W': [1328.15, 899.427, 46.2098, 0, 21.9422, 0, 0, 0, 0, 0,
              }
 
 
-def plot(x, y, read, scoreType, outputFile):
+def plot(x, y, read, scoreType, outputDir):
     """
     Make a scatterplot of the test results.
 
     @param x: a C{list} of the x coordinates (light matter score).
     @param y: a C{list} of the y coordinates (either z-score or bit score).
-    @param filename: the C{str} filename where the image should be saved to.
+    @param scoreType: A C{str} Y-axis title indicating the type of score.
+    @param outputDir: the C{str} directory where the image should be saved to.
     """
     plt.rcParams['font.family'] = 'Helvetica'
     fig = plt.figure(figsize=(7, 5))
@@ -194,10 +196,7 @@ def plot(x, y, read, scoreType, outputFile):
     ax.spines['bottom'].set_linewidth(0.5)
     ax.spines['left'].set_linewidth(0.5)
 
-    outputDir = '/'.join(outputFile.split('/')[0:-1])
-    if len(outputDir) == 0:
-        outputDir = '.'
-    fig.savefig('%s/%s-%s.png' % (outputDir, read, scoreType))
+    fig.savefig(join(outputDir, '%s-%s.png' % (read, scoreType)))
 
 
 class WriteMarkdownFile(object):
@@ -362,11 +361,11 @@ if __name__ == '__main__':
                 score = 0
             fiveSixList[read].append(score)
 
+    outputDir = dirname(args.outputFile) or '.'
+
     for read in fiveSixList:
-        plot(fiveSixList[read], ZSCORES[read], read, 'Z-score',
-             args.outputFile)
-        plot(fiveSixList[read], BITSCORES[read], read, 'Bit-score',
-             args.outputFile)
+        plot(fiveSixList[read], ZSCORES[read], read, 'Z-score', outputDir)
+        plot(fiveSixList[read], BITSCORES[read], read, 'Bit-score', outputDir)
 
     # close file
     writer.close()

@@ -1,6 +1,8 @@
 from unittest import TestCase
 
 from dark.reads import Reads, AARead
+
+from light.database import Database
 from light.performance.query import queryDatabase
 from light.landmarks import AlphaHelix
 from light.trig import Peaks
@@ -19,11 +21,12 @@ class TestQueryDatabase(TestCase):
         """
         No matches should be found if the database is empty.
         """
+        database = Database([AlphaHelix], [Peaks], maxDistance=11)
         subjects = Reads()
         queries = Reads()
         queries.add(AARead('query', 'FRRRFRRRFASAASA'))
-        result = queryDatabase(subjects, queries, [AlphaHelix], [Peaks],
-                               maxDistance=11, significanceFraction=0.1)
+        result = queryDatabase(subjects, queries, database,
+                               significanceFraction=0.1)
         self.assertEqual({}, result)
 
     def testFindOneMatchingSignificant(self):
@@ -31,12 +34,13 @@ class TestQueryDatabase(TestCase):
         One matching and significant subject must be found if the
         significanceFraction is sufficiently low.
         """
+        database = Database([AlphaHelix], [Peaks], maxDistance=11)
         subjects = Reads()
         subjects.add(AARead('subject', 'AFRRRFRRRFASAASA'))
         queries = Reads()
         queries.add(AARead('query', 'FRRRFRRRFASAASA'))
-        result = queryDatabase(subjects, queries, [AlphaHelix], [Peaks],
-                               maxDistance=11, significanceFraction=0)
+        result = queryDatabase(subjects, queries, database,
+                               significanceFraction=0.1)
         self.assertEqual(
             {
                 'query': {

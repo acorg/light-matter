@@ -22,7 +22,7 @@ class TestPlotHashesInSubjectAndRead(TestCase):
                                             significanceFraction=0.25,
                                             maxDistance=10, minDistance=1,
                                             limitPerLandmark=10,
-                                            distanceScale=1.0)
+                                            distanceBase=1.0)
         self.assertEqual(0, len(list(hashes.matchingHashes)))
         self.assertEqual(0, len(list(hashes.queryHashes)))
         self.assertEqual(0, len(list(hashes.subjectHashes)))
@@ -41,7 +41,7 @@ class TestPlotHashesInSubjectAndRead(TestCase):
                                             significanceFraction=0.25,
                                             maxDistance=50, minDistance=1,
                                             limitPerLandmark=10,
-                                            distanceScale=1.0)
+                                            distanceBase=1.0)
         self.assertEqual(0, len(list(hashes.matchingHashes)))
         self.assertEqual(1, len(list(hashes.queryHashes)))
         self.assertEqual(1, len(list(hashes.subjectHashes)))
@@ -60,7 +60,7 @@ class TestPlotHashesInSubjectAndRead(TestCase):
                                             significanceFraction=0.01,
                                             maxDistance=50, minDistance=1,
                                             limitPerLandmark=10,
-                                            distanceScale=1.0)
+                                            distanceBase=1.0)
         matchingHashesCount = sum([len(bin_) for bin_ in
                                    hashes.matchingHashes])
         self.assertEqual(2, matchingHashesCount)
@@ -81,7 +81,7 @@ class TestPlotHashesInSubjectAndRead(TestCase):
                                             significanceFraction=0.01,
                                             maxDistance=50, minDistance=1,
                                             limitPerLandmark=10,
-                                            distanceScale=1.0)
+                                            distanceBase=1.0)
         matchingHashesCount = sum([len(bin_) for bin_ in
                                    hashes.matchingHashes])
         self.assertEqual(1, matchingHashesCount)

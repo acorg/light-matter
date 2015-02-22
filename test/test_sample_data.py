@@ -22,7 +22,7 @@ class TestParams(TestCase):
             {
                 'subjectCount': 5,
                 'totalCoveredResidues': 62,
-                'checksum': 3807596652,
+                'checksum': 849636647,
                 'limitPerLandmark': Database.DEFAULT_LIMIT_PER_LANDMARK,
                 'trigPointClasses': [
                     'AminoAcids',
@@ -37,7 +37,7 @@ class TestParams(TestCase):
                 ],
                 'maxDistance': Database.DEFAULT_MAX_DISTANCE,
                 'minDistance': Database.DEFAULT_MIN_DISTANCE,
-                'distanceScale': Database.DEFAULT_BUCKET_FACTOR,
+                'distanceBase': 1.0,
             },
             loads(PARAMS))
 

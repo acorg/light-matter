@@ -1,3 +1,4 @@
+from light.distance import scale
 from light.features import Landmark, Finder
 
 
@@ -34,12 +35,12 @@ class GOR4Coil(Finder):
             else:
                 if count:
                     # We were in a string of C's, but it has just ended.
-                    length = int(count // self._distanceScale)
+                    length = scale(count, self._distanceBase)
                     yield Landmark(self.NAME, self.SYMBOL, start, length,
                                    length)
                     count = 0
 
         if count:
             # We reached the end of the string still in a coil.
-            length = int(count // self._distanceScale)
+            length = scale(count, self._distanceBase)
             yield Landmark(self.NAME, self.SYMBOL, start, length, length)

@@ -248,10 +248,10 @@ class Finder(object):
     """
     Holds information about landmark or trigPoint finders.
 
-    @param distanceScale: A C{float} by which the length of the landmark or
-        trigPoint will be divided. The default of 1.0 set below is only used by
+    @param distanceBase: A C{float} by which the length of the landmark or
+        trigPoint will be divided. The default of 1.1 set below is only used by
         the tests. Otherwise, it is set by the light.database.Database class.
     """
 
-    def __init__(self, distanceScale=1.0):
-        self._distanceScale = distanceScale
+    def __init__(self, distanceBase=1.1):
+        self._distanceBase = distanceBase

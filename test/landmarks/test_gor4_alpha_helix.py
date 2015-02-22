@@ -2,7 +2,9 @@ from unittest import TestCase
 
 from dark.reads import AARead
 
+from light.distance import scale
 from light.features import Landmark
+from light.database import Database
 from light.landmarks.gor4_alpha_helix import GOR4AlphaHelix
 
 
@@ -37,25 +39,30 @@ class TestGOR4AlphaHelix(TestCase):
         read = AARead('id', seq)
         landmark = GOR4AlphaHelix()
         result = list(landmark.find(read))
+        len7 = scale(7, Database.DEFAULT_DISTANCE_BASE)
+        len11 = scale(11, Database.DEFAULT_DISTANCE_BASE)
         # The GOR IV secondary structure prediction is
         # 'CCCCCCCCCCHHHHHHHCCHHHHHHHHHHHCCCCEEEEECCEEEEEEEEC'
-        self.assertEqual([Landmark('GOR4AlphaHelix', 'GA', 10, 7, 7),
-                          Landmark('GOR4AlphaHelix', 'GA', 19, 11, 11)],
+        self.assertEqual([Landmark('GOR4AlphaHelix', 'GA', 10, len7, len7),
+                          Landmark('GOR4AlphaHelix', 'GA', 19, len11, len11)],
                          result)
 
-    def testApoamicyaninTwoAlphaHelixsWithBucketFactor(self):
+    def testApoamicyaninTwoAlphaHelixsWithNonDefaultDistanceBase(self):
         """
         The GOR4AlphaHelix landmark finder must find the two expected landmarks
         in a fragment of the APOAMICYANIN sequence from the GOR IV reference
         database. It must return the right length of the landmark, after a
-        distanceScale has been applied
+        non-default distanceBase has been applied
         """
         seq = 'DKATIPSESPFAAAEVADGAIVVDIAKMKYETPELHVKVGDTVTWINREA'
         read = AARead('id', seq)
-        landmark = GOR4AlphaHelix(distanceScale=1.5)
+        distanceBase = 1.5
+        landmark = GOR4AlphaHelix(distanceBase=distanceBase)
         result = list(landmark.find(read))
+        len7 = scale(7, distanceBase)
+        len11 = scale(11, distanceBase)
         # The GOR IV secondary structure prediction is
         # 'CCCCCCCCCCHHHHHHHCCHHHHHHHHHHHCCCCEEEEECCEEEEEEEEC'
-        self.assertEqual([Landmark('GOR4AlphaHelix', 'GA', 10, 4, 4),
-                          Landmark('GOR4AlphaHelix', 'GA', 19, 7, 7)],
+        self.assertEqual([Landmark('GOR4AlphaHelix', 'GA', 10, len7, len7),
+                          Landmark('GOR4AlphaHelix', 'GA', 19, len11, len11)],
                          result)

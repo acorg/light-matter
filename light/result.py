@@ -106,7 +106,6 @@ class Result(object):
                     'landmarkLength': match['landmark'].length,
                     'landmarkName': match['landmark'].name,
                     'readOffset': match['landmark'].offset,
-                    'subjectLength': match['subjectLength'],
                     'subjectOffsets': match['subjectOffsets'],
                     'trigPointName': match['trigPoint'].name,
                 })

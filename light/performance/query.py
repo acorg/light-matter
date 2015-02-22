@@ -1,46 +1,31 @@
 from collections import defaultdict
 
-from dark.reads import Reads
 from dark.fasta import FastaReads
-from light.database import Database
 
 
-def queryDatabase(databaseFile, queryFile, landmarkFinders, trigFinders,
-                  limitPerLandmark=None, maxDistance=None, minDistance=None,
-                  significanceFraction=None, bucketFactor=None):
+def queryDatabase(subjects, queries, database, significanceFraction=None):
     """
-    Build a database, query it, return results.
+    Add subjects to a database, query it, return results.
 
-    @param databaseFile: Either an instance of C{dark.reads.Reads} or a C{str}
+    @param subjects: Either an instance of C{dark.reads.Reads} or a C{str}
         filename with sequences that should be turned into a database.
-    @param queryFile: Either an instance of C{dark.reads.Reads} or a C{str}
+    @param queries: Either an instance of C{dark.reads.Reads} or a C{str}
         filename with sequences that should be looked up in the database.
-    @param landmarkFinders: a C{list} of landmarkFinders.
-    @param landmarkFinders: a C{list} of landmarkFinders.
-    @param limitPerLandmark: A limit on the number of pairs to yield per
-        landmark per read.
-    @param maxDistance: The maximum distance permitted between yielded pairs.
-    @param minDistance: The minimum distance permitted between yielded pairs.
-    @param bucketFactor: A C{float} factor by which the distance between
-        a landmark and a trig point is divided, to reduce sensitivity to small
-        differences in distance.
+    @param database: A C{light.database.Database} instance.
+    @param significanceFraction: The C{float} fraction of all (landmark,
+        trig point) pairs for a scannedRead that need to fall into the
+        same histogram bucket for that bucket to be considered a
+        significant match with a database title.
     @return: A C{dict} whose keys are query ids and whose values are C{dict}s
         that map subject ids to scores. I.e., for each read we provide a
         C{dict} showing what subjects it matched, and with what score.
     """
-    database = Database(landmarkFinders, trigFinders,
-                        limitPerLandmark=limitPerLandmark,
-                        maxDistance=maxDistance, minDistance=minDistance,
-                        bucketFactor=bucketFactor)
-    if isinstance(queryFile, Reads):
-        queries = queryFile
-    else:
-        queries = FastaReads(queryFile)
+    if isinstance(queries, basestring):
+        queries = FastaReads(queries)
 
-    if isinstance(databaseFile, Reads):
-        subjects = databaseFile
-    else:
-        subjects = FastaReads(databaseFile)
+    if isinstance(subjects, basestring):
+        subjects = FastaReads(subjects)
+
     map(database.addSubject, subjects)
 
     resultDict = defaultdict(dict)

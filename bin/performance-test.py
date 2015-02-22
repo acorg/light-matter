@@ -4,12 +4,10 @@ import sys
 import argparse
 from time import time
 from scipy import stats
-from os.path import basename
 import matplotlib.pyplot as plt
 from collections import defaultdict
 
-from light.landmarks import findLandmark, ALL_LANDMARK_CLASSES
-from light.trig import findTrigPoint, ALL_TRIG_CLASSES
+from light.database import DatabaseSpecifier
 from light.performance.query import queryDatabase
 
 """
@@ -29,20 +27,20 @@ Test5 and Test6: The polymerase sequences described in Cerny et al., 2014.
 
 # GLOBALS:
 # filenames
-T1DB = '../performance/database/t1-db.fasta'
-T1READ = '../performance/read/t1-read.fasta'
+T1DB = 'performance/database/t1-db.fasta'
+T1READ = 'performance/read/t1-read.fasta'
 
-T2DB = '../performance/database/t2-db.fasta'
-T2READ = '../performance/read/t2-read.fasta'
+T2DB = 'performance/database/t2-db.fasta'
+T2READ = 'performance/read/t2-read.fasta'
 
-T3DB = '../performance/database/t3-db.fasta'
-T3READ = '../performance/read/t3-read.fasta'
+T3DB = 'performance/database/t3-db.fasta'
+T3READ = 'performance/read/t3-read.fasta'
 
-T4DB = '../performance/database/t4-db.fasta'
-T4READ = '../performance/read/t4-read.fasta'
+T4DB = 'performance/database/t4-db.fasta'
+T4READ = 'performance/read/t4-read.fasta'
 
-T56DB = '../performance/database/polymerase-db.fasta'
-T56READ = '../performance/read/polymerase-queries.fasta'
+T56DB = 'performance/database/polymerase-db.fasta'
+T56READ = 'performance/read/polymerase-queries.fasta'
 
 # blast and z-scores
 ORDER = ['2J7W', '4K6M', '1S49', '1NB6', '3OLB', '1XR7', '1XR6', '3CDW',
@@ -215,19 +213,18 @@ class WriteMarkdownFile(object):
     def open(self):
         self.openedFile = open(self.outputFile, 'w')
 
-    def writeHeader(self, landmark, trig, maxDistance, minDistance,
+    def writeHeader(self, landmarkNames, trigNames, maxDistance, minDistance,
                     limitPerLandmark, bucketFactor):
         self.openedFile.write('Title:\nDate:\nCategory: light-matter\nTags: '
                               'light-matter, benchmarking\nSummary: '
                               'Performance and sensitivity testing\n\n'
-                              '#####Database arguments:</b> Landmarks: %s, '
-                              'trig points: %s, maxDistance: %s, '
-                              'minDistance: %s '
+                              '#####Database arguments:</b> '
+                              'Landmarks: %s, trig points: %s, '
+                              'maxDistance: %s, minDistance: %s '
                               'limitPerLandmark: %s, bucketFactor %f\n\n' %
-                              ([i.NAME for i in landmarkClasses],
-                               [i.NAME for i in trigClasses],
-                               args.maxDistance, args.minDistance,
-                               args.limitPerLandmark, args.bucketFactor))
+                              (landmarkNames, trigNames,
+                               maxDistance, minDistance,
+                               limitPerLandmark, bucketFactor))
 
     def writeTest(self, testName, testResult, time, readNr):
         """
@@ -265,86 +262,34 @@ if __name__ == '__main__':
     startTime = time()
 
     parser = argparse.ArgumentParser(
-        description='A script to run a set of performance and sensitivity '
-        'tests and generates a HTML file with the results.')
+        description=('A script to run a set of performance and sensitivity '
+                     'tests and generates a HTML file with the results.'))
 
     parser.add_argument(
         '--outputFile', required=True, default='index.md',
         help='The filename where the output will be written to.')
 
     parser.add_argument(
-        '--landmark', action='append', type=str, dest='landmarkFinderNames',
-        choices=sorted(klass.NAME for klass in ALL_LANDMARK_CLASSES),
-        help='The name of a landmark finder to use. May be specified '
-        'multiple times.')
-
-    parser.add_argument(
-        '--trig', action='append', type=str, dest='trigFinderNames',
-        choices=sorted(klass.NAME for klass in ALL_TRIG_CLASSES),
-        help='The name of a trig point finder to use. May be specified '
-        'multiple times.')
-
-    parser.add_argument(
-        '--limitPerLandmark', type=int, default=None,
-        help='A limit on the number of pairs to yield per landmark per read.')
-
-    parser.add_argument(
-        '--maxDistance', type=int, default=None,
-        help='The maximum distance permitted between yielded pairs.')
-    parser.add_argument(
-        '--minDistance', type=int, default=None,
-        help='The minimum distance permitted between yielded pairs.')
-
-    parser.add_argument(
-        '--bucketFactor', type=float, default=1.1,
-        help=('A factor by which the distance between a landmark and a trig '
-              'point is divided, to reduce sensitivity to small differences '
-              'in distance.'))
+        '--significanceFraction', type=float, default=None,
+        help='The (float) fraction of all (landmark, trig point) pairs for a '
+        'scannedRead that need to fall into the same histogram bucket for '
+        'that bucket to be considered a significant match with a database '
+        'title.')
 
     parser.add_argument(
         '--verbose', default=False, action='store_true',
-        help='If True, information about each matching read will be written '
-        'out.')
+        help=('If True, information about each matching read will be written '
+              'out.'))
+
+    databaseSpecifier = DatabaseSpecifier(allowInMemory=False)
+    databaseSpecifier.addArgsToParser(parser)
 
     args = parser.parse_args()
-
-    landmarkFinderNames = (args.landmarkFinderNames or
-                           [klass.NAME for klass in
-                            ALL_LANDMARK_CLASSES])
-    trigFinderNames = (args.trigFinderNames or
-                       [klass.NAME for klass in ALL_TRIG_CLASSES])
-
-    if len(landmarkFinderNames) + len(trigFinderNames) == 0:
-        print >>sys.stderr, ('You must specify either landmark or trig point '
-                             'finders to find.\n%s') % parser.format_usage()
-        sys.exit(1)
-
-    # Make sure all landmark finders requested exist.
-    landmarkClasses = []
-    for landmarkFinderName in landmarkFinderNames:
-        landmarkClass = findLandmark(landmarkFinderName)
-        if landmarkClass:
-            landmarkClasses.append(landmarkClass)
-        else:
-            print >>sys.stderr, '%s: Could not find landmark finder %r.' % (
-                basename(sys.argv[0]), landmarkFinderName)
-            sys.exit(1)
-
-    # Make sure all trig point finders requested exist.
-    trigClasses = []
-    for trigFinderName in trigFinderNames:
-        trigClass = findTrigPoint(trigFinderName)
-        if trigClass:
-            trigClasses.append(trigClass)
-        else:
-            print '%s: Could not find trig point finder %r.' % (
-                basename(sys.argv[0]), trigFinderName)
-            sys.exit(1)
 
     # start writing to file
     writer = WriteMarkdownFile(args.outputFile, args.verbose)
     writer.open()
-    writer.writeHeader(landmarkFinderNames, trigFinderNames,
+    writer.writeHeader(args.landmarkFinderNames, args.trigFinderNames,
                        args.maxDistance, args.minDistance,
                        args.limitPerLandmark, args.bucketFactor)
 
@@ -352,10 +297,9 @@ if __name__ == '__main__':
     # 1) A complete sequence must match itself:
     oneStart = time()
     print >>sys.stderr, '1) A complete sequence must find itself.'
-    oneResult = queryDatabase(T1DB, T1READ, landmarkClasses,
-                              trigClasses, args.limitPerLandmark,
-                              args.maxDistance, args.minDistance,
-                              args.bucketFactor)
+    database = databaseSpecifier.getDatabaseFromArgs(args)
+    oneResult = queryDatabase(T1DB, T1READ, database,
+                              significanceFraction=args.significanceFraction)
     oneTime = time() - oneStart
     writer.writeTest('1) A complete sequence must match itself', oneResult,
                      oneTime, 1)
@@ -363,10 +307,9 @@ if __name__ == '__main__':
     # 2) Reads made from a sequence must match itself:
     twoStart = time()
     print >>sys.stderr, '2) Reads made from a sequence must match itself.'
-    twoResult = queryDatabase(T2DB, T2READ, landmarkClasses,
-                              trigClasses, args.limitPerLandmark,
-                              args.maxDistance, args.minDistance,
-                              args.bucketFactor)
+    database = databaseSpecifier.getDatabaseFromArgs(args)
+    twoResult = queryDatabase(T2DB, T2READ, database,
+                              significanceFraction=args.significanceFraction)
     twoTime = time() - twoStart
     writer.writeTest('2) Reads made from a sequence must match itself',
                      twoResult, twoTime, 9)
@@ -374,10 +317,9 @@ if __name__ == '__main__':
     # 3) A sequence must find related sequences:
     threeStart = time()
     print >>sys.stderr, '3) A sequence must match related sequences.'
-    threeResult = queryDatabase(T3DB, T3READ, landmarkClasses,
-                                trigClasses, args.limitPerLandmark,
-                                args.maxDistance, args.minDistance,
-                                args.bucketFactor)
+    database = databaseSpecifier.getDatabaseFromArgs(args)
+    threeResult = queryDatabase(T3DB, T3READ, database,
+                                significanceFraction=args.significanceFraction)
     threeTime = time() - threeStart
     writer.writeTest('3) A sequence must find related sequences', threeResult,
                      threeTime, 1)
@@ -386,10 +328,9 @@ if __name__ == '__main__':
     fourStart = time()
     print >>sys.stderr, ('4) Reads made from a sequence must match related '
                          'sequences.')
-    fourResult = queryDatabase(T4DB, T4READ, landmarkClasses,
-                               trigClasses, args.limitPerLandmark,
-                               args.maxDistance, args.minDistance,
-                               args.bucketFactor)
+    database = databaseSpecifier.getDatabaseFromArgs(args)
+    fourResult = queryDatabase(T4DB, T4READ, database,
+                               significanceFraction=args.significanceFraction)
     fourTime = time() - fourStart
     fourTitle = '4) Reads made from a sequence must match related sequences'
     writer.writeTest(fourTitle, fourResult, fourTime, 7)
@@ -401,17 +342,17 @@ if __name__ == '__main__':
                          'correlate.')
     print >>sys.stderr, ('6) The BLASTp bit scores and light matter scores '
                          'must correlate.')
-    fiveSixResult = queryDatabase(T56DB, T56READ, landmarkClasses,
-                                  trigClasses, args.limitPerLandmark,
-                                  args.maxDistance, args.minDistance,
-                                  args.bucketFactor)
+    database = databaseSpecifier.getDatabaseFromArgs(args)
+    fiveSixResult = queryDatabase(
+        T56DB, T56READ, database,
+        significanceFraction=args.significanceFraction)
     fiveSixTime = time() - fiveSixStart
     sTitle = '6) The BLASTp bit scores and light matter scores must correlate'
     writer.writeTest('5) The Z-scores and light matter score must correlate',
                      fiveSixResult, fiveSixTime, 20)
     writer.writeTest(sTitle, fiveSixResult, fiveSixTime, 20)
 
-    # prepare results for plotting, plot
+    # Prepare results for plotting, and plot.
     fiveSixList = defaultdict(list)
     for read in fiveSixResult:
         for subjectName in ORDER:

@@ -1,8 +1,8 @@
 from dark.aa import PROPERTY_DETAILS as PD
-from light.features import TrigPoint
+from light.features import TrigPoint, Finder
 
 
-class IndividualTroughs(object):
+class IndividualTroughs(Finder):
     """
     A class for computing statistics based on individual amino acid property
     troughs.

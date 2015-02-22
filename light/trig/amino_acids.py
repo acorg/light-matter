@@ -1,7 +1,7 @@
-from light.features import TrigPoint
+from light.features import TrigPoint, Finder
 
 
-class AminoAcids(object):
+class AminoAcids(Finder):
     """
     A class for computing trig points based on the position of a specific
     amino acid.

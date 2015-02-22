@@ -1,8 +1,8 @@
 from dark.aa import PROPERTY_DETAILS
-from light.features import TrigPoint
+from light.features import TrigPoint, Finder
 
 
-class Peaks(object):
+class Peaks(Finder):
     """
     A class for computing statistics based on amino acid property peaks.
     """

@@ -214,17 +214,17 @@ class WriteMarkdownFile(object):
         self.openedFile = open(self.outputFile, 'w')
 
     def writeHeader(self, landmarkNames, trigNames, maxDistance, minDistance,
-                    limitPerLandmark, bucketFactor):
+                    limitPerLandmark, distanceScale):
         self.openedFile.write('Title:\nDate:\nCategory: light-matter\nTags: '
                               'light-matter, benchmarking\nSummary: '
                               'Performance and sensitivity testing\n\n'
                               '#####Database arguments:</b> '
                               'Landmarks: %s, trig points: %s, '
                               'maxDistance: %s, minDistance: %s '
-                              'limitPerLandmark: %s, bucketFactor %f\n\n' %
+                              'limitPerLandmark: %s, distanceScale %f\n\n' %
                               (landmarkNames, trigNames,
                                maxDistance, minDistance,
-                               limitPerLandmark, bucketFactor))
+                               limitPerLandmark, distanceScale))
 
     def writeTest(self, testName, testResult, time, readNr):
         """
@@ -291,7 +291,7 @@ if __name__ == '__main__':
     writer.open()
     writer.writeHeader(args.landmarkFinderNames, args.trigFinderNames,
                        args.maxDistance, args.minDistance,
-                       args.limitPerLandmark, args.bucketFactor)
+                       args.limitPerLandmark, args.distanceScale)
 
     # run tests
     # 1) A complete sequence must match itself:

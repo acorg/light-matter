@@ -58,3 +58,23 @@ class TestGOR4Coil(TestCase):
                           Landmark('GOR4Coil', 'GC', 39, 2, 2),
                           Landmark('GOR4Coil', 'GC', 49, 1, 1)],
                          result)
+
+    def testApoamicyaninFiveCoilsWithBucketFactor(self):
+        """
+        The GOR4Coil landmark finder must find the five expected landmarks
+        in a fragment of the APOAMICYANIN sequence from the GOR IV reference
+        database. It must return the right lenght of the landmark after a
+        distanceScale has been applied.
+        """
+        seq = 'DKATIPSESPFAAAEVADGAIVVDIAKMKYETPELHVKVGDTVTWINREA'
+        read = AARead('id', seq)
+        landmark = GOR4Coil(distanceScale=1.5)
+        result = list(landmark.find(read))
+        # The GOR IV secondary structure prediction is
+        # 'CCCCCCCCCCHHHHHHHCCHHHHHHHHHHHCCCCEEEEECCEEEEEEEEC'.
+        self.assertEqual([Landmark('GOR4Coil', 'GC', 0, 6, 6),
+                          Landmark('GOR4Coil', 'GC', 17, 1, 1),
+                          Landmark('GOR4Coil', 'GC', 30, 2, 2),
+                          Landmark('GOR4Coil', 'GC', 39, 1, 1),
+                          Landmark('GOR4Coil', 'GC', 49, 0, 0)],
+                         result)

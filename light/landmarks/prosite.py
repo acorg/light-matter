@@ -3,10 +3,13 @@ from json import loads
 from os.path import dirname, join
 
 import light
-from light.features import Landmark
+from light.features import Landmark, Finder
 
 
-class Prosite(object):
+_DB_FILE = join(dirname(light.__file__), '..', 'data', 'prosite-20-110.json')
+
+
+class Prosite(Finder):
     """
     A class for computing statistics based on prosite motifs. The prosite
     database is available at:
@@ -14,16 +17,17 @@ class Prosite(object):
     An explanation about the fields and structure of the database is available
     at: http://prosite.expasy.org/prosuser.html
 
-    @param databaseFile: the C{str} name of the prosite database file.
+    @param distanceScale: A C{float} by which the length of the landmark or
+        trigPoint will be divided. The default of 1.0 set below is only used by
+        the tests. Otherwise, it is set by the light.database.Database class.
     """
     NAME = 'Prosite'
     SYMBOL = 'PS'
 
-    def __init__(self, databaseFile=None):
-        dbFile = databaseFile or join(dirname(light.__file__), '..', 'data',
-                                      'prosite-20-110.json')
+    def __init__(self, distanceScale=1.0):
+        Finder.__init__(self, distanceScale)
         self.database = []
-        with open(dbFile) as fp:
+        with open(_DB_FILE) as fp:
             for line in fp:
                 motif = loads(line)
                 regex = re.compile(motif['pattern'])

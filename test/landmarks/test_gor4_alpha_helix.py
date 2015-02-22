@@ -42,3 +42,20 @@ class TestGOR4AlphaHelix(TestCase):
         self.assertEqual([Landmark('GOR4AlphaHelix', 'GA', 10, 7, 7),
                           Landmark('GOR4AlphaHelix', 'GA', 19, 11, 11)],
                          result)
+
+    def testApoamicyaninTwoAlphaHelixsWithBucketFactor(self):
+        """
+        The GOR4AlphaHelix landmark finder must find the two expected landmarks
+        in a fragment of the APOAMICYANIN sequence from the GOR IV reference
+        database. It must return the right length of the landmark, after a
+        distanceScale has been applied
+        """
+        seq = 'DKATIPSESPFAAAEVADGAIVVDIAKMKYETPELHVKVGDTVTWINREA'
+        read = AARead('id', seq)
+        landmark = GOR4AlphaHelix(distanceScale=1.5)
+        result = list(landmark.find(read))
+        # The GOR IV secondary structure prediction is
+        # 'CCCCCCCCCCHHHHHHHCCHHHHHHHHHHHCCCCEEEEECCEEEEEEEEC'
+        self.assertEqual([Landmark('GOR4AlphaHelix', 'GA', 10, 4, 4),
+                          Landmark('GOR4AlphaHelix', 'GA', 19, 7, 7)],
+                         result)

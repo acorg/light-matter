@@ -8,6 +8,7 @@ from operator import attrgetter
 
 from dark.fasta import combineReads
 
+from light.distance import scale
 from light.reads import ScannedRead
 from light.result import Result
 from light.landmarks import (
@@ -33,9 +34,9 @@ class Database(object):
         yielded pairs.
     @param minDistance: The C{int} minimum distance permitted between
         yielded pairs.
-    @param distanceScale: A C{float} factor by which the distance between
-        a landmark and a trig point is divided, to reduce sensitivity to small
-        differences in distance.
+    @param distanceBase: The distance between a landmark and a trig point is
+        scaled to be its logarithm using this C{float} base. This reduces
+        sensitivity to relatively small differences in distance.
     """
 
     # Database construction and look-up defaults. See explanations in
@@ -43,7 +44,7 @@ class Database(object):
     DEFAULT_LIMIT_PER_LANDMARK = 10
     DEFAULT_MAX_DISTANCE = 200
     DEFAULT_MIN_DISTANCE = 1
-    DEFAULT_BUCKET_FACTOR = 1  # Should be >1. Can we use a float?
+    DEFAULT_DISTANCE_BASE = 1.1
 
     # The default fraction of all (landmark, trig point) pairs for a
     # scannedRead that need to fall into the same offset delta histogram
@@ -53,7 +54,7 @@ class Database(object):
 
     def __init__(self, landmarkClasses, trigPointClasses,
                  limitPerLandmark=None, maxDistance=None, minDistance=None,
-                 distanceScale=None):
+                 distanceBase=None):
         self.landmarkClasses = (
             DEFAULT_LANDMARK_CLASSES if landmarkClasses is None
             else landmarkClasses)
@@ -74,12 +75,12 @@ class Database(object):
             self.DEFAULT_MIN_DISTANCE if minDistance is None
             else minDistance)
 
-        self.distanceScale = (
-            self.DEFAULT_BUCKET_FACTOR if distanceScale is None
-            else distanceScale)
+        self.distanceBase = (
+            self.DEFAULT_DISTANCE_BASE if distanceBase is None
+            else distanceBase)
 
-        if self.distanceScale <= 0:
-            raise ValueError('distanceScale must be > 0.')
+        if self.distanceBase <= 0:
+            raise ValueError('distanceBase must be > 0.')
 
         # It may look like self.d should be a defaultdict(list). But that
         # will not work because a database JSON save followed by a load
@@ -92,10 +93,10 @@ class Database(object):
         # Create instances of the landmark and trig point finder classes.
         self.landmarkFinders = []
         for landmarkClass in self.landmarkClasses:
-            self.landmarkFinders.append(landmarkClass(self.distanceScale))
+            self.landmarkFinders.append(landmarkClass(self.distanceBase))
         self.trigPointFinders = []
         for trigPointClass in self.trigPointClasses:
-            self.trigPointFinders.append(trigPointClass(self.distanceScale))
+            self.trigPointFinders.append(trigPointClass(self.distanceBase))
         self._initializeChecksum()
 
     def _initializeChecksum(self):
@@ -116,7 +117,7 @@ class Database(object):
             [f.NAME for f in trigPointFinders] +
             [f.SYMBOL for f in trigPointFinders] +
             map(str, (self.limitPerLandmark, self.maxDistance,
-                      self.minDistance, self.distanceScale)))
+                      self.minDistance, self.distanceBase)))
 
     def _updateChecksum(self, strings):
         """
@@ -138,8 +139,7 @@ class Database(object):
         @return: A C{str} key based on the landmark, the trig point,
             and the distance between them.
         """
-        distance = int(((trigPoint.offset - landmark.offset)
-                        // self.distanceScale))
+        distance = scale(trigPoint.offset - landmark.offset, self.distanceBase)
         return '%s:%s:%s' % (landmark.hashkey(), trigPoint.hashkey(),
                              distance)
 
@@ -229,7 +229,7 @@ class Database(object):
             'subjectCount': self.subjectCount,
             'totalResidues': self.totalResidues,
             'totalCoveredResidues': self.totalCoveredResidues,
-            'distanceScale': self.distanceScale,
+            'distanceBase': self.distanceBase,
         })
 
         return fp
@@ -306,7 +306,7 @@ class Database(object):
             'totalResidues': self.totalResidues,
             'totalCoveredResidues': self.totalCoveredResidues,
             'subjectInfo': self.subjectInfo,
-            'distanceScale': self.distanceScale
+            'distanceBase': self.distanceBase
         }
         dump(state, fp)
 
@@ -346,7 +346,7 @@ class Database(object):
                             limitPerLandmark=state['limitPerLandmark'],
                             maxDistance=state['maxDistance'],
                             minDistance=state['minDistance'],
-                            distanceScale=state['distanceScale'])
+                            distanceBase=state['distanceBase'])
 
         # Monkey-patch the new database instance to restore its state.
         for attr in ('checksum', 'd', 'subjectCount', 'totalResidues',
@@ -492,11 +492,12 @@ class DatabaseSpecifier(object):
                 help='The minimum distance permitted between yielded pairs.')
 
             parser.add_argument(
-                '--distanceScale', type=float,
-                default=Database.DEFAULT_BUCKET_FACTOR,
-                help=('A factor by which the distance between a landmark and '
-                      'a trig point is divided, to reduce sensitivity to small'
-                      'differences in distance.'))
+                '--distanceBase', type=float,
+                default=Database.DEFAULT_DISTANCE_BASE,
+                help=('The distance between a landmark and a trig point is'
+                      'scaled to be its logarithm using this base. This '
+                      'reducessensitivity to relatively small differences in '
+                      'distance.'))
 
         if self._allowPopulation:
             parser.add_argument(
@@ -548,7 +549,7 @@ class DatabaseSpecifier(object):
 
             database = Database(landmarkClasses, trigClasses,
                                 args.limitPerLandmark, args.maxDistance,
-                                args.minDistance, args.distanceScale)
+                                args.minDistance, args.distanceBase)
 
         if self._allowPopulation:
             for read in combineReads(args.databaseFasta,
@@ -563,7 +564,7 @@ class DatabaseSpecifier(object):
             limitPerLandmark=Database.DEFAULT_LIMIT_PER_LANDMARK,
             maxDistance=Database.DEFAULT_MAX_DISTANCE,
             minDistance=Database.DEFAULT_MIN_DISTANCE,
-            distanceScale=Database.DEFAULT_BUCKET_FACTOR,
+            distanceBase=Database.DEFAULT_DISTANCE_BASE,
             database=None, databaseFile=None,
             databaseFasta=None, databaseSequences=None):
         """
@@ -581,9 +582,9 @@ class DatabaseSpecifier(object):
             yielded pairs.
         @param minDistance: The C{int} minimum distance permitted between
             yielded pairs.
-        @param distanceScale: A C{float} factor by which the distance between
-            a landmark and a trig point is divided, to reduce sensitivity to
-            small differences in distance.
+        @param distanceBase: The distance between a landmark and a trig point
+            is scaled to be its logarithm using this C{float} base. This
+            reduces sensitivity to relatively small differences in distance.
         @param database: An instance of C{light.database.Database}.
         @param databaseFile: The C{str} file name containing a database.
         @param databaseFasta: The name of a FASTA file containing the
@@ -629,7 +630,7 @@ class DatabaseSpecifier(object):
         commandLine.extend(['--limitPerLandmark', str(limitPerLandmark),
                             '--maxDistance', str(maxDistance),
                             '--minDistance', str(minDistance),
-                            '--distanceScale', str(distanceScale)])
+                            '--distanceBase', str(distanceBase)])
 
         if databaseFasta is not None:
             commandLine.extend(['--databaseFasta', databaseFasta])

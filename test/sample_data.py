@@ -12,7 +12,7 @@ from light.trig.troughs import Troughs
 
 
 DB = Database([AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, BetaStrand],
-              [AminoAcids, Troughs])
+              [AminoAcids, Troughs], distanceBase=1.0)
 
 # An alpha helix with many Tryptophan (W) trig points.
 COWPOX = AARead('Cowpox virus 15', 'ADDDADDDAMWDWMWDWMWDW')

@@ -2,6 +2,7 @@ import sys
 from json import dumps
 from collections import defaultdict
 
+from light.distance import scale
 from light.histogram import Histogram
 
 
@@ -36,7 +37,7 @@ class Result(object):
         for subjectIndex in matches:
             maxLen = max([len(scannedRead.read.sequence),
                           len(database.subjectInfo[subjectIndex][1])])
-            nBins = int(maxLen // database.distanceScale)
+            nBins = scale(maxLen, database.distanceBase)
             histogram = Histogram(nBins)
 
             for match in matches[subjectIndex]:

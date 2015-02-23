@@ -253,8 +253,9 @@ class TestResult(TestCase):
 
     def testRightNumberOfBucketsDefault(self):
         """
-        If no bucket factor is given, the number of bins must be 20 if
+        If no bucket factor is given, the number of bins must be 31 if
         the length of the subject is 20 and the length of the read is less.
+        This is because log base 1.1 of 20 is 31.
         """
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
         database = Database([], [])
@@ -271,15 +272,16 @@ class TestResult(TestCase):
         }
         result = Result(read, matches, hashCount, significanceFraction=0.0,
                         database=database, storeFullAnalysis=True)
-        self.assertEqual(20, len(result.analysis[0]['histogram'].bins))
+        self.assertEqual(31, len(result.analysis[0]['histogram'].bins))
 
-    def testRightNumberOfBuckets(self):
+    def testRightNumberOfBucketsWithNonDefaultDistanceBase(self):
         """
-        If a distanceScale of 5.0 is given and the length of the longer
-        sequence (out of subject and query) is 20, there should be 4 buckets.
+        If a distanceBase of 1.3 is given and the length of the longer
+        sequence (out of subject and query) is 20, there should be 11 buckets
+        (because int(log base 1.3 of 20) = 11).
         """
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
-        database = Database([], [], distanceScale=5.0)
+        database = Database([], [])
         database.addSubject(AARead('subject', 'AAAAAAAAAAAAAAAAAAAA'))
         hashCount = 1
         matches = {
@@ -293,30 +295,7 @@ class TestResult(TestCase):
         }
         result = Result(read, matches, hashCount, significanceFraction=0.0,
                         database=database, storeFullAnalysis=True)
-        self.assertEqual(4, len(result.analysis[0]['histogram'].bins))
-
-    def testRightNumberOfBucketsWithFloatingPointBucketFactor(self):
-        """
-        If a distanceScale of 1.3 is given and the length of the longer
-        sequence (out of subject and query) is 20, there should be 15 buckets
-        (because 20.0 // 1.3 = 15).
-        """
-        read = ScannedRead(AARead('read', 'AGTARFSDDD'))
-        database = Database([], [], distanceScale=1.3)
-        database.addSubject(AARead('subject', 'AAAAAAAAAAAAAAAAAAAA'))
-        hashCount = 1
-        matches = {
-            0: [
-                {
-                    'trigPoint': TrigPoint('Peaks', 'P', 1),
-                    'landmark': Landmark('AlphaHelix', 'A', 1, 9),
-                    'subjectOffsets': [2],
-                },
-            ],
-        }
-        result = Result(read, matches, hashCount, significanceFraction=0.0,
-                        database=database, storeFullAnalysis=True)
-        self.assertEqual(15, len(result.analysis[0]['histogram'].bins))
+        self.assertEqual(31, len(result.analysis[0]['histogram'].bins))
 
     def testPrintWithReadWithNoMatchesDueToNoFinders(self):
         """

@@ -17,15 +17,15 @@ class Prosite(Finder):
     An explanation about the fields and structure of the database is available
     at: http://prosite.expasy.org/prosuser.html
 
-    @param distanceScale: A C{float} by which the length of the landmark or
+    @param distanceBase: A C{float} by which the length of the landmark or
         trigPoint will be divided. The default of 1.0 set below is only used by
         the tests. Otherwise, it is set by the light.database.Database class.
     """
     NAME = 'Prosite'
     SYMBOL = 'PS'
 
-    def __init__(self, distanceScale=1.0):
-        Finder.__init__(self, distanceScale)
+    def __init__(self, distanceBase=1.0):
+        Finder.__init__(self, distanceBase)
         self.database = []
         with open(_DB_FILE) as fp:
             for line in fp:

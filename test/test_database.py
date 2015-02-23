@@ -490,13 +490,11 @@ class TestDatabase(TestCase):
                     {
                         'trigPoint': TrigPoint('Peaks', 'P', 10),
                         'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                        'subjectLength': 16,
                         'subjectOffsets': [1],
                     },
                     {
                         'trigPoint': TrigPoint('Peaks', 'P', 13),
                         'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                        'subjectLength': 16,
                         'subjectOffsets': [1],
                     }
                 ]
@@ -520,7 +518,6 @@ class TestDatabase(TestCase):
                         'trigPoint': TrigPoint('Peaks', 'P', 10),
                         'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
                         'subjectOffsets': [1],
-                        'subjectLength': 16,
                     },
                 ],
             },
@@ -564,13 +561,11 @@ class TestDatabase(TestCase):
                         'trigPoint': TrigPoint('Peaks', 'P', 10),
                         'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
                         'subjectOffsets': [0],
-                        'subjectLength': 15,
                     },
                     {
                         'trigPoint': TrigPoint('Peaks', 'P', 13),
                         'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
                         'subjectOffsets': [0],
-                        'subjectLength': 15,
                     }
                 ],
             },

@@ -20,9 +20,10 @@ class TestResult(TestCase):
         A result with no matches added to it must have the expected attributes.
         """
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
+        database = Database([], [])
         hashCount = 0
         result = Result(read, {}, hashCount, significanceFraction=0.0,
-                        distanceScale=1.0)
+                        database=database)
         self.assertEqual({}, result.matches)
         self.assertEqual([], list(result.significant()))
         self.assertIs(read, result.scannedRead)
@@ -33,6 +34,8 @@ class TestResult(TestCase):
         being stored in the result instance.
         """
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
+        database = Database([], [])
+        database.addSubject(AARead('subject', 'AAA'))
         hashCount = 1
         matches = {
             0: [
@@ -40,12 +43,11 @@ class TestResult(TestCase):
                     'trigPoint': TrigPoint('Peaks', 'P', 1),
                     'landmark': Landmark('AlphaHelix', 'A', 0, 9),
                     'subjectOffsets': [2],
-                    'subjectLength': 100,
                 },
             ],
         }
         result = Result(read, matches, hashCount, significanceFraction=0.0,
-                        distanceScale=1.0)
+                        database=database)
         self.assertEqual(matches, result.matches)
 
     def testNoSignificantMatches(self):
@@ -54,6 +56,8 @@ class TestResult(TestCase):
         above the mean number of deltas.
         """
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
+        database = Database([], [])
+        database.addSubject(AARead('subject', 'AAA'))
         hashCount = 1
         matches = {
             0: [
@@ -61,12 +65,11 @@ class TestResult(TestCase):
                     'trigPoint': TrigPoint('Peaks', 'P', 1),
                     'landmark': Landmark('AlphaHelix', 'A', 1, 9),
                     'subjectOffsets': [2, 10],
-                    'subjectLength': 100,
                 },
             ],
         }
         result = Result(read, matches, hashCount, significanceFraction=5,
-                        distanceScale=1.0)
+                        database=database)
         self.assertEqual([], list(result.significant()))
 
     def testOneSignificantMatch(self):
@@ -75,6 +78,8 @@ class TestResult(TestCase):
         (the maximum number of identical distances) must be too.
         """
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
+        database = Database([], [])
+        database.addSubject(AARead('subject', 'AAA'))
         hashCount = 4
         matches = {
             0: [
@@ -82,25 +87,22 @@ class TestResult(TestCase):
                     'trigPoint': TrigPoint('Peaks', 'P', 1),
                     'landmark': Landmark('AlphaHelix', 'A', 0, 9),
                     'subjectOffsets': [0],
-                    'subjectLength': 100,
                 },
                 {
                     'trigPoint': TrigPoint('Peaks', 'P', 2),
                     'landmark': Landmark('AlphaHelix', 'A', 0, 9),
                     'subjectOffsets': [0],
-                    'subjectLength': 100,
                 },
                 {
                     'trigPoint': TrigPoint('Peaks', 'P', 3),
                     'landmark': Landmark('AlphaHelix', 'A', 0, 9),
                     'subjectOffsets': [10],
-                    'subjectLength': 100,
                 },
             ],
         }
 
         result = Result(read, matches, hashCount, significanceFraction=0.25,
-                        distanceScale=1.0)
+                        database=database)
         self.assertEqual([0], list(result.significant()))
         self.assertEqual(0.5, result.analysis[0]['score'])
 
@@ -110,6 +112,9 @@ class TestResult(TestCase):
         different subjects, and their scores must be correct.
         """
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
+        database = Database([], [])
+        database.addSubject(AARead('subject0', 'AAA'))
+        database.addSubject(AARead('subject1', 'AAA'))
         hashCount = 5
         matches = {
             0: [
@@ -117,19 +122,16 @@ class TestResult(TestCase):
                     'trigPoint': TrigPoint('Peaks', 'P', 1),
                     'landmark': Landmark('AlphaHelix', 'A', 0, 9),
                     'subjectOffsets': [0],
-                    'subjectLength': 100,
                 },
                 {
                     'trigPoint': TrigPoint('Peaks', 'P', 2),
                     'landmark': Landmark('AlphaHelix', 'A', 0, 9),
                     'subjectOffsets': [0],
-                    'subjectLength': 100,
                 },
                 {
                     'trigPoint': TrigPoint('Peaks', 'P', 3),
                     'landmark': Landmark('AlphaHelix', 'A', 0, 9),
                     'subjectOffsets': [10],
-                    'subjectLength': 100,
                 },
             ],
 
@@ -138,19 +140,17 @@ class TestResult(TestCase):
                     'trigPoint': TrigPoint('Peaks', 'P', 1),
                     'landmark': Landmark('AlphaHelix', 'A', 0, 9),
                     'subjectOffsets': [0],
-                    'subjectLength': 1000,
                 },
                 {
                     'trigPoint': TrigPoint('Peaks', 'P', 2),
                     'landmark': Landmark('AlphaHelix', 'A', 0, 9),
                     'subjectOffsets': [0],
-                    'subjectLength': 1000,
                 },
             ],
         }
 
         result = Result(read, matches, hashCount, significanceFraction=0.3,
-                        distanceScale=1.0)
+                        database=database)
         self.assertEqual([0, 1], sorted(list(result.significant())))
         self.assertEqual(0.4, result.analysis[0]['score'])
         self.assertEqual(0.4, result.analysis[1]['score'])
@@ -160,7 +160,8 @@ class TestResult(TestCase):
         If self.matches is empty, return an empty output.
         """
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
-        result = Result(read, [], 0, 0, distanceScale=1.0)
+        database = Database([], [])
+        result = Result(read, [], 0, 0, database=database)
         fp = StringIO()
         result.save(fp=fp)
         result = loads(fp.getvalue())
@@ -177,8 +178,9 @@ class TestResult(TestCase):
         The save function must return its (fp) argument.
         """
         read = ScannedRead(AARead('id', 'A'))
+        database = Database([], [])
         result = Result(read, {}, 0, significanceFraction=0.0,
-                        distanceScale=1.0)
+                        database=database)
         fp = StringIO()
         self.assertIs(fp, result.save(fp))
 
@@ -188,6 +190,9 @@ class TestResult(TestCase):
         """
         read = ScannedRead(
             AARead('id', 'FRRRFRRRFRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
+        database = Database([], [])
+        database.addSubject(AARead('subject0', 'AAA'))
+        database.addSubject(AARead('subject1', 'AAA'))
         hashCount = 1
         matches = {
             0: [
@@ -195,21 +200,19 @@ class TestResult(TestCase):
                     'trigPoint': TrigPoint('Peaks', 'P', 1),
                     'landmark': Landmark('AlphaHelix', 'A', 0, 9),
                     'subjectOffsets': [0],
-                    'subjectLength': 1000,
                 },
             ],
 
-            27: [
+            1: [
                 {
                     'trigPoint': TrigPoint('Peaks', 'P', 1),
                     'landmark': Landmark('AlphaHelix', 'A', 27, 13),
                     'subjectOffsets': [27],
-                    'subjectLength': 100,
                 },
             ],
         }
         result = Result(read, matches, hashCount, significanceFraction=0.1,
-                        distanceScale=1.0)
+                        database=database)
         fp = StringIO()
         result.save(fp=fp)
         result = loads(fp.getvalue())
@@ -240,7 +243,7 @@ class TestResult(TestCase):
                             },
                         ],
                         'matchScore': 1.0,
-                        'subjectIndex': 27,
+                        'subjectIndex': 1,
                     },
                 ],
                 'queryId': 'id',
@@ -254,6 +257,8 @@ class TestResult(TestCase):
         the length of the subject is 20 and the length of the read is less.
         """
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
+        database = Database([], [])
+        database.addSubject(AARead('subject', 'AAAAAAAAAAAAAAAAAAAA'))
         hashCount = 1
         matches = {
             0: [
@@ -261,12 +266,11 @@ class TestResult(TestCase):
                     'trigPoint': TrigPoint('Peaks', 'P', 1),
                     'landmark': Landmark('AlphaHelix', 'A', 1, 9),
                     'subjectOffsets': [2],
-                    'subjectLength': 20,
                 },
             ],
         }
         result = Result(read, matches, hashCount, significanceFraction=0.0,
-                        distanceScale=1.0, storeFullAnalysis=True)
+                        database=database, storeFullAnalysis=True)
         self.assertEqual(20, len(result.analysis[0]['histogram'].bins))
 
     def testRightNumberOfBuckets(self):
@@ -275,6 +279,8 @@ class TestResult(TestCase):
         sequence (out of subject and query) is 20, there should be 4 buckets.
         """
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
+        database = Database([], [], distanceScale=5.0)
+        database.addSubject(AARead('subject', 'AAAAAAAAAAAAAAAAAAAA'))
         hashCount = 1
         matches = {
             0: [
@@ -282,12 +288,11 @@ class TestResult(TestCase):
                     'trigPoint': TrigPoint('Peaks', 'P', 1),
                     'landmark': Landmark('AlphaHelix', 'A', 1, 9),
                     'subjectOffsets': [2],
-                    'subjectLength': 20,
                 },
             ],
         }
         result = Result(read, matches, hashCount, significanceFraction=0.0,
-                        distanceScale=5.0, storeFullAnalysis=True)
+                        database=database, storeFullAnalysis=True)
         self.assertEqual(4, len(result.analysis[0]['histogram'].bins))
 
     def testRightNumberOfBucketsWithFloatingPointBucketFactor(self):
@@ -297,6 +302,8 @@ class TestResult(TestCase):
         (because 20.0 // 1.3 = 15).
         """
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
+        database = Database([], [], distanceScale=1.3)
+        database.addSubject(AARead('subject', 'AAAAAAAAAAAAAAAAAAAA'))
         hashCount = 1
         matches = {
             0: [
@@ -304,12 +311,11 @@ class TestResult(TestCase):
                     'trigPoint': TrigPoint('Peaks', 'P', 1),
                     'landmark': Landmark('AlphaHelix', 'A', 1, 9),
                     'subjectOffsets': [2],
-                    'subjectLength': 20,
                 },
             ],
         }
         result = Result(read, matches, hashCount, significanceFraction=0.0,
-                        distanceScale=1.3, storeFullAnalysis=True)
+                        database=database, storeFullAnalysis=True)
         self.assertEqual(15, len(result.analysis[0]['histogram'].bins))
 
     def testPrintWithReadWithNoMatchesDueToNoFinders(self):

@@ -496,7 +496,7 @@ class DatabaseSpecifier(object):
             parser.add_argument(
                 '--distanceBase', type=float,
                 default=Database.DEFAULT_DISTANCE_BASE,
-                help=('The distance between a landmark and a trig point is'
+                help=('The distance between a landmark and a trig point is '
                       'scaled to be its logarithm using this base. This '
                       'reducessensitivity to relatively small differences in '
                       'distance.'))

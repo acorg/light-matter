@@ -22,7 +22,7 @@ class TestResult(TestCase):
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
         hashCount = 0
         result = Result(read, {}, hashCount, significanceFraction=0.0,
-                        distanceScale=1.0)
+                        distanceBase=1.0)
         self.assertEqual({}, result.matches)
         self.assertEqual([], list(result.significant()))
         self.assertIs(read, result.scannedRead)
@@ -45,7 +45,7 @@ class TestResult(TestCase):
             ],
         }
         result = Result(read, matches, hashCount, significanceFraction=0.0,
-                        distanceScale=1.0)
+                        distanceBase=1.0)
         self.assertEqual(matches, result.matches)
 
     def testNoSignificantMatches(self):
@@ -66,7 +66,7 @@ class TestResult(TestCase):
             ],
         }
         result = Result(read, matches, hashCount, significanceFraction=5,
-                        distanceScale=1.0)
+                        distanceBase=1.0)
         self.assertEqual([], list(result.significant()))
 
     def testOneSignificantMatch(self):
@@ -100,7 +100,7 @@ class TestResult(TestCase):
         }
 
         result = Result(read, matches, hashCount, significanceFraction=0.25,
-                        distanceScale=1.0)
+                        distanceBase=1.0)
         self.assertEqual([0], list(result.significant()))
         self.assertEqual(0.5, result.analysis[0]['score'])
 
@@ -150,7 +150,7 @@ class TestResult(TestCase):
         }
 
         result = Result(read, matches, hashCount, significanceFraction=0.3,
-                        distanceScale=1.0)
+                        distanceBase=1.0)
         self.assertEqual([0, 1], sorted(list(result.significant())))
         self.assertEqual(0.4, result.analysis[0]['score'])
         self.assertEqual(0.4, result.analysis[1]['score'])
@@ -160,7 +160,7 @@ class TestResult(TestCase):
         If self.matches is empty, return an empty output.
         """
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
-        result = Result(read, [], 0, 0, distanceScale=1.0)
+        result = Result(read, [], 0, 0, distanceBase=1.0)
         fp = StringIO()
         result.save(fp=fp)
         result = loads(fp.getvalue())
@@ -178,7 +178,7 @@ class TestResult(TestCase):
         """
         read = ScannedRead(AARead('id', 'A'))
         result = Result(read, {}, 0, significanceFraction=0.0,
-                        distanceScale=1.0)
+                        distanceBase=1.0)
         fp = StringIO()
         self.assertIs(fp, result.save(fp))
 
@@ -209,7 +209,7 @@ class TestResult(TestCase):
             ],
         }
         result = Result(read, matches, hashCount, significanceFraction=0.1,
-                        distanceScale=1.0)
+                        distanceBase=1.0)
         fp = StringIO()
         result.save(fp=fp)
         result = loads(fp.getvalue())
@@ -250,31 +250,11 @@ class TestResult(TestCase):
             },
             result)
 
-    def testRightNumberOfBucketsDefault(self):
-        """
-        If no bucket factor is given, the number of bins must be 20 if
-        the length of the subject is 20 and the length of the read is less.
-        """
-        read = ScannedRead(AARead('read', 'AGTARFSDDD'))
-        hashCount = 1
-        matches = {
-            0: [
-                {
-                    'trigPoint': TrigPoint('Peaks', 'P', 1),
-                    'landmark': Landmark('AlphaHelix', 'A', 1, 9),
-                    'subjectOffsets': [2],
-                    'subjectLength': 20,
-                },
-            ],
-        }
-        result = Result(read, matches, hashCount, significanceFraction=0.0,
-                        distanceScale=1.0, storeFullAnalysis=True)
-        self.assertEqual(20, len(result.analysis[0]['histogram'].bins))
-
     def testRightNumberOfBuckets(self):
         """
-        If a distanceScale of 5.0 is given and the length of the longer
-        sequence (out of subject and query) is 20, there should be 4 buckets.
+        If a distanceBase of 1.3 is given and the length of the longer
+        sequence (out of subject and query) is 20, there should be 11 buckets
+        (because int(log base 1.3 of 20) = 11).
         """
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
         hashCount = 1
@@ -289,12 +269,12 @@ class TestResult(TestCase):
             ],
         }
         result = Result(read, matches, hashCount, significanceFraction=0.0,
-                        distanceScale=5.0, storeFullAnalysis=True)
-        self.assertEqual(4, len(result.analysis[0]['histogram'].bins))
+                        distanceBase=1.3, storeFullAnalysis=True)
+        self.assertEqual(11, len(result.analysis[0]['histogram'].bins))
 
     def testRightNumberOfBucketsWithFloatingPointBucketFactor(self):
         """
-        If a distanceScale of 1.3 is given and the length of the longer
+        If a distanceBase of 1.1 is given and the length of the longer
         sequence (out of subject and query) is 20, there should be 15 buckets
         (because 20.0 // 1.3 = 15).
         """
@@ -311,8 +291,8 @@ class TestResult(TestCase):
             ],
         }
         result = Result(read, matches, hashCount, significanceFraction=0.0,
-                        distanceScale=1.3, storeFullAnalysis=True)
-        self.assertEqual(15, len(result.analysis[0]['histogram'].bins))
+                        distanceBase=1.1, storeFullAnalysis=True)
+        self.assertEqual(31, len(result.analysis[0]['histogram'].bins))
 
     def testPrintWithReadWithNoMatchesDueToNoFinders(self):
         """

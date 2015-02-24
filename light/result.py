@@ -2,6 +2,7 @@ import sys
 from json import dumps
 from collections import defaultdict
 
+from light.distance import scale
 from light.histogram import Histogram
 
 
@@ -19,16 +20,16 @@ class Result(object):
         trig point) pairs for a scannedRead that need to fall into the
         same histogram bucket for that bucket to be considered a
         significant match with a database title.
-    @param distanceScale: A C{float} factor by which the distance between
-        a landmark and a trig point is divided, to reduce sensitivity to small
-        differences in distance.
+    @param distanceBase: The distance between a landmark and a trig point
+        is scaled to be its logarithm using this C{float} base. This
+        reduces sensitivity to relatively small differences in distance.
     @param nonMatchingHashes: A C{set} of hashes in scannedRead that does not
         match a subject.
     @param storeFullAnalysis: A C{bool}. If C{True} the full significance
         analysis of each matched subject will be stored.
     """
     def __init__(self, scannedRead, matches, hashCount, significanceFraction,
-                 distanceScale, nonMatchingHashes=None,
+                 distanceBase, nonMatchingHashes=None,
                  storeFullAnalysis=False):
         self.scannedRead = scannedRead
         self.matches = matches
@@ -38,7 +39,7 @@ class Result(object):
         for subjectIndex in matches:
             maxLen = max([len(scannedRead.read.sequence),
                           matches[subjectIndex][0]['subjectLength']])
-            nBins = int(maxLen // distanceScale)
+            nBins = scale(maxLen, distanceBase)
             histogram = Histogram(nBins)
 
             for match in matches[subjectIndex]:

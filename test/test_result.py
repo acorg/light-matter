@@ -253,9 +253,9 @@ class TestResult(TestCase):
 
     def testRightNumberOfBucketsDefault(self):
         """
-        If no bucket factor is given, the number of bins must be 31 if
-        the length of the subject is 20 and the length of the read is less.
-        This is because log base 1.1 of 20 is 31.
+        If no distanceBase is specified for a database, the number of bins must
+        be 31 if the length of the subject is 20 and the length of the read
+        is less. This is because log base 1.1 of 20 is 31.
         """
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
         database = Database([], [])

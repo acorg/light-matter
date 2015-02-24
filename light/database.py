@@ -278,16 +278,14 @@ class Database(object):
             else:
                 for subjectIndex, subjectOffsets in subjectDict.iteritems():
                     subjectIndex = int(subjectIndex)
-                    subjectLength = len(self.subjectInfo[subjectIndex][1])
                     matches[subjectIndex].append({
                         'landmark': landmark,
-                        'subjectLength': subjectLength,
                         'subjectOffsets': subjectOffsets,
                         'trigPoint': trigPoint,
                     })
 
         return Result(scannedRead, matches, hashCount, significanceFraction,
-                      self.distanceBase, nonMatchingHashes,
+                      self, nonMatchingHashes,
                       storeFullAnalysis=storeFullAnalysis)
 
     def save(self, fp=sys.stdout):

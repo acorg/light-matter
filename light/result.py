@@ -20,16 +20,14 @@ class Result(object):
         trig point) pairs for a scannedRead that need to fall into the
         same histogram bucket for that bucket to be considered a
         significant match with a database title.
-    @param distanceBase: The distance between a landmark and a trig point
-        is scaled to be its logarithm using this C{float} base. This
-        reduces sensitivity to relatively small differences in distance.
+    @param database: A C{light.database.Database} instance.
     @param nonMatchingHashes: A C{set} of hashes in scannedRead that does not
         match a subject.
     @param storeFullAnalysis: A C{bool}. If C{True} the full significance
         analysis of each matched subject will be stored.
     """
     def __init__(self, scannedRead, matches, hashCount, significanceFraction,
-                 distanceBase, nonMatchingHashes=None,
+                 database, nonMatchingHashes=None,
                  storeFullAnalysis=False):
         self.scannedRead = scannedRead
         self.matches = matches
@@ -38,8 +36,8 @@ class Result(object):
         significanceCutoff = significanceFraction * hashCount
         for subjectIndex in matches:
             maxLen = max([len(scannedRead.read.sequence),
-                          matches[subjectIndex][0]['subjectLength']])
-            nBins = scale(maxLen, distanceBase)
+                          len(database.subjectInfo[subjectIndex][1])])
+            nBins = scale(maxLen, database.distanceBase)
             histogram = Histogram(nBins)
 
             for match in matches[subjectIndex]:
@@ -107,7 +105,6 @@ class Result(object):
                     'landmarkLength': match['landmark'].length,
                     'landmarkName': match['landmark'].name,
                     'readOffset': match['landmark'].offset,
-                    'subjectLength': match['subjectLength'],
                     'subjectOffsets': match['subjectOffsets'],
                     'trigPointName': match['trigPoint'].name,
                 })

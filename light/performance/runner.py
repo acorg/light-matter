@@ -11,7 +11,10 @@
 
 import sys
 from time import time, gmtime, strftime
-from ujson import dump
+try:
+    from ujson import dump
+except ImportError:
+    from json import dump
 
 from unittest import TestResult, TestSuite
 

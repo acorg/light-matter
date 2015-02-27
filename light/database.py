@@ -2,7 +2,10 @@ import argparse
 import sys
 from warnings import warn
 from collections import defaultdict
-from ujson import dump, dumps, load
+try:
+    from ujson import dump, dumps, load
+except ImportError:
+    from json import dump, dumps, load
 from binascii import crc32
 from operator import attrgetter
 

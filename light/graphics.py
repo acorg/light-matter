@@ -8,7 +8,6 @@ from light.trig import ALL_TRIG_CLASSES
 from light.landmarks import ALL_LANDMARK_CLASSES, findLandmark
 from light.features import Landmark
 from light.colors import colors
-from light.reads import ScannedRead
 
 from dark.dimension import dimensionalIterator
 from dark.fasta import FastaReads
@@ -346,20 +345,20 @@ def plotLandmarksInSequences(fastaFile, landmarkName):
 
     @param fastaFile: A C{str} filename of sequences to be plotted.
     @param landmarkName: The C{str} name of a landmark finder.
+    @raise ValueError: If invalid landmarkName
     """
     reads = FastaReads(fastaFile, readClass=AARead)
     fig = plt.figure(figsize=(20, len(list(reads)) / 2))
     ax = fig.add_subplot(111)
     color = (0.33999999999999997, 0.67279999999999973, 0.86)
     landmarkFinder = findLandmark(landmarkName)
+    if landmarkFinder is None:
+        raise ValueError('Unknown landmark finder: %s' % landmarkName)
 
     for i, read in enumerate(reads):
-        scannedRead = ScannedRead(read)
-        for landmark in landmarkFinder().find(read):
-            scannedRead.landmarks.append(landmark)
         plt.plot([0, len(read.sequence)], [i, i], '-', linewidth=0.5,
                  color='grey')
-        for landmark in scannedRead.landmarks:
+        for landmark in landmarkFinder().find(read):
             plt.plot([landmark.offset, landmark.offset + landmark.length],
                      [i, i], '-', color=color, linewidth=2)
 

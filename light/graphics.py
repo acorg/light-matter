@@ -353,7 +353,7 @@ def plotLandmarksInSequences(fastaFile, landmarkName):
     color = (0.33999999999999997, 0.67279999999999973, 0.86)
     landmarkFinder = findLandmark(landmarkName)
     if landmarkFinder is None:
-        raise ValueError('Unknown landmark finder: %s' % landmarkName)
+        raise ValueError('Unknown landmark finder: %r' % landmarkName)
 
     for i, read in enumerate(reads):
         plt.plot([0, len(read.sequence)], [i, i], '-', linewidth=0.5,

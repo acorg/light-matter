@@ -91,8 +91,8 @@ class TestGOR4BetaStrandOverlap(TestCase):
         GOR4 alpha helix and beta strand finders using the default distance
         base (currently 1.1).
         """
-        alphaHelixDb = Database([GOR4AlphaHelix], [], distanceBase=1.2)
-        betaStrandDb = Database([GOR4BetaStrand], [], distanceBase=1.2)
+        alphaHelixDb = Database([GOR4AlphaHelix], [])
+        betaStrandDb = Database([GOR4BetaStrand], [])
         alphaHelixScanned = alphaHelixDb.scan(self.READ)
         betaStrandScanned = betaStrandDb.scan(self.READ)
         alphaHelixIndices = alphaHelixScanned.coveredIndices()

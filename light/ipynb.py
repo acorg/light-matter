@@ -7,7 +7,9 @@ from dark.html import (
     summarizeTitlesByLength, summarizeTitlesByMaxScore,
     summarizeTitlesByMedianScore, summarizeTitlesByCount,
     summarizeTitlesByTitle)
+
 from .alignments import LightReadsAlignments
+from .database import Database, DatabaseSpecifier
 from .graphics import (
     plotFeatures, plotHistogram, plotFeaturePanel, plotFeatureSquare)
 
@@ -16,11 +18,11 @@ _ = (FastaReads, LightReadsAlignments, titleCounts, TitlesAlignments,
      summarizeTitlesByLength, summarizeTitlesByMaxScore,
      summarizeTitlesByMedianScore, summarizeTitlesByCount,
      summarizeTitlesByTitle, plotFeatures, plotHistogram, plotFeaturePanel,
-     plotFeatureSquare)
+     plotFeatureSquare, Database, DatabaseSpecifier)
 
 __all__ = [
     'FastaReads', 'LightReadsAlignments', 'titleCounts', 'TitlesAlignments',
     'summarizeTitlesByLength', 'summarizeTitlesByMaxScore',
     'summarizeTitlesByMedianScore', 'summarizeTitlesByCount',
     'summarizeTitlesByTitle', 'plotFeatures', 'plotHistogram',
-    'plotFeaturePanel', 'plotFeatureSquare']
+    'plotFeaturePanel', 'plotFeatureSquare', 'Database', 'DatabaseSpecifier']

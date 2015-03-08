@@ -6,6 +6,7 @@ from light.distance import scale
 from light.features import Landmark
 from light.database import Database
 from light.landmarks.gor4_alpha_helix import GOR4AlphaHelix
+from light.landmarks.gor4_beta_strand import GOR4BetaStrand
 
 
 class TestGOR4AlphaHelix(TestCase):
@@ -66,3 +67,61 @@ class TestGOR4AlphaHelix(TestCase):
         self.assertEqual([Landmark('GOR4AlphaHelix', 'GA', 10, len7, len7),
                           Landmark('GOR4AlphaHelix', 'GA', 19, len11, len11)],
                          result)
+
+
+class TestGOR4BetaStrandOverlap(TestCase):
+    """
+    Test that the GOR4AlphaHelix finder does not produce landmarks that
+    overlap with those of the GOR4BetaStrand finder.
+
+    This is for debugging https://github.com/acorg/light-matter/issues/220
+    """
+    READ = AARead('gi|188036137|pdb|2VQ0_A|Chain A, Capsid Structure Of '
+                  'Sesbania Mosaic Virus Coat Protein Deletion Mutant '
+                  'Rcp(Delta 48 To 59)',
+                  'MAKRLSKQQLAKAIANTLETPPQPKAGRRRNRRRQRSAVQQLQPTQAVRIRNP'
+                  'AVSSSRGGITVLTHSELSAEIGVTDSIVVSSELVMPYTVGTWLRGVAANWSKY'
+                  'SWLSVRYTYIPSCPSSTAGSIHMGFQYDMADTVPVSVNQLSNLRGYVSGQVWS'
+                  'GSAGLCFINGTRCSDTSTAISTTLDVSKLGKKWYPYKTSADYATAVGVDVNIA'
+                  'TPLVPARLVIALLDGSSSTAVAAGRIYCTYTIQMIEPTASALNN')
+
+    def testNoOverlapDefaultDistanceBase(self):
+        """
+        There cannot be any index overlap between landmarks found by the
+        GOR4 alpha helix and beta strand finders using the default distance
+        base (currently 1.1).
+        """
+        alphaHelixDb = Database([GOR4AlphaHelix], [], distanceBase=1.2)
+        betaStrandDb = Database([GOR4BetaStrand], [], distanceBase=1.2)
+        alphaHelixScanned = alphaHelixDb.scan(self.READ)
+        betaStrandScanned = betaStrandDb.scan(self.READ)
+        alphaHelixIndices = alphaHelixScanned.coveredIndices()
+        betaStrandIndices = betaStrandScanned.coveredIndices()
+        self.assertEqual(0, len(alphaHelixIndices & betaStrandIndices))
+
+    def testNoOverlapDistanceBaseOne(self):
+        """
+        There cannot be any index overlap between landmarks found by the
+        GOR4 alpha helix and beta strand finders using a distance base of 1.0
+        (which should do no scaling).
+        """
+        alphaHelixDb = Database([GOR4AlphaHelix], [], distanceBase=1.0)
+        betaStrandDb = Database([GOR4BetaStrand], [], distanceBase=1.0)
+        alphaHelixScanned = alphaHelixDb.scan(self.READ)
+        betaStrandScanned = betaStrandDb.scan(self.READ)
+        alphaHelixIndices = alphaHelixScanned.coveredIndices()
+        betaStrandIndices = betaStrandScanned.coveredIndices()
+        self.assertEqual(0, len(alphaHelixIndices & betaStrandIndices))
+
+    def testNoOverlapDistanceBaseOnePointFive(self):
+        """
+        There cannot be any index overlap between landmarks found by the
+        GOR4 alpha helix and beta strand finders using a distance base of 1.5.
+        """
+        alphaHelixDb = Database([GOR4AlphaHelix], [], distanceBase=1.5)
+        betaStrandDb = Database([GOR4BetaStrand], [], distanceBase=1.5)
+        alphaHelixScanned = alphaHelixDb.scan(self.READ)
+        betaStrandScanned = betaStrandDb.scan(self.READ)
+        alphaHelixIndices = alphaHelixScanned.coveredIndices()
+        betaStrandIndices = betaStrandScanned.coveredIndices()
+        self.assertEqual(0, len(alphaHelixIndices & betaStrandIndices))

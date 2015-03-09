@@ -272,6 +272,18 @@ class TestKMeansAnalysis(TestCase):
         km.cluster(1)
         self.assertTrue(isinstance(km.kMeans, KMeans))
 
+    def testOneReadClusterCount(self):
+        """
+        The KMeansAnalysis class must find one cluster when given one read,
+        and set the value of nClusters to 1.
+        """
+        reads = Reads()
+        reads.add(AARead('id1', 'FRRRFRRRF'))
+        km = KMeansAnalysis(reads, {}, defaultLabel=0,
+                            landmarkNames=['AlphaHelix'])
+        km.cluster(1)
+        self.assertEqual(1, km.nClusters)
+
     def testTwoReadsNothingInCommonClusterCount(self):
         """
         The KMeansAnalysis class must find two clusters when given two reads

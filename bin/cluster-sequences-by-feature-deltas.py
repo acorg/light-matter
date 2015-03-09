@@ -33,7 +33,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--labelFile',
         help=('The name of a file containing labels for reads. Each line must '
-              'have a label, a space, then a read id.'))
+              'have an integer label, a space, then a read id.'))
 
     parser.add_argument(
         '--sequence', action='append', dest='sequences',
@@ -45,14 +45,15 @@ if __name__ == '__main__':
     parser.add_argument(
         '--label', action='append', dest='labels',
         metavar='"label read-id"',
-        help=('The label for a read. Format is label, then a single space '
-              'then the read id (which must match the read id in the fasta '
-              'file or a read given on the command line via --sequence.'))
+        help=('The label for a read. Format is an integer label, then a '
+              'single space then the read id (which must match the read id '
+              'in the fasta file or a read given on the command line via '
+              '--sequence.'))
 
     parser.add_argument(
-        '--defaultLabel', default=0,
-        help=('The default label to use for read ids that are not explicitly '
-              'labeled.'))
+        '--defaultLabel', type=int, default=None,
+        help=('The default (integer) label to use for read ids that are not '
+              'explicitly labeled.'))
 
     databaseSpecifier = DatabaseSpecifier(allowInMemory=False)
     databaseSpecifier.addArgsToParser(parser)
@@ -86,7 +87,13 @@ if __name__ == '__main__':
                 raise ValueError('Bad label %r. --label arguments must have '
                                  'a label, a space, then a read id.' %
                                  labelArg)
-            labels[fields[1]] = int(fields[0])
+            try:
+                labels[fields[1]] = int(fields[0])
+            except ValueError:
+                print >>sys.stderr, (
+                    '%s: Non-integer label in --label argument %r.' %
+                    (basename(sys.argv[0]), labelArg))
+                sys.exit(1)
 
     # Read labels from a file, if --labelFile is given.
     if args.labelFile:
@@ -99,7 +106,14 @@ if __name__ == '__main__':
                                      '%d. Label lines must have a label, a '
                                      'space, then a read id.' %
                                      (line, args.labelFile, count))
-                labels[fields[1]] = int(fields[0])
+                try:
+                    labels[fields[1]] = int(fields[0])
+                except ValueError:
+                    print >>sys.stderr, (
+                        '%s: Non-integer label %r found on line %d of %s.' %
+                        (basename(sys.argv[0]), fields[0], count,
+                         args.labelFile))
+                    sys.exit(1)
 
     if args.algorithm == 'kMeans':
         clusterClass = KMeansAnalysis

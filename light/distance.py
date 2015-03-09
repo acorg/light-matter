@@ -25,8 +25,10 @@ def scale(dist, base):
     @return: An C{int} scaled distance.
     """
     if dist > 0:
-        return int(log(dist) / log(base)) if base != 1.0 else dist
+        result = int(log(dist) / log(base)) if base != 1.0 else dist
+        return min([result, dist])
     elif dist < 0:
-        return -1 * int(log(-dist) / log(base)) if base != 1.0 else dist
+        result = -1 * int(log(-dist) / log(base)) if base != 1.0 else dist
+        return max([result, dist])
     else:
         return 0

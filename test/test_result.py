@@ -254,8 +254,10 @@ class TestResult(TestCase):
     def testRightNumberOfBucketsDefault(self):
         """
         If no distanceBase is specified for a database, the number of bins must
-        be 31 if the length of the subject is 20 and the length of the read
-        is less. This is because log base 1.1 of 20 is 31.
+        be 20 if the length of the subject is 20 and the length of the read
+        is less. This is because int(log base 1.1 of 20) = 31, which is greater
+        than 20, so the value of 20 should be used. Note that 1.1 is the
+        default distanceBase.
         """
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
         database = Database([], [])
@@ -272,7 +274,7 @@ class TestResult(TestCase):
         }
         result = Result(read, matches, hashCount, significanceFraction=0.0,
                         database=database, storeFullAnalysis=True)
-        self.assertEqual(31, len(result.analysis[0]['histogram'].bins))
+        self.assertEqual(20, len(result.analysis[0]['histogram'].bins))
 
     def testRightNumberOfBucketsWithNonDefaultDistanceBase(self):
         """
@@ -281,7 +283,7 @@ class TestResult(TestCase):
         (because int(log base 1.3 of 20) = 11).
         """
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
-        database = Database([], [])
+        database = Database([], [], distanceBase=1.3)
         database.addSubject(AARead('subject', 'AAAAAAAAAAAAAAAAAAAA'))
         hashCount = 1
         matches = {
@@ -295,7 +297,7 @@ class TestResult(TestCase):
         }
         result = Result(read, matches, hashCount, significanceFraction=0.0,
                         database=database, storeFullAnalysis=True)
-        self.assertEqual(31, len(result.analysis[0]['histogram'].bins))
+        self.assertEqual(11, len(result.analysis[0]['histogram'].bins))
 
     def testPrintWithReadWithNoMatchesDueToNoFinders(self):
         """

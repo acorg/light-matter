@@ -262,15 +262,20 @@ class TestDatabase(TestCase):
 
     def testOneReadOneLandmarkOnePeakDistanceBase(self):
         """
-        If a distanceBase is used, the right distance needs to be calculated.
-        The offsets are 10 AA apart, the distanceBase should make that 2.
+        If a non-default distanceBase of 2.0 is used, the right distance needs
+        to be calculated. In this case, the offsets are 10 AA apart, and the
+        distanceBase scaling will change that to a 3 (since int(log base 2 10)
+        = 3), though we don't test the 3 value explicitly since that may change
+        if we ever change the scale function. That's desirable, but we already
+        have tests in test_distance.py that will break in that case.
         """
-        db = Database([AlphaHelix], [Peaks], distanceBase=1.2)
+        distanceBase = 2.0
+        db = Database([AlphaHelix], [Peaks], distanceBase=distanceBase)
         db.addSubject(AARead('id', 'FRRRFRRRFASA'))
-        distance9 = str(scale(9, 1.2))
+        distance10 = str(scale(10, distanceBase))
         self.assertEqual(
             {
-                'A2:P:' + distance9: {'0': [0]},
+                'A2:P:' + distance10: {'0': [0]},
             },
             db.d)
 

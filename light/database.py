@@ -309,7 +309,7 @@ class Database(object):
             'totalResidues': self.totalResidues,
             'totalCoveredResidues': self.totalCoveredResidues,
             'subjectInfo': self.subjectInfo,
-            'distanceBase': self.distanceBase
+            'distanceBase': self.distanceBase,
         }
         dump(state, fp)
 
@@ -499,7 +499,7 @@ class DatabaseSpecifier(object):
                 default=Database.DEFAULT_DISTANCE_BASE,
                 help=('The distance between a landmark and a trig point is '
                       'scaled to be its logarithm using this base. This '
-                      'reducessensitivity to relatively small differences in '
+                      'reduces sensitivity to relatively small differences in '
                       'distance.'))
 
         if self._allowPopulation:

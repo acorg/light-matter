@@ -16,16 +16,16 @@ from light.database import DatabaseSpecifier
 
 class ClusterAnalysis(object):
 
-    def __init__(self, fastaFile, labels, defaultLabel=None, **kwargs):
+    def __init__(self, sequences, labels, defaultLabel=None, **kwargs):
         """
         Base class for using cluster analysis to evaluate how well various
         feature finders and database parameter settings can separate a set of
         sequences. The clustering is based on feature offset deltas.
 
-        @param fastaFile: Either A C{str} filename of sequences to consider or
+        @param sequences: Either A C{str} filename of sequences to consider or
             a C{light.reads.Reads} instance.
         @param labels: A C{dict} with a label for each sequence id in
-            fastaFile. These are the known categories of each sequence.
+            C{sequences}. These are the known categories of each sequence.
         @param defaultLabel: If not C{None}, a label to use for reads whose ids
             are not present in C{labels}. If C{None} and a read id has no label
             a ValueError is raised.
@@ -33,12 +33,12 @@ class ClusterAnalysis(object):
             C{database.DatabaseSpecifier.getDatabaseFromKeywords} for
             additional keywords, all of which are optional.
         @raises ValueError: If the id of a read is not in labels and no default
-            label has been set, or if there are no reads in C{fastaFile}.
+            label has been set, or if there are no reads in C{sequences}.
         """
-        if isinstance(fastaFile, basestring):
-            reads = FastaReads(fastaFile, readClass=AARead)
+        if isinstance(sequences, basestring):
+            reads = FastaReads(sequences, readClass=AARead)
         else:
-            reads = fastaFile
+            reads = sequences
         database = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
         allOffsetDeltas = []
         trueLabels = []
@@ -60,7 +60,7 @@ class ClusterAnalysis(object):
         nReads = len(reads)
 
         if nReads == 0:
-            raise ValueError('No sequences were found in %r' % fastaFile)
+            raise ValueError('No sequences were found in %r' % sequences)
 
         # Don't check that len(reads) == len(labels). I.e., ignore extra labels
         # to make using this class interactively more convenient.

@@ -58,11 +58,21 @@ if __name__ == '__main__':
     databaseSpecifier.addArgsToParser(parser)
     args = parser.parse_args()
 
-    if args.algorithm == 'kMeans' and args.k is None:
-        print >>sys.stderr, ('%s: If you use "--algorithm kMeans", you must '
-                             'also use "--k N" to specify the desired number '
-                             'of clusters.' % basename(sys.argv[0]))
-        sys.exit(1)
+    if args.algorithm == 'kMeans':
+        if args.k is None:
+            print >>sys.stderr, (
+                '%s: If you use "--algorithm kMeans", you must also use '
+                '"--k N" to specify the desired number of clusters.' %
+                basename(sys.argv[0]))
+            sys.exit(1)
+    else:
+        if args.k is not None:
+            print >>sys.stderr, (
+                '%s: If you use "--algorithm affinityPropagation", you cannot '
+                'also use "--k N" to specify a desired number of clusters. '
+                'The --k option only applies to clustering via '
+                '"--algorithm kMeans".' % basename(sys.argv[0]))
+            sys.exit(1)
 
     database = databaseSpecifier.getDatabaseFromArgs(args)
     reads = combineReads(args.fastaFile, args.sequences)

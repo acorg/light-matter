@@ -62,11 +62,11 @@ class ClusterAnalysis(object):
         if nReads == 0:
             raise ValueError('No sequences were found in %r' % fastaFile)
 
-        # Don't check that len(reads) == len(labels). I.e., extra labels
-        # are ignored, to make using this class interactively more convenient.
+        # Don't check that len(reads) == len(labels). I.e., ignore extra labels
+        # to make using this class interactively more convenient.
 
-        # Create an affinity matrix. We initially set all values to 1.0 so
-        # we don't need to later initialize the diagonal.
+        # Create an affinity matrix. Initially set all values to 1.0 so we
+        # don't need to later initialize the diagonal.
         affinity = np.ones((nReads, nReads))
 
         for row, offsetDeltas in enumerate(allOffsetDeltas):
@@ -91,16 +91,16 @@ class ClusterAnalysis(object):
         @return: A C{float} from 0.0 to 1.0 (inclusive) of the affinity
             (similarity) of the contents of the two counters.
         """
-        # The affinity is twice the size of the intersection divided by the
-        # sum of the sizes of the two counters. So if both counters are
-        # identical, the affinity will be 1.0 and if they have nothing in
-        # common it will be 0.0.
-        denom = sum(a.values()) + sum(b.values())
+        # The affinity is the size of the intersection divided by the size
+        # of the union of the two counters. If both counters are identical,
+        # the affinity will be 1.0 and if they have nothing in common it
+        # will be 0.0.
+        denom = sum((a | b).values())
         if denom:
-            return 2.0 * sum((a & b).values()) / denom
+            return sum((a & b).values()) / float(denom)
         else:
-            # Neither sequence had any features, so let's say they have no
-            # affinity.
+            # Neither sequence had any features (which means there are no
+            # deltas at all). Let's define this as zero affinity.
             return 0.0
 
 
@@ -168,9 +168,10 @@ class KMeansAnalysis(ClusterAnalysis):
 
         @return: An C{sklearn.cluster.KMeans} instance.
         """
-        self.kmeans = KMeans(n_clusters=k, init='k-means++').fit(self.affinity)
-        self.clusterLabels = self.kmeans.labels_
-        return self.kmeans
+        self.kMeans = KMeans(n_clusters=k, init='k-means++').fit(self.affinity)
+        self.nClusters = k
+        self.clusterLabels = self.kMeans.labels_
+        return self.kMeans
 
     def print_(self, fp=sys.stdout):
         """

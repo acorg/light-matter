@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 
+import sys
 import argparse
+from os.path import basename
 
 from dark.fasta import combineReads
 
 from light.database import DatabaseSpecifier
-from light.performance.feature import FeatureEvaluator
+from light.performance.cluster import (
+    AffinityPropagationAnalysis, KMeansAnalysis)
 
 
 if __name__ == '__main__':
@@ -13,6 +16,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description=('Cluster sequences based on offset distances between '
                      'their features.'))
+
+    parser.add_argument(
+        '--algorithm', choices=('kMeans', 'affinityPropagation'),
+        required=True, help=('The name of the clustering algorithm to use.'))
+
+    parser.add_argument(
+        '--k', type=int, default=None,
+        help=('When k-means clustering is to be used, the value of k.'))
 
     parser.add_argument(
         '--fastaFile',
@@ -46,6 +57,13 @@ if __name__ == '__main__':
     databaseSpecifier = DatabaseSpecifier(allowInMemory=False)
     databaseSpecifier.addArgsToParser(parser)
     args = parser.parse_args()
+
+    if args.algorithm == 'kMeans' and args.k is None:
+        print >>sys.stderr, ('%s: If you use "--algorithm kMeans", you must '
+                             'also use "--k N" to specify the desired number '
+                             'of clusters.' % basename(sys.argv[0]))
+        sys.exit(1)
+
     database = databaseSpecifier.getDatabaseFromArgs(args)
     reads = combineReads(args.fastaFile, args.sequences)
     labels = {}
@@ -73,7 +91,21 @@ if __name__ == '__main__':
                                      (line, args.labelFile, count))
                 labels[fields[1]] = int(fields[0])
 
-    featureEvaluator = FeatureEvaluator(reads, labels, args.defaultLabel,
-                                        database=database)
+    if args.algorithm == 'kMeans':
+        clusterClass = KMeansAnalysis
+        clusterArgs = [args.k]
+    else:
+        clusterClass = AffinityPropagationAnalysis
+        clusterArgs = []
 
-    featureEvaluator.print_()
+    analysis = clusterClass(reads, labels, args.defaultLabel,
+                            database=database)
+    analysis.cluster(*clusterArgs)
+
+    analysis.print_()
+
+    print '%d read%s assigned to %d clusters. Read id by cluster label:' % (
+        analysis.nReads, '' if analysis.nReads == 1 else 's',
+        analysis.nClusters)
+    for read, label in zip(reads, analysis.clusterLabels):
+        print '%s: %s' % (label, read.id)

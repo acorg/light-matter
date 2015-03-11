@@ -5,7 +5,7 @@ from operator import attrgetter
 
 from light.database import DatabaseSpecifier
 from light.trig import ALL_TRIG_CLASSES
-from light.landmarks import ALL_LANDMARK_CLASSES, findLandmark
+from light.landmarks import ALL_LANDMARK_CLASSES
 from light.features import Landmark
 from light.colors import colors
 
@@ -308,8 +308,8 @@ class PlotHashesInSubjectAndRead(object):
         """
         Plots the graph.
 
-        @param readsAx: If not None, use this as the subplot for displaying
-        reads.
+        @param readsAx: If not C{None}, use this as the subplot for displaying
+            reads.
         """
         height = (len(self.query) * 15) / len(self.subject)
         fig = plt.figure(figsize=(15, height))
@@ -338,37 +338,64 @@ class PlotHashesInSubjectAndRead(object):
         readsAx.grid()
 
 
-def plotLandmarksInSequences(fastaFile, landmarkName):
+def plotLandmarksInSequences(sequences, **kwargs):
     """
-    Plot the positions of a landmark on many sequences, and plot the sequences
-    underneath each other.
+    Plot the positions of landmarks and trig points on many sequences, with
+    sequences stacked above each other.
 
-    @param fastaFile: A C{str} filename of sequences to be plotted.
-    @param landmarkName: The C{str} name of a landmark finder.
-    @raise ValueError: If invalid landmarkName
+    @param sequences: Either A C{str} filename of sequences to consider or
+        a C{light.reads.Reads} instance.
+    @param kwargs: See
+        C{database.DatabaseSpecifier.getDatabaseFromKeywords} for
+        additional keywords, all of which are optional.
     """
+<<<<<<< HEAD
     reads = FastaReads(fastaFile, readClass=AARead)
     fig = plt.figure(figsize=(17, len(list(reads)) / 2))
+=======
+    if isinstance(sequences, basestring):
+        reads = list(FastaReads(sequences, readClass=AARead))
+    else:
+        reads = list(sequences)
+
+    db = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
+    fig = plt.figure(figsize=(15, len(reads) / 3))
+>>>>>>> c6ae89c5a79d057ba174ac5ed0e3f43499efab99
     ax = fig.add_subplot(111)
-    color = (0.33999999999999997, 0.67279999999999973, 0.86)
-    landmarkFinder = findLandmark(landmarkName)
-    if landmarkFinder is None:
-        raise ValueError('Unknown landmark finder: %r' % landmarkName)
+    namesSeen = set()
+    maxLen = 0
 
     for i, read in enumerate(reads):
+        readLen = len(read)
+        if readLen > maxLen:
+            maxLen = readLen
         plt.plot([0, len(read.sequence)], [i, i], '-', linewidth=0.5,
                  color='grey')
-        for landmark in landmarkFinder().find(read):
+        scannedRead = db.scan(read)
+        # Landmarks are drawn as colored horizontal lines.
+        for landmark in scannedRead.landmarks:
+            namesSeen.add(landmark.name)
             plt.plot([landmark.offset, landmark.offset + landmark.length],
-                     [i, i], '-', color=color, linewidth=2)
+                     [i, i], '-', color=COLORS[landmark.symbol], linewidth=2)
+        # Trig points are drawn as small colored vertical lines.
+        for trigPoint in scannedRead.trigPoints:
+            namesSeen.add(trigPoint.name)
+            plt.plot([trigPoint.offset, trigPoint.offset],
+                     [i - 0.125, i + 0.125], '-',
+                     color=COLORS[trigPoint.symbol], linewidth=2)
 
-    ax.set_title(landmarkName)
+    ax.set_title('Landmarks and features')
     ax.spines['top'].set_linewidth(0)
     ax.spines['right'].set_linewidth(0)
     ax.spines['bottom'].set_linewidth(0)
     ax.spines['left'].set_linewidth(0)
     ax.xaxis.grid()
     ax.set_ylim(-0.1, i + 0.1)
+    ax.set_xlim(0, maxLen)
+    # Add a legend above left on the plot.
+    ax.legend(handles=legendHandles(namesSeen),
+              bbox_to_anchor=(0.0, 1.02, 1.0, 0.102), loc=3, ncol=2,
+              borderaxespad=0.5)
 
     plt.tick_params(axis='x', which='both', bottom='off', top='off',
                     labelbottom='on')

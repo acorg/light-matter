@@ -5,6 +5,9 @@ from light.landmarks import (
     ALL_LANDMARK_CLASSES, DEFAULT_LANDMARK_CLASSES, AlphaHelix,
     AlphaHelix_3_10, AlphaHelix_pi, AminoAcids, BetaStrand, BetaTurn,
     GOR4AlphaHelix, GOR4BetaStrand, GOR4Coil, Prosite)
+from light.database import Database
+
+from dark.reads import AARead
 
 
 class TestFindLandmark(TestCase):
@@ -124,3 +127,27 @@ class TestDefaultLandmarkClasses(TestCase):
         """
         for klass in DEFAULT_LANDMARK_CLASSES:
             self.assertIn(klass, ALL_LANDMARK_CLASSES)
+
+
+class TestGor4Finders(TestCase):
+    """
+    Tests for the Gor4 finders combined.
+    """
+
+    def testGor4NoOverlap(self):
+        """
+        The gor4 finders must not overlap.
+        """
+        subject = AARead('id', 'GPLGSVHSNQEKIKKRIQKLKEEFATTWHKDPEHPYRTWTYHGSY')
+        dbCoil = Database([GOR4Coil], [], distanceBase=1)
+        scanCoil = dbCoil.scan(subject).coveredIndices()
+        dbAlphaHelix = Database([GOR4AlphaHelix], [], distanceBase=1)
+        scanAlphaHelix = dbAlphaHelix.scan(subject).coveredIndices()
+        dbBetaStrand = Database([GOR4BetaStrand], [], distanceBase=1)
+        scanBetaStrand = dbBetaStrand.scan(subject).coveredIndices()
+        coilAlphaHelix = scanCoil.intersection(scanAlphaHelix)
+        betaStrandAlphaHelix = scanBetaStrand.intersection(scanAlphaHelix)
+        self.assertEqual(0, len(coilAlphaHelix))
+        self.assertEqual(0, len(betaStrandAlphaHelix))
+
+

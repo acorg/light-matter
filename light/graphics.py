@@ -2,6 +2,7 @@ from random import uniform
 import matplotlib.pyplot as plt
 from matplotlib import patches
 from operator import attrgetter
+from textwrap import fill
 
 from light.database import DatabaseSpecifier
 from light.trig import ALL_TRIG_CLASSES
@@ -252,7 +253,7 @@ def plotFeatureSquare(read, significanceFraction=None, readsAx=None, **kwargs):
 
     # Set labels, titles, axis limits, legend, etc.
     totalCoveredResidues = len(scannedRead.coveredIndices())
-    readsAx.set_title('%s\n Length: %d, covered residues: %s' % (read.id,
+    readsAx.set_title('%s\n Length: %d, covered residues: %s' % (fill(read.id),
                       len(read), totalCoveredResidues), fontsize=20)
     readsAx.set_xlabel('Offset (landmarks)', fontsize=16)
     readsAx.set_ylabel('Offset (trig points)', fontsize=16)

@@ -253,5 +253,5 @@ class Finder(object):
         the tests. Otherwise, it is set by the light.database.Database class.
     """
 
-    def __init__(self, distanceBase=1):
+    def __init__(self, distanceBase=1.1):
         self._distanceBase = distanceBase

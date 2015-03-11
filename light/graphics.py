@@ -349,10 +349,6 @@ def plotLandmarksInSequences(sequences, **kwargs):
         C{database.DatabaseSpecifier.getDatabaseFromKeywords} for
         additional keywords, all of which are optional.
     """
-<<<<<<< HEAD
-    reads = FastaReads(fastaFile, readClass=AARead)
-    fig = plt.figure(figsize=(17, len(list(reads)) / 2))
-=======
     if isinstance(sequences, basestring):
         reads = list(FastaReads(sequences, readClass=AARead))
     else:
@@ -360,7 +356,6 @@ def plotLandmarksInSequences(sequences, **kwargs):
 
     db = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
     fig = plt.figure(figsize=(15, len(reads) / 3))
->>>>>>> c6ae89c5a79d057ba174ac5ed0e3f43499efab99
     ax = fig.add_subplot(111)
     namesSeen = set()
     maxLen = 0

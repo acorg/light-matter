@@ -39,7 +39,7 @@ if __name__ == '__main__':
         '--sequence', action='append', dest='sequences',
         metavar='"id sequence"',
         help=('Amino acid sequences to add to the set of reads to be '
-              'clustered. The sequence id will be the text up to the last '
+              'clustered. The sequence id will be the text up to the first '
               'space, if any, otherwise will be automatically assigned.'))
 
     parser.add_argument(

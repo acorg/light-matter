@@ -9,7 +9,8 @@ except ImportError:
 from binascii import crc32
 from operator import attrgetter
 
-from dark.fasta import combineReads
+from dark.fasta import combineReads, FastaReads
+from dark.reads import AARead
 
 from light.distance import scale
 from light.reads import ScannedRead
@@ -569,7 +570,7 @@ class DatabaseSpecifier(object):
             minDistance=Database.DEFAULT_MIN_DISTANCE,
             distanceBase=Database.DEFAULT_DISTANCE_BASE,
             database=None, databaseFile=None,
-            databaseFasta=None, databaseSequences=None):
+            databaseFasta=None, subjects=None):
         """
         Use Python function keywords to build an argument parser that can
         used to find or create a database using getDatabaseFromArgs
@@ -590,11 +591,10 @@ class DatabaseSpecifier(object):
             reduces sensitivity to relatively small differences in distance.
         @param database: An instance of C{light.database.Database}.
         @param databaseFile: The C{str} file name containing a database.
-        @param databaseFasta: The name of a FASTA file containing the
+        @param databaseFasta: The name of a FASTA file containing subject
             sequences that should be added to the database.
-        @param databaseSequences: A C{list} of amino acid sequences to add
-            to the database. The sequence id will be the text up to the last
-            space, if any, otherwise will be automatically assigned.
+        @param subjects: A C{dark.reads.Reads} instance containing amino
+            acid subject sequences to add to the database.
         @raise ValueError: If a database cannot be found or created.
         @return: A C{light.database.Database} instance.
         """
@@ -607,10 +607,13 @@ class DatabaseSpecifier(object):
         if database is not None:
             assert self._allowInMemory, (
                 'In-memory database specification not enabled')
-            if (self._allowPopulation and (databaseFasta is not None or
-                                           databaseSequences is not None)):
-                for read in combineReads(databaseFasta, databaseSequences):
-                    database.addSubject(read)
+            if self._allowPopulation:
+                if databaseFasta is not None:
+                    for read in FastaReads(databaseFasta, readClass=AARead):
+                        database.addSubject(read)
+                if subjects is not None:
+                    for subject in subjects:
+                        database.addSubject(subject)
             return database
 
         if databaseFile is not None:
@@ -635,11 +638,13 @@ class DatabaseSpecifier(object):
                             '--minDistance', str(minDistance),
                             '--distanceBase', str(distanceBase)])
 
-        if databaseFasta is not None:
+        if self._allowPopulation and databaseFasta is not None:
             commandLine.extend(['--databaseFasta', databaseFasta])
 
-        if databaseSequences is not None:
-            for databaseSequence in databaseSequences:
-                commandLine.extend(['--databaseSequence', databaseSequence])
+        database = self.getDatabaseFromArgs(parser.parse_args(commandLine))
 
-        return self.getDatabaseFromArgs(parser.parse_args(commandLine))
+        if self._allowPopulation and subjects is not None:
+            for subject in subjects:
+                database.addSubject(subject)
+
+        return database

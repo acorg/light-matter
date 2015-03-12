@@ -396,3 +396,29 @@ def plotLandmarksInSequences(sequences, **kwargs):
     plt.tick_params(axis='x', which='both', bottom='off', top='off',
                     labelbottom='on')
     ax.get_yaxis().set_visible(False)
+
+
+def confusionMatrix(confusionMatrix):
+    """
+    Plot a confusion matrix (http://en.wikipedia.org/wiki/Confusion_matrix)
+    to visualize the accuracy of the clustering.
+
+    @param confusionMatrix: A confusion matrix, as returned from
+        C{light.performance.cluster.ClusterAnalysis}.
+    """
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1)
+    ax.set_aspect('equal')
+    plt.imshow(confusionMatrix, interpolation='nearest', cmap=plt.cm.GnBu)
+    plt.title('Confusion matrix \n')
+    colorbar = plt.colorbar(ticks=[range(0,
+                            max(confusionMatrix.max(axis=1)) + 1)])
+    colorbar.outline.remove()
+    plt.tick_params(axis='x', which='both', bottom='off', top='off',
+                    labelbottom='off', labeltop='on')
+    plt.tick_params(axis='y', which='both', left='off', right='off',
+                    labelbottom='on')
+    ax.spines['top'].set_linewidth(0)
+    ax.spines['right'].set_linewidth(0)
+    ax.spines['bottom'].set_linewidth(0)
+    ax.spines['left'].set_linewidth(0)

@@ -5,7 +5,8 @@ import numpy as np
 from sklearn.cluster import AffinityPropagation, KMeans
 from sklearn.metrics import (
     homogeneity_score, completeness_score, v_measure_score,
-    adjusted_rand_score, adjusted_mutual_info_score, silhouette_score)
+    adjusted_rand_score, adjusted_mutual_info_score, silhouette_score,
+    confusion_matrix)
 
 from dark.reads import AARead
 from dark.fasta import FastaReads
@@ -120,6 +121,8 @@ class AffinityPropagationAnalysis(ClusterAnalysis):
         self.nClusters = len(affinityPropagation.cluster_centers_indices_)
         self.clusterLabels = affinityPropagation.labels_
         self.affinityPropagation = affinityPropagation
+        self.confusionMatrix = confusion_matrix(self.trueLabels,
+                                                self.clusterLabels)
         return affinityPropagation
 
     def print_(self, fp=sys.stdout):
@@ -171,6 +174,8 @@ class KMeansAnalysis(ClusterAnalysis):
         self.kMeans = KMeans(n_clusters=k, init='k-means++').fit(self.affinity)
         self.nClusters = k
         self.clusterLabels = self.kMeans.labels_
+        self.confusionMatrix = confusion_matrix(self.trueLabels,
+                                                self.clusterLabels)
         return self.kMeans
 
     def print_(self, fp=sys.stdout):

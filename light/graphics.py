@@ -395,7 +395,6 @@ def plotLandmarksInSequences(sequences, **kwargs):
 
     plt.tick_params(axis='x', which='both', bottom='off', top='off',
                     labelbottom='on')
-    ax.get_yaxis().set_visible(False)
 
 
 def confusionMatrix(confusionMatrix):

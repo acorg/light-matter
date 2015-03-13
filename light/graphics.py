@@ -287,17 +287,14 @@ class PlotHashesInSubjectAndRead(object):
         self.subject = subject
 
         database = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
-        sbjctIndex = database.addSubject(self.subject)
-
+        subjectIndex = database.addSubject(self.subject)
         result = database.find(self.query, significanceFraction,
                                storeFullAnalysis=True)
-        if sbjctIndex in result.analysis:
-            self.matchingHashes = result.analysis[sbjctIndex]['histogram'].bins
-            self.queryHashes = result.analysis[sbjctIndex]['nonMatchingHashes']
-        else:
-            self.matchingHashes = []
-            scannedQuery = database.scan(query)
-            self.queryHashes = database.getScannedPairs(scannedQuery)
+
+        self.queryHashes = result.nonMatchingHashes
+        self.matchingHashes = (
+            result.analysis[subjectIndex]['histogram'].bins
+            if subjectIndex in result.analysis else set())
 
         scannedSubject = database.scan(subject)
         self.subjectHashes = set(database.getScannedPairs(scannedSubject))

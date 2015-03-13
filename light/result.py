@@ -21,8 +21,8 @@ class Result(object):
         same histogram bucket for that bucket to be considered a
         significant match with a database title.
     @param database: A C{light.database.Database} instance.
-    @param nonMatchingHashes: A C{set} of hashes in scannedRead that does not
-        match a subject.
+    @param nonMatchingHashes: A C{set} of hashes found in C{scannedRead} that
+        did not match any subject.
     @param storeFullAnalysis: A C{bool}. If C{True} the full significance
         analysis of each matched subject will be stored.
     """
@@ -32,6 +32,7 @@ class Result(object):
         self.scannedRead = scannedRead
         self.matches = matches
         self._storeFullAnalysis = storeFullAnalysis
+        self.nonMatchingHashes = nonMatchingHashes
         self.analysis = defaultdict(dict)
         significanceCutoff = significanceFraction * hashCount
         for subjectIndex in matches:
@@ -66,7 +67,6 @@ class Result(object):
                     'score': score,
                     'significanceCutoff': significanceCutoff,
                     'significantBinCount': len(significant),
-                    'nonMatchingHashes': nonMatchingHashes,
                 }
             elif significant:
                 self.analysis[subjectIndex] = {

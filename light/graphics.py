@@ -267,10 +267,11 @@ def plotFeatureSquare(read, significanceFraction=None, readsAx=None, **kwargs):
 
 class PlotHashesInSubjectAndRead(object):
     """
-    A class which plots a visualisation of the hashes in subject and query.
-    It will return three types of hashes: 1) Hashes in the query that don't
+    A class which plots visualisations of the hashes in subject and query.
+
+    It holds three types of hashes: 1) Hashes in the query that don't
     match in the subject. 2) Hashes in the subject that don't match in the
-    query. 3) Hashes that match in subject and query. These will subsequently
+    query. 3) Hashes that match in subject and query. These can subsequently
     be plotted.
 
     @param query: an AARead instance of the sequence of the query.
@@ -304,7 +305,8 @@ class PlotHashesInSubjectAndRead(object):
 
     def plotGraph(self, readsAx=None):
         """
-        Plots the graph.
+        Plot a graph with the subject on the X axis and the query on the Y
+        axis, showing where all hashes are located.
 
         @param readsAx: If not C{None}, use this as the subplot for displaying
             reads.
@@ -333,6 +335,107 @@ class PlotHashesInSubjectAndRead(object):
 
         readsAx.set_ylabel('Query: %s' % self.query.id)
         readsAx.set_xlabel('Subject: %s' % self.subject.id)
+        readsAx.grid()
+
+    def plotHorizontal(self, readsAx=None):
+        """
+        Plot a graph with the subject and query drawn as two horizontal lines.
+
+        @param readsAx: If not C{None}, use this as the subplot for displaying
+            reads.
+        """
+        fig = plt.figure(figsize=(15, 3))
+        readsAx = readsAx or fig.add_subplot(111)
+        cols = colors.color_palette('hls', len(self.matchingHashes))
+        namesSeen = set()
+        subjectY = 1.0
+        queryY = 0.0
+        trigPointY = 0.025
+        missY = 0.2
+        plottedOnSubject = set()
+        plottedOnQuery = set()
+
+        # Draw a line for the subject.
+        readsAx.plot([0.0, len(self.subject)], [subjectY, subjectY], '-',
+                     color='#999999')
+        readsAx.plot([0.0, len(self.query)], [queryY, queryY], '-',
+                     color='#999999')
+
+        # Subject-only hashes.
+        for landmark, trigPoint in self.subjectHashes:
+            if (landmark, trigPoint) not in plottedOnSubject:
+                plottedOnSubject.add((landmark, trigPoint))
+                namesSeen.add(landmark.name)
+                namesSeen.add(trigPoint.name)
+                print 'subject only', landmark.name, trigPoint.name
+                plt.plot([landmark.offset, landmark.offset + landmark.length],
+                         [subjectY + missY, subjectY + missY],
+                         '-', color=COLORS[landmark.symbol], linewidth=2)
+                plt.plot([trigPoint.offset, trigPoint.offset],
+                         [subjectY + missY + trigPointY,
+                          subjectY + missY - trigPointY], '-',
+                         color=COLORS[trigPoint.symbol], linewidth=2)
+
+        # Query-only hashes.
+        for landmark, trigPoint in self.queryHashes:
+            if (landmark, trigPoint) not in plottedOnQuery:
+                plottedOnQuery.add((landmark, trigPoint))
+                namesSeen.add(landmark.name)
+                namesSeen.add(trigPoint.name)
+                print 'query only', landmark.name, trigPoint.name
+                plt.plot([landmark.offset, landmark.offset + landmark.length],
+                         [queryY - missY, queryY - missY], '-',
+                         color=COLORS[landmark.symbol], linewidth=2)
+                plt.plot([trigPoint.offset, trigPoint.offset],
+                         [queryY - missY + trigPointY,
+                          queryY - missY - trigPointY], '-',
+                         color=COLORS[trigPoint.symbol], linewidth=2)
+
+        # We'll now plot on the subject and query horizontal lines.
+        plottedOnSubject = set()
+        plottedOnQuery = set()
+
+        print 'number of matchingHashes', len(self.matchingHashes)
+        for index, bin_ in enumerate(self.matchingHashes):
+            col = cols[index]
+            print bin_
+            for match in bin_:
+                landmark = match['landmark']
+                trigPoint = match['trigPoint']
+                if (landmark, trigPoint) not in plottedOnQuery:
+                    plottedOnQuery.add((landmark, trigPoint))
+                    namesSeen.add(landmark.name)
+                    namesSeen.add(trigPoint.name)
+                    # print 'both', landmark.name, trigPoint.name
+                    plt.plot(
+                        [landmark.offset, landmark.offset + landmark.length],
+                        [queryY, queryY], '-', color=COLORS[landmark.symbol],
+                        linewidth=2)
+                    plt.plot([trigPoint.offset, trigPoint.offset],
+                             [queryY + trigPointY, queryY - trigPointY], '-',
+                             color=COLORS[trigPoint.symbol], linewidth=2)
+                for subjectOffset in match['subjectOffsets']:
+                    if (landmark, trigPoint, subjectOffset) not in plottedOnSubject:
+                        plottedOnSubject.add((landmark, trigPoint, subjectOffset))
+                        # Landmark and trig point on the subject.
+                        plt.plot([subjectOffset, subjectOffset + landmark.length],
+                                 [subjectY, subjectY],
+                                 '-', color=COLORS[landmark.symbol], linewidth=2)
+
+                    # plt.plot([trigPoint.offset, trigPoint.offset], [subjectY + missY + trigPointY, subjectY + missY - trigPointY], '-', color=COLORS[trigPoint.symbol], linewidth=2)
+
+                    # Diagonal lines connecting start and end of landmarks between query and subject.
+                    plt.plot([landmark.offset, subjectOffset],
+                             [queryY, subjectY], '-', color=col, linewidth=1)
+                    plt.plot([landmark.offset + landmark.length, subjectOffset + landmark.length],
+                             [queryY, subjectY], '-', color='#dddddd', linewidth=1)
+
+        readsAx.legend(handles=legendHandles(namesSeen),
+                       bbox_to_anchor=(0.0, 1.02, 1.0, 0.102), loc=3, ncol=2,
+                       borderaxespad=0.5)
+        readsAx.set_xlabel(fill('Subject (top): %s\n\n\nQuery (bottom): %s' % (self.subject.id, self.query.id)))
+        readsAx.set_ylim(-0.25, 1.25)
+        readsAx.set_xlim(-0.1, 0.1 + max([len(self.subject), len(self.query)]))
         readsAx.grid()
 
 

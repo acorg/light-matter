@@ -339,10 +339,10 @@ class TestResult(TestCase):
                         database=database, storeFullAnalysis=True)
         self.assertEqual(11, len(result.analysis[0]['histogram'].bins))
 
-    def testPrintWithReadWithNoMatchesDueToNoFinders(self):
+    def testPrintWithQueryWithNoMatchesDueToNoFinders(self):
         """
         Check that the print_ method of a result produces the expected result
-        when asked to print the read and when there are no matches (in this
+        when asked to print the query and when there are no matches (in this
         case due to the database having no finders).
         """
         fp = StringIO()
@@ -353,19 +353,19 @@ class TestResult(TestCase):
                                storeFullAnalysis=True)
 
         result.print_(database, fp)
-        expected = ("Read: read\n"
-                    "  Sequence: AGTARFSDDD\n"
+        expected = ("Query title: read\n"
                     "  Length: 10\n"
                     "  Covered indices: 0 (0.00%)\n"
                     "  Landmark count 0, trig point count 0\n"
-                    "Significant matches: 0\n"
                     "Overall matches: 0\n"
-                    "Hash count: 0\n"
+                    "Significant matches: 0\n"
+                    "Query hash count: 0\n"
                     "Significance fraction: 0.000000\n"
                     "Significance cutoff: 0.000000\n")
+
         self.assertEqual(expected, fp.getvalue())
 
-    def testPrintWithoutReadWithNoMatchesDueToNoFinders(self):
+    def testPrintWithoutQueryWithNoMatchesDueToNoFinders(self):
         """
         Check that the print_ method of a result produces the expected result
         when asked to not print the read and when there are no matches (in this
@@ -379,18 +379,17 @@ class TestResult(TestCase):
                                storeFullAnalysis=True)
 
         result.print_(database, fp, printQuery=False)
-        expected = ("Significant matches: 0\n"
-                    "Overall matches: 0\n"
-                    "Hash count: 0\n"
+        expected = ("Overall matches: 0\n"
+                    "Significant matches: 0\n"
+                    "Query hash count: 0\n"
                     "Significance fraction: 0.000000\n"
                     "Significance cutoff: 0.000000\n")
         self.assertEqual(expected, fp.getvalue())
 
-    def testPrintWithoutReadWithNoMatchingSubjects(self):
+    def testPrintNoMatchingSubjects(self):
         """
         Check that the print_ method of a result produces the expected result
-        when asked to not print the read and when there are no matches (in this
-        case due to the database having no finders).
+        when there are no matches.
         """
         fp = StringIO()
         read = AARead('read', 'FRRRFRRRFRFRFRFRFRFRFFRRRFRRRFRRRF')
@@ -400,18 +399,17 @@ class TestResult(TestCase):
         result = database.find(read, storeFullAnalysis=True)
 
         result.print_(database, fp, printQuery=False)
-        expected = ("Significant matches: 0\n"
-                    "Overall matches: 0\n"
-                    "Hash count: 1\n"
+        expected = ("Overall matches: 0\n"
+                    "Significant matches: 0\n"
+                    "Query hash count: 1\n"
                     "Significance fraction: 0.250000\n"
                     "Significance cutoff: 0.250000\n")
         self.assertEqual(expected, fp.getvalue())
 
-    def testPrintWithoutReadWithMatchesFullAnalysis(self):
+    def testPrintOneMatchStoredAnalysis(self):
         """
         Check that the print_ method of a result produces the expected result
-        when asked to not print the read and when there are matches and the
-        full analysis is stored.
+        when there is a match.
         """
         fp = StringIO()
         sequence = 'FRRRFRRRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'
@@ -423,33 +421,31 @@ class TestResult(TestCase):
                                storeFullAnalysis=True)
 
         result.print_(database, fp, printQuery=False)
-        expected = ("Significant matches: 1\n"
-                    "Overall matches: 1\n"
-                    "Hash count: 1\n"
+
+        expected = ("Overall matches: 1\n"
+                    "Significant matches: 1\n"
+                    "Query hash count: 1\n"
                     "Significance fraction: 0.000000\n"
                     "Significance cutoff: 0.000000\n"
-                    "Subject matches:\n"
-                    "  Title: subject\n"
-                    "    Score: 1.0\n"
-                    "    Sequence: FRRRFRRRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF\n"
-                    "    Database subject index: 0\n"
-                    "    Histogram\n"
-                    "      Number of bins: 38\n"
-                    "      Significant bin count: 1\n"
-                    "      Max bin count: 1\n"
-                    "      Counts: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "
-                    "0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "
-                    "0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]\n"
-                    "      Max (scaled) offset delta: 0\n"
-                    "      Min (scaled) offset delta: 0\n")
+                    "Matched subjects:\n"
+                    "  Subject 1 title: subject\n"
+                    "    Index in database: 0\n"
+                    "    Best HSP score: 1.0\n"
+                    "    HSP count: 1\n"
+                    "      HSP 1 has 1 matching (landmark, trigpoint) pair "
+                    "and score: 1.000000\n"
+                    "        Landmark AlphaHelix symbol='A' offset=0 len=9 "
+                    "detail=2 subjectOffset=0\n"
+                    "        Trig point AlphaHelix symbol='A' offset=25 "
+                    "len=13 detail=3\n")
 
         self.assertEqual(expected, fp.getvalue())
 
-    def testPrintWithoutReadWithMatchesWithoutFullAnalysis(self):
+    def testOneMatchNoFullAnalysis(self):
         """
         Check that the print_ method of a result produces the expected result
-        when asked to not print the read and when there are matches and the
-        full analysis is not stored.
+        when asked to not print the read, when there are matches and the
+        full analysis is not stored, and when sequences are not printed.
         """
         fp = StringIO()
         sequence = 'FRRRFRRRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'
@@ -460,15 +456,83 @@ class TestResult(TestCase):
         result = database.find(read, significanceFraction=0.0)
 
         result.print_(database, fp, printQuery=False)
-        expected = ("Significant matches: 1\n"
-                    "Overall matches: 1\n"
-                    "Hash count: 1\n"
+        expected = ("Overall matches: 1\n"
+                    "Significant matches: 1\n"
+                    "Query hash count: 1\n"
                     "Significance fraction: 0.000000\n"
                     "Significance cutoff: 0.000000\n"
-                    "Subject matches:\n"
-                    "  Title: subject\n"
-                    "    Score: 1.0\n"
+                    "Matched subjects:\n"
+                    "  Subject 1 title: subject\n"
+                    "    Index in database: 0\n"
+                    "    Best HSP score: 1.0\n"
+                    "    HSP count: 1\n"
+                    "      HSP 1 has 1 matching (landmark, trigpoint) pair "
+                    "and score: 1.000000\n"
+                    "        Landmark AlphaHelix symbol='A' offset=0 len=9 "
+                    "detail=2 subjectOffset=0\n"
+                    "        Trig point AlphaHelix symbol='A' offset=25 "
+                    "len=13 detail=3\n")
+
+        self.assertEqual(expected, fp.getvalue())
+
+    def testOneMatchNoFullAnalysisNoFeatures(self):
+        """
+        Check that the print_ method of a result produces the expected result
+        when asked to not print the read, when there are matches and the
+        full analysis is not stored, and when features are not printed.
+        """
+        fp = StringIO()
+        sequence = 'FRRRFRRRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'
+        database = Database([AlphaHelix], [])
+        subject = AARead('subject', sequence)
+        database.addSubject(subject)
+        read = AARead('read', sequence)
+        result = database.find(read, significanceFraction=0.0)
+
+        result.print_(database, fp, printQuery=False, printFeatures=False)
+        expected = ("Overall matches: 1\n"
+                    "Significant matches: 1\n"
+                    "Query hash count: 1\n"
+                    "Significance fraction: 0.000000\n"
+                    "Significance cutoff: 0.000000\n"
+                    "Matched subjects:\n"
+                    "  Subject 1 title: subject\n"
+                    "    Index in database: 0\n"
+                    "    Best HSP score: 1.0\n"
+                    "    HSP count: 1\n"
+                    "      HSP 1 has 1 matching (landmark, trigpoint) pair "
+                    "and score: 1.000000\n")
+
+        self.assertEqual(expected, fp.getvalue())
+
+    def testPrintWithoutQueryWithMatchesWithoutFullAnalysisWithSequences(self):
+        """
+        Check that the print_ method of a result produces the expected result
+        when asked to not print the read, when there are matches and the
+        full analysis is not stored, and when sequences are printed.
+        """
+        fp = StringIO()
+        sequence = 'FRRRFRRRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'
+        database = Database([AlphaHelix], [])
+        subject = AARead('subject', sequence)
+        database.addSubject(subject)
+        read = AARead('read', sequence)
+        result = database.find(read, significanceFraction=0.0)
+
+        result.print_(database, fp, printQuery=False, printSequences=True,
+                      printFeatures=False)
+        expected = ("Overall matches: 1\n"
+                    "Significant matches: 1\n"
+                    "Query hash count: 1\n"
+                    "Significance fraction: 0.000000\n"
+                    "Significance cutoff: 0.000000\n"
+                    "Matched subjects:\n"
+                    "  Subject 1 title: subject\n"
+                    "    Index in database: 0\n"
+                    "    Best HSP score: 1.0\n"
                     "    Sequence: FRRRFRRRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF\n"
-                    "    Database subject index: 0\n")
+                    "    HSP count: 1\n"
+                    "      HSP 1 has 1 matching (landmark, trigpoint) pair "
+                    "and score: 1.000000\n")
 
         self.assertEqual(expected, fp.getvalue())

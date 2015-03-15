@@ -112,13 +112,13 @@ def plotFeatures(read, significanceFraction=None, readsAx=None, **kwargs):
 
     database = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
     result = database.find(read, significanceFraction, storeFullAnalysis=True)
-    scannedRead = result.scannedRead
+    scannedQuery = result.scannedQuery
 
     # plot landmarks and trig point pairs.
-    totalCoveredResidues = len(scannedRead.coveredIndices())
+    totalCoveredResidues = len(scannedQuery.coveredIndices())
     count = 0
 
-    for landmark, trigPoint in database.getScannedPairs(scannedRead):
+    for landmark, trigPoint in database.getScannedPairs(scannedQuery):
         readsAx.plot([landmark.offset, trigPoint.offset], [count, count], '-',
                      color='grey')
         landmarkColor = COLORS[landmark.symbol]
@@ -137,7 +137,7 @@ def plotFeatures(read, significanceFraction=None, readsAx=None, **kwargs):
     readsAx.set_ylim(-0.5, count + 1)
     readsAx.grid()
 
-    return scannedRead, count
+    return scannedQuery, count
 
 
 def plotFeaturePanel(reads, **kwargs):
@@ -215,7 +215,7 @@ def plotFeatureSquare(read, significanceFraction=None, readsAx=None, **kwargs):
 
     database = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
     result = database.find(read, significanceFraction, storeFullAnalysis=True)
-    scannedRead = result.scannedRead
+    scannedQuery = result.scannedQuery
 
     # Plot a light grey diagonal line, bottom left to top right.
     readsAx.plot([0, len(read.sequence)], [0, len(read.sequence)], '-',
@@ -227,7 +227,7 @@ def plotFeatureSquare(read, significanceFraction=None, readsAx=None, **kwargs):
     namesSeen = set()
     landmarks = set()
 
-    for landmark, trigPoint in database.getScannedPairs(scannedRead):
+    for landmark, trigPoint in database.getScannedPairs(scannedQuery):
         # Add jitter to the Y offset so we can see more trig points that
         # occur at the same offset.
         scatterX.append(landmark.offset)
@@ -252,7 +252,7 @@ def plotFeatureSquare(read, significanceFraction=None, readsAx=None, **kwargs):
     readsAx.scatter(scatterX, scatterY, c=scatterColors, edgecolors='none')
 
     # Set labels, titles, axis limits, legend, etc.
-    totalCoveredResidues = len(scannedRead.coveredIndices())
+    totalCoveredResidues = len(scannedQuery.coveredIndices())
     readsAx.set_title('%s\n Length: %d, covered residues: %s' % (fill(read.id),
                       len(read), totalCoveredResidues), fontsize=20)
     readsAx.set_xlabel('Offset (landmarks)', fontsize=16)
@@ -262,7 +262,7 @@ def plotFeatureSquare(read, significanceFraction=None, readsAx=None, **kwargs):
     readsAx.legend(handles=legendHandles(namesSeen), loc=2)
     readsAx.grid()
 
-    return scannedRead
+    return scannedQuery
 
 
 class PlotHashesInSubjectAndRead(object):

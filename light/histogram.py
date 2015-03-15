@@ -1,12 +1,12 @@
 class Histogram(object):
     """
-    Maintain a histogram!
+    Maintain a histogram.
 
-    @param data: An iterable of items that should be put into a histogram.
-    @param key: A function to obtain a numeric value from a data element.
     @param nBins: An C{int} number of bins to use in the histogram.
     """
     def __init__(self, nBins=10):
+        if nBins < 1:
+            raise ValueError('Number of bins must be at least one.')
         self.max = self.min = None
         self._first = True
         self._values = []
@@ -42,7 +42,7 @@ class Histogram(object):
         self._finalized = True
         # Bin the data.
         nBins = len(self.bins)
-        binWidth = (self.max - self.min) / float(nBins)
+        binWidth = self.binWidth = (self.max - self.min) / float(nBins)
         min_ = self.min
         max_ = self.max
         for data, value in self._values:

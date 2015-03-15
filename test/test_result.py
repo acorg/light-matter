@@ -26,7 +26,7 @@ class TestResult(TestCase):
                         database=database)
         self.assertEqual({}, result.matches)
         self.assertEqual([], list(result.significant()))
-        self.assertIs(read, result.scannedRead)
+        self.assertIs(read, result.scannedQuery)
 
     def testAddOneMatch(self):
         """
@@ -40,9 +40,11 @@ class TestResult(TestCase):
         matches = {
             0: [
                 {
-                    'trigPoint': TrigPoint('Peaks', 'P', 1),
                     'landmark': Landmark('AlphaHelix', 'A', 0, 9),
-                    'subjectOffsets': [2],
+                    'queryLandmarkOffsets': [0],
+                    'queryTrigPointOffsets': [1],
+                    'subjectLandmarkOffsets': [2],
+                    'trigPoint': TrigPoint('Peaks', 'P', 1),
                 },
             ],
         }
@@ -62,9 +64,11 @@ class TestResult(TestCase):
         matches = {
             0: [
                 {
-                    'trigPoint': TrigPoint('Peaks', 'P', 1),
                     'landmark': Landmark('AlphaHelix', 'A', 1, 9),
-                    'subjectOffsets': [2, 10],
+                    'queryLandmarkOffsets': [1],
+                    'queryTrigPointOffsets': [1],
+                    'subjectLandmarkOffsets': [2, 10],
+                    'trigPoint': TrigPoint('Peaks', 'P', 1),
                 },
             ],
         }
@@ -84,19 +88,25 @@ class TestResult(TestCase):
         matches = {
             0: [
                 {
+                    'landmark': Landmark('AlphaHelix', 'A', 0, 9),
+                    'queryLandmarkOffsets': [0],
+                    'queryTrigPointOffsets': [1],
+                    'subjectLandmarkOffsets': [0],
                     'trigPoint': TrigPoint('Peaks', 'P', 1),
-                    'landmark': Landmark('AlphaHelix', 'A', 0, 9),
-                    'subjectOffsets': [0],
                 },
                 {
+                    'landmark': Landmark('AlphaHelix', 'A', 0, 9),
+                    'queryLandmarkOffsets': [0],
+                    'queryTrigPointOffsets': [2],
+                    'subjectLandmarkOffsets': [0],
                     'trigPoint': TrigPoint('Peaks', 'P', 2),
-                    'landmark': Landmark('AlphaHelix', 'A', 0, 9),
-                    'subjectOffsets': [0],
                 },
                 {
-                    'trigPoint': TrigPoint('Peaks', 'P', 3),
                     'landmark': Landmark('AlphaHelix', 'A', 0, 9),
-                    'subjectOffsets': [10],
+                    'queryLandmarkOffsets': [0],
+                    'queryTrigPointOffsets': [3],
+                    'subjectLandmarkOffsets': [10],
+                    'trigPoint': TrigPoint('Peaks', 'P', 3),
                 },
             ],
         }
@@ -104,7 +114,7 @@ class TestResult(TestCase):
         result = Result(read, matches, hashCount, significanceFraction=0.25,
                         database=database)
         self.assertEqual([0], list(result.significant()))
-        self.assertEqual(0.5, result.analysis[0]['score'])
+        self.assertEqual(0.5, result.analysis[0]['bestScore'])
 
     def testTwoSignificantMatches(self):
         """
@@ -119,32 +129,42 @@ class TestResult(TestCase):
         matches = {
             0: [
                 {
+                    'landmark': Landmark('AlphaHelix', 'A', 0, 9),
+                    'queryLandmarkOffsets': [0],
+                    'queryTrigPointOffsets': [1],
+                    'subjectLandmarkOffsets': [0],
                     'trigPoint': TrigPoint('Peaks', 'P', 1),
-                    'landmark': Landmark('AlphaHelix', 'A', 0, 9),
-                    'subjectOffsets': [0],
                 },
                 {
+                    'landmark': Landmark('AlphaHelix', 'A', 0, 9),
+                    'queryLandmarkOffsets': [0],
+                    'queryTrigPointOffsets': [2],
+                    'subjectLandmarkOffsets': [0],
                     'trigPoint': TrigPoint('Peaks', 'P', 2),
-                    'landmark': Landmark('AlphaHelix', 'A', 0, 9),
-                    'subjectOffsets': [0],
                 },
                 {
-                    'trigPoint': TrigPoint('Peaks', 'P', 3),
                     'landmark': Landmark('AlphaHelix', 'A', 0, 9),
-                    'subjectOffsets': [10],
+                    'queryLandmarkOffsets': [0],
+                    'queryTrigPointOffsets': [3],
+                    'subjectLandmarkOffsets': [10],
+                    'trigPoint': TrigPoint('Peaks', 'P', 3),
                 },
             ],
 
             1: [
                 {
-                    'trigPoint': TrigPoint('Peaks', 'P', 1),
                     'landmark': Landmark('AlphaHelix', 'A', 0, 9),
-                    'subjectOffsets': [0],
+                    'queryLandmarkOffsets': [0],
+                    'queryTrigPointOffsets': [1],
+                    'subjectLandmarkOffsets': [0],
+                    'trigPoint': TrigPoint('Peaks', 'P', 1),
                 },
                 {
-                    'trigPoint': TrigPoint('Peaks', 'P', 2),
                     'landmark': Landmark('AlphaHelix', 'A', 0, 9),
-                    'subjectOffsets': [0],
+                    'queryLandmarkOffsets': [0],
+                    'queryTrigPointOffsets': [2],
+                    'subjectLandmarkOffsets': [0],
+                    'trigPoint': TrigPoint('Peaks', 'P', 2),
                 },
             ],
         }
@@ -152,8 +172,8 @@ class TestResult(TestCase):
         result = Result(read, matches, hashCount, significanceFraction=0.3,
                         database=database)
         self.assertEqual([0, 1], sorted(list(result.significant())))
-        self.assertEqual(0.4, result.analysis[0]['score'])
-        self.assertEqual(0.4, result.analysis[1]['score'])
+        self.assertEqual(0.4, result.analysis[0]['bestScore'])
+        self.assertEqual(0.4, result.analysis[1]['bestScore'])
 
     def testSaveEmpty(self):
         """
@@ -186,7 +206,7 @@ class TestResult(TestCase):
 
     def testSave(self):
         """
-        Save must produce the right JSON format.
+        Save must write results out in the expected JSON format.
         """
         read = ScannedRead(
             AARead('id', 'FRRRFRRRFRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
@@ -197,17 +217,21 @@ class TestResult(TestCase):
         matches = {
             0: [
                 {
-                    'trigPoint': TrigPoint('Peaks', 'P', 1),
                     'landmark': Landmark('AlphaHelix', 'A', 0, 9),
-                    'subjectOffsets': [0],
+                    'queryLandmarkOffsets': [0],
+                    'queryTrigPointOffsets': [1],
+                    'subjectLandmarkOffsets': [0],
+                    'trigPoint': TrigPoint('Peaks', 'P', 1),
                 },
             ],
 
             1: [
                 {
-                    'trigPoint': TrigPoint('Peaks', 'P', 1),
                     'landmark': Landmark('AlphaHelix', 'A', 27, 13),
-                    'subjectOffsets': [27],
+                    'queryLandmarkOffsets': [27],
+                    'queryTrigPointOffsets': [1],
+                    'subjectLandmarkOffsets': [27],
+                    'trigPoint': TrigPoint('Peaks', 'P', 1),
                 },
             ],
         }
@@ -220,30 +244,42 @@ class TestResult(TestCase):
             {
                 'alignments': [
                     {
-                        'matchInfo': [
+                        'subjectIndex': 0,
+                        'matchScore': 1.0,
+                        'hsps': [
                             {
-                                'landmarkLength': 9,
-                                'landmarkName': 'AlphaHelix',
-                                'readOffset': 0,
-                                'subjectOffsets': [0],
-                                'trigPointName': 'Peaks',
+                                'hspInfo': [
+                                    {
+                                        'landmark': 'AlphaHelix',
+                                        'landmarkLength': 9,
+                                        'queryLandmarkOffset': 0,
+                                        'queryTrigPointOffset': 1,
+                                        'subjectLandmarkOffset': 0,
+                                        'trigPoint': 'Peaks',
+                                    },
+                                ],
+                                'score': 1.0,
                             },
                         ],
-                        'matchScore': 1.0,
-                        'subjectIndex': 0
                     },
                     {
-                        'matchInfo': [
+                        'subjectIndex': 1,
+                        'matchScore': 1.0,
+                        'hsps': [
                             {
-                                'landmarkLength': 13,
-                                'landmarkName': 'AlphaHelix',
-                                'readOffset': 27,
-                                'subjectOffsets': [27],
-                                'trigPointName': 'Peaks',
+                                'hspInfo': [
+                                    {
+                                        'landmark': 'AlphaHelix',
+                                        'landmarkLength': 13,
+                                        'queryLandmarkOffset': 27,
+                                        'queryTrigPointOffset': 1,
+                                        'subjectLandmarkOffset': 27,
+                                        'trigPoint': 'Peaks',
+                                    },
+                                ],
+                                'score': 1.0,
                             },
                         ],
-                        'matchScore': 1.0,
-                        'subjectIndex': 1,
                     },
                 ],
                 'queryId': 'id',
@@ -266,9 +302,11 @@ class TestResult(TestCase):
         matches = {
             0: [
                 {
-                    'trigPoint': TrigPoint('Peaks', 'P', 1),
                     'landmark': Landmark('AlphaHelix', 'A', 1, 9),
-                    'subjectOffsets': [2],
+                    'queryLandmarkOffsets': [1],
+                    'queryTrigPointOffsets': [1],
+                    'subjectLandmarkOffsets': [2],
+                    'trigPoint': TrigPoint('Peaks', 'P', 1),
                 },
             ],
         }
@@ -289,9 +327,11 @@ class TestResult(TestCase):
         matches = {
             0: [
                 {
-                    'trigPoint': TrigPoint('Peaks', 'P', 1),
                     'landmark': Landmark('AlphaHelix', 'A', 1, 9),
-                    'subjectOffsets': [2],
+                    'queryLandmarkOffsets': [1],
+                    'queryTrigPointOffsets': [1],
+                    'subjectLandmarkOffsets': [2],
+                    'trigPoint': TrigPoint('Peaks', 'P', 1),
                 },
             ],
         }
@@ -318,7 +358,11 @@ class TestResult(TestCase):
                     "  Length: 10\n"
                     "  Covered indices: 0 (0.00%)\n"
                     "  Landmark count 0, trig point count 0\n"
-                    "Significant matches: 0\nOverall matches: 0\n")
+                    "Significant matches: 0\n"
+                    "Overall matches: 0\n"
+                    "Hash count: 0\n"
+                    "Significance fraction: 0.000000\n"
+                    "Significance cutoff: 0.000000\n")
         self.assertEqual(expected, fp.getvalue())
 
     def testPrintWithoutReadWithNoMatchesDueToNoFinders(self):
@@ -334,9 +378,12 @@ class TestResult(TestCase):
         result = database.find(read, significanceFraction=0.0,
                                storeFullAnalysis=True)
 
-        result.print_(database, fp, printRead=False)
+        result.print_(database, fp, printQuery=False)
         expected = ("Significant matches: 0\n"
-                    "Overall matches: 0\n")
+                    "Overall matches: 0\n"
+                    "Hash count: 0\n"
+                    "Significance fraction: 0.000000\n"
+                    "Significance cutoff: 0.000000\n")
         self.assertEqual(expected, fp.getvalue())
 
     def testPrintWithoutReadWithNoMatchingSubjects(self):
@@ -352,9 +399,12 @@ class TestResult(TestCase):
         database.addSubject(subject)
         result = database.find(read, storeFullAnalysis=True)
 
-        result.print_(database, fp, printRead=False)
+        result.print_(database, fp, printQuery=False)
         expected = ("Significant matches: 0\n"
-                    "Overall matches: 0\n")
+                    "Overall matches: 0\n"
+                    "Hash count: 1\n"
+                    "Significance fraction: 0.250000\n"
+                    "Significance cutoff: 0.250000\n")
         self.assertEqual(expected, fp.getvalue())
 
     def testPrintWithoutReadWithMatchesFullAnalysis(self):
@@ -372,25 +422,26 @@ class TestResult(TestCase):
         result = database.find(read, significanceFraction=0.0,
                                storeFullAnalysis=True)
 
-        result.print_(database, fp, printRead=False)
+        result.print_(database, fp, printQuery=False)
         expected = ("Significant matches: 1\n"
                     "Overall matches: 1\n"
+                    "Hash count: 1\n"
+                    "Significance fraction: 0.000000\n"
+                    "Significance cutoff: 0.000000\n"
                     "Subject matches:\n"
                     "  Title: subject\n"
                     "    Score: 1.0\n"
                     "    Sequence: FRRRFRRRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF\n"
                     "    Database subject index: 0\n"
-                    "    Hash count: 1\n"
                     "    Histogram\n"
                     "      Number of bins: 38\n"
-                    "      Significance cutoff: 0.0\n"
                     "      Significant bin count: 1\n"
                     "      Max bin count: 1\n"
                     "      Counts: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "
                     "0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "
                     "0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]\n"
-                    "      Max offset delta: 0\n"
-                    "      Min offset delta: 0\n")
+                    "      Max (scaled) offset delta: 0\n"
+                    "      Min (scaled) offset delta: 0\n")
 
         self.assertEqual(expected, fp.getvalue())
 
@@ -408,9 +459,12 @@ class TestResult(TestCase):
         read = AARead('read', sequence)
         result = database.find(read, significanceFraction=0.0)
 
-        result.print_(database, fp, printRead=False)
+        result.print_(database, fp, printQuery=False)
         expected = ("Significant matches: 1\n"
                     "Overall matches: 1\n"
+                    "Hash count: 1\n"
+                    "Significance fraction: 0.000000\n"
+                    "Significance cutoff: 0.000000\n"
                     "Subject matches:\n"
                     "  Title: subject\n"
                     "    Score: 1.0\n"

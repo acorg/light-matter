@@ -37,7 +37,7 @@ def affinityMatrix(sequences, significanceFraction=None, **kwargs):
             read, significanceFraction=significanceFraction).analysis
         for subjectIndex in xrange(subjectCount):
             try:
-                score = analysis[subjectIndex]['score']
+                score = analysis[subjectIndex]['bestScore']
             except KeyError:
                 score = 0.0
             append(score)

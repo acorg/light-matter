@@ -12,8 +12,7 @@ from dark.hsp import HSP
 from dark.reads import AARead
 
 from light.database import Database
-from light.alignments import (
-    LightReadsAlignments, LightAlignment, jsonDictToAlignments)
+from light.alignments import LightReadsAlignments, jsonDictToAlignments
 
 
 class BZ2(object):
@@ -35,22 +34,6 @@ class BZ2(object):
         index = self._index
         self._index = len(self._data)
         return iter(self._data[index:])
-
-
-class TestLightAlignment(TestCase):
-    """
-    Test the LightAlignment class. The class only stores one additional
-    attribute and the rest of its behavior is inherited from
-    C{dark.alignment.Alignment} which is tested in the dark matter code.
-    """
-
-    def testStoresMatchInfo(self):
-        """
-        The LightAlignment class must store the match info it is passed.
-        """
-        matchInfo = {}
-        lightAlignment = LightAlignment(55, 'title', matchInfo)
-        self.assertIs(matchInfo, lightAlignment.matchInfo)
 
 
 class TestLightReadsAlignments(TestCase):
@@ -274,8 +257,6 @@ class TestLightReadsAlignments(TestCase):
         """
         The hsps function must yield the HSPs.
         """
-        # adjustHspsForPlotting changes HSPs in place, so we pass copied
-        # records so we don't mess up other tests.
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2 +
                                          RECORD3))
         with patch('__builtin__.open', mockOpener, create=True):
@@ -318,7 +299,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
 
     def testLimitZero(self):
         """
-        If L{LightReadsAlignments} is limited to zero result, that limit must
+        If L{LightReadsAlignments} is limited to zero results, that limit must
         be respected.
         """
         mockOpener = mockOpen(read_data=PARAMS + RECORD0)
@@ -750,64 +731,52 @@ class TestJSONDictToAlignments(TestCase):
         lightDict = {
             'alignments': [
                 {
-                    'matchInfo': [
+                    'subjectIndex': 0,
+                    'matchScore': 1.0,
+                    'hsps': [
                         {
-                            'landmarkLength': 9,
-                            'landmarkName': 'AlphaHelix',
-                            'readOffset': 0,
-                            'subjectOffset': 0,
-                            'trigPointName': 'AminoAcids',
-                        },
-                        {
-                            'landmarkLength': 9,
-                            'landmarkName': 'AlphaHelix',
-                            'readOffset': 0,
-                            'subjectOffset': 0,
-                            'trigPointName': 'AminoAcids',
+                            'hspInfo': [
+                                {
+                                    'landmark': 'AlphaHelix',
+                                    'subjectOffset': 0,
+                                    'trigPoint': 'Peaks',
+                                    'queryOffset': 0,
+                                },
+                            ],
+                            'score': 1.0,
                         },
                     ],
-                    'matchScore': 2,
-                    'subjectIndex': 0,
                 },
                 {
-                    'matchInfo': [
+                    'subjectIndex': 1,
+                    'matchScore': 1.0,
+                    'hsps': [
                         {
-                            'landmarkLength': 7,
-                            'landmarkName': 'AlphaHelix_3_10',
-                            'readOffset': 15,
-                            'subjectOffset': 0,
-                            'trigPointName': 'AminoAcids',
-                        },
-                        {
-                            'landmarkLength': 7,
-                            'landmarkName': 'AlphaHelix_3_10',
-                            'readOffset': 15,
-                            'subjectOffset': 0,
-                            'trigPointName': 'AminoAcids',
-                        },
-                        {
-                            'landmarkLength': 7,
-                            'landmarkName': 'AlphaHelix_3_10',
-                            'readOffset': 15,
-                            'subjectOffset': 0,
-                            'trigPointName': 'AminoAcids',
+                            'hspInfo': [
+                                {
+                                    'landmark': 'AlphaHelix',
+                                    'subjectOffset': 27,
+                                    'trigPoint': 'Peaks',
+                                    'queryOffset': 27,
+                                },
+                            ],
+                            'score': 1.0,
                         },
                     ],
-                    'matchScore': 3,
-                    'subjectIndex': 1,
                 },
-
             ],
-            'queryId': 'id0',
-            'querySequence': 'ADDDADDDAMDCMDCADDADDAMCDC',
+            'queryId': 'id',
+            'querySequence': 'FRRRFRRRFRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF',
         }
         alignments = jsonDictToAlignments(lightDict, database)
         self.assertEqual(2, len(alignments))
-        self.assertEqual(HSP(2), alignments[0].hsps[0])
+
+        self.assertEqual(HSP(1.0), alignments[0].hsps[0])
         self.assertEqual('subject0', alignments[0].subjectTitle)
-        self.assertEqual(lightDict['alignments'][0]['matchInfo'],
-                         alignments[0].matchInfo)
-        self.assertEqual(HSP(3), alignments[1].hsps[0])
+        self.assertEqual(lightDict['alignments'][0]['hsps'][0]['hspInfo'],
+                         alignments[0].hsps[0].hspInfo)
+
+        self.assertEqual(HSP(1.0), alignments[1].hsps[0])
         self.assertEqual('subject1', alignments[1].subjectTitle)
-        self.assertEqual(lightDict['alignments'][1]['matchInfo'],
-                         alignments[1].matchInfo)
+        self.assertEqual(lightDict['alignments'][1]['hsps'][0]['hspInfo'],
+                         alignments[1].hsps[0].hspInfo)

@@ -25,6 +25,22 @@ class TestHistogram(TestCase):
         self.assertIs(None, h.max)
         self.assertIs(None, h.min)
 
+    def testZeroBins(self):
+        """
+        If a bin count of zero is given to the Histogram class, a ValueError
+        must be raised.
+        """
+        error = '^Number of bins must be at least one\.$'
+        self.assertRaisesRegexp(ValueError, error, Histogram, 0)
+
+    def testNegativeBins(self):
+        """
+        If a negative bin count is given to the Histogram class, a ValueError
+        must be raised.
+        """
+        error = '^Number of bins must be at least one\.$'
+        self.assertRaisesRegexp(ValueError, error, Histogram, -1)
+
     def testDefaultNumberOfBins(self):
         """
         If no bin count is given to the Histogram class, it must make the
@@ -51,6 +67,16 @@ class TestHistogram(TestCase):
         h.finalizeHistogram()
         self.assertEqual([[3]], h.bins)
 
+    def testOneElementBinWidth(self):
+        """
+        If a histogram is created with just one element, the bin width must be
+        zero.
+        """
+        h = Histogram()
+        h.add(3, 3)
+        h.finalizeHistogram()
+        self.assertEqual(0.0, h.binWidth)
+
     def testOneElementMaxMin(self):
         """
         If a histogram is created with just one element, the max and min
@@ -61,6 +87,17 @@ class TestHistogram(TestCase):
         h.finalizeHistogram()
         self.assertEqual(3, h.max)
         self.assertEqual(3, h.min)
+
+    def testTwoElementsBinWidth(self):
+        """
+        If a histogram with 10 buckets is created with two elements that differ
+        by 1.0, the bin width should be set to the correct value of 0.1.
+        """
+        h = Histogram(10)
+        h.add(3, 3)
+        h.add(3, 4)
+        h.finalizeHistogram()
+        self.assertEqual(0.1, h.binWidth)
 
     def testTwoElementsMaxMin(self):
         """
@@ -108,3 +145,14 @@ class TestHistogram(TestCase):
             h.add(i, i)
         h.finalizeHistogram()
         self.assertEqual([[0, 1, 2, 3, 4], [5, 6, 7, 8, 9]], h.bins)
+
+    def testTenElementsInTwoBinsBinWidth(self):
+        """
+        If a histogram is created with ten elements (0-9) placed into 2 bins,
+        the bin width must be 4.5.
+        """
+        h = Histogram(2)
+        for i in range(10):
+            h.add(i, i)
+        h.finalizeHistogram()
+        self.assertEqual(4.5, h.binWidth)

@@ -1,6 +1,7 @@
 from unittest import TestCase
 from cStringIO import StringIO
 from json import loads
+import warnings
 
 from dark.reads import AARead
 
@@ -9,6 +10,7 @@ from light.features import Landmark, TrigPoint
 from light.reads import ScannedRead
 from light.database import Database
 from light.landmarks import AlphaHelix, BetaStrand
+from light.trig import Troughs
 
 
 class TestResult(TestCase):
@@ -352,7 +354,7 @@ class TestResult(TestCase):
         result = database.find(read, significanceFraction=0.0,
                                storeFullAnalysis=True)
 
-        result.print_(database, fp)
+        result.print_(fp=fp)
         expected = ("Query title: read\n"
                     "  Length: 10\n"
                     "  Covered indices: 0 (0.00%)\n"
@@ -378,7 +380,7 @@ class TestResult(TestCase):
         result = database.find(read, significanceFraction=0.0,
                                storeFullAnalysis=True)
 
-        result.print_(database, fp, printQuery=False)
+        result.print_(fp=fp, printQuery=False)
         expected = ("Overall matches: 0\n"
                     "Significant matches: 0\n"
                     "Query hash count: 0\n"
@@ -392,13 +394,13 @@ class TestResult(TestCase):
         when there are no matches.
         """
         fp = StringIO()
-        read = AARead('read', 'FRRRFRRRFRFRFRFRFRFRFFRRRFRRRFRRRF')
+        query = AARead('query', 'FRRRFRRRFRFRFRFRFRFRFFRRRFRRRFRRRF')
         database = Database([AlphaHelix, BetaStrand], [])
         subject = AARead('subject', 'VICVICV')
         database.addSubject(subject)
-        result = database.find(read, storeFullAnalysis=True)
+        result = database.find(query, storeFullAnalysis=True)
 
-        result.print_(database, fp, printQuery=False)
+        result.print_(fp=fp, printQuery=False)
         expected = ("Overall matches: 0\n"
                     "Significant matches: 0\n"
                     "Query hash count: 1\n"
@@ -416,11 +418,11 @@ class TestResult(TestCase):
         database = Database([AlphaHelix], [])
         subject = AARead('subject', sequence)
         database.addSubject(subject)
-        read = AARead('read', sequence)
-        result = database.find(read, significanceFraction=0.0,
+        query = AARead('query', sequence)
+        result = database.find(query, significanceFraction=0.0,
                                storeFullAnalysis=True)
 
-        result.print_(database, fp, printQuery=False)
+        result.print_(fp=fp, printQuery=False)
 
         expected = ("Overall matches: 1\n"
                     "Significant matches: 1\n"
@@ -444,7 +446,7 @@ class TestResult(TestCase):
     def testOneMatchNoFullAnalysis(self):
         """
         Check that the print_ method of a result produces the expected result
-        when asked to not print the read, when there are matches and the
+        when asked to not print the query, when there are matches and the
         full analysis is not stored, and when sequences are not printed.
         """
         fp = StringIO()
@@ -452,10 +454,10 @@ class TestResult(TestCase):
         database = Database([AlphaHelix], [])
         subject = AARead('subject', sequence)
         database.addSubject(subject)
-        read = AARead('read', sequence)
-        result = database.find(read, significanceFraction=0.0)
+        query = AARead('query', sequence)
+        result = database.find(query, significanceFraction=0.0)
 
-        result.print_(database, fp, printQuery=False)
+        result.print_(fp=fp, printQuery=False)
         expected = ("Overall matches: 1\n"
                     "Significant matches: 1\n"
                     "Query hash count: 1\n"
@@ -478,7 +480,7 @@ class TestResult(TestCase):
     def testOneMatchNoFullAnalysisNoFeatures(self):
         """
         Check that the print_ method of a result produces the expected result
-        when asked to not print the read, when there are matches and the
+        when asked to not print the query, when there are matches and the
         full analysis is not stored, and when features are not printed.
         """
         fp = StringIO()
@@ -486,10 +488,10 @@ class TestResult(TestCase):
         database = Database([AlphaHelix], [])
         subject = AARead('subject', sequence)
         database.addSubject(subject)
-        read = AARead('read', sequence)
-        result = database.find(read, significanceFraction=0.0)
+        query = AARead('query', sequence)
+        result = database.find(query, significanceFraction=0.0)
 
-        result.print_(database, fp, printQuery=False, printFeatures=False)
+        result.print_(fp=fp, printQuery=False, printFeatures=False)
         expected = ("Overall matches: 1\n"
                     "Significant matches: 1\n"
                     "Query hash count: 1\n"
@@ -508,7 +510,7 @@ class TestResult(TestCase):
     def testPrintWithoutQueryWithMatchesWithoutFullAnalysisWithSequences(self):
         """
         Check that the print_ method of a result produces the expected result
-        when asked to not print the read, when there are matches and the
+        when asked to not print the query, when there are matches and the
         full analysis is not stored, and when sequences are printed.
         """
         fp = StringIO()
@@ -516,10 +518,10 @@ class TestResult(TestCase):
         database = Database([AlphaHelix], [])
         subject = AARead('subject', sequence)
         database.addSubject(subject)
-        read = AARead('read', sequence)
-        result = database.find(read, significanceFraction=0.0)
+        query = AARead('query', sequence)
+        result = database.find(query, significanceFraction=0.0)
 
-        result.print_(database, fp, printQuery=False, printSequences=True,
+        result.print_(fp=fp, printQuery=False, printSequences=True,
                       printFeatures=False)
         expected = ("Overall matches: 1\n"
                     "Significant matches: 1\n"
@@ -536,3 +538,44 @@ class TestResult(TestCase):
                     "and score: 1.000000\n")
 
         self.assertEqual(expected, fp.getvalue())
+
+    def testBinOverflowWarning(self):
+        """
+        When a large distanceBase is used, it scales many distances into the
+        same value. This can cause more deltas to be placed into the same
+        histogram bin than there are hashes in the query. Normally, the
+        maximum number of deltas in a bin will be the number of hashes in
+        the query, so anything more than this indicates that the
+        distanceBase is (in this case) clouding the picture because it is
+        too aggressive. That's not necessarily a bad thing - a high
+        distanceBase might be good overall in some circumstances (e.g.,
+        comparing homologous sequences that have had many insertions /
+        deletions), and just undesirable in one particular bin. So for now
+        a warning is raised in result.py. In this test we trigger the
+        warning and catch it.
+
+        When this condition occurs The score from find() must be set to 1.0
+        """
+        # Here's a sequence with an alpha helix in the middle of many troughs.
+        sequence = (
+            'ISDLFKKNQHGGLREIYVLTIKSKLLALFLETCSRCLCEQFTVETMTHPDCKMEVIERHKMQVN'
+            'TLAAKTKRSFNSYQCSADKKSWNNNLVMPALSIPLLMLLPKAFHGAIQRTLNMWNQRLIQLPRG'
+            'FRRRFRRRF'
+            'VLKLLTAGVELSDPTYQLMMKEFESPGSTGDSPLFPNAGSGYCILHRGMMQGILHYTSSLLHVN'
+            'YLFVTRELIRSAYKAKFPDTTFLIDQMCSSDDSATIMSVVHPLNESEQGIKVISAFSEIICEVL'
+            'KTFCRYSCFTNSEKSVMGSLNQLEFNSEFIIGNNMAVPILKWVFSAFG')
+        database = Database([AlphaHelix], [Troughs], distanceBase=1.4)
+        subject = AARead('subject', sequence)
+        database.addSubject(subject)
+        query = AARead('query', sequence)
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
+            # This find will trigger a warning due to too many deltas.
+            result = database.find(query)
+            self.assertEqual(1, len(w))
+            self.assertTrue(issubclass(w[0].category, RuntimeWarning))
+            error = ('Bin contains 14 deltas for a query that has only 10 '
+                     'hashes.')
+            self.assertIn(error, str(w[0].message))
+            self.assertEqual(1.0, result.analysis[0]['bestScore'])

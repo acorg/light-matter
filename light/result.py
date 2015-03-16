@@ -1,6 +1,7 @@
 import sys
 from json import dumps
 from collections import defaultdict
+from warnings import warn
 
 from light.distance import scale
 from light.histogram import Histogram
@@ -34,9 +35,10 @@ class Result(object):
                  database, nonMatchingHashes=None,
                  storeFullAnalysis=False):
         self.scannedQuery = scannedQuery
-        self.matches = matches  # Only used (outside __init__) for testing.
+        self.matches = matches  # Only saved on self for testing.
         self.hashCount = hashCount
         self.significanceFraction = significanceFraction
+        self.database = database
         self.nonMatchingHashes = nonMatchingHashes
         self._storeFullAnalysis = storeFullAnalysis
         self.analysis = defaultdict(dict)
@@ -59,6 +61,7 @@ class Result(object):
             for match in matches[subjectIndex]:
                 landmark = match['landmark']
                 trigPoint = match['trigPoint']
+
                 for queryLandmarkOffset, queryTrigPointOffset in zip(
                         match['queryLandmarkOffsets'],
                         match['queryTrigPointOffsets']):
@@ -81,7 +84,26 @@ class Result(object):
             for binIndex, bin_ in enumerate(histogram.bins):
                 count = len(bin_)
                 if count > significanceCutoff:
+                    # We don't have to worry about hashCount being zero here.
+                    # Because 'matches' has some hashes in it, hashCount
+                    # cannot be zero by this point.
                     score = count / float(hashCount)
+
+                    # It is possible that a bin has more deltas in it than
+                    # the number of hashes in the query. This can occur
+                    # when the distanceBase used to scale distances results
+                    # in two or more different distances being put into the
+                    # same bin. In this case, the distance binning is
+                    # arguably being too aggessive. For now, issue a
+                    # warning and set the score to 1.0
+                    if score > 1.0:
+                        score = 1.0
+                        warn('Bin contains %d deltas for a query that has '
+                             'only %d hashes. The database distanceBase is '
+                             'causing different distances to be scaled into '
+                             'the same bin, which might not be a good thing.' %
+                             (count, hashCount), RuntimeWarning)
+
                     significantBins.append({
                         'bin': bin_,
                         'score': score,
@@ -169,8 +191,8 @@ class Result(object):
 
         return fp
 
-    def print_(self, database, fp=sys.stdout, printQuery=True,
-               printSequences=False, printFeatures=True, printHistograms=False,
+    def print_(self, fp=sys.stdout, printQuery=True, printSequences=False,
+               printFeatures=True, printHistograms=False,
                queryDescription='Query title'):
         """
         Print a result in a human-readable format. If self._storeFullAnalysis
@@ -178,7 +200,6 @@ class Result(object):
         matches that were not significant) will be printed. If not, only basic
         information about significant matches will appear.
 
-        @param database: A C{light.database.Database} instance.
         @param fp: A file pointer to print to.
         @param printQuery: If C{True}, also print details of the query.
         @param printSequences: If C{True}, also print query and subject
@@ -218,7 +239,7 @@ class Result(object):
 
         for subjectCount, subjectIndex in enumerate(subjectIndices, start=1):
             analysis = self.analysis[subjectIndex]
-            title, sequence = database.subjectInfo[subjectIndex]
+            title, sequence = self.database.subjectInfo[subjectIndex]
 
             # Get a list of the significant bins, sorted by decreasing score.
             significantBins = sorted(

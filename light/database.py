@@ -315,8 +315,7 @@ class Database(object):
             else:
                 for (subjectIndex,
                      subjectLandmarkOffsets) in subjectDict.iteritems():
-                    subjectIndex = int(subjectIndex)
-                    matches[subjectIndex].append({
+                    matches[int(subjectIndex)].append({
                         'landmark': hashInfo['landmark'],
                         'queryLandmarkOffsets': hashInfo['landmarkOffsets'],
                         'queryTrigPointOffsets': hashInfo['trigPointOffsets'],

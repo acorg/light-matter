@@ -36,9 +36,13 @@ def affinityMatrix(sequences, significanceFraction=None, **kwargs):
         analysis = db.find(
             read, significanceFraction=significanceFraction).analysis
         for subjectIndex in xrange(subjectCount):
-            try:
+            # Be careful how we access the analysis. It is a defaultdict,
+            # so its keys are created upon access. I.e., don't use a
+            # try/except below because analysis[subjectIndex] will never
+            # raise a KeyError.
+            if subjectIndex in analysis:
                 score = analysis[subjectIndex]['bestScore']
-            except KeyError:
+            else:
                 score = 0.0
             append(score)
 

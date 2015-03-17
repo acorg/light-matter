@@ -5,8 +5,13 @@ from mock import patch
 
 from mocking import mockOpen
 from sample_data import (
-    DB, PARAMS, RECORD0, RECORD1, RECORD2, RECORD3, COWPOX, MUMMYPOX,
-    SQUIRRELPOX1296, READ0, READ1, READ2)
+    DB, PARAMS, RECORD0, RECORD1, RECORD2, RECORD3,
+    CATPOX, COWPOX, MUMMYPOX, MONKEYPOX, SQUIRRELPOX,
+    READ1, READ2,
+    READ0_SQUIRRELPOX_SCORE, READ0_CATPOX_SCORE,
+    READ1_MONKEYPOX_SCORE, READ1_MONKEYPOX_HSP2_SCORE, READ1_MUMMYPOX_SCORE,
+    READ2_COWPOX_SCORE,
+    READ3_COWPOX_SCORE)
 
 from dark.hsp import HSP
 from dark.reads import AARead
@@ -144,8 +149,8 @@ class TestLightReadsAlignments(TestCase):
                 ['file1.json.bz2', 'file2.json.bz2'], DB)
             result = list(readsAlignments)
             self.assertEqual(2, len(result))
-            self.assertEqual('id0', result[0].read.id)
-            self.assertEqual('id1', result[1].read.id)
+            self.assertEqual('read0', result[0].read.id)
+            self.assertEqual('read1', result[1].read.id)
 
     def testThreeCompressedJSONInputs(self):
         """
@@ -184,9 +189,9 @@ class TestLightReadsAlignments(TestCase):
                 ['3.json.bz2', '1.json.bz2', '2.json.bz2'], DB)
             result = list(readsAlignments)
             self.assertEqual(3, len(result))
-            self.assertEqual('id0', result[0].read.id)
-            self.assertEqual('id1', result[1].read.id)
-            self.assertEqual('id2', result[2].read.id)
+            self.assertEqual('read0', result[0].read.id)
+            self.assertEqual('read1', result[1].read.id)
+            self.assertEqual('read2', result[2].read.id)
 
     def testIncompatibleParameters(self):
         """
@@ -262,8 +267,13 @@ class TestLightReadsAlignments(TestCase):
         with patch('__builtin__.open', mockOpener, create=True):
             readsAlignments = LightReadsAlignments('file.json', DB)
             self.assertEqual(
-                sorted([HSP(1.0 / 11.0), HSP(3.0 / 11.0), HSP(0.2),
-                        HSP(0.25), HSP(1.0), HSP(1.0)]),
+                sorted([HSP(READ0_SQUIRRELPOX_SCORE),
+                        HSP(READ0_CATPOX_SCORE),
+                        HSP(READ1_MONKEYPOX_SCORE),
+                        HSP(READ1_MONKEYPOX_HSP2_SCORE),
+                        HSP(READ1_MUMMYPOX_SCORE),
+                        HSP(READ2_COWPOX_SCORE),
+                        HSP(READ3_COWPOX_SCORE)]),
                 sorted(readsAlignments.hsps()))
 
 
@@ -295,7 +305,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
             readsAlignments = LightReadsAlignments('file.json', DB)
             result = list(readsAlignments.filter())
             self.assertEqual(1, len(result))
-            self.assertEqual('id0', result[0].read.id)
+            self.assertEqual('read0', result[0].read.id)
 
     def testLimitZero(self):
         """
@@ -318,7 +328,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
             readsAlignments = LightReadsAlignments('file.json', DB)
             result = list(readsAlignments.filter(limit=1))
             self.assertEqual(1, len(result))
-            self.assertEqual('id0', result[0].read.id)
+            self.assertEqual('read0', result[0].read.id)
 
     def testOneAlignmentPerRead(self):
         """
@@ -331,7 +341,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
             result = list(readsAlignments.filter(oneAlignmentPerRead=True))
             self.assertEqual(1, len(result))
             self.assertEqual(1, len(result[0]))
-            self.assertEqual(SQUIRRELPOX1296.id, result[0][0].subjectTitle)
+            self.assertEqual(SQUIRRELPOX.id, result[0][0].subjectTitle)
 
     def testScoreCutoffRemovesEntireAlignment(self):
         """
@@ -342,10 +352,11 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         mockOpener = mockOpen(read_data=PARAMS + RECORD0)
         with patch('__builtin__.open', mockOpener, create=True):
             readsAlignments = LightReadsAlignments('file.json', DB)
-            result = list(readsAlignments.filter(scoreCutoff=0.23))
+            result = list(readsAlignments.filter(
+                scoreCutoff=READ0_SQUIRRELPOX_SCORE - 0.01))
             self.assertEqual(1, len(result))
             self.assertEqual(1, len(result[0]))
-            self.assertEqual(SQUIRRELPOX1296.id, result[0][0].subjectTitle)
+            self.assertEqual(SQUIRRELPOX.id, result[0][0].subjectTitle)
 
     def testTitleByRegexCaseInvariant(self):
         """
@@ -356,9 +367,8 @@ class TestLightReadsAlignmentsFiltering(TestCase):
             readsAlignments = LightReadsAlignments('file.json', DB)
             result = list(readsAlignments.filter(titleRegex='sqUIRRel'))
             self.assertEqual(1, len(result))
-            self.assertEqual('id0', result[0].read.id)
-            self.assertEqual('Squirrelpox virus 1296/99',
-                             result[0][0].subjectTitle)
+            self.assertEqual('read0', result[0].read.id)
+            self.assertEqual(SQUIRRELPOX.id, result[0][0].subjectTitle)
 
     def testTitleByRegexAllAlignments(self):
         """
@@ -370,9 +380,8 @@ class TestLightReadsAlignmentsFiltering(TestCase):
             readsAlignments = LightReadsAlignments('file.json', DB)
             result = list(readsAlignments.filter(titleRegex='squirrel'))
             self.assertEqual(1, len(result))
-            self.assertEqual('id0', result[0].read.id)
-            self.assertEqual('Squirrelpox virus 1296/99',
-                             result[0][0].subjectTitle)
+            self.assertEqual('read0', result[0].read.id)
+            self.assertEqual(SQUIRRELPOX.id, result[0][0].subjectTitle)
 
     def testTitleByRegexOneAlignments(self):
         """
@@ -384,9 +393,8 @@ class TestLightReadsAlignmentsFiltering(TestCase):
             readsAlignments = LightReadsAlignments('file.json', DB)
             result = list(readsAlignments.filter(titleRegex='Mummy'))
             self.assertEqual(1, len(result))
-            self.assertEqual('id1', result[0].read.id)
-            self.assertEqual('Mummypox virus 3000 B.C.',
-                             result[0][0].subjectTitle)
+            self.assertEqual('read1', result[0].read.id)
+            self.assertEqual(MUMMYPOX.id, result[0][0].subjectTitle)
 
     def testTitleByNegativeRegexOneAlignment(self):
         """
@@ -399,9 +407,9 @@ class TestLightReadsAlignmentsFiltering(TestCase):
             readsAlignments = LightReadsAlignments('file.json', DB)
             result = list(readsAlignments.filter(negativeTitleRegex='Mummy'))
             self.assertEqual(3, len(result))
-            self.assertEqual('id1', result[1].read.id)
+            self.assertEqual('read1', result[1].read.id)
             self.assertEqual(1, len(result[1]))
-            self.assertEqual('Monkeypox virus 456', result[1][0].subjectTitle)
+            self.assertEqual(MONKEYPOX.id, result[1][0].subjectTitle)
 
     def testTitleByNegativeRegexMatchesAll(self):
         """
@@ -423,11 +431,11 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2))
         with patch('__builtin__.open', mockOpener, create=True):
             readsAlignments = LightReadsAlignments('file.json', DB)
-            title = 'Squirrelpox virus 1296/99'
+            title = SQUIRRELPOX.id
             result = list(readsAlignments.filter(negativeTitleRegex='pox',
                                                  whitelist=[title]))
             self.assertEqual(1, len(result))
-            self.assertEqual('id0', result[0].read.id)
+            self.assertEqual('read0', result[0].read.id)
             self.assertEqual(1, len(result[0]))
             self.assertEqual(title, result[0][0].subjectTitle)
 
@@ -439,30 +447,12 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2))
         with patch('__builtin__.open', mockOpener, create=True):
             readsAlignments = LightReadsAlignments('file.json', DB)
-            blacklist = ['Squirrelpox virus 1296/99', 'Squirrelpox virus 55']
+            blacklist = [SQUIRRELPOX.id, CATPOX.id]
             result = list(readsAlignments.filter(titleRegex='pox',
                                                  blacklist=blacklist))
             self.assertEqual(2, len(result))
-            self.assertEqual('id1', result[0].read.id)
-            self.assertEqual('id2', result[1].read.id)
-
-    def testTitleTruncation(self):
-        """
-        When truncating titles, if a set of matched sequences has titles that
-        are identical up to the truncation word, only the first found is
-        returned.
-        """
-        mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2))
-        with patch('__builtin__.open', mockOpener, create=True):
-            readsAlignments = LightReadsAlignments('file.json', DB)
-            result = readsAlignments.filter(truncateTitlesAfter='virus')
-            result = list(result)
-            self.assertEqual(3, len(result))
-            self.assertEqual('id0', result[0].read.id)
-            self.assertEqual(1, len(result[0]))
-            # The Squirrelpox virus 55 hit in RECORD0 must not be returned.
-            self.assertEqual('Squirrelpox virus 1296/99',
-                             result[0][0].subjectTitle)
+            self.assertEqual('read1', result[0].read.id)
+            self.assertEqual('read2', result[1].read.id)
 
     def testMinTitleSequenceLength(self):
         """
@@ -472,11 +462,12 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2))
         with patch('__builtin__.open', mockOpener, create=True):
             readsAlignments = LightReadsAlignments('file.json', DB)
-            result = list(readsAlignments.filter(minSequenceLen=20))
+            result = list(readsAlignments.filter(
+                minSequenceLen=len(MUMMYPOX.sequence)))
             self.assertEqual(1, len(result))
-            self.assertEqual(READ2.id, result[0].read.id)
+            self.assertEqual(READ1.id, result[0].read.id)
             self.assertEqual(1, len(result[0]))
-            self.assertEqual(COWPOX.id, result[0][0].subjectTitle)
+            self.assertEqual(MUMMYPOX.id, result[0][0].subjectTitle)
 
     def testMinTitleSequenceLengthNoHits(self):
         """
@@ -498,11 +489,12 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2))
         with patch('__builtin__.open', mockOpener, create=True):
             readsAlignments = LightReadsAlignments('file.json', DB)
-            result = list(readsAlignments.filter(maxSequenceLen=9))
+            result = list(readsAlignments.filter(
+                maxSequenceLen=len(COWPOX.sequence) + 1))
             self.assertEqual(1, len(result))
-            self.assertEqual(READ1.id, result[0].read.id)
+            self.assertEqual(READ2.id, result[0].read.id)
             self.assertEqual(1, len(result[0]))
-            self.assertEqual(MUMMYPOX.id, result[0][0].subjectTitle)
+            self.assertEqual(COWPOX.id, result[0][0].subjectTitle)
 
     def testMaxTitleSequenceLengthNoHits(self):
         """
@@ -513,7 +505,8 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2))
         with patch('__builtin__.open', mockOpener, create=True):
             readsAlignments = LightReadsAlignments('file.json', DB)
-            result = list(readsAlignments.filter(maxSequenceLen=6))
+            result = list(readsAlignments.filter(
+                maxSequenceLen=len(COWPOX.sequence) - 1))
             self.assertEqual(0, len(result))
 
     def testMinAndMaxTitleSequenceLength(self):
@@ -524,12 +517,13 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2))
         with patch('__builtin__.open', mockOpener, create=True):
             readsAlignments = LightReadsAlignments('file.json', DB)
-            result = list(readsAlignments.filter(minSequenceLen=14,
-                                                 maxSequenceLen=16))
+            result = list(readsAlignments.filter(
+                minSequenceLen=len(COWPOX.sequence),
+                maxSequenceLen=len(COWPOX.sequence)))
             self.assertEqual(1, len(result))
-            self.assertEqual(READ0.id, result[0].read.id)
+            self.assertEqual(READ2.id, result[0].read.id)
             self.assertEqual(1, len(result[0]))
-            self.assertEqual(SQUIRRELPOX1296.id, result[0][0].subjectTitle)
+            self.assertEqual(COWPOX.id, result[0][0].subjectTitle)
 
     @skip('Subject filtering on minStart/maxStop not yet implemented.')
     def testMinStart(self):
@@ -542,7 +536,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
             readsAlignments = LightReadsAlignments('file.json', DB)
             result = list(readsAlignments.filter(minStart=15300))
             self.assertEqual(1, len(result))
-            self.assertEqual('id0', result[0].read.id)
+            self.assertEqual('read0', result[0].read.id)
             self.assertEqual(1, len(result[0]))
             self.assertEqual('Squirrelpox virus 1296/99',
                              result[0][0].subjectTitle)
@@ -571,9 +565,9 @@ class TestLightReadsAlignmentsFiltering(TestCase):
             readsAlignments = LightReadsAlignments('file.json', DB)
             result = list(readsAlignments.filter(maxStop=1500))
             self.assertEqual(1, len(result))
-            self.assertEqual('id2', result[0].read.id)
+            self.assertEqual('read2', result[0].read.id)
             self.assertEqual(1, len(result[0]))
-            self.assertEqual('Cowpox virus 15', result[0][0].subjectTitle)
+            self.assertEqual(COWPOX.id, result[0][0].subjectTitle)
 
     @skip('Subject filtering on minStart/maxStop not yet implemented.')
     def testMaxStopNoHits(self):
@@ -599,7 +593,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
             readsAlignments = LightReadsAlignments('file.json', DB)
             result = list(readsAlignments.filter(minStart=9000, maxStop=12000))
             self.assertEqual(1, len(result))
-            self.assertEqual('id1', result[0].read.id)
+            self.assertEqual('read1', result[0].read.id)
             self.assertEqual(2, len(result[0]))
 
     @skip('Subject filtering on minStart/maxStop not yet implemented.')
@@ -615,8 +609,8 @@ class TestLightReadsAlignmentsFiltering(TestCase):
             readsAlignments.filter(minStart=9000)
             result = list(readsAlignments)
             self.assertEqual(2, len(result))
-            self.assertEqual('id0', result[0].read.id)
-            self.assertEqual('id1', result[1].read.id)
+            self.assertEqual('read0', result[0].read.id)
+            self.assertEqual('read1', result[1].read.id)
 
     @skip('Subject filtering on minStart/maxStop not yet implemented.')
     def testRepeatedFilter_MinStartThenMaxstop(self):
@@ -631,7 +625,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
             readsAlignments.filter(maxStop=12000)
             result = list(readsAlignments)
             self.assertEqual(1, len(result))
-            self.assertEqual('id1', result[0].read.id)
+            self.assertEqual('read1', result[0].read.id)
             self.assertEqual(2, len(result[0]))
 
     def testClearFilter(self):
@@ -671,10 +665,10 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2))
         with patch('__builtin__.open', mockOpener, create=True):
             readsAlignments = LightReadsAlignments('file.json', DB)
-            result = list(readsAlignments.filter(readIdRegex='id[12]'))
+            result = list(readsAlignments.filter(readIdRegex='read[12]'))
             self.assertEqual(2, len(result))
-            self.assertEqual('id1', result[0].read.id)
-            self.assertEqual('id2', result[1].read.id)
+            self.assertEqual('read1', result[0].read.id)
+            self.assertEqual('read2', result[1].read.id)
 
     def testReadIdAnchored(self):
         """
@@ -684,9 +678,9 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2))
         with patch('__builtin__.open', mockOpener, create=True):
             readsAlignments = LightReadsAlignments('file.json', DB)
-            result = list(readsAlignments.filter(readIdRegex='^id0$'))
+            result = list(readsAlignments.filter(readIdRegex='^read0$'))
             self.assertEqual(1, len(result))
-            self.assertEqual('id0', result[0].read.id)
+            self.assertEqual('read0', result[0].read.id)
 
     def testReadIdCaseSensitive(self):
         """
@@ -696,7 +690,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2))
         with patch('__builtin__.open', mockOpener, create=True):
             readsAlignments = LightReadsAlignments('file.json', DB)
-            result = list(readsAlignments.filter(readIdRegex='^ID0$'))
+            result = list(readsAlignments.filter(readIdRegex='^READ0$'))
             self.assertEqual(0, len(result))
 
 

@@ -4,72 +4,72 @@ from dark.reads import AARead
 
 from light.database import Database
 from light.landmarks.alpha_helix import AlphaHelix
-from light.landmarks.alpha_helix_3_10 import AlphaHelix_3_10
-from light.landmarks.alpha_helix_pi import AlphaHelix_pi
 from light.landmarks.beta_strand import BetaStrand
 from light.trig.amino_acids import AminoAcids
-from light.trig.troughs import Troughs
 
 
-DB = Database([AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, BetaStrand],
-              [AminoAcids, Troughs], distanceBase=1.0)
+DB = Database([AlphaHelix, BetaStrand], [AminoAcids])
 
-# An alpha helix with many Tryptophan (W) trig points.
-COWPOX = AARead('Cowpox virus 15', 'ADDDADDDAMWDWMWDWMWDW')
-DB.addSubject(COWPOX)
+_ALPHA = 'ADDDADDDAM'
+_BETA = 'VVVVVVM'
+_TRYPTOPHAN = 'W'
 
-# An alpha helix pi with one Tryptophan (W) trig point.
-MONKEYPOX = AARead('Monkeypox virus 456', 'ADDDDADDDDAMW')
-DB.addSubject(MONKEYPOX)
+CATPOX = AARead(
+    'Catpox', _ALPHA + _BETA + _ALPHA + _BETA)
 
-# A beta strand with one trig point.
-MUMMYPOX = AARead('Mummypox virus 3000 B.C.', 'VVVVVVVAW')
-DB.addSubject(MUMMYPOX)
+COWPOX = AARead(
+    'Cowpox', _ALPHA + _TRYPTOPHAN + _TRYPTOPHAN + _TRYPTOPHAN + _TRYPTOPHAN)
 
-# An alpha helix with one trig point.
-SQUIRRELPOX1296 = AARead('Squirrelpox virus 1296/99', 'ADDDADDDAMDWMDW')
-# SQUIRRELPOX1296 = AARead('Squirrelpox virus 1296/99', 'ADDADDAVVVVVVVVVVAW')
-DB.addSubject(SQUIRRELPOX1296)
+MONKEYPOX = AARead(
+    'Monkeypox', _BETA + _ALPHA + _ALPHA + _ALPHA + _ALPHA)
 
-# An alpha helix 3, 10 with one trig point.
-SQUIRRELPOX55 = AARead('Squirrelpox virus 55', 'ADDADDAMWDW')
-# SQUIRRELPOX55 = AARead('Squirrelpox virus 55', 'ADDADDAVVVVVVVVVV')
-DB.addSubject(SQUIRRELPOX55)
+MUMMYPOX = AARead(
+    'Mummypox', _BETA + _ALPHA + _ALPHA + _ALPHA + _ALPHA + _TRYPTOPHAN)
+
+SQUIRRELPOX = AARead(
+    'Squirrelpox', _ALPHA + _BETA + _BETA + _ALPHA + _BETA)
+
+_CATPOX_INDEX = DB.addSubject(CATPOX)
+_COWPOX_INDEX = DB.addSubject(COWPOX)
+_MONKEYPOX_INDEX = DB.addSubject(MONKEYPOX)
+_MUMMYPOX_INDEX = DB.addSubject(MUMMYPOX)
+_SQUIRRELPOX_INDEX = DB.addSubject(SQUIRRELPOX)
 
 PARAMS = DB.saveParamsAsJSON(StringIO()).getvalue()
 
-# TESTING .................................
-# READ0 = AARead('id0', SQUIRRELPOX1296.sequence + SQUIRRELPOX55.sequence)
-# _result = DB.find(READ0, storeFullAnalysis=True, significanceFraction=0.1)
-# _result.print_(DB)
-# TESTING .................................
-
-# Run find on a read that hits both squirrelpox subjects.
-READ0 = AARead('id0', SQUIRRELPOX1296.sequence + SQUIRRELPOX55.sequence)
-_result = DB.find(READ0, storeFullAnalysis=True, significanceFraction=0.18)
+# Run find on a read that matches squirrelpox and catpox.
+READ0 = AARead('read0', _ALPHA + _BETA + _BETA + _ALPHA + _BETA)
+_result = DB.find(READ0, storeFullAnalysis=True, significanceFraction=0.2)
+READ0_SQUIRRELPOX_SCORE = _result.analysis[_SQUIRRELPOX_INDEX]['bestScore']
+READ0_CATPOX_SCORE = _result.analysis[_CATPOX_INDEX]['bestScore']
 RECORD0 = _result.save(StringIO()).getvalue()
 
-# Run find on a read that hits both monkeypox and mummypox. Note that if
-# you swap the order of mummypox and monkeypox, you'll need to stick a
-# non-beta-sheet AA in the middle (like 'A'), otherwise both subjects will
-# not match as the last two residues in the monkeypox sequence will then
-# start a beta strand (instead of the mummypox sequence starting it 2
-# residues later).
-READ1 = AARead('id1', MUMMYPOX.sequence + MONKEYPOX.sequence)
-_result = DB.find(READ1, storeFullAnalysis=True, significanceFraction=0.01)
+# Run find on a read that matches both monkeypox and mummypox.
+READ1 = AARead('read1', _BETA + _ALPHA + _ALPHA + _ALPHA + _BETA + _TRYPTOPHAN)
+_result = DB.find(READ1, storeFullAnalysis=True, significanceFraction=0.25)
+READ1_MONKEYPOX_SCORE = _result.analysis[_MONKEYPOX_INDEX]['bestScore']
+READ1_MONKEYPOX_HSP2_SCORE = _result.analysis[_MONKEYPOX_INDEX][
+    'significantBins'][1]['score']
+READ1_MUMMYPOX_SCORE = _result.analysis[_MUMMYPOX_INDEX]['bestScore']
 RECORD1 = _result.save(StringIO()).getvalue()
 
-# Run find on a read that hits only cowpox.
-READ2 = AARead('id2', COWPOX.sequence)
-_result = DB.find(READ2, storeFullAnalysis=True, significanceFraction=0.4)
+# Run find on a read that matches only cowpox.
+READ2 = AARead('read2',
+               _ALPHA + _TRYPTOPHAN + _TRYPTOPHAN + _TRYPTOPHAN + _BETA)
+_result = DB.find(READ2, storeFullAnalysis=True, significanceFraction=0.3)
+READ2_COWPOX_SCORE = _result.analysis[_COWPOX_INDEX]['bestScore']
 RECORD2 = _result.save(StringIO()).getvalue()
 
-# Run find on a second read that also hits just cowpox.
-READ3 = AARead('id3', COWPOX.sequence)
-_result = DB.find(READ3, storeFullAnalysis=True, significanceFraction=0.4)
+# Run find on a second read that also matches just cowpox.
+READ3 = AARead('read3',
+               _ALPHA + _TRYPTOPHAN + _TRYPTOPHAN + _TRYPTOPHAN + _BETA)
+_result = DB.find(READ3, storeFullAnalysis=True, significanceFraction=0.3)
+READ3_COWPOX_SCORE = _result.analysis[_COWPOX_INDEX]['bestScore']
 RECORD3 = _result.save(StringIO()).getvalue()
 
-# Run find on a third read that also hits just cowpox.
-READ4 = AARead('id4', COWPOX.sequence)
-_result = DB.find(READ4, storeFullAnalysis=True, significanceFraction=0.4)
+# Run find on a third read that also matches just cowpox.
+READ4 = AARead('read4',
+               _ALPHA + _TRYPTOPHAN + _TRYPTOPHAN + _TRYPTOPHAN + _BETA)
+_result = DB.find(READ4, storeFullAnalysis=True, significanceFraction=0.3)
+READ4_COWPOX_SCORE = _result.analysis[_COWPOX_INDEX]['bestScore']
 RECORD4 = _result.save(StringIO()).getvalue()

@@ -1,6 +1,7 @@
 import sys
 from json import dumps
 from collections import defaultdict
+from operator import itemgetter
 from warnings import warn
 
 from light.distance import scale
@@ -18,8 +19,8 @@ class Result(object):
         of those C{dict}s corresponds to one hash that occurs in both the
         query and the subject, and contains keys: 'landmark', 'readOffsets',
         'subjectOffsets', and 'trigPoint'.
-    @param hashCount: The C{int} number of hashes that the query has (including
-        those that were not found in the database).
+    @param queryHashCount: The C{int} number of hashes that the query has
+        (including those that were not found in the database).
     @param significanceFraction: The C{float} fraction of all (landmark,
         trig point) pairs for the query that need to fall into the same
         histogram bucket for that bucket to be considered a significant match
@@ -31,31 +32,30 @@ class Result(object):
     @param storeFullAnalysis: A C{bool}. If C{True} the full significance
         analysis of each matched subject will be stored.
     """
-    def __init__(self, scannedQuery, matches, hashCount, significanceFraction,
-                 database, nonMatchingHashes=None,
+    def __init__(self, scannedQuery, matches, queryHashCount,
+                 significanceFraction, database, nonMatchingHashes=None,
                  storeFullAnalysis=False):
         self.scannedQuery = scannedQuery
         self.matches = matches  # Only saved on self for testing.
-        self.hashCount = hashCount
+        self.queryHashCount = queryHashCount
         self.significanceFraction = significanceFraction
         self.database = database
         self.nonMatchingHashes = nonMatchingHashes
         self._storeFullAnalysis = storeFullAnalysis
         self.analysis = defaultdict(dict)
-        significanceCutoff = significanceFraction * hashCount
         distanceBase = database.distanceBase
         queryLen = len(scannedQuery.read.sequence)
+        scoreGetter = itemgetter('score')
 
         # Go through all the subejcts that were matched at all, and put the
-        # match offset deltas into bins so we can decide which of the
-        # matches is significant.
+        # match offset deltas into bins so we can decide which (if any) of
+        # the matches is significant.
         for subjectIndex in matches:
             subjectLen = len(database.subjectInfo[subjectIndex][1])
             # Use a histogram to bin scaled (landmark, trigPoint) offset
             # deltas.
             maxLen = max([queryLen, subjectLen])
             nBins = scale(maxLen, distanceBase)
-            subjectHashCount = database.subjectInfo[subjectIndex][2]
             histogram = Histogram(nBins)
             add = histogram.add
 
@@ -78,39 +78,48 @@ class Result(object):
                             scale(delta, distanceBase))
 
             histogram.finalizeHistogram()
+
+            subjectHashCount = database.subjectInfo[subjectIndex][2]
+            minHashCount = min(queryHashCount, subjectHashCount)
+            significanceCutoff = significanceFraction * minHashCount
             significantBins = []
             bestScore = None
 
-            # Look for bins with a significant number of elements (deltas).
-            for binIndex, bin_ in enumerate(histogram.bins):
-                count = len(bin_)
-                if count > significanceCutoff:
+            # Look for bins with a significant number of elements (scaled
+            # hash offset deltas).
+            for bin_ in histogram.bins:
+                binCount = len(bin_)
+                if binCount >= significanceCutoff:
                     try:
-                        score = float(count) / min(hashCount, subjectHashCount)
+                        score = float(binCount) / minHashCount
                     except ZeroDivisionError:
                         score = 0.0
 
                     # It is possible that a bin has more deltas in it than
-                    # the number of hashes in the query. This can occur
-                    # when the distanceBase used to scale distances results
-                    # in two or more different distances being put into the
-                    # same bin. In this case, the distance binning is
-                    # arguably being too aggessive. For now, issue a
-                    # warning and set the score to 1.0
+                    # the number of hashes in the query / subject. This can
+                    # occur when the distanceBase used to scale distances
+                    # results in multiple different distances being put
+                    # into the same bin. In this case, the distance binning
+                    # is perhaps too aggessive. For now, issue a warning
+                    # and set the score to 1.0
                     if score > 1.0:
                         score = 1.0
-                        warn('Bin contains %d deltas for a query that has '
-                             'only %d hashes. The database distanceBase is '
-                             'causing different distances to be scaled into '
-                             'the same bin, which might not be a good thing.' %
-                             (count, hashCount), RuntimeWarning)
+                        warn('Bin contains %d deltas for a query/subject pair '
+                             'with a minimum hash count of only %d. The '
+                             'database distanceBase is causing different '
+                             'distances to be scaled into the same bin, which '
+                             'might not be a good thing.' %
+                             (binCount, minHashCount), RuntimeWarning)
 
                     significantBins.append({
                         'bin': bin_,
                         'score': score,
                     })
-                    if bestScore is None or score > bestScore:
-                        bestScore = score
+
+            # Sort the significant bins by decreasing score.
+            if significantBins:
+                significantBins.sort(key=scoreGetter, reverse=True)
+                bestScore = significantBins[0]['score']
 
             if storeFullAnalysis:
                 self.analysis[subjectIndex] = {
@@ -229,10 +238,8 @@ class Result(object):
         result = [
             'Overall matches: %d' % len(subjectIndices),
             'Significant matches: %d' % len(list(self.significant())),
-            'Query hash count: %d' % self.hashCount,
+            'Query hash count: %d' % self.queryHashCount,
             'Significance fraction: %f' % self.significanceFraction,
-            'Significance cutoff: %f' % (self.significanceFraction *
-                                         self.hashCount),
         ]
 
         if subjectIndices:
@@ -240,33 +247,36 @@ class Result(object):
 
         for subjectCount, subjectIndex in enumerate(subjectIndices, start=1):
             analysis = self.analysis[subjectIndex]
-            title, sequence, hashCount = self.database.subjectInfo[
+            title, sequence, subjectHashCount = self.database.subjectInfo[
                 subjectIndex]
-
-            # Get a list of the significant bins, sorted by decreasing score.
-            significantBins = sorted(
-                analysis['significantBins'], reverse=True,
-                key=lambda bin_: bin_['score'])
+            minHashCount = min(self.queryHashCount, subjectHashCount)
+            significantBins = analysis['significantBins']
 
             result.extend([
-                '  Subject %d title: %s' % (subjectCount, title),
-                '    Index in database: %d' % subjectIndex,
-                '    Hash count: %s' % hashCount,
+                '  Subject %d:' % subjectCount,
+                '    Title: %s' % title,
                 '    Best HSP score: %s' % analysis['bestScore'],
             ])
 
             if printSequences:
                 result.append('    Sequence: %s' % sequence)
 
-            result.append('    HSP count: %d' % len(significantBins))
+            result.extend([
+                '    Index in database: %d' % subjectIndex,
+                '    Subject hash count: %s' % subjectHashCount,
+                '    Subject/query min hash count: %s' % minHashCount,
+                '    Significance cutoff: %f' % (self.significanceFraction *
+                                                 minHashCount),
+                '    Number of HSPs: %d' % len(significantBins),
+            ])
 
             for hspCount, bin_ in enumerate(significantBins, start=1):
-                pairCount = len(bin_['bin'])
-                result.append('      HSP %d has %d matching (landmark, '
-                              'trigpoint) pair%s and score: %f' % (
-                                  hspCount, pairCount,
-                                  '' if pairCount == 1 else 's',
-                                  bin_['score']))
+                binCount = len(bin_['bin'])
+                result.append(
+                    '      HSP %d has %d matching hash%s and score: %f' %
+                    (hspCount, binCount, '' if binCount == 1 else 'es',
+                     bin_['score']))
+
                 if printFeatures:
                     for binItem in bin_['bin']:
                         result.extend([

@@ -517,9 +517,9 @@ class TestDatabase(TestCase):
         One matching subject should be found, but is not significant with the
         default value of significanceFraction.
         """
-        subject = AARead('subject', 'AFRRRFRRRFASAASA')
+        subject = AARead('subject', 'AFRRRFRRRFASAASAVVVVVVASAVVVASA')
         query = AARead('query', 'FRRRFRRRFASAASAFRRRFRRRFFRRRFRRRFFRRRFRRRF')
-        db = Database([AlphaHelix], [Peaks])
+        db = Database([AlphaHelix, BetaStrand], [Peaks])
         db.addSubject(subject)
         result = db.find(query)
         self.assertEqual(
@@ -568,24 +568,51 @@ class TestDatabase(TestCase):
             },
             result.matches)
 
-    def testSymmetricFindScores(self):
+    def testSymmetricFindScoresSameSubjectAndQuery(self):
         """
         The score of matching a sequence A against a sequence B must
-        be the same as when matching B against A.
+        be the same as when matching B against A, and that score must
+        be 1.0 when the subject and the query are identical.
         """
-        subject = AARead('subject', 'AFRRRFRRRFASAASAFRRRFRRRF')
-        query = AARead('query', 'FRRRFRRRFASAASA')
-        db = Database([AlphaHelix], [Peaks])
+        sequence = 'AFRRRFRRRFASAASAFRRRFRRRF'
+        subject = AARead('subject', sequence)
+        query = AARead('query', sequence)
+        db = Database([AlphaHelix, BetaStrand], [Peaks])
         db.addSubject(subject)
         result = db.find(query, significanceFraction=0.0)
         score1 = result.analysis[0]['bestScore']
 
-        db = Database([AlphaHelix], [Peaks])
+        db = Database([AlphaHelix, BetaStrand], [Peaks])
         db.addSubject(query)
         result = db.find(subject, significanceFraction=0.0)
         score2 = result.analysis[0]['bestScore']
 
         self.assertEqual(score1, score2)
+        self.assertEqual(1.0, score1)
+
+    def testSymmetricFindScoresDifferingSubjectAndQuery(self):
+        """
+        The score of matching a sequence A against a sequence B must
+        be the same as when matching B against A, including when the number
+        of hashes in the two differs and the scores are not 1.0.
+        """
+        subject = AARead('subject', 'AFRRRFRRRFASAASAFRRRFRRRF')
+        query = AARead('query', 'FRRRFRRRFASAVVVVVV')
+        db = Database([AlphaHelix, BetaStrand], [Peaks])
+        db.addSubject(subject)
+        hashCount1 = db.subjectInfo[0][2]
+        result = db.find(query, significanceFraction=0.0)
+        score1 = result.analysis[0]['bestScore']
+
+        db = Database([AlphaHelix, BetaStrand], [Peaks])
+        db.addSubject(query)
+        hashCount2 = db.subjectInfo[0][2]
+        result = db.find(subject, significanceFraction=0.0)
+        score2 = result.analysis[0]['bestScore']
+
+        self.assertNotEqual(hashCount1, hashCount2)
+        self.assertEqual(score1, score2)
+        self.assertNotEqual(1.0, score1)
 
     def testFindNoneMatchingTooSmallDistance(self):
         """

@@ -3,9 +3,14 @@ from mock import patch
 
 from mocking import mockOpen
 from sample_data import (
-    DB, PARAMS, COWPOX, MONKEYPOX, MUMMYPOX, SQUIRRELPOX55, SQUIRRELPOX1296,
+    DB, PARAMS,
+    CATPOX, COWPOX, MONKEYPOX, MUMMYPOX, SQUIRRELPOX,
     RECORD0, RECORD1, RECORD2, RECORD3, RECORD4,
-    READ0, READ2, READ3)
+    READ0, READ2, READ3,
+    READ0_SQUIRRELPOX_SCORE, READ0_CATPOX_SCORE,
+    READ1_MONKEYPOX_SCORE, READ1_MONKEYPOX_HSP2_SCORE, READ1_MUMMYPOX_SCORE,
+    READ2_COWPOX_SCORE,
+    READ3_COWPOX_SCORE)
 
 from dark.hsp import HSP
 from dark.titles import titleCounts, TitleAlignments, TitlesAlignments
@@ -38,11 +43,11 @@ class TestTitleCounts(TestCase):
             readsAlignments = LightReadsAlignments('file.json', DB)
             self.assertEqual(
                 {
-                    SQUIRRELPOX1296.id: 1,
+                    SQUIRRELPOX.id: 1,
                     MUMMYPOX.id: 1,
                     COWPOX.id: 1,
                     MONKEYPOX.id: 1,
-                    SQUIRRELPOX55.id: 1
+                    CATPOX.id: 1
                 },
                 titleCounts(readsAlignments))
 
@@ -86,13 +91,13 @@ class TestTitlesAlignments(TestCase):
             readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
             self.assertEqual(
-                [
+                sorted([
                     COWPOX.id,
                     MONKEYPOX.id,
                     MUMMYPOX.id,
-                    SQUIRRELPOX1296.id,
-                    SQUIRRELPOX55.id,
-                ],
+                    SQUIRRELPOX.id,
+                    CATPOX.id,
+                ]),
                 sorted(titlesAlignments.keys()))
 
     def testExpectedTitleDetails(self):
@@ -106,21 +111,23 @@ class TestTitlesAlignments(TestCase):
             readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
 
-            titleAlignments = titlesAlignments[SQUIRRELPOX1296.id]
-            self.assertEqual(SQUIRRELPOX1296.id, titleAlignments.subjectTitle)
-            self.assertEqual(len(SQUIRRELPOX1296.sequence),
+            titleAlignments = titlesAlignments[SQUIRRELPOX.id]
+            self.assertEqual(SQUIRRELPOX.id, titleAlignments.subjectTitle)
+            self.assertEqual(len(SQUIRRELPOX.sequence),
                              titleAlignments.subjectLength)
             self.assertEqual(1, len(titleAlignments))
             self.assertEqual(READ0, titleAlignments[0].read)
-            self.assertEqual(0.25, titleAlignments[0].hsps[0].score.score)
+            self.assertEqual(READ0_SQUIRRELPOX_SCORE,
+                             titleAlignments[0].hsps[0].score.score)
 
-            titleAlignments = titlesAlignments[SQUIRRELPOX55.id]
-            self.assertEqual(SQUIRRELPOX55.id, titleAlignments.subjectTitle)
-            self.assertEqual(len(SQUIRRELPOX55.sequence),
+            titleAlignments = titlesAlignments[CATPOX.id]
+            self.assertEqual(CATPOX.id, titleAlignments.subjectTitle)
+            self.assertEqual(len(CATPOX.sequence),
                              titleAlignments.subjectLength)
             self.assertEqual(1, len(titleAlignments))
             self.assertEqual(READ0, titleAlignments[0].read)
-            self.assertEqual(0.2, titleAlignments[0].hsps[0].score.score)
+            self.assertEqual(READ0_CATPOX_SCORE,
+                             titleAlignments[0].hsps[0].score.score)
 
     def testTitleCollection(self):
         """
@@ -141,10 +148,12 @@ class TestTitlesAlignments(TestCase):
                              titleAlignments.subjectLength)
 
             self.assertEqual(READ2, titleAlignments[0].read)
-            self.assertEqual(1.0, titleAlignments[0].hsps[0].score.score)
+            self.assertEqual(READ2_COWPOX_SCORE,
+                             titleAlignments[0].hsps[0].score.score)
 
             self.assertEqual(READ3, titleAlignments[1].read)
-            self.assertEqual(1.0, titleAlignments[1].hsps[0].score.score)
+            self.assertEqual(READ3_COWPOX_SCORE,
+                             titleAlignments[1].hsps[0].score.score)
 
     def testAddTitleRepeat(self):
         """
@@ -155,9 +164,9 @@ class TestTitlesAlignments(TestCase):
         with patch('__builtin__.open', mockOpener, create=True):
             readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
-            title = SQUIRRELPOX1296.id
+            title = SQUIRRELPOX.id
             titleAlignments = TitleAlignments(title, 55)
-            error = ("Title 'Squirrelpox virus 1296/99' already present in "
+            error = ("Title 'Squirrelpox' already present in "
                      "TitlesAlignments instance\.")
             self.assertRaisesRegexp(KeyError, error, titlesAlignments.addTitle,
                                     title, titleAlignments)
@@ -188,8 +197,12 @@ class TestTitlesAlignments(TestCase):
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = list(titlesAlignments.hsps())
             self.assertEqual(
-                sorted([HSP(0.25), HSP(0.2), HSP(3.0 / 11.0), HSP(1.0 / 11.0),
-                        HSP(1.0)]),
+                sorted([HSP(READ0_SQUIRRELPOX_SCORE),
+                        HSP(READ0_CATPOX_SCORE),
+                        HSP(READ1_MONKEYPOX_SCORE),
+                        HSP(READ1_MONKEYPOX_HSP2_SCORE),
+                        HSP(READ1_MUMMYPOX_SCORE),
+                        HSP(READ2_COWPOX_SCORE)]),
                 sorted(result))
 
 
@@ -208,15 +221,15 @@ class TestTitlesAlignmentsFiltering(TestCase):
             readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = titlesAlignments.filter()
-            self.assertEqual(
+            self.assertItemsEqual(
                 [
                     COWPOX.id,
                     MONKEYPOX.id,
                     MUMMYPOX.id,
-                    SQUIRRELPOX1296.id,
-                    SQUIRRELPOX55.id,
+                    SQUIRRELPOX.id,
+                    CATPOX.id,
                 ],
-                sorted(result.keys()))
+                result.keys())
 
     def testMinMatchingReads(self):
         """
@@ -248,7 +261,7 @@ class TestTitlesAlignmentsFiltering(TestCase):
             result = titlesAlignments.filter(minMedianScore=0.9)
             self.assertEqual(
                 [
-                    COWPOX.id,
+                    SQUIRRELPOX.id,
                 ],
                 result.keys())
 
@@ -265,7 +278,7 @@ class TestTitlesAlignmentsFiltering(TestCase):
             result = titlesAlignments.filter(withScoreBetterThan=0.9)
             self.assertEqual(
                 [
-                    COWPOX.id,
+                    SQUIRRELPOX.id,
                 ],
                 result.keys())
 
@@ -280,15 +293,15 @@ class TestTitlesAlignmentsFiltering(TestCase):
             readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = titlesAlignments.filter(minNewReads=0.0)
-            self.assertEqual(
+            self.assertItemsEqual(
                 [
+                    CATPOX.id,
                     COWPOX.id,
                     MONKEYPOX.id,
                     MUMMYPOX.id,
-                    SQUIRRELPOX1296.id,
-                    SQUIRRELPOX55.id,
+                    SQUIRRELPOX.id,
                 ],
-                sorted(result.keys()))
+                result.keys())
 
     def testReadSetFilterStrict(self):
         """
@@ -349,8 +362,8 @@ class TestTitlesAlignmentsFiltering(TestCase):
                     COWPOX.id,
                     MONKEYPOX.id,
                     MUMMYPOX.id,
-                    SQUIRRELPOX1296.id,
-                    SQUIRRELPOX55.id,
+                    SQUIRRELPOX.id,
+                    CATPOX.id,
                 ],
                 sorted(result.keys()))
 
@@ -416,11 +429,11 @@ class TestTitleSorting(TestCase):
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = titlesAlignments.sortTitles('medianScore')
             self.assertEqual([
-                COWPOX.id,           # 1.0
-                MONKEYPOX.id,        # 0.2727 (3.0 / 11.0)
-                SQUIRRELPOX1296.id,  # 0.25 (5.0 / 21.0)
-                SQUIRRELPOX55.id,    # 0.2 (4.0 / 21.0)
-                MUMMYPOX.id,         # 0.0909 (1.0 / 11.0)
+                SQUIRRELPOX.id,  # 1.0
+                COWPOX.id,       # 0.75
+                CATPOX.id,       # 0.5
+                MONKEYPOX.id,    # 0.45 (0.6 + 0.3) / 2  Because 2 HPSs match.
+                MUMMYPOX.id,     # 0.4
             ], result)
 
     def testMaxScore(self):
@@ -434,11 +447,11 @@ class TestTitleSorting(TestCase):
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = titlesAlignments.sortTitles('maxScore')
             self.assertEqual([
-                COWPOX.id,           # 1.0
-                MONKEYPOX.id,        # 0.2727
-                SQUIRRELPOX1296.id,  # 0.25
-                SQUIRRELPOX55.id,    # 0.2
-                MUMMYPOX.id,         # 0.0909
+                SQUIRRELPOX.id,      # 1.0
+                COWPOX.id,           # 0.75
+                MONKEYPOX.id,        # 0.6
+                CATPOX.id,           # 0.5
+                MUMMYPOX.id,         # 0.4
             ], result)
 
     def testReadCount(self):
@@ -452,11 +465,11 @@ class TestTitleSorting(TestCase):
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = titlesAlignments.sortTitles('readCount')
             self.assertEqual([
-                COWPOX.id,           # 3
+                COWPOX.id,           # 2
+                CATPOX.id,           # 1
                 MONKEYPOX.id,        # 1
                 MUMMYPOX.id,         # 1
-                SQUIRRELPOX1296.id,  # 1
-                SQUIRRELPOX55.id,    # 1
+                SQUIRRELPOX.id,      # 1
             ], result)
 
     def testLength(self):
@@ -470,11 +483,11 @@ class TestTitleSorting(TestCase):
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = titlesAlignments.sortTitles('length')
             self.assertEqual([
-                COWPOX.id,           # 21
-                SQUIRRELPOX1296.id,  # 15
-                MONKEYPOX.id,        # 13
-                SQUIRRELPOX55.id,    # 11
-                MUMMYPOX.id,         # 8
+                MUMMYPOX.id,         # 48
+                MONKEYPOX.id,        # 47
+                SQUIRRELPOX.id,      # 41
+                CATPOX.id,           # 34
+                COWPOX.id,           # 14
             ], result)
 
     def testTitle(self):
@@ -488,9 +501,9 @@ class TestTitleSorting(TestCase):
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = titlesAlignments.sortTitles('title')
             self.assertEqual([
+                CATPOX.id,
                 COWPOX.id,
                 MONKEYPOX.id,
                 MUMMYPOX.id,
-                SQUIRRELPOX1296.id,
-                SQUIRRELPOX55.id,
+                SQUIRRELPOX.id,
             ], result)

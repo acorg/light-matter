@@ -10,7 +10,7 @@ from light.features import Landmark, TrigPoint
 from light.reads import ScannedRead
 from light.database import Database
 from light.landmarks import AlphaHelix, BetaStrand
-from light.trig import Troughs
+from light.trig import Troughs, AminoAcids
 
 
 class TestResult(TestCase):
@@ -24,7 +24,7 @@ class TestResult(TestCase):
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
         database = Database([], [])
         hashCount = 0
-        result = Result(read, {}, hashCount, significanceFraction=0.0,
+        result = Result(read, {}, hashCount, significanceFraction=0.1,
                         database=database)
         self.assertEqual({}, result.matches)
         self.assertEqual([], list(result.significant()))
@@ -50,7 +50,7 @@ class TestResult(TestCase):
                 },
             ],
         }
-        result = Result(read, matches, hashCount, significanceFraction=0.0,
+        result = Result(read, matches, hashCount, significanceFraction=0.1,
                         database=database)
         self.assertEqual(matches, result.matches)
 
@@ -60,8 +60,8 @@ class TestResult(TestCase):
         above the mean number of deltas.
         """
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
-        database = Database([], [])
-        database.addSubject(AARead('subject', 'AAA'))
+        database = Database([AlphaHelix], [AminoAcids])
+        database.addSubject(AARead('subject', 'ADDDADDDAWW'))
         hashCount = 1
         matches = {
             0: [
@@ -84,8 +84,8 @@ class TestResult(TestCase):
         (the maximum number of identical distances) must be too.
         """
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
-        database = Database([], [])
-        database.addSubject(AARead('subject', 'AAA'))
+        database = Database([AlphaHelix], [AminoAcids])
+        database.addSubject(AARead('subject', 'ADDDADDDAWWWW'))
         hashCount = 4
         matches = {
             0: [
@@ -124,9 +124,13 @@ class TestResult(TestCase):
         different subjects, and their scores must be correct.
         """
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
-        database = Database([], [])
-        database.addSubject(AARead('subject0', 'AAA'))
-        database.addSubject(AARead('subject1', 'AAA'))
+        database = Database([AlphaHelix], [AminoAcids])
+        # Note that both subject added here have a hash count of 5 (the
+        # same as the passed query hash count). If we use anything less,
+        # the score will change because its calculation uses the min
+        # query/subject hash count in the denominator.
+        database.addSubject(AARead('subject0', 'ADDDADDDAWWWWW'))
+        database.addSubject(AARead('subject1', 'ADDDADDDAWWWWW'))
         hashCount = 5
         matches = {
             0: [
@@ -201,7 +205,7 @@ class TestResult(TestCase):
         """
         read = ScannedRead(AARead('id', 'A'))
         database = Database([], [])
-        result = Result(read, {}, 0, significanceFraction=0.0,
+        result = Result(read, {}, 0, significanceFraction=0.1,
                         database=database)
         fp = StringIO()
         self.assertIs(fp, result.save(fp))
@@ -211,10 +215,10 @@ class TestResult(TestCase):
         Save must write results out in the expected JSON format.
         """
         read = ScannedRead(
-            AARead('id', 'FRRRFRRRFRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
-        database = Database([], [])
-        database.addSubject(AARead('subject0', 'AAA'))
-        database.addSubject(AARead('subject1', 'AAA'))
+            AARead('id', 'FRRRFRRRFRFRFRFRRRFRRRF'))
+        database = Database([AlphaHelix], [])
+        database.addSubject(AARead('subject0', 'FRRRFRRRFRFRFRFRRRFRRRF'))
+        database.addSubject(AARead('subject1', 'FRRRFRRRFRFRFRFRRRFRRRF'))
         hashCount = 1
         matches = {
             0: [
@@ -242,6 +246,7 @@ class TestResult(TestCase):
         fp = StringIO()
         result.save(fp=fp)
         result = loads(fp.getvalue())
+        self.maxDiff = None
         self.assertEqual(
             {
                 'alignments': [
@@ -285,7 +290,7 @@ class TestResult(TestCase):
                     },
                 ],
                 'queryId': 'id',
-                'querySequence': 'FRRRFRRRFRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF',
+                'querySequence': 'FRRRFRRRFRFRFRFRRRFRRRF',
             },
             result)
 
@@ -312,7 +317,7 @@ class TestResult(TestCase):
                 },
             ],
         }
-        result = Result(read, matches, hashCount, significanceFraction=0.0,
+        result = Result(read, matches, hashCount, significanceFraction=0.1,
                         database=database, storeFullAnalysis=True)
         self.assertEqual(20, len(result.analysis[0]['histogram'].bins))
 
@@ -337,7 +342,7 @@ class TestResult(TestCase):
                 },
             ],
         }
-        result = Result(read, matches, hashCount, significanceFraction=0.0,
+        result = Result(read, matches, hashCount, significanceFraction=0.1,
                         database=database, storeFullAnalysis=True)
         self.assertEqual(11, len(result.analysis[0]['histogram'].bins))
 
@@ -351,7 +356,7 @@ class TestResult(TestCase):
         read = AARead('read', 'AGTARFSDDD')
         database = Database([], [])
         database.addSubject(read)
-        result = database.find(read, significanceFraction=0.0,
+        result = database.find(read, significanceFraction=0.1,
                                storeFullAnalysis=True)
 
         result.print_(fp=fp)
@@ -362,8 +367,7 @@ class TestResult(TestCase):
                     "Overall matches: 0\n"
                     "Significant matches: 0\n"
                     "Query hash count: 0\n"
-                    "Significance fraction: 0.000000\n"
-                    "Significance cutoff: 0.000000\n")
+                    "Significance fraction: 0.100000\n")
 
         self.assertEqual(expected, fp.getvalue())
 
@@ -377,15 +381,14 @@ class TestResult(TestCase):
         read = AARead('read', 'AGTARFSDDD')
         database = Database([], [])
         database.addSubject(read)
-        result = database.find(read, significanceFraction=0.0,
+        result = database.find(read, significanceFraction=0.1,
                                storeFullAnalysis=True)
 
         result.print_(fp=fp, printQuery=False)
         expected = ("Overall matches: 0\n"
                     "Significant matches: 0\n"
                     "Query hash count: 0\n"
-                    "Significance fraction: 0.000000\n"
-                    "Significance cutoff: 0.000000\n")
+                    "Significance fraction: 0.100000\n")
         self.assertEqual(expected, fp.getvalue())
 
     def testPrintNoMatchingSubjects(self):
@@ -404,8 +407,7 @@ class TestResult(TestCase):
         expected = ("Overall matches: 0\n"
                     "Significant matches: 0\n"
                     "Query hash count: 1\n"
-                    "Significance fraction: 0.250000\n"
-                    "Significance cutoff: 0.250000\n")
+                    "Significance fraction: 0.250000\n")
         self.assertEqual(expected, fp.getvalue())
 
     def testPrintOneMatchStoredAnalysis(self):
@@ -419,7 +421,7 @@ class TestResult(TestCase):
         subject = AARead('subject', sequence)
         database.addSubject(subject)
         query = AARead('query', sequence)
-        result = database.find(query, significanceFraction=0.0,
+        result = database.find(query, significanceFraction=0.1,
                                storeFullAnalysis=True)
 
         result.print_(fp=fp, printQuery=False)
@@ -427,15 +429,17 @@ class TestResult(TestCase):
         expected = ("Overall matches: 1\n"
                     "Significant matches: 1\n"
                     "Query hash count: 1\n"
-                    "Significance fraction: 0.000000\n"
-                    "Significance cutoff: 0.000000\n"
+                    "Significance fraction: 0.100000\n"
                     "Matched subjects:\n"
-                    "  Subject 1 title: subject\n"
-                    "    Index in database: 0\n"
+                    "  Subject 1:\n"
+                    "    Title: subject\n"
                     "    Best HSP score: 1.0\n"
-                    "    HSP count: 1\n"
-                    "      HSP 1 has 1 matching (landmark, trigpoint) pair "
-                    "and score: 1.000000\n"
+                    "    Index in database: 0\n"
+                    "    Subject hash count: 1\n"
+                    "    Subject/query min hash count: 1\n"
+                    "    Significance cutoff: 0.100000\n"
+                    "    Number of HSPs: 1\n"
+                    "      HSP 1 has 1 matching hash and score: 1.000000\n"
                     "        Landmark AlphaHelix symbol='A' offset=0 len=9 "
                     "detail=2 subjectOffset=0\n"
                     "        Trig point AlphaHelix symbol='A' offset=25 "
@@ -455,21 +459,23 @@ class TestResult(TestCase):
         subject = AARead('subject', sequence)
         database.addSubject(subject)
         query = AARead('query', sequence)
-        result = database.find(query, significanceFraction=0.0)
+        result = database.find(query, significanceFraction=0.1)
 
         result.print_(fp=fp, printQuery=False)
         expected = ("Overall matches: 1\n"
                     "Significant matches: 1\n"
                     "Query hash count: 1\n"
-                    "Significance fraction: 0.000000\n"
-                    "Significance cutoff: 0.000000\n"
+                    "Significance fraction: 0.100000\n"
                     "Matched subjects:\n"
-                    "  Subject 1 title: subject\n"
-                    "    Index in database: 0\n"
+                    "  Subject 1:\n"
+                    "    Title: subject\n"
                     "    Best HSP score: 1.0\n"
-                    "    HSP count: 1\n"
-                    "      HSP 1 has 1 matching (landmark, trigpoint) pair "
-                    "and score: 1.000000\n"
+                    "    Index in database: 0\n"
+                    "    Subject hash count: 1\n"
+                    "    Subject/query min hash count: 1\n"
+                    "    Significance cutoff: 0.100000\n"
+                    "    Number of HSPs: 1\n"
+                    "      HSP 1 has 1 matching hash and score: 1.000000\n"
                     "        Landmark AlphaHelix symbol='A' offset=0 len=9 "
                     "detail=2 subjectOffset=0\n"
                     "        Trig point AlphaHelix symbol='A' offset=25 "
@@ -489,21 +495,23 @@ class TestResult(TestCase):
         subject = AARead('subject', sequence)
         database.addSubject(subject)
         query = AARead('query', sequence)
-        result = database.find(query, significanceFraction=0.0)
+        result = database.find(query, significanceFraction=0.1)
 
         result.print_(fp=fp, printQuery=False, printFeatures=False)
         expected = ("Overall matches: 1\n"
                     "Significant matches: 1\n"
                     "Query hash count: 1\n"
-                    "Significance fraction: 0.000000\n"
-                    "Significance cutoff: 0.000000\n"
+                    "Significance fraction: 0.100000\n"
                     "Matched subjects:\n"
-                    "  Subject 1 title: subject\n"
-                    "    Index in database: 0\n"
+                    "  Subject 1:\n"
+                    "    Title: subject\n"
                     "    Best HSP score: 1.0\n"
-                    "    HSP count: 1\n"
-                    "      HSP 1 has 1 matching (landmark, trigpoint) pair "
-                    "and score: 1.000000\n")
+                    "    Index in database: 0\n"
+                    "    Subject hash count: 1\n"
+                    "    Subject/query min hash count: 1\n"
+                    "    Significance cutoff: 0.100000\n"
+                    "    Number of HSPs: 1\n"
+                    "      HSP 1 has 1 matching hash and score: 1.000000\n")
 
         self.assertEqual(expected, fp.getvalue())
 
@@ -519,23 +527,25 @@ class TestResult(TestCase):
         subject = AARead('subject', sequence)
         database.addSubject(subject)
         query = AARead('query', sequence)
-        result = database.find(query, significanceFraction=0.0)
+        result = database.find(query, significanceFraction=0.1)
 
         result.print_(fp=fp, printQuery=False, printSequences=True,
                       printFeatures=False)
         expected = ("Overall matches: 1\n"
                     "Significant matches: 1\n"
                     "Query hash count: 1\n"
-                    "Significance fraction: 0.000000\n"
-                    "Significance cutoff: 0.000000\n"
+                    "Significance fraction: 0.100000\n"
                     "Matched subjects:\n"
-                    "  Subject 1 title: subject\n"
-                    "    Index in database: 0\n"
+                    "  Subject 1:\n"
+                    "    Title: subject\n"
                     "    Best HSP score: 1.0\n"
                     "    Sequence: FRRRFRRRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF\n"
-                    "    HSP count: 1\n"
-                    "      HSP 1 has 1 matching (landmark, trigpoint) pair "
-                    "and score: 1.000000\n")
+                    "    Index in database: 0\n"
+                    "    Subject hash count: 1\n"
+                    "    Subject/query min hash count: 1\n"
+                    "    Significance cutoff: 0.100000\n"
+                    "    Number of HSPs: 1\n"
+                    "      HSP 1 has 1 matching hash and score: 1.000000\n")
 
         self.assertEqual(expected, fp.getvalue())
 
@@ -575,7 +585,7 @@ class TestResult(TestCase):
             result = database.find(query)
             self.assertEqual(1, len(w))
             self.assertTrue(issubclass(w[0].category, RuntimeWarning))
-            error = ('Bin contains 14 deltas for a query that has only 10 '
-                     'hashes.')
+            error = ('Bin contains 14 deltas for a query/subject pair with a '
+                     'minimum hash count of only 10.')
             self.assertIn(error, str(w[0].message))
             self.assertEqual(1.0, result.analysis[0]['bestScore'])

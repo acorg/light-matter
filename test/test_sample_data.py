@@ -22,7 +22,7 @@ class TestParams(TestCase):
             {
                 'subjectCount': 5,
                 'totalCoveredResidues': 62,
-                'checksum': 849636647,
+                'checksum': 2573734520,
                 'limitPerLandmark': Database.DEFAULT_LIMIT_PER_LANDMARK,
                 'trigPointClasses': [
                     'AminoAcids',
@@ -49,16 +49,16 @@ class TestRecords(TestCase):
     def testRECORD0(self):
         """
         The results in RECORD0 must match two subjects: SQUIRRELPOX1296 (with
-        score 2) and SQUIRRELPOX55 (with score 2).
+        score 1.0) and SQUIRRELPOX55 (with score 1.0).
         """
         alignments = jsonDictToAlignments(loads(RECORD0), DB)
         self.assertEqual(2, len(alignments))
 
         self.assertEqual(SQUIRRELPOX1296.id, alignments[0].subjectTitle)
-        self.assertEqual(0.25, alignments[0].hsps[0].score.score)
+        self.assertEqual(1.0, alignments[0].hsps[0].score.score)
 
         self.assertEqual(SQUIRRELPOX55.id, alignments[1].subjectTitle)
-        self.assertEqual(0.2, alignments[1].hsps[0].score.score)
+        self.assertEqual(1.0, alignments[1].hsps[0].score.score)
 
     def testRECORD1(self):
         """
@@ -69,10 +69,10 @@ class TestRecords(TestCase):
         self.assertEqual(2, len(alignments))
 
         self.assertEqual(MONKEYPOX.id, alignments[0].subjectTitle)
-        self.assertEqual(3.0 / 11.0, alignments[0].hsps[0].score.score)
+        self.assertEqual(1.0, alignments[0].hsps[0].score.score)
 
         self.assertEqual(MUMMYPOX.id, alignments[1].subjectTitle)
-        self.assertEqual(1.0 / 11.0, alignments[1].hsps[0].score.score)
+        self.assertEqual(1.0, alignments[1].hsps[0].score.score)
 
     def testRECORD2(self):
         """

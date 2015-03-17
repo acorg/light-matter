@@ -55,6 +55,7 @@ class Result(object):
             # deltas.
             maxLen = max([queryLen, subjectLen])
             nBins = scale(maxLen, distanceBase)
+            subjectHashCount = database.subjectInfo[subjectIndex][2]
             histogram = Histogram(nBins)
             add = histogram.add
 
@@ -84,10 +85,10 @@ class Result(object):
             for binIndex, bin_ in enumerate(histogram.bins):
                 count = len(bin_)
                 if count > significanceCutoff:
-                    # We don't have to worry about hashCount being zero here.
-                    # Because 'matches' has some hashes in it, hashCount
-                    # cannot be zero by this point.
-                    score = count / float(hashCount)
+                    try:
+                        score = float(count) / min(hashCount, subjectHashCount)
+                    except ZeroDivisionError:
+                        score = 0.0
 
                     # It is possible that a bin has more deltas in it than
                     # the number of hashes in the query. This can occur
@@ -239,7 +240,8 @@ class Result(object):
 
         for subjectCount, subjectIndex in enumerate(subjectIndices, start=1):
             analysis = self.analysis[subjectIndex]
-            title, sequence = self.database.subjectInfo[subjectIndex]
+            title, sequence, hashCount = self.database.subjectInfo[
+                subjectIndex]
 
             # Get a list of the significant bins, sorted by decreasing score.
             significantBins = sorted(
@@ -249,6 +251,7 @@ class Result(object):
             result.extend([
                 '  Subject %d title: %s' % (subjectCount, title),
                 '    Index in database: %d' % subjectIndex,
+                '    Hash count: %s' % hashCount,
                 '    Best HSP score: %s' % analysis['bestScore'],
             ])
 

@@ -28,14 +28,21 @@ DB.addSubject(MUMMYPOX)
 
 # An alpha helix with one trig point.
 SQUIRRELPOX1296 = AARead('Squirrelpox virus 1296/99', 'ADDDADDDAMDWMDW')
+# SQUIRRELPOX1296 = AARead('Squirrelpox virus 1296/99', 'ADDADDAVVVVVVVVVVAW')
 DB.addSubject(SQUIRRELPOX1296)
 
 # An alpha helix 3, 10 with one trig point.
 SQUIRRELPOX55 = AARead('Squirrelpox virus 55', 'ADDADDAMWDW')
+# SQUIRRELPOX55 = AARead('Squirrelpox virus 55', 'ADDADDAVVVVVVVVVV')
 DB.addSubject(SQUIRRELPOX55)
 
 PARAMS = DB.saveParamsAsJSON(StringIO()).getvalue()
 
+# TESTING .................................
+# READ0 = AARead('id0', SQUIRRELPOX1296.sequence + SQUIRRELPOX55.sequence)
+# _result = DB.find(READ0, storeFullAnalysis=True, significanceFraction=0.1)
+# _result.print_(DB)
+# TESTING .................................
 
 # Run find on a read that hits both squirrelpox subjects.
 READ0 = AARead('id0', SQUIRRELPOX1296.sequence + SQUIRRELPOX55.sequence)

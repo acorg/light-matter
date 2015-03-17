@@ -222,19 +222,17 @@ class Database(object):
             be an actual read from a sequencing run.
         @return: The C{int} subject index of the added subject.
         """
-        subjectInfo = (subject.id, subject.sequence)
-        self._updateChecksum(subjectInfo)
-        self.subjectInfo.append(subjectInfo)
         subjectIndex = self.subjectCount
         self.subjectCount += 1
         self.totalResidues += len(subject)
-
         scannedSubject = self.scan(subject)
 
         self.totalCoveredResidues += len(scannedSubject.coveredIndices())
 
+        hashCount = 0
         for landmark, trigPoint in self.getScannedPairs(scannedSubject):
             hash_ = self.hash(landmark, trigPoint)
+            hashCount += 1
             try:
                 subjectDict = self.d[hash_]
             except KeyError:
@@ -244,6 +242,9 @@ class Database(object):
                 subjectDict[str(subjectIndex)].append(landmark.offset)
             except KeyError:
                 subjectDict[str(subjectIndex)] = [landmark.offset]
+
+        self._updateChecksum((subject.id, subject.sequence, str(hashCount)))
+        self.subjectInfo.append((subject.id, subject.sequence, hashCount))
 
         return subjectIndex
 

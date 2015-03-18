@@ -564,7 +564,7 @@ class TestResult(TestCase):
         a warning is raised in result.py. In this test we trigger the
         warning and catch it.
 
-        When this condition occurs The score from find() must be set to 1.0
+        When this condition occurs, the score from find() must be set to 1.0
         """
         # Here's a sequence with an alpha helix in the middle of many troughs.
         sequence = (

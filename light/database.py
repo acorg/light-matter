@@ -403,6 +403,13 @@ class Database(object):
         @param printHashes: If C{True}, print all hashes and associated
             subjects.
         """
+        # calculate coverage.
+        try:
+            coverage = (float(self.totalCoveredResidues) /
+                        self.totalResidues * 100.0)
+        except ZeroDivisionError:
+            coverage = 0.0
+
         # Print basic database information.
         if self.landmarkFinders:
             print >>fp, 'Landmark finders:'
@@ -421,8 +428,7 @@ class Database(object):
         print >>fp, 'Subject count: %s' % self.subjectCount
         print >>fp, 'Hash count: %d' % len(self.d)
         print >>fp, 'Total residues: %d' % self.totalResidues
-        print >>fp, 'Coverage: %.2f%%' % (float(self.totalCoveredResidues) /
-                                          self.totalResidues * 100.0)
+        print >>fp, 'Coverage: %.2f%%' % (coverage)
         print >>fp, 'Checksum: %s' % self.checksum
 
         # Print hashes.

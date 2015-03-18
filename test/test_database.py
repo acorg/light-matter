@@ -1033,3 +1033,29 @@ class TestDatabase(TestCase):
             '  Peaks (P): 1\n'
             '  Troughs (T): 2\n')
         self.assertEqual(expected, fp.getvalue())
+
+    def testPrintNoHashes(self):
+        """
+        The print_ function should report the expected result if no hashes are
+        found in the subject.
+        """
+        fp = StringIO()
+        subject = AARead('subject', '')
+        db = Database([AlphaHelix, BetaStrand], [Peaks, Troughs],
+                      limitPerLandmark=16, maxDistance=10, minDistance=0,
+                      distanceBase=1)
+        db.addSubject(subject)
+        db.print_(fp)
+        expected = (
+            'Landmark finders:\n'
+            '  AlphaHelix\n'
+            '  BetaStrand\n'
+            'Trig point finders:\n'
+            '  Peaks\n'
+            '  Troughs\n'
+            'Subject count: 1\n'
+            'Hash count: 0\n'
+            'Total residues: 0\n'
+            'Coverage: 0.00%\n'
+            'Checksum: 4224788348\n')
+        self.assertEqual(expected, fp.getvalue())

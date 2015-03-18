@@ -428,7 +428,7 @@ class Database(object):
         print >>fp, 'Subject count: %s' % self.subjectCount
         print >>fp, 'Hash count: %d' % len(self.d)
         print >>fp, 'Total residues: %d' % self.totalResidues
-        print >>fp, 'Coverage: %.2f%%' % (coverage)
+        print >>fp, 'Coverage: %.2f%%' % coverage
         print >>fp, 'Checksum: %s' % self.checksum
 
         # Print hashes.

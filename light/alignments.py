@@ -21,14 +21,7 @@ class LightAlignment(Alignment):
         against.
     @param subjectTitle: The C{str} title of the sequence a read matched
         against.
-    @param matchInfo: A C{list} of C{dict}s, each containing information
-        about the matching landmarks and trig points. These are the C{dicts}
-        created in C{light.database.find} and passed to C{addResult} in
-        result.py.
     """
-    def __init__(self, subjectLength, subjectTitle, matchInfo):
-        Alignment.__init__(self, subjectLength, subjectTitle)
-        self.matchInfo = matchInfo
 
 
 class LightReadsAlignments(ReadsAlignments):
@@ -56,9 +49,10 @@ class LightReadsAlignments(ReadsAlignments):
             self.resultFilenames = resultFilenames
         self._database = database
 
-        # Add a dictionary that will allow us to look up databae subjects
+        # Add a dictionary that will allow us to look up database subjects
         # by title.
-        self._subjects = dict(database.subjectInfo)
+        self._subjects = dict(subjectInfo[:2] for subjectInfo in
+                              database.subjectInfo)
 
         # Prepare application parameters in order to initialize self.
         self._reader = self._getReader(self.resultFilenames[0])
@@ -139,7 +133,8 @@ def jsonDictToAlignments(lightDict, database):
     Take a dict of light matter results (converted from JSON) for a single
     read and produce a list of alignments.
 
-    @param lightDict: A C{dict}, created from a line of light result JSON.
+    @param lightDict: A C{dict}, created from a line of light matter result
+        JSON.
     @param database: A C{light.database.Database} instance.
     @return: A C{list} of L{light.alignment.LightAlignment} instances.
     """
@@ -147,10 +142,14 @@ def jsonDictToAlignments(lightDict, database):
 
     for alignment in lightDict['alignments']:
         subjectId, subjectSequence = database.subjectInfo[
-            alignment['subjectIndex']]
-        lightAlignment = LightAlignment(len(subjectSequence), subjectId,
-                                        alignment['matchInfo'])
-        lightAlignment.addHsp(HSP(alignment['matchScore']))
+            alignment['subjectIndex']][:2]
+        lightAlignment = LightAlignment(len(subjectSequence), subjectId)
+        for hspDict in alignment['hsps']:
+            hsp = HSP(hspDict['score'])
+            # This is ugly: manually put the additional light matter HSP
+            # info onto the HSP instance. For now.
+            hsp.hspInfo = hspDict['hspInfo']
+            lightAlignment.addHsp(hsp)
         lightAlignments.append(lightAlignment)
 
     return lightAlignments

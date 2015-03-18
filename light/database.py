@@ -1,7 +1,7 @@
 import argparse
 import sys
 from warnings import warn
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 try:
     from ujson import dump, dumps, load
 except ImportError:
@@ -133,14 +133,14 @@ class Database(object):
         update = '\0'.join(strings) + '\0'
         self.checksum = crc32(update, self.checksum) & 0xFFFFFFFF
 
-    def key(self, landmark, trigPoint):
+    def hash(self, landmark, trigPoint):
         """
-        Compute a key to store information about a landmark / trig point
+        Compute a hash key to store information about a landmark / trig point
         association for a read.
 
         @param landmark: A C{light.features.Landmark} instance.
         @param trigPoint: A C{light.features.TrigPoint} instance.
-        @return: A C{str} key based on the landmark, the trig point,
+        @return: A C{str} hash key based on the landmark, the trig point,
             and the distance between them.
         """
         distance = scale(trigPoint.offset - landmark.offset, self.distanceBase)
@@ -169,11 +169,48 @@ class Database(object):
         Get the (landmark, trigPoint) pairs from a ScannedRead instance.
 
         @param scannedSequence: A C{light.reads.ScannedRead} instance.
-        @return: C{light.reads.ScannedRead.getPairs}
+        @return: A generator yielding (landmark, trigPoint) pairs, as returned
+            by C{light.reads.ScannedRead.getPairs}.
         """
         return scannedSequence.getPairs(limitPerLandmark=self.limitPerLandmark,
                                         maxDistance=self.maxDistance,
                                         minDistance=self.minDistance)
+
+    def getHashes(self, scannedSequence):
+        """
+        Get all (landmark, trigPoint) hashes from a scanned sequence and
+        collect the offsets at which the (landmark, trigPoint) pair occurs.
+
+        @param scannedSequence: A C{light.reads.ScannedRead} instance.
+        @return: A C{dict} keyed by (landmark, trigPoint) hash, whose values
+            are C{dict}s containing the first (landmark, trigPoint) pair that
+            generated that hash, and a list of all offsets into the read
+            where the (landmark, trigPoint) pair was found.
+        """
+        # For testing reasons, use an ordered dict to hold hash information.
+        # Our database and result code do not need the dict to be ordered.
+        # But a deterministic order of hashes makes it simple to write reliable
+        # tests. If we ever get really serious about speed we may want to use
+        # a regular dict instead and make the tests do more digging / sorting
+        # in results.
+        hashes = OrderedDict()
+
+        for (landmark, trigPoint) in self.getScannedPairs(scannedSequence):
+            hash_ = self.hash(landmark, trigPoint)
+            try:
+                hashInfo = hashes[hash_]
+            except KeyError:
+                hashes[hash_] = {
+                    'landmark': landmark,
+                    'landmarkOffsets': [landmark.offset],
+                    'trigPointOffsets': [trigPoint.offset],
+                    'trigPoint': trigPoint,
+                }
+            else:
+                hashInfo['trigPointOffsets'].append(trigPoint.offset)
+                hashInfo['landmarkOffsets'].append(landmark.offset)
+
+        return hashes
 
     def addSubject(self, subject):
         """
@@ -185,28 +222,29 @@ class Database(object):
             be an actual read from a sequencing run.
         @return: The C{int} subject index of the added subject.
         """
-        subjectInfo = (subject.id, subject.sequence)
-        self._updateChecksum(subjectInfo)
-        self.subjectInfo.append(subjectInfo)
         subjectIndex = self.subjectCount
         self.subjectCount += 1
         self.totalResidues += len(subject)
-
         scannedSubject = self.scan(subject)
 
         self.totalCoveredResidues += len(scannedSubject.coveredIndices())
 
+        hashCount = 0
         for landmark, trigPoint in self.getScannedPairs(scannedSubject):
-            key = self.key(landmark, trigPoint)
+            hash_ = self.hash(landmark, trigPoint)
+            hashCount += 1
             try:
-                subjectDict = self.d[key]
+                subjectDict = self.d[hash_]
             except KeyError:
-                self.d[key] = subjectDict = {}
+                self.d[hash_] = subjectDict = {}
 
             try:
                 subjectDict[str(subjectIndex)].append(landmark.offset)
             except KeyError:
                 subjectDict[str(subjectIndex)] = [landmark.offset]
+
+        self._updateChecksum((subject.id, subject.sequence, str(hashCount)))
+        self.subjectInfo.append((subject.id, subject.sequence, hashCount))
 
         return subjectIndex
 
@@ -255,37 +293,35 @@ class Database(object):
         if significanceFraction is None:
             significanceFraction = self.DEFAULT_SIGNIFICANCE_FRACTION
 
+        matches = defaultdict(list)
+        nonMatchingHashes = {}
+        hashCount = 0
         scannedRead = self.scan(read)
 
-        matches = defaultdict(list)
-        nonMatchingHashes = set()
-        hashCount = 0
-
-        for landmark, trigPoint in self.getScannedPairs(scannedRead):
-            hashCount += 1
-            key = self.key(landmark, trigPoint)
+        for hash_, hashInfo in self.getHashes(scannedRead).iteritems():
+            # Note that hashCount is incremented for every hash, even those
+            # that are not in the database. Basing significance (in
+            # result.py) on a fraction of that overall count therefore
+            # takes into account the fact that some hashes may have been
+            # missed. We may want to do that at a finer level of
+            # granularity, though.  E.g., by considering where in the read
+            # the misses were.
+            hashCount += len(hashInfo['landmarkOffsets'])
             try:
-                subjectDict = self.d[key]
+                subjectDict = self.d[hash_]
             except KeyError:
-                # A hash that's in the read but not in our database. We
-                # should eventually keep these mismatches and use them to
-                # help determine how good a match against a subject is.
-                #
-                # Note that hashCount is incremented for every pair, even
-                # ones that are not in the database. Basing significance on
-                # a fraction of that overall count does take into account
-                # the fact that some hashes may have been missed. We may
-                # want to do that at a finer level of granularity, though.
-                # E.g., consider _where_ in the read the misses were.
+                # A hash that's in the read but not in our database.
                 if storeFullAnalysis:
-                    nonMatchingHashes.add((landmark, trigPoint))
+                    nonMatchingHashes[hash_] = hashInfo
             else:
-                for subjectIndex, subjectOffsets in subjectDict.iteritems():
-                    subjectIndex = int(subjectIndex)
-                    matches[subjectIndex].append({
-                        'landmark': landmark,
-                        'subjectOffsets': subjectOffsets,
-                        'trigPoint': trigPoint,
+                for (subjectIndex,
+                     subjectLandmarkOffsets) in subjectDict.iteritems():
+                    matches[int(subjectIndex)].append({
+                        'landmark': hashInfo['landmark'],
+                        'queryLandmarkOffsets': hashInfo['landmarkOffsets'],
+                        'queryTrigPointOffsets': hashInfo['trigPointOffsets'],
+                        'subjectLandmarkOffsets': subjectLandmarkOffsets,
+                        'trigPoint': hashInfo['trigPoint'],
                     })
 
         return Result(scannedRead, matches, hashCount, significanceFraction,
@@ -394,11 +430,11 @@ class Database(object):
             print >>fp, 'Subjects (with offsets) by hash:'
             landmarkCount = defaultdict(int)
             trigCount = defaultdict(int)
-            for hashkey, subjects in self.d.iteritems():
-                print >>fp, '  ', hashkey
+            for hash_, subjects in self.d.iteritems():
+                print >>fp, '  ', hash_
                 # The split on ':' corresponds to the use of ':' above in
-                # self.key() to make a hash key.
-                landmarkHashkey, trigHashkey, distance = hashkey.split(':')
+                # self.hash() to make a hash key.
+                landmarkHashkey, trigHashkey, distance = hash_.split(':')
                 landmarkCount[landmarkHashkey] += 1
                 trigCount[trigHashkey] += 1
                 for subjectIndex, offsets in subjects.iteritems():
@@ -407,14 +443,14 @@ class Database(object):
                         self.subjectInfo[subjectIndex][0], offsets)
 
             print >>fp, 'Landmark symbol counts:'
-            for hashkey, count in landmarkCount.iteritems():
+            for hash_, count in landmarkCount.iteritems():
                 print >>fp, '  %s (%s): %d' % (
-                    landmarkNameFromHashkey(hashkey), hashkey, count)
+                    landmarkNameFromHashkey(hash_), hash_, count)
 
             print >>fp, 'Trig point symbol counts:'
-            for hashkey, count in trigCount.iteritems():
+            for hash_, count in trigCount.iteritems():
                 print >>fp, '  %s (%s): %d' % (
-                    trigNameFromHashkey(hashkey), hashkey, count)
+                    trigNameFromHashkey(hash_), hash_, count)
 
 
 class DatabaseSpecifier(object):

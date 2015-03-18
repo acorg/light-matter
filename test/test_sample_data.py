@@ -5,8 +5,13 @@ from light.alignments import jsonDictToAlignments
 from light.database import Database
 
 from sample_data import (
-    DB, PARAMS, COWPOX, MONKEYPOX, MUMMYPOX, SQUIRRELPOX55, SQUIRRELPOX1296,
-    RECORD0, RECORD1, RECORD2, RECORD3, RECORD4)
+    DB, PARAMS, COWPOX, MONKEYPOX, MUMMYPOX, CATPOX, SQUIRRELPOX,
+    RECORD0, RECORD1, RECORD2, RECORD3, RECORD4,
+    READ0_SQUIRRELPOX_SCORE, READ0_CATPOX_SCORE,
+    READ1_MONKEYPOX_SCORE, READ1_MONKEYPOX_HSP2_SCORE, READ1_MUMMYPOX_SCORE,
+    READ2_COWPOX_SCORE,
+    READ3_COWPOX_SCORE,
+    READ4_COWPOX_SCORE)
 
 
 class TestParams(TestCase):
@@ -20,24 +25,21 @@ class TestParams(TestCase):
         self.maxDiff = None
         self.assertEqual(
             {
-                'subjectCount': 5,
-                'totalCoveredResidues': 62,
-                'checksum': 849636647,
-                'limitPerLandmark': Database.DEFAULT_LIMIT_PER_LANDMARK,
-                'trigPointClasses': [
-                    'AminoAcids',
-                    'Troughs',
-                ],
-                'totalResidues': 69,
+                'checksum': 3043375176,
+                'distanceBase': 1.1,
                 'landmarkClasses': [
                     'AlphaHelix',
-                    'AlphaHelix_3_10',
-                    'AlphaHelix_pi',
                     'BetaStrand',
                 ],
+                'limitPerLandmark': Database.DEFAULT_LIMIT_PER_LANDMARK,
                 'maxDistance': Database.DEFAULT_MAX_DISTANCE,
                 'minDistance': Database.DEFAULT_MIN_DISTANCE,
-                'distanceBase': 1.0,
+                'subjectCount': 5,
+                'totalCoveredResidues': 164,
+                'totalResidues': 184,
+                'trigPointClasses': [
+                    'AminoAcids',
+                ],
             },
             loads(PARAMS))
 
@@ -48,31 +50,33 @@ class TestRecords(TestCase):
     """
     def testRECORD0(self):
         """
-        The results in RECORD0 must match two subjects: SQUIRRELPOX1296 (with
-        score 2) and SQUIRRELPOX55 (with score 2).
+        The results in RECORD0 must match two subjects: CATPOX
+        and SQUIRRELPOX.
         """
         alignments = jsonDictToAlignments(loads(RECORD0), DB)
         self.assertEqual(2, len(alignments))
 
-        self.assertEqual(SQUIRRELPOX1296.id, alignments[0].subjectTitle)
-        self.assertEqual(0.25, alignments[0].hsps[0].score.score)
+        self.assertEqual(CATPOX.id, alignments[0].subjectTitle)
+        self.assertEqual(READ0_CATPOX_SCORE, alignments[0].hsps[0].score.score)
 
-        self.assertEqual(SQUIRRELPOX55.id, alignments[1].subjectTitle)
-        self.assertEqual(0.2, alignments[1].hsps[0].score.score)
+        self.assertEqual(SQUIRRELPOX.id, alignments[1].subjectTitle)
+        self.assertEqual(READ0_SQUIRRELPOX_SCORE,
+                         alignments[1].hsps[0].score.score)
 
     def testRECORD1(self):
         """
-        The results in RECORD1 must match two subjects: MONKEYPOX (with score
-        1) and MUMMYPOX (with score 1).
+        The results in RECORD1 must match two subjects: MONKEYPOX and MUMMYPOX.
         """
         alignments = jsonDictToAlignments(loads(RECORD1), DB)
         self.assertEqual(2, len(alignments))
 
         self.assertEqual(MONKEYPOX.id, alignments[0].subjectTitle)
-        self.assertEqual(3.0 / 11.0, alignments[0].hsps[0].score.score)
+        self.assertEqual(READ1_MONKEYPOX_SCORE,
+                         alignments[0].hsps[0].score.score)
 
         self.assertEqual(MUMMYPOX.id, alignments[1].subjectTitle)
-        self.assertEqual(1.0 / 11.0, alignments[1].hsps[0].score.score)
+        self.assertEqual(READ1_MUMMYPOX_SCORE,
+                         alignments[1].hsps[0].score.score)
 
     def testRECORD2(self):
         """
@@ -82,7 +86,7 @@ class TestRecords(TestCase):
         self.assertEqual(1, len(alignments))
 
         self.assertEqual(COWPOX.id, alignments[0].subjectTitle)
-        self.assertEqual(1.0, alignments[0].hsps[0].score.score)
+        self.assertEqual(READ2_COWPOX_SCORE, alignments[0].hsps[0].score.score)
 
     def testRECORD3(self):
         """
@@ -92,7 +96,7 @@ class TestRecords(TestCase):
         self.assertEqual(1, len(alignments))
 
         self.assertEqual(COWPOX.id, alignments[0].subjectTitle)
-        self.assertEqual(1.0, alignments[0].hsps[0].score.score)
+        self.assertEqual(READ3_COWPOX_SCORE, alignments[0].hsps[0].score.score)
 
     def testRECORD4(self):
         """
@@ -102,4 +106,53 @@ class TestRecords(TestCase):
         self.assertEqual(1, len(alignments))
 
         self.assertEqual(COWPOX.id, alignments[0].subjectTitle)
-        self.assertEqual(1.0, alignments[0].hsps[0].score.score)
+        self.assertEqual(READ4_COWPOX_SCORE, alignments[0].hsps[0].score.score)
+
+
+class TestSubjects(TestCase):
+    """
+    Test the subject sequences in the sample database. These tests are not
+    needed for correctness. They are included to show the specific values
+    of sequence lengths and scores and so that we will have failing tests
+    if any of those things change unexpectedly.
+
+    Having the explicit numerical values also helps to see why tests elsewhere
+    have the results they do.
+    """
+    def testCATPOX(self):
+        """
+        The CATPOX subject must have the expected length and match scores.
+        """
+        self.assertEqual(34, len(CATPOX.sequence))
+        self.assertEqual(0.5, READ0_CATPOX_SCORE)
+
+    def testCOWPOX(self):
+        """
+        The COWPOX subject must have the expected length and match scores.
+        """
+        self.assertEqual(14, len(COWPOX.sequence))
+        self.assertEqual(0.75, READ2_COWPOX_SCORE)
+        self.assertEqual(0.75, READ3_COWPOX_SCORE)
+        self.assertEqual(0.75, READ4_COWPOX_SCORE)
+
+    def testMONKEYPOX(self):
+        """
+        The MONKEYPOX subject must have the expected length and match scores.
+        """
+        self.assertEqual(47, len(MONKEYPOX.sequence))
+        self.assertEqual(0.6, READ1_MONKEYPOX_SCORE)
+        self.assertEqual(0.3, READ1_MONKEYPOX_HSP2_SCORE)
+
+    def testMUMMYPOX(self):
+        """
+        The MUMMYPOX subject must have the expected length and match scores.
+        """
+        self.assertEqual(48, len(MUMMYPOX.sequence))
+        self.assertEqual(0.4, READ1_MUMMYPOX_SCORE)
+
+    def testSQUIRRELPOX(self):
+        """
+        The SQUIRRELPOX subject must have the expected length and match scores.
+        """
+        self.assertEqual(41, len(SQUIRRELPOX.sequence))
+        self.assertEqual(1.0, READ0_SQUIRRELPOX_SCORE)

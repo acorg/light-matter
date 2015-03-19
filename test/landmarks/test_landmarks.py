@@ -89,17 +89,23 @@ class TestLandmarkNameFromHashkey(TestCase):
 
 class TestAllLandmarkClasses(TestCase):
     """
-    Trivial tests for the ALL_LANDMARK_CLASSES set.
+    Trivial tests for the ALL_LANDMARK_CLASSES list.
     """
+
+    def testIsAList(self):
+        """
+        ALL_LANDMARK_CLASSES must be a list (not a set).
+        """
+        self.assertTrue(isinstance(ALL_LANDMARK_CLASSES, list))
 
     def testAllClasses(self):
         """
-        The ALL_LANDMARK_CLASSES set must be as expected.
+        The ALL_LANDMARK_CLASSES list must be as expected.
         """
         self.assertEqual(
-            {AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, AminoAcids,
+            [AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, AminoAcids,
              BetaStrand, BetaTurn, GOR4AlphaHelix, GOR4BetaStrand, GOR4Coil,
-             Prosite},
+             Prosite],
             ALL_LANDMARK_CLASSES)
 
 
@@ -108,13 +114,19 @@ class TestDefaultLandmarkClasses(TestCase):
     Trivial tests for the DEFAULT_LANDMARK_CLASSES set.
     """
 
+    def testIsAList(self):
+        """
+        DEFAULT_LANDMARK_CLASSES must be a list (not a set).
+        """
+        self.assertTrue(isinstance(DEFAULT_LANDMARK_CLASSES, list))
+
     def testDefaultClasses(self):
         """
         The DEFAULT_LANDMARK_CLASSES must be as expected.
         """
         self.assertEqual(
-            {AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, AminoAcids,
-             BetaStrand, BetaTurn, Prosite},
+            [AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, AminoAcids,
+             BetaStrand, BetaTurn, Prosite],
             DEFAULT_LANDMARK_CLASSES)
 
     def testDefaultClassesAreInAllClasses(self):

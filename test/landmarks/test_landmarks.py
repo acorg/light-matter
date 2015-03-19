@@ -126,7 +126,7 @@ class TestDefaultLandmarkClasses(TestCase):
         """
         self.assertEqual(
             [AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, AminoAcids,
-             BetaStrand, BetaTurn, Prosite],
+             BetaStrand, BetaTurn, GOR4AlphaHelix, GOR4BetaStrand, Prosite],
             DEFAULT_LANDMARK_CLASSES)
 
     def testDefaultClassesAreInAllClasses(self):

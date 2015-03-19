@@ -131,8 +131,7 @@ class TestDefaultLandmarkClasses(TestCase):
 
     def testDefaultClassesAreInAllClasses(self):
         """
-        The DEFAULT_LANDMARK_CLASSES must all appear in
-        ALL_LANDMARK_CLASSES.
+        The DEFAULT_LANDMARK_CLASSES must all be in ALL_LANDMARK_CLASSES.
         """
         for klass in DEFAULT_LANDMARK_CLASSES:
             self.assertIn(klass, ALL_LANDMARK_CLASSES)

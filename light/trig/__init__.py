@@ -5,9 +5,9 @@ from light.trig.individual_peaks import IndividualPeaks
 from light.trig.individual_troughs import IndividualTroughs
 
 ALL_TRIG_CLASSES = [
-    Peaks, Troughs, AminoAcids, IndividualPeaks, IndividualTroughs]
+    AminoAcids, IndividualPeaks, IndividualTroughs, Peaks, Troughs]
 
-DEFAULT_TRIG_CLASSES = [Peaks, Troughs, AminoAcids]
+DEFAULT_TRIG_CLASSES = [AminoAcids]
 
 _HASHKEY_TO_NAME = dict((cls.SYMBOL, cls.NAME) for cls in ALL_TRIG_CLASSES)
 

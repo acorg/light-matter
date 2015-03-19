@@ -10,7 +10,6 @@ from light.landmarks import ALL_LANDMARK_CLASSES
 from light.features import Landmark
 from light.colors import colors
 
-from dark.dimension import dimensionalIterator
 from dark.fasta import FastaReads
 from dark.reads import AARead
 
@@ -91,109 +90,6 @@ def plotHistogram(query, subject, significanceFraction=None, readsAx=None,
         readsAx.set_title('%s against %s' % (query.id, subject.id))
         readsAx.set_xlabel("Offsets (database-read)")
         readsAx.xaxis.tick_bottom()
-
-
-def plotFeatures(read, significanceFraction=None, readsAx=None, **kwargs):
-    """
-    A function which plots the positions of landmark and trigpoint pairs on a
-    sequence.
-
-    @param read: A C{dark.reads.AARead} instance.
-    @param significanceFraction: The C{float} fraction of all (landmark,
-        trig point) pairs for a scannedRead that need to fall into the
-        same histogram bucket for that bucket to be considered a
-        significant match with a database title.
-    @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
-        for additional keywords, all of which are optional.
-    """
-    width = 20
-    fig = plt.figure(figsize=(width, 20))
-    readsAx = readsAx or fig.add_subplot(111)
-
-    database = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
-    result = database.find(read, significanceFraction, storeFullAnalysis=True)
-    scannedQuery = result.scannedQuery
-
-    # plot landmarks and trig point pairs.
-    totalCoveredResidues = len(scannedQuery.coveredIndices())
-    count = 0
-
-    for landmark, trigPoint in database.getScannedPairs(scannedQuery):
-        readsAx.plot([landmark.offset, trigPoint.offset], [count, count], '-',
-                     color='grey')
-        landmarkColor = COLORS[landmark.symbol]
-        trigPointColor = COLORS[trigPoint.symbol]
-        readsAx.plot([landmark.offset, landmark.offset + landmark.length],
-                     [count, count], '-', color=landmarkColor, linewidth=4)
-        readsAx.plot([trigPoint.offset, trigPoint.offset + trigPoint.length],
-                     [count, count], '-', color=trigPointColor, linewidth=4)
-        count += 1
-
-    readsAx.set_title('%s\n Length: %d, covered residues: %s' % (read.id,
-                      len(read), totalCoveredResidues), fontsize=20)
-    readsAx.set_ylabel('Rank', fontsize=10)
-
-    readsAx.set_xlim(0, len(read.sequence))
-    readsAx.set_ylim(-0.5, count + 1)
-    readsAx.grid()
-
-    return scannedQuery, count
-
-
-def plotFeaturePanel(reads, **kwargs):
-    """
-    Plot a panel of feature plots from plotFeatures.
-
-    @param reads: A C{dark.fasta.FastaReads} instance.
-    @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
-        for additional keywords, all of which are optional.
-    """
-    cols = 5
-    rows = 40
-    # rows = int(len(reads) / cols) + (0 if len(reads) % cols == 0 else 1)
-    figure, ax = plt.subplots(rows, cols, squeeze=False)
-    maxY = 0
-    maxX = 0
-
-    coords = dimensionalIterator((rows, cols))
-
-    for i, read in enumerate(reads):
-        row, col = coords.next()
-        print '%d: %s' % (i, read.id)
-
-        graphInfo, y = plotFeatures(read, readsAx=ax[row][col], **kwargs)
-
-        totalCoveredResidues = len(graphInfo.coveredIndices())
-        plotTitle = ('%s\n Length: %d, covered residues: %s' % (read.id,
-                     len(read), totalCoveredResidues))
-
-        ax[row][col].set_title(plotTitle, fontsize=10)
-        if y > maxY:
-            maxY = y
-        if len(read) > maxX:
-            maxX = len(read)
-
-    # Post-process graphs to adjust axes, etc.
-    coords = dimensionalIterator((rows, cols))
-    for read in reads:
-        row, col = coords.next()
-        a = ax[row][col]
-        # a.set_ylim([-0.5, maxY + 0.5])
-        a.set_yticks([])
-        a.set_xticks([])
-        a.set_ylabel('')
-
-    # Hide the final panel graphs (if any) that have no content. We do this
-    # because the panel is a rectangular grid and some of the plots at the
-    # end of the last row may be unused.
-    for row, col in coords:
-        ax[row][col].axis('off')
-
-    plt.subplots_adjust(hspace=0.4)
-    figure.suptitle('X: 0 to %d, Y: 0 to %d (rank)' % (maxX, maxY),
-                    fontsize=20)
-    figure.set_size_inches(5 * cols, 3 * rows, forward=True)
-    figure.show()
 
 
 def plotFeatureSquare(read, significanceFraction=None, readsAx=None, **kwargs):
@@ -290,21 +186,38 @@ class PlotHashesInSubjectAndRead(object):
         subjectIndex = database.addSubject(self.subject)
         result = database.find(self.query, significanceFraction,
                                storeFullAnalysis=True)
+        if len(result.analysis[subjectIndex]) > 0:
+            self.score = result.analysis[subjectIndex]['bestScore']
+            self.signBins = len(result.analysis[subjectIndex][
+                                'significantBins'])
+            self.matchingFeatures = (
+                result.analysis[subjectIndex]['histogram'].bins if
+                subjectIndex in result.analysis else set())
+        else:
+            self.score = 0.0
+            self.signBins = 0
+            self.matchingFeatures = {}
 
-        self.queryHashes = result.nonMatchingHashes
-        self.matchingHashes = (
-            result.analysis[subjectIndex]['histogram'].bins
-            if subjectIndex in result.analysis else set())
+        self.queryFeatures = result.nonMatchingHashes
 
         scannedSubject = database.scan(subject)
-        self.subjectHashes = set(database.getScannedPairs(scannedSubject))
-        self.subjectHashes.difference_update(set(
-            (hash_['landmark'], hash_['trigPoint'])
-            for bin_ in self.matchingHashes for hash_ in bin_))
+        self.subjectFeatures = database.getHashes(scannedSubject)
+
+        for bin_ in self.matchingFeatures:
+            for feature in bin_:
+                hash_ = database.hash(feature['landmark'],
+                                      feature['trigPoint'])
+                try:
+                    del self.subjectFeatures[hash_]
+                except KeyError:
+                    continue
 
     def plotGraph(self, readsAx=None):
         """
-        Plots the graph.
+        Plots the hashes in a subject and a query. Matching hashes are plotted
+        as a scatter plot, with hashes from each bin coloured differently.
+        Non matching hashes in the subject are plotted on the x-axis, non
+        matchint hashes in the query are plotted on the y-axis.
 
         @param readsAx: If not C{None}, use this as the subplot for displaying
             reads.
@@ -312,27 +225,39 @@ class PlotHashesInSubjectAndRead(object):
         height = (len(self.query) * 15) / len(self.subject)
         fig = plt.figure(figsize=(15, height))
         readsAx = readsAx or fig.add_subplot(111)
-        cols = colors.color_palette('hls', len(self.matchingHashes))
+        cols = colors.color_palette('hls', len(self.matchingFeatures))
 
-        for landmark, trigPoint in self.queryHashes:
-            readsAx.plot(landmark.offset + uniform(-0.4, 0.4), 0, 'o',
-                         markerfacecolor='black', markeredgecolor='white')
+        for feature in self.queryFeatures:
+            for offset in self.queryFeatures[feature]['landmarkOffsets']:
+                readsAx.plot(offset + uniform(-0.4, 0.4), 0, 'o',
+                             markerfacecolor='black', markeredgecolor='white')
 
-        for landmark, trigPoint in self.subjectHashes:
-            readsAx.plot(0, landmark.offset + uniform(-0.4, 0.4), 'o',
-                         markerfacecolor='black', markeredgecolor='white')
-
-        for index, bin_ in enumerate(self.matchingHashes):
+        for feature in self.subjectFeatures:
+            for offset in self.subjectFeatures[feature]['landmarkOffsets']:
+                readsAx.plot(0, offset + uniform(-0.4, 0.4), 'o',
+                             markerfacecolor='black', markeredgecolor='white')
+        matchingFeaturesCount = 0
+        for index, bin_ in enumerate(self.matchingFeatures):
             col = cols[index]
             for match in bin_:
-                for subjectOffset in match['subjectOffsets']:
-                    readsAx.plot(subjectOffset + uniform(-0.4, 0.4),
-                                 match['landmark'].offset + uniform(-0.4, 0.4),
-                                 'o', markerfacecolor=col,
-                                 markeredgecolor='white')
+                matchingFeaturesCount += 1
+                readsAx.plot((match['subjectLandmarkOffset'] +
+                              uniform(-0.4, 0.4)),
+                             match['queryLandmarkOffset'] + uniform(-0.4, 0.4),
+                             'o', markerfacecolor=col, markeredgecolor='white')
 
+        readsAx.set_title('Hashes from matching %s against %s\n Score: %.4f, '
+                          'total bins: %d, significant bins: %d\n '
+                          'Matching hashes: %d, subject hashes: %d, '
+                          'query hashes: %d' % (
+                              self.query.id, self.subject.id, self.score,
+                              len(self.matchingFeatures), self.signBins,
+                              matchingFeaturesCount, len(self.subjectFeatures),
+                              len(self.queryFeatures)))
         readsAx.set_ylabel('Query: %s' % self.query.id)
         readsAx.set_xlabel('Subject: %s' % self.subject.id)
+        readsAx.set_xlim(-0.5, len(self.subject))
+        readsAx.set_ylim(-0.5, len(self.query))
         readsAx.grid()
 
 

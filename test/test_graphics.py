@@ -11,8 +11,8 @@ class TestPlotHashesInSubjectAndRead(TestCase):
     """
     def testNoHashes(self):
         """
-        If there are no hashes in subject and query, matchingHashes,
-        queryHashes and subjectHashes must be empty.
+        If there are no hashes in subject and query, matchingFeatures,
+        queryFeatures and subjectFeatures must be empty.
         """
         subject = AARead('subject', 'RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR')
         query = AARead('query', 'AAAAAAAAAAAAAAAAAAAAAAA')
@@ -23,13 +23,13 @@ class TestPlotHashesInSubjectAndRead(TestCase):
                                             maxDistance=10, minDistance=1,
                                             limitPerLandmark=10,
                                             distanceBase=1.0)
-        self.assertEqual(0, len(list(hashes.matchingHashes)))
-        self.assertEqual(0, len(list(hashes.queryHashes)))
-        self.assertEqual(0, len(list(hashes.subjectHashes)))
+        self.assertEqual(0, len(list(hashes.matchingFeatures)))
+        self.assertEqual(0, len(list(hashes.queryFeatures)))
+        self.assertEqual(0, len(list(hashes.subjectFeatures)))
 
     def testNoMatchingHashes(self):
         """
-        If there are no matching hashes in subject and query, matchingHashes
+        If there are no matching hashes in subject and query, matchingFeatures
         must be empty.
         """
         subject = AARead('subject', 'FRRFRRFRRFAAAAAAAAAAAAASARRRRRRRRRRRRRR')
@@ -42,14 +42,14 @@ class TestPlotHashesInSubjectAndRead(TestCase):
                                             maxDistance=50, minDistance=1,
                                             limitPerLandmark=10,
                                             distanceBase=1.0)
-        self.assertEqual(0, len(list(hashes.matchingHashes)))
-        self.assertEqual(1, len(list(hashes.queryHashes)))
-        self.assertEqual(1, len(list(hashes.subjectHashes)))
+        self.assertEqual(0, len(list(hashes.matchingFeatures)))
+        self.assertEqual(1, len(list(hashes.queryFeatures)))
+        self.assertEqual(1, len(list(hashes.subjectFeatures)))
 
-    def testNoQueryHashes(self):
+    def testNoQuerysubjectHashes(self):
         """
-        If all hashes in the query also occur in the subject, queryHashes must
-        be empty.
+        If all subjectFeatures in the query also occur in the subject,
+        queryFeatures must be empty.
         """
         subject = AARead('subject', 'FRRFRRFRRFAAAAAAAAAAAASARRRRFRRFRRFAAASA')
         query = AARead('query', 'ASARRRRFRRFRRFAAASA')
@@ -62,14 +62,14 @@ class TestPlotHashesInSubjectAndRead(TestCase):
                                             limitPerLandmark=10,
                                             distanceBase=1.0)
         matchingHashesCount = sum([len(bin_) for bin_ in
-                                   hashes.matchingHashes])
+                                   hashes.matchingFeatures])
         self.assertEqual(2, matchingHashesCount)
-        self.assertEqual(0, len(hashes.queryHashes))
-        self.assertEqual(5, len(hashes.subjectHashes))
+        self.assertEqual(0, len(hashes.queryFeatures))
+        self.assertEqual(3, len(hashes.subjectFeatures))
 
     def testNoSubjectHashes(self):
         """
-        If all hashes in the subject also occur in the query, subjectHashes
+        If all hashes in the subject also occur in the query, subjectFeatures
         must be empty.
         """
         subject = AARead('subject', 'FRRFRRFRRFAAAAAAAAAAAASA')
@@ -83,7 +83,7 @@ class TestPlotHashesInSubjectAndRead(TestCase):
                                             limitPerLandmark=10,
                                             distanceBase=1.0)
         matchingHashesCount = sum([len(bin_) for bin_ in
-                                   hashes.matchingHashes])
+                                   hashes.matchingFeatures])
         self.assertEqual(1, matchingHashesCount)
-        self.assertEqual(4, len(hashes.queryHashes))
-        self.assertEqual(0, len(hashes.subjectHashes))
+        self.assertEqual(4, len(hashes.queryFeatures))
+        self.assertEqual(0, len(hashes.subjectFeatures))

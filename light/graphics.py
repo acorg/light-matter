@@ -16,7 +16,7 @@ from dark.reads import AARead
 
 ALL_FEATURES = [
     (feature.SYMBOL, feature.NAME) for feature in
-    sorted(ALL_LANDMARK_CLASSES | ALL_TRIG_CLASSES,
+    sorted(ALL_LANDMARK_CLASSES + ALL_TRIG_CLASSES,
            key=attrgetter('NAME'))]
 
 # From http://www.randalolson.com/2014/06/28/how-to-make-beautiful-data-\

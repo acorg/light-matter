@@ -83,12 +83,18 @@ class TestAllTrigClasses(TestCase):
     Trivial tests for the ALL_TRIG_CLASSES set.
     """
 
+    def testIsAList(self):
+        """
+        ALL_TRIG_CLASSES must be a list (not a set).
+        """
+        self.assertTrue(isinstance(ALL_TRIG_CLASSES, list))
+
     def testAllClasses(self):
         """
         The ALL_TRIG_CLASSES set must be as expected.
         """
         self.assertEqual(
-            {AminoAcids, Peaks, Troughs, IndividualPeaks, IndividualTroughs},
+            [AminoAcids, IndividualPeaks, IndividualTroughs, Peaks, Troughs],
             ALL_TRIG_CLASSES)
 
 
@@ -97,18 +103,21 @@ class TestDefaultTrigClasses(TestCase):
     Trivial tests for the DEFAULT_TRIG_CLASSES set.
     """
 
+    def testIsAList(self):
+        """
+        DEFAULT_TRIG_CLASSES must be a list (not a set).
+        """
+        self.assertTrue(isinstance(DEFAULT_TRIG_CLASSES, list))
+
     def testDefaultClasses(self):
         """
         The DEFAULT_TRIG_CLASSES must be as expected.
         """
-        self.assertEqual(
-            {Peaks, Troughs, AminoAcids},
-            DEFAULT_TRIG_CLASSES)
+        self.assertEqual([AminoAcids], DEFAULT_TRIG_CLASSES)
 
     def testDefaultClassesAreInAllClasses(self):
         """
-        The DEFAULT_TRIG_CLASSES must all appear in
-        ALL_TRIG_CLASSES.
+        The DEFAULT_TRIG_CLASSES must all be in ALL_TRIG_CLASSES.
         """
         for klass in DEFAULT_TRIG_CLASSES:
             self.assertIn(klass, ALL_TRIG_CLASSES)

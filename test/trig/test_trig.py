@@ -94,7 +94,7 @@ class TestAllTrigClasses(TestCase):
         The ALL_TRIG_CLASSES set must be as expected.
         """
         self.assertEqual(
-            [Peaks, Troughs, AminoAcids, IndividualPeaks, IndividualTroughs],
+            [AminoAcids, IndividualPeaks, IndividualTroughs, Peaks, Troughs],
             ALL_TRIG_CLASSES)
 
 
@@ -113,14 +113,11 @@ class TestDefaultTrigClasses(TestCase):
         """
         The DEFAULT_TRIG_CLASSES must be as expected.
         """
-        self.assertEqual(
-            [Peaks, Troughs, AminoAcids],
-            DEFAULT_TRIG_CLASSES)
+        self.assertEqual([AminoAcids], DEFAULT_TRIG_CLASSES)
 
     def testDefaultClassesAreInAllClasses(self):
         """
-        The DEFAULT_TRIG_CLASSES must all appear in
-        ALL_TRIG_CLASSES.
+        The DEFAULT_TRIG_CLASSES must all be in ALL_TRIG_CLASSES.
         """
         for klass in DEFAULT_TRIG_CLASSES:
             self.assertIn(klass, ALL_TRIG_CLASSES)

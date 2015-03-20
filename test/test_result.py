@@ -297,14 +297,14 @@ class TestResult(TestCase):
     def testRightNumberOfBucketsDefault(self):
         """
         If no distanceBase is specified for a database, the number of bins must
-        be 20 if the length of the subject is 20 and the length of the read
-        is less. This is because int(log base 1.1 of 20) = 31, which is greater
-        than 20, so the value of 20 should be used. Note that 1.1 is the
-        default distanceBase.
+        be 21 if the length of the subject is 21 and the length of the read
+        is less. This is because int(log base 1.1 of 21) = 31, which is
+        greater than 21, so the value of 21 should be used. Note that 1.1
+        is the default distanceBase.
         """
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
         database = Database([], [])
-        database.addSubject(AARead('subject', 'AAAAAAAAAAAAAAAAAAAA'))
+        database.addSubject(AARead('subject', 'A' * 21))
         hashCount = 1
         matches = {
             0: [
@@ -319,7 +319,34 @@ class TestResult(TestCase):
         }
         result = Result(read, matches, hashCount, significanceFraction=0.1,
                         database=database, storeFullAnalysis=True)
-        self.assertEqual(20, len(result.analysis[0]['histogram'].bins))
+        self.assertEqual(21, result.analysis[0]['histogram'].nBins)
+
+    def testRightNumberOfBucketsDefaultNonEven(self):
+        """
+        If no distanceBase is specified for a database, the number of bins must
+        be 21 if the length of the subject is 20 and the length of the read
+        is less. This is because int(log base 1.1 of 20) = 31, which is greater
+        than 20, so the value of 20 should be used but result.py will adjust
+        this to 21 to ensure that the number of bins is odd.
+        """
+        read = ScannedRead(AARead('read', 'AGTARFSDDD'))
+        database = Database([], [])
+        database.addSubject(AARead('subject', 'A' * 20))
+        hashCount = 1
+        matches = {
+            0: [
+                {
+                    'landmark': Landmark('AlphaHelix', 'A', 1, 9),
+                    'queryLandmarkOffsets': [1],
+                    'queryTrigPointOffsets': [1],
+                    'subjectLandmarkOffsets': [2],
+                    'trigPoint': TrigPoint('Peaks', 'P', 1),
+                },
+            ],
+        }
+        result = Result(read, matches, hashCount, significanceFraction=0.1,
+                        database=database, storeFullAnalysis=True)
+        self.assertEqual(21, result.analysis[0]['histogram'].nBins)
 
     def testRightNumberOfBucketsWithNonDefaultDistanceBase(self):
         """
@@ -344,7 +371,7 @@ class TestResult(TestCase):
         }
         result = Result(read, matches, hashCount, significanceFraction=0.1,
                         database=database, storeFullAnalysis=True)
-        self.assertEqual(11, len(result.analysis[0]['histogram'].bins))
+        self.assertEqual(11, result.analysis[0]['histogram'].nBins)
 
     def testPrintWithQueryWithNoMatchesDueToNoFinders(self):
         """

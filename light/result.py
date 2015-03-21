@@ -56,6 +56,8 @@ class Result(object):
             # deltas.
             maxLen = max([queryLen, subjectLen])
             nBins = scale(maxLen, distanceBase)
+            # Make sure the number of bins is odd, else Histogram() will raise.
+            nBins |= 0x1
             histogram = Histogram(nBins)
             add = histogram.add
 
@@ -68,14 +70,14 @@ class Result(object):
                         match['queryTrigPointOffsets']):
                     for subjectOffset in match['subjectLandmarkOffsets']:
                         delta = subjectOffset - queryLandmarkOffset
-                        add({
-                            'landmark': landmark,
-                            'queryLandmarkOffset': queryLandmarkOffset,
-                            'queryTrigPointOffset': queryTrigPointOffset,
-                            'subjectLandmarkOffset': subjectOffset,
-                            'trigPoint': trigPoint,
-                            },
-                            scale(delta, distanceBase))
+                        add(scale(delta, distanceBase),
+                            {
+                                'landmark': landmark,
+                                'queryLandmarkOffset': queryLandmarkOffset,
+                                'queryTrigPointOffset': queryTrigPointOffset,
+                                'subjectLandmarkOffset': subjectOffset,
+                                'trigPoint': trigPoint,
+                            })
 
             histogram.finalizeHistogram()
 

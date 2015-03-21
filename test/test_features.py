@@ -1,6 +1,21 @@
 from unittest import TestCase
+from random import shuffle as pyshuffle
+from copy import copy
 
 from light.features import Landmark, TrigPoint, CombinedFeatureList, Finder
+
+
+def shuffle(l):
+    """
+    Copy a list, shuffle it, and return it.
+
+    @param l: A C{list}.
+    @return: A new list, with the same elements, but in a randomly shuffled
+        order.
+    """
+    result = copy(l)
+    pyshuffle(result)
+    return result
 
 
 class TestLandmarks(TestCase):
@@ -71,6 +86,67 @@ class TestLandmarks(TestCase):
         landmark = Landmark('name', 'L', 0, 1, 2)
         self.assertEqual('L2', landmark.hashkey())
 
+    def testSortOnName(self):
+        """
+        Sorting must be according to name if all else is equal.
+        """
+        expected = [
+            Landmark('nameA', 'L', 50, 22, 0),
+            Landmark('nameB', 'L', 50, 22, 0),
+            Landmark('nameC', 'L', 50, 22, 0),
+        ]
+
+        for _ in xrange(100):
+            self.assertEqual(expected, sorted(shuffle(expected)))
+
+    def testSortOnSymbol(self):
+        """
+        Sorting does not consider the symbol becaused it uses the name.
+        All names are unique and each has a unique symbol, so nothing
+        would be gained by additionally sorting on symbol once sorting
+        on name had been done.
+        """
+        pass
+
+    def testSortOnOffset(self):
+        """
+        Sorting must be according to offset if all else is equal.
+        """
+        expected = [
+            Landmark('name', 'L', 50, 22, 0),
+            Landmark('name', 'L', 51, 22, 0),
+            Landmark('name', 'L', 52, 22, 0),
+        ]
+
+        for _ in xrange(100):
+            self.assertEqual(expected, sorted(shuffle(expected)))
+
+    def testSortOnLength(self):
+        """
+        Sorting must be according to length if all else is equal.
+        """
+        expected = [
+            Landmark('name', 'L', 50, 20, 0),
+            Landmark('name', 'L', 50, 21, 0),
+            Landmark('name', 'L', 50, 22, 0),
+        ]
+
+        for _ in xrange(100):
+            self.assertEqual(expected, sorted(shuffle(expected)))
+
+    def testSortOnSymbolDetail(self):
+        """
+        Sorting must be according to symbol detail if all else is equal.
+        """
+        expected = [
+            Landmark('name', 'L', 50, 22, 0),
+            Landmark('name', 'L', 51, 22, 1),
+            Landmark('name', 'L', 52, 22, 2),
+        ]
+
+        for _ in xrange(100):
+            self.assertEqual(expected, sorted(shuffle(expected)))
+
 
 class TestTrigPoints(TestCase):
     """
@@ -112,8 +188,43 @@ class TestTrigPoints(TestCase):
         """
         The hashkey function must return as expected.
         """
-        landmark = TrigPoint('name', 'L', 0)
-        self.assertEqual('L', landmark.hashkey())
+        trigPoint = TrigPoint('name', 'L', 0)
+        self.assertEqual('L', trigPoint.hashkey())
+
+    def testSortOnName(self):
+        """
+        Sorting must be according to name if all else is equal.
+        """
+        expected = [
+            TrigPoint('nameA', 'L', 50),
+            TrigPoint('nameB', 'L', 50),
+            TrigPoint('nameC', 'L', 50),
+        ]
+
+        for _ in xrange(100):
+            self.assertEqual(expected, sorted(shuffle(expected)))
+
+    def testSortOnSymbol(self):
+        """
+        Sorting does not consider the symbol becaused it uses the name.
+        All names are unique and each has a unique symbol, so nothing
+        would be gained by additionally sorting on symbol once sorting
+        on name had been done.
+        """
+        pass
+
+    def testSortOnOffset(self):
+        """
+        Sorting must be according to offset if all else is equal.
+        """
+        expected = [
+            TrigPoint('name', 'L', 50),
+            TrigPoint('name', 'L', 51),
+            TrigPoint('name', 'L', 52),
+        ]
+
+        for _ in xrange(100):
+            self.assertEqual(expected, sorted(shuffle(expected)))
 
 
 class TestCombinedFeatureList(TestCase):

@@ -9,13 +9,13 @@ from light.landmarks.gor4_beta_strand import GOR4BetaStrand
 from light.landmarks.gor4_coil import GOR4Coil
 from light.landmarks.prosite import Prosite
 
-ALL_LANDMARK_CLASSES = {
+ALL_LANDMARK_CLASSES = [
     AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, AminoAcids, BetaStrand,
-    BetaTurn, GOR4AlphaHelix, GOR4BetaStrand, GOR4Coil, Prosite}
+    BetaTurn, GOR4AlphaHelix, GOR4BetaStrand, GOR4Coil, Prosite]
 
-DEFAULT_LANDMARK_CLASSES = {
+DEFAULT_LANDMARK_CLASSES = [
     AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, AminoAcids, BetaStrand,
-    BetaTurn, Prosite}
+    BetaTurn, GOR4AlphaHelix, GOR4BetaStrand, Prosite]
 
 _HASHKEY_TO_NAME = dict((cls.SYMBOL, cls.NAME) for cls in ALL_LANDMARK_CLASSES)
 

@@ -69,7 +69,8 @@ class TestDatabase(TestCase):
         landmark = Landmark('name', 'A', 20, 0)
         trigPoint = TrigPoint('name', 'B', 10)
         distanceMinus10 = str(scale(-10, Database.DEFAULT_DISTANCE_BASE))
-        self.assertEqual('A:B:' + distanceMinus10, db.key(landmark, trigPoint))
+        self.assertEqual('A:B:' + distanceMinus10,
+                         db.hash(landmark, trigPoint))
 
     def testKeyWithFeatureOnRight(self):
         """
@@ -80,7 +81,7 @@ class TestDatabase(TestCase):
         landmark = Landmark('name', 'A', 20, 0)
         trigPoint = TrigPoint('name', 'B', 30)
         distance10 = str(scale(10, Database.DEFAULT_DISTANCE_BASE))
-        self.assertEqual('A:B:' + distance10, db.key(landmark, trigPoint))
+        self.assertEqual('A:B:' + distance10, db.hash(landmark, trigPoint))
 
     def testKeyWithFeatureOnLeftAndNonDefaultDistanceBase(self):
         """
@@ -92,7 +93,8 @@ class TestDatabase(TestCase):
         landmark = Landmark('name', 'A', 20, 0)
         trigPoint = TrigPoint('name', 'B', 10)
         distanceMinus10 = str(scale(-10, 1.5))
-        self.assertEqual('A:B:' + distanceMinus10, db.key(landmark, trigPoint))
+        self.assertEqual('A:B:' + distanceMinus10,
+                         db.hash(landmark, trigPoint))
 
     def testKeyWithFeatureOnRightAndNonDefaultDistanceBase(self):
         """
@@ -104,7 +106,7 @@ class TestDatabase(TestCase):
         landmark = Landmark('name', 'A', 20, 0)
         trigPoint = TrigPoint('name', 'B', 30)
         distance10 = str(scale(10, 1.5))
-        self.assertEqual('A:B:' + distance10, db.key(landmark, trigPoint))
+        self.assertEqual('A:B:' + distance10, db.hash(landmark, trigPoint))
 
     def testKeyWithSymbolDetail(self):
         """
@@ -115,44 +117,54 @@ class TestDatabase(TestCase):
         landmark = Landmark('name', 'A', 20, 0, 5)
         trigPoint = TrigPoint('name', 'B', 30)
         distance10 = str(scale(10, Database.DEFAULT_DISTANCE_BASE))
-        self.assertEqual('A5:B:' + distance10, db.key(landmark, trigPoint))
+        self.assertEqual('A5:B:' + distance10, db.hash(landmark, trigPoint))
 
-    def testInitialDatabaseHasNoReadInfo(self):
+    def testInitialDatabaseHasNoSubjectInfo(self):
         """
-        The database must not have any stored read information if no reads have
-        been added.
+        The database must not have any stored subject information if no
+        subjects have been added.
         """
         db = Database([], [])
         self.assertEqual([], db.subjectInfo)
 
     def testAddSubjectReturnsIndex(self):
         """
-        If one read is added, addSubject must return the index (0) of the added
-        subject.
+        If one subject is added, addSubject must return the index (0) of the
+        added subject.
         """
         db = Database([AlphaHelix], [])
         self.assertEqual(0, db.addSubject(AARead('id', 'FRRRFRRRF')))
 
     def testOneReadOneLandmark(self):
         """
-        If one read is added but it only has one landmark, nothing is added
+        If one subject is added but it only has one landmark, nothing is added
         to the database.
         """
         db = Database([AlphaHelix], [])
         db.addSubject(AARead('id', 'FRRRFRRRF'))
         self.assertEqual({}, db.d)
 
-    def testOneReadOneLandmarkReadInfo(self):
+    def testOneReadOneLandmarkSubjectInfo(self):
         """
-        If one read is added an entry is appended to the read info.
+        If one subject with just one landmark (and hence no hashes) is added,
+        an entry is appended to the subject info.
         """
         db = Database([AlphaHelix], [])
         db.addSubject(AARead('id', 'FRRRFRRRF'))
-        self.assertEqual([('id', 'FRRRFRRRF')], db.subjectInfo)
+        self.assertEqual([('id', 'FRRRFRRRF', 0)], db.subjectInfo)
+
+    def testOneReadTwoLandmarksSubjectInfo(self):
+        """
+        If one subject with two landmarks (and hence one hash) is added, an
+        entry is appended to the subject info.
+        """
+        db = Database([AlphaHelix], [])
+        db.addSubject(AARead('id', 'FRRRFRRRFAFRRRFRRRF'))
+        self.assertEqual([('id', 'FRRRFRRRFAFRRRFRRRF', 1)], db.subjectInfo)
 
     def testOneReadOneLandmarkStatistics(self):
         """
-        If one read is added the database statistics must be correct.
+        If one subject is added the database statistics must be correct.
         """
         db = Database([], [])
         db.addSubject(AARead('id', 'FRRRFRRRF'))
@@ -162,7 +174,7 @@ class TestDatabase(TestCase):
 
     def testOneReadTwoLandmarks(self):
         """
-        If one read is added and it has two landmarks, one key is added
+        If one subject is added and it has two landmarks, one key is added
         to the database.
         """
         db = Database([AlphaHelix], [])
@@ -176,7 +188,7 @@ class TestDatabase(TestCase):
 
     def testOneReadTwoLandmarksStatistics(self):
         """
-        If one read is added, the database statistics must be correct.
+        If one subject is added, the database statistics must be correct.
         """
         db = Database([AlphaHelix], [])
         db.addSubject(AARead('id', 'FRRRFRRRFAAAAAAAAAAAAAAFRRRFRRRFRRRF'))
@@ -228,8 +240,8 @@ class TestDatabase(TestCase):
 
     def testTwoReadsTwoLandmarksDifferentOffsets(self):
         """
-        If two reads are added, both with two landmarks separated by the same
-        distance, only one key is added to the database and both reads are
+        If two subjects are added, both with two landmarks separated by the
+        same distance, only one key is added to the database and both reads are
         listed in the dictionary values for the key.
 
         Note that A3:A2:-23 is not added to the database since that would be
@@ -248,8 +260,8 @@ class TestDatabase(TestCase):
 
     def testOneReadOneLandmarkOnePeak(self):
         """
-        If one read is added and it has one landmark and one peak, one pair is
-        added to the database.
+        If one subject is added and it has one landmark and one peak, one pair
+        is added to the database.
         """
         db = Database([AlphaHelix], [Peaks])
         db.addSubject(AARead('id', 'FRRRFRRRFASA'))
@@ -281,8 +293,8 @@ class TestDatabase(TestCase):
 
     def testOneReadOneLandmarkOnePeakNoTrigFinders(self):
         """
-        If one read is added and it has one landmark and one peak, but no trig
-        finders are in use, nothing is added to the database.
+        If one subject is added and it has one landmark and one peak, but no
+        trig finders are in use, nothing is added to the database.
         """
         db = Database([AlphaHelix], [])
         db.addSubject(AARead('id', 'FRRRFRRRFASA'))
@@ -290,8 +302,8 @@ class TestDatabase(TestCase):
 
     def testOneReadOneLandmarkTwoPeaks(self):
         """
-        If one read is added and it has one landmark and two peaks, two pairs
-        are added to the database.
+        If one subject is added and it has one landmark and two peaks, two
+        pairs are added to the database.
         """
         db = Database([AlphaHelix], [Peaks])
         db.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
@@ -306,7 +318,7 @@ class TestDatabase(TestCase):
 
     def testOneReadOneLandmarkTwoPeaksLimitOnePairPerLandmark(self):
         """
-        If one read is added and it has one landmark and two peaks, but a
+        If one subject is added and it has one landmark and two peaks, but a
         limit of one pair per landmarks is imposed, only one key is added to
         the database.
         """
@@ -321,7 +333,7 @@ class TestDatabase(TestCase):
 
     def testOneReadOneLandmarkTwoPeaksSevereMaxDistance(self):
         """
-        If one read is added and it has one landmark and two peaks, but a
+        If one subject is added and it has one landmark and two peaks, but a
         severe maximum distance is imposed, no keys are added to
         the database.
         """
@@ -331,7 +343,7 @@ class TestDatabase(TestCase):
 
     def testOneReadOneLandmarkTwoPeaksIntermediateMaxDistance(self):
         """
-        If one read is added and it has one landmark and two peaks, but a
+        If one subject is added and it has one landmark and two peaks, but a
         maximum distance is imposed that makes one of the peaks too far
         away, only one key is added to the database.
         """
@@ -346,7 +358,7 @@ class TestDatabase(TestCase):
 
     def testOneReadOneLandmarkTwoPeaksLargeMaxDistance(self):
         """
-        If one read is added and it has one landmark and two peaks, and a
+        If one subject is added and it has one landmark and two peaks, and a
         maximum distance is imposed that is greater than the distance to the
         peaks, two keys are added to the database.
         """
@@ -363,7 +375,7 @@ class TestDatabase(TestCase):
 
     def testOneReadOneLandmarkTwoPeaksPermissiveMinDistance(self):
         """
-        If one read is added and it has one landmark and two peaks, but a
+        If one subject is added and it has one landmark and two peaks, but a
         permissive minimum distance is imposed, all keys are added to
         the database.
         """
@@ -380,7 +392,7 @@ class TestDatabase(TestCase):
 
     def testOneReadOneLandmarkTwoPeaksIntermediateMinDistance(self):
         """
-        If one read is added and it has one landmark and two peaks, but an
+        If one subject is added and it has one landmark and two peaks, but an
         intermediate minimum distance is imposed, only the key for the pair
         that exceeds the minimum distance is added to the database.
         """
@@ -395,7 +407,7 @@ class TestDatabase(TestCase):
 
     def testOneReadOneLandmarkTwoPeaksSevereMinDistance(self):
         """
-        If one read is added and it has one landmark and two peaks, but a
+        If one subject is added and it has one landmark and two peaks, but a
         severe minimum distance is imposed, no keys are added to
         the database.
         """
@@ -405,8 +417,8 @@ class TestDatabase(TestCase):
 
     def testMultipleSubjectOffsets(self):
         """
-        If one read is added and it has one landmark and one peak separated by
-        10 bases and then, later in the subject, the same pair with the
+        If one subject is added and it has one landmark and one peak separated
+        by 10 bases and then, later in the subject, the same pair with the
         same separation, one key must be added to the database and it
         should have two subject offsets.  Note that minDistance and
         maxDistance are used to discard the matches some longer and shorter
@@ -505,23 +517,27 @@ class TestDatabase(TestCase):
         One matching subject should be found, but is not significant with the
         default value of significanceFraction.
         """
-        subject = AARead('subject', 'AFRRRFRRRFASAASA')
+        subject = AARead('subject', 'AFRRRFRRRFASAASAVVVVVVASAVVVASA')
         query = AARead('query', 'FRRRFRRRFASAASAFRRRFRRRFFRRRFRRRFFRRRFRRRF')
-        db = Database([AlphaHelix], [Peaks])
+        db = Database([AlphaHelix, BetaStrand], [Peaks])
         db.addSubject(subject)
         result = db.find(query)
         self.assertEqual(
             {
                 0: [
                     {
-                        'trigPoint': TrigPoint('Peaks', 'P', 10),
                         'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                        'subjectOffsets': [1],
+                        'queryLandmarkOffsets': [0],
+                        'queryTrigPointOffsets': [10],
+                        'subjectLandmarkOffsets': [1],
+                        'trigPoint': TrigPoint('Peaks', 'P', 10),
                     },
                     {
-                        'trigPoint': TrigPoint('Peaks', 'P', 13),
                         'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                        'subjectOffsets': [1],
+                        'queryLandmarkOffsets': [0],
+                        'queryTrigPointOffsets': [13],
+                        'subjectLandmarkOffsets': [1],
+                        'trigPoint': TrigPoint('Peaks', 'P', 13),
                     }
                 ]
             }, result.matches)
@@ -532,8 +548,9 @@ class TestDatabase(TestCase):
         One matching and significant subject must be found if the
         significanceFraction is sufficiently low.
         """
-        subject = AARead('subject', 'AFRRRFRRRFASAASA')
-        query = AARead('query', 'FRRRFRRRFASAASA')
+        sequence = 'AFRRRFRRRFASAASA'
+        subject = AARead('subject', sequence)
+        query = AARead('query', sequence)
         db = Database([AlphaHelix], [Peaks], maxDistance=11)
         db.addSubject(subject)
         result = db.find(query, significanceFraction=0.0)
@@ -541,20 +558,69 @@ class TestDatabase(TestCase):
             {
                 0: [
                     {
-                        'trigPoint': TrigPoint('Peaks', 'P', 10),
-                        'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                        'subjectOffsets': [1],
+                        'landmark': Landmark('AlphaHelix', 'A', 1, 9, 2),
+                        'queryLandmarkOffsets': [1],
+                        'queryTrigPointOffsets': [11],
+                        'subjectLandmarkOffsets': [1],
+                        'trigPoint': TrigPoint('Peaks', 'P', 11),
                     },
                 ],
             },
             result.matches)
 
+    def testSymmetricFindScoresSameSubjectAndQuery(self):
+        """
+        The score of matching a sequence A against a sequence B must
+        be the same as when matching B against A, and that score must
+        be 1.0 when the subject and the query are identical.
+        """
+        sequence = 'AFRRRFRRRFASAASAFRRRFRRRF'
+        subject = AARead('subject', sequence)
+        query = AARead('query', sequence)
+        db = Database([AlphaHelix, BetaStrand], [Peaks])
+        db.addSubject(subject)
+        result = db.find(query, significanceFraction=0.0)
+        score1 = result.analysis[0]['bestScore']
+
+        db = Database([AlphaHelix, BetaStrand], [Peaks])
+        db.addSubject(query)
+        result = db.find(subject, significanceFraction=0.0)
+        score2 = result.analysis[0]['bestScore']
+
+        self.assertEqual(score1, score2)
+        self.assertEqual(1.0, score1)
+
+    def testSymmetricFindScoresDifferingSubjectAndQuery(self):
+        """
+        The score of matching a sequence A against a sequence B must
+        be the same as when matching B against A, including when the number
+        of hashes in the two differs and the scores are not 1.0.
+        """
+        subject = AARead('subject', 'AFRRRFRRRFASAASAFRRRFRRRF')
+        query = AARead('query', 'FRRRFRRRFASAVVVVVV')
+        db = Database([AlphaHelix, BetaStrand], [Peaks])
+        db.addSubject(subject)
+        hashCount1 = db.subjectInfo[0][2]
+        result = db.find(query, significanceFraction=0.0)
+        score1 = result.analysis[0]['bestScore']
+
+        db = Database([AlphaHelix, BetaStrand], [Peaks])
+        db.addSubject(query)
+        hashCount2 = db.subjectInfo[0][2]
+        result = db.find(subject, significanceFraction=0.0)
+        score2 = result.analysis[0]['bestScore']
+
+        self.assertNotEqual(hashCount1, hashCount2)
+        self.assertEqual(score1, score2)
+        self.assertNotEqual(1.0, score1)
+
     def testFindNoneMatchingTooSmallDistance(self):
         """
         One matching key must be found.
         """
-        subject = AARead('subject', 'FRRRFRRRFASAASA')
-        query = AARead('query', 'FRRRFRRRFASAASA')
+        sequence = 'AFRRRFRRRFASAASA'
+        subject = AARead('subject', sequence)
+        query = AARead('query', sequence)
         db = Database([AlphaHelix], [Peaks], maxDistance=1)
         db.addSubject(subject)
         result = db.find(query)
@@ -564,8 +630,9 @@ class TestDatabase(TestCase):
         """
         One matching key must be found.
         """
-        subject = AARead('subject', 'FRRRFRRRFASAASA')
-        query = AARead('query', 'FRRRFRRRFASAASA')
+        sequence = 'AFRRRFRRRFASAASA'
+        subject = AARead('subject', sequence)
+        query = AARead('query', sequence)
         db = Database([AlphaHelix], [])
         db.addSubject(subject)
         result = db.find(query)
@@ -573,10 +640,11 @@ class TestDatabase(TestCase):
 
     def testFindTwoMatchingInSameSubject(self):
         """
-        Two matching keys in the same subject must be found.
+        Two matching hashes in the subject must be found correctly.
         """
-        subject = AARead('subject', 'FRRRFRRRFASAASA')
-        query = AARead('query', 'FRRRFRRRFASAASA')
+        sequence = 'FRRRFRRRFASAASA'
+        subject = AARead('subject', sequence)
+        query = AARead('query', sequence)
         db = Database([AlphaHelix], [Peaks])
         db.addSubject(subject)
         result = db.find(query)
@@ -584,14 +652,18 @@ class TestDatabase(TestCase):
             {
                 0: [
                     {
-                        'trigPoint': TrigPoint('Peaks', 'P', 10),
                         'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                        'subjectOffsets': [0],
+                        'queryLandmarkOffsets': [0],
+                        'queryTrigPointOffsets': [10],
+                        'subjectLandmarkOffsets': [0],
+                        'trigPoint': TrigPoint('Peaks', 'P', 10),
                     },
                     {
-                        'trigPoint': TrigPoint('Peaks', 'P', 13),
                         'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                        'subjectOffsets': [0],
+                        'queryLandmarkOffsets': [0],
+                        'queryTrigPointOffsets': [13],
+                        'subjectLandmarkOffsets': [0],
+                        'trigPoint': TrigPoint('Peaks', 'P', 13),
                     }
                 ],
             },
@@ -611,8 +683,9 @@ class TestDatabase(TestCase):
         Saving parameters as JSON must work correctly.
         """
         db = Database([AlphaHelix], [Peaks], limitPerLandmark=3,
-                      maxDistance=9, minDistance=5)
-        db.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
+                      maxDistance=19, minDistance=5)
+        sequence = 'AFRRRFRRRFASAASA'
+        db.addSubject(AARead('id', sequence))
 
         checksum = self._checksum([
             AlphaHelix.NAME,
@@ -620,10 +693,12 @@ class TestDatabase(TestCase):
             Peaks.NAME,
             Peaks.SYMBOL,
             3,  # Limit per landmark.
-            9,  # Max distance.
+            19,  # Max distance.
             5,  # Min distance.
             Database.DEFAULT_DISTANCE_BASE,
-            'id', 'FRRRFRRRFASAASA',
+            'id',
+            sequence,
+            2,  # Hash count.
         ])
 
         out = StringIO()
@@ -633,10 +708,10 @@ class TestDatabase(TestCase):
             'landmarkClasses': ['AlphaHelix'],
             'trigPointClasses': ['Peaks'],
             'limitPerLandmark': 3,
-            'maxDistance': 9,
+            'maxDistance': 19,
             'minDistance': 5,
             'subjectCount': 1,
-            'totalResidues': 15,
+            'totalResidues': 16,
             'totalCoveredResidues': 11,
             'distanceBase': Database.DEFAULT_DISTANCE_BASE,
         }
@@ -708,7 +783,8 @@ class TestDatabase(TestCase):
         subject but no landmarks are found.
         """
         db = Database([AlphaHelix], [])
-        subject = AARead('id', 'FRRRFRRRFASAASA')
+        sequence = 'AFRRRFRRRFASAASA'
+        subject = AARead('id', sequence)
         db.addSubject(subject)
 
         checksum = self._checksum([
@@ -718,7 +794,9 @@ class TestDatabase(TestCase):
             Database.DEFAULT_MAX_DISTANCE,
             Database.DEFAULT_MIN_DISTANCE,
             Database.DEFAULT_DISTANCE_BASE,
-            'id', 'FRRRFRRRFASAASA',
+            'id',
+            sequence,
+            0,  # Hash count.
         ])
         self.assertEqual(checksum, db.checksum)
 
@@ -738,7 +816,9 @@ class TestDatabase(TestCase):
             Database.DEFAULT_MAX_DISTANCE,
             Database.DEFAULT_MIN_DISTANCE,
             Database.DEFAULT_DISTANCE_BASE,
-            'id', sequence,
+            'id',
+            sequence,
+            1,  # Hash count.
         ])
         self.assertEqual(checksum, db.checksum)
 
@@ -779,8 +859,7 @@ class TestDatabase(TestCase):
         The scan method must return a scanned subject.
         """
         subject = AARead('subject', 'FRRRFRRRFASAASA')
-        db = Database([AlphaHelix], [Peaks], limitPerLandmark=16,
-                      maxDistance=10, minDistance=0, distanceBase=1.0)
+        db = Database([AlphaHelix], [Peaks])
         db.addSubject(subject)
         scannedSubject = db.scan(subject)
         self.assertIsInstance(scannedSubject, ScannedRead)
@@ -791,16 +870,106 @@ class TestDatabase(TestCase):
         (landmark, trigPoints).
         """
         subject = AARead('subject', 'FRRRFRRRFASAASA')
-        db = Database([AlphaHelix], [Peaks], limitPerLandmark=16,
-                      maxDistance=10, minDistance=0, distanceBase=1.0)
+        db = Database([AlphaHelix], [Peaks], distanceBase=1.0)
         db.addSubject(subject)
         scannedSubject = db.scan(subject)
         pairs = list(db.getScannedPairs(scannedSubject))
+        # First pair.
         landmark, trigPoint = pairs[0]
         self.assertEqual(Landmark(AlphaHelix.NAME, AlphaHelix.SYMBOL,
                                   0, 9, 2), landmark)
         self.assertEqual(TrigPoint(Peaks.NAME, Peaks.SYMBOL, 10), trigPoint)
-        self.assertEqual(1, len(pairs))
+        # Second pair.
+        landmark, trigPoint = pairs[1]
+        self.assertEqual(Landmark(AlphaHelix.NAME, AlphaHelix.SYMBOL,
+                                  0, 9, 2), landmark)
+        self.assertEqual(TrigPoint(Peaks.NAME, Peaks.SYMBOL, 13), trigPoint)
+        self.assertEqual(2, len(pairs))
+
+    def testCollectReadHashesWithNoHashes(self):
+        """
+        The getHashes method must return a dict keyed by (landmark, trigPoints)
+        hash with values containing the read offsets. The result should be
+        empty if there are no landmarks in the read.
+        """
+        db = Database([AlphaHelix], [])
+        query = AARead('query', 'AAA')
+        scannedQuery = db.scan(query)
+        hashCount = db.getHashes(scannedQuery)
+        self.assertEqual({}, hashCount)
+
+    def testCollectReadHashesWithOneLandmark(self):
+        """
+        The getHashes method must return a dict keyed by (landmark, trigPoints)
+        hash with values containing the read offsets. The result should be
+        empty if there is only one landmark in the read.
+        """
+        db = Database([AlphaHelix], [])
+        query = AARead('query', 'FRRRFRRRF')
+        scannedQuery = db.scan(query)
+        hashCount = db.getHashes(scannedQuery)
+        self.assertEqual({}, hashCount)
+
+    def testCollectReadHashes(self):
+        """
+        The getHashes method must return a dict keyed by (landmark, trigPoints)
+        hash with values containing the read offsets.
+        """
+        db = Database([AlphaHelix], [Peaks], distanceBase=1.0)
+        query = AARead('query', 'FRRRFRRRFASAASAFRRRFRRRFASAASA')
+        scannedQuery = db.scan(query)
+        hashCount = db.getHashes(scannedQuery)
+        helixAt0 = Landmark(AlphaHelix.NAME, AlphaHelix.SYMBOL, 0, 9, 2)
+        helixAt15 = Landmark(AlphaHelix.NAME, AlphaHelix.SYMBOL, 15, 9, 2)
+        peakAt10 = TrigPoint(Peaks.NAME, Peaks.SYMBOL, 10)
+        peakAt13 = TrigPoint(Peaks.NAME, Peaks.SYMBOL, 13)
+        peakAt25 = TrigPoint(Peaks.NAME, Peaks.SYMBOL, 25)
+        peakAt28 = TrigPoint(Peaks.NAME, Peaks.SYMBOL, 28)
+        self.assertEqual(
+            {
+                'A2:A2:15': {
+                    'landmark': helixAt0,
+                    'landmarkOffsets': [0],
+                    'trigPointOffsets': [15],
+                    'trigPoint': helixAt15,
+                },
+                'A2:P:-2': {
+                    'landmark': helixAt15,
+                    'landmarkOffsets': [15],
+                    'trigPointOffsets': [13],
+                    'trigPoint': peakAt13,
+                },
+                'A2:P:-5': {
+                    'landmark': helixAt15,
+                    'landmarkOffsets': [15],
+                    'trigPointOffsets': [10],
+                    'trigPoint': peakAt10,
+                },
+                'A2:P:10': {
+                    'landmark': helixAt0,
+                    'landmarkOffsets': [0, 15],
+                    'trigPointOffsets': [10, 25],
+                    'trigPoint': peakAt10,
+                },
+                'A2:P:13': {
+                    'landmark': helixAt0,
+                    'landmarkOffsets': [0, 15],
+                    'trigPointOffsets': [13, 28],
+                    'trigPoint': peakAt13,
+                },
+                'A2:P:25': {
+                    'landmark': helixAt0,
+                    'landmarkOffsets': [0],
+                    'trigPointOffsets': [25],
+                    'trigPoint': peakAt25,
+                },
+                'A2:P:28': {
+                    'landmark': helixAt0,
+                    'landmarkOffsets': [0],
+                    'trigPointOffsets': [28],
+                    'trigPoint': peakAt28,
+                },
+            }, hashCount)
 
     def testPrint(self):
         """
@@ -824,7 +993,7 @@ class TestDatabase(TestCase):
             'Hash count: 3\n'
             'Total residues: 15\n'
             'Coverage: 73.33%\n'
-            'Checksum: 99889531\n')
+            'Checksum: 682086972\n')
         self.assertEqual(expected, fp.getvalue())
 
     def testPrintWithHashes(self):
@@ -850,7 +1019,7 @@ class TestDatabase(TestCase):
             'Hash count: 3\n'
             'Total residues: 15\n'
             'Coverage: 73.33%\n'
-            'Checksum: 2294967298\n'
+            'Checksum: 3279991028\n'
             'Subjects (with offsets) by hash:\n'
             '   A2:P:10\n'
             '    id [0]\n'
@@ -863,4 +1032,30 @@ class TestDatabase(TestCase):
             'Trig point symbol counts:\n'
             '  Peaks (P): 1\n'
             '  Troughs (T): 2\n')
+        self.assertEqual(expected, fp.getvalue())
+
+    def testPrintNoHashes(self):
+        """
+        The print_ function should report the expected result if no hashes are
+        found in the subject.
+        """
+        fp = StringIO()
+        subject = AARead('subject', '')
+        db = Database([AlphaHelix, BetaStrand], [Peaks, Troughs],
+                      limitPerLandmark=16, maxDistance=10, minDistance=0,
+                      distanceBase=1)
+        db.addSubject(subject)
+        db.print_(fp)
+        expected = (
+            'Landmark finders:\n'
+            '  AlphaHelix\n'
+            '  BetaStrand\n'
+            'Trig point finders:\n'
+            '  Peaks\n'
+            '  Troughs\n'
+            'Subject count: 1\n'
+            'Hash count: 0\n'
+            'Total residues: 0\n'
+            'Coverage: 0.00%\n'
+            'Checksum: 4224788348\n')
         self.assertEqual(expected, fp.getvalue())

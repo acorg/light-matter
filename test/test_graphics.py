@@ -12,17 +12,13 @@ class TestPlotHashesInSubjectAndRead(TestCase):
     def testNoHashes(self):
         """
         If there are no hashes in subject and query, matchingHashes,
-        queryHashes and subjectHashes must be empty.
+        queryHashes and subjectHashes must all be empty.
         """
         subject = AARead('subject', 'RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR')
         query = AARead('query', 'AAAAAAAAAAAAAAAAAAAAAAA')
-        hashes = PlotHashesInSubjectAndRead(query, subject,
-                                            landmarkNames=['AlphaHelix'],
-                                            trigPointNames=['Peaks'],
-                                            significanceFraction=0.25,
-                                            maxDistance=10, minDistance=1,
-                                            limitPerLandmark=10,
-                                            distanceBase=1.0)
+        hashes = PlotHashesInSubjectAndRead(
+            query, subject, landmarkNames=['AlphaHelix', 'AlphaHelix_3_10'],
+            trigPointNames=['Peaks'])
         self.assertEqual(0, len(list(hashes.matchingHashes)))
         self.assertEqual(0, len(list(hashes.queryHashes)))
         self.assertEqual(0, len(list(hashes.subjectHashes)))
@@ -34,38 +30,26 @@ class TestPlotHashesInSubjectAndRead(TestCase):
         """
         subject = AARead('subject', 'FRRFRRFRRFAAAAAAAAAAAAASARRRRRRRRRRRRRR')
         query = AARead('query', 'FRRFRRFAAASAAAAAAAAAAAAA')
-        hashes = PlotHashesInSubjectAndRead(query, subject,
-                                            landmarkNames=['AlphaHelix',
-                                                           'AlphaHelix_3_10'],
-                                            trigPointNames=['Peaks'],
-                                            significanceFraction=0.25,
-                                            maxDistance=50, minDistance=1,
-                                            limitPerLandmark=10,
-                                            distanceBase=1.0)
+        hashes = PlotHashesInSubjectAndRead(
+            query, subject, landmarkNames=['AlphaHelix', 'AlphaHelix_3_10'],
+            trigPointNames=['Peaks'])
         self.assertEqual(0, len(list(hashes.matchingHashes)))
         self.assertEqual(1, len(list(hashes.queryHashes)))
         self.assertEqual(1, len(list(hashes.subjectHashes)))
 
-    def testNoQueryHashes(self):
+    def testNoQuerysubjectHashes(self):
         """
         If all hashes in the query also occur in the subject, queryHashes must
         be empty.
         """
         subject = AARead('subject', 'FRRFRRFRRFAAAAAAAAAAAASARRRRFRRFRRFAAASA')
         query = AARead('query', 'ASARRRRFRRFRRFAAASA')
-        hashes = PlotHashesInSubjectAndRead(query, subject,
-                                            landmarkNames=['AlphaHelix',
-                                                           'AlphaHelix_3_10'],
-                                            trigPointNames=['Peaks'],
-                                            significanceFraction=0.01,
-                                            maxDistance=50, minDistance=1,
-                                            limitPerLandmark=10,
-                                            distanceBase=1.0)
-        matchingHashesCount = sum([len(bin_) for bin_ in
-                                   hashes.matchingHashes])
-        self.assertEqual(2, matchingHashesCount)
+        hashes = PlotHashesInSubjectAndRead(
+            query, subject, landmarkNames=['AlphaHelix', 'AlphaHelix_3_10'],
+            trigPointNames=['Peaks'])
+        self.assertEqual(2, len(hashes.matchingHashes))
         self.assertEqual(0, len(hashes.queryHashes))
-        self.assertEqual(5, len(hashes.subjectHashes))
+        self.assertEqual(3, len(hashes.subjectHashes))
 
     def testNoSubjectHashes(self):
         """
@@ -74,16 +58,9 @@ class TestPlotHashesInSubjectAndRead(TestCase):
         """
         subject = AARead('subject', 'FRRFRRFRRFAAAAAAAAAAAASA')
         query = AARead('query', 'FRRFRRFRRFAAAAAAAAAAAASARRRRFRRFRRFAAASA')
-        hashes = PlotHashesInSubjectAndRead(query, subject,
-                                            landmarkNames=['AlphaHelix',
-                                                           'AlphaHelix_3_10'],
-                                            trigPointNames=['Peaks'],
-                                            significanceFraction=0.01,
-                                            maxDistance=50, minDistance=1,
-                                            limitPerLandmark=10,
-                                            distanceBase=1.0)
-        matchingHashesCount = sum([len(bin_) for bin_ in
-                                   hashes.matchingHashes])
-        self.assertEqual(1, matchingHashesCount)
+        hashes = PlotHashesInSubjectAndRead(
+            query, subject, landmarkNames=['AlphaHelix', 'AlphaHelix_3_10'],
+            trigPointNames=['Peaks'])
+        self.assertEqual(1, len(hashes.matchingHashes))
         self.assertEqual(4, len(hashes.queryHashes))
         self.assertEqual(0, len(hashes.subjectHashes))

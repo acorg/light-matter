@@ -1,6 +1,7 @@
 from unittest import TestCase
 from cStringIO import StringIO
 from json import loads
+import warnings
 
 from dark.reads import AARead
 
@@ -9,6 +10,7 @@ from light.features import Landmark, TrigPoint
 from light.reads import ScannedRead
 from light.database import Database
 from light.landmarks import AlphaHelix, BetaStrand
+from light.trig import Troughs, AminoAcids
 
 
 class TestResult(TestCase):
@@ -22,11 +24,11 @@ class TestResult(TestCase):
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
         database = Database([], [])
         hashCount = 0
-        result = Result(read, {}, hashCount, significanceFraction=0.0,
+        result = Result(read, {}, hashCount, significanceFraction=0.1,
                         database=database)
         self.assertEqual({}, result.matches)
         self.assertEqual([], list(result.significant()))
-        self.assertIs(read, result.scannedRead)
+        self.assertIs(read, result.scannedQuery)
 
     def testAddOneMatch(self):
         """
@@ -40,13 +42,15 @@ class TestResult(TestCase):
         matches = {
             0: [
                 {
-                    'trigPoint': TrigPoint('Peaks', 'P', 1),
                     'landmark': Landmark('AlphaHelix', 'A', 0, 9),
-                    'subjectOffsets': [2],
+                    'queryLandmarkOffsets': [0],
+                    'queryTrigPointOffsets': [1],
+                    'subjectLandmarkOffsets': [2],
+                    'trigPoint': TrigPoint('Peaks', 'P', 1),
                 },
             ],
         }
-        result = Result(read, matches, hashCount, significanceFraction=0.0,
+        result = Result(read, matches, hashCount, significanceFraction=0.1,
                         database=database)
         self.assertEqual(matches, result.matches)
 
@@ -56,15 +60,17 @@ class TestResult(TestCase):
         above the mean number of deltas.
         """
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
-        database = Database([], [])
-        database.addSubject(AARead('subject', 'AAA'))
+        database = Database([AlphaHelix], [AminoAcids])
+        database.addSubject(AARead('subject', 'ADDDADDDAWW'))
         hashCount = 1
         matches = {
             0: [
                 {
-                    'trigPoint': TrigPoint('Peaks', 'P', 1),
                     'landmark': Landmark('AlphaHelix', 'A', 1, 9),
-                    'subjectOffsets': [2, 10],
+                    'queryLandmarkOffsets': [1],
+                    'queryTrigPointOffsets': [1],
+                    'subjectLandmarkOffsets': [2, 10],
+                    'trigPoint': TrigPoint('Peaks', 'P', 1),
                 },
             ],
         }
@@ -78,25 +84,31 @@ class TestResult(TestCase):
         (the maximum number of identical distances) must be too.
         """
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
-        database = Database([], [])
-        database.addSubject(AARead('subject', 'AAA'))
+        database = Database([AlphaHelix], [AminoAcids])
+        database.addSubject(AARead('subject', 'ADDDADDDAWWWW'))
         hashCount = 4
         matches = {
             0: [
                 {
+                    'landmark': Landmark('AlphaHelix', 'A', 0, 9),
+                    'queryLandmarkOffsets': [0],
+                    'queryTrigPointOffsets': [1],
+                    'subjectLandmarkOffsets': [0],
                     'trigPoint': TrigPoint('Peaks', 'P', 1),
-                    'landmark': Landmark('AlphaHelix', 'A', 0, 9),
-                    'subjectOffsets': [0],
                 },
                 {
+                    'landmark': Landmark('AlphaHelix', 'A', 0, 9),
+                    'queryLandmarkOffsets': [0],
+                    'queryTrigPointOffsets': [2],
+                    'subjectLandmarkOffsets': [0],
                     'trigPoint': TrigPoint('Peaks', 'P', 2),
-                    'landmark': Landmark('AlphaHelix', 'A', 0, 9),
-                    'subjectOffsets': [0],
                 },
                 {
-                    'trigPoint': TrigPoint('Peaks', 'P', 3),
                     'landmark': Landmark('AlphaHelix', 'A', 0, 9),
-                    'subjectOffsets': [10],
+                    'queryLandmarkOffsets': [0],
+                    'queryTrigPointOffsets': [3],
+                    'subjectLandmarkOffsets': [10],
+                    'trigPoint': TrigPoint('Peaks', 'P', 3),
                 },
             ],
         }
@@ -104,7 +116,7 @@ class TestResult(TestCase):
         result = Result(read, matches, hashCount, significanceFraction=0.25,
                         database=database)
         self.assertEqual([0], list(result.significant()))
-        self.assertEqual(0.5, result.analysis[0]['score'])
+        self.assertEqual(0.5, result.analysis[0]['bestScore'])
 
     def testTwoSignificantMatches(self):
         """
@@ -112,39 +124,53 @@ class TestResult(TestCase):
         different subjects, and their scores must be correct.
         """
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
-        database = Database([], [])
-        database.addSubject(AARead('subject0', 'AAA'))
-        database.addSubject(AARead('subject1', 'AAA'))
+        database = Database([AlphaHelix], [AminoAcids])
+        # Note that both subject added here have a hash count of 5 (the
+        # same as the passed query hash count). If we use anything less,
+        # the score will change because its calculation uses the min
+        # query/subject hash count in the denominator.
+        database.addSubject(AARead('subject0', 'ADDDADDDAWWWWW'))
+        database.addSubject(AARead('subject1', 'ADDDADDDAWWWWW'))
         hashCount = 5
         matches = {
             0: [
                 {
+                    'landmark': Landmark('AlphaHelix', 'A', 0, 9),
+                    'queryLandmarkOffsets': [0],
+                    'queryTrigPointOffsets': [1],
+                    'subjectLandmarkOffsets': [0],
                     'trigPoint': TrigPoint('Peaks', 'P', 1),
-                    'landmark': Landmark('AlphaHelix', 'A', 0, 9),
-                    'subjectOffsets': [0],
                 },
                 {
+                    'landmark': Landmark('AlphaHelix', 'A', 0, 9),
+                    'queryLandmarkOffsets': [0],
+                    'queryTrigPointOffsets': [2],
+                    'subjectLandmarkOffsets': [0],
                     'trigPoint': TrigPoint('Peaks', 'P', 2),
-                    'landmark': Landmark('AlphaHelix', 'A', 0, 9),
-                    'subjectOffsets': [0],
                 },
                 {
-                    'trigPoint': TrigPoint('Peaks', 'P', 3),
                     'landmark': Landmark('AlphaHelix', 'A', 0, 9),
-                    'subjectOffsets': [10],
+                    'queryLandmarkOffsets': [0],
+                    'queryTrigPointOffsets': [3],
+                    'subjectLandmarkOffsets': [10],
+                    'trigPoint': TrigPoint('Peaks', 'P', 3),
                 },
             ],
 
             1: [
                 {
-                    'trigPoint': TrigPoint('Peaks', 'P', 1),
                     'landmark': Landmark('AlphaHelix', 'A', 0, 9),
-                    'subjectOffsets': [0],
+                    'queryLandmarkOffsets': [0],
+                    'queryTrigPointOffsets': [1],
+                    'subjectLandmarkOffsets': [0],
+                    'trigPoint': TrigPoint('Peaks', 'P', 1),
                 },
                 {
-                    'trigPoint': TrigPoint('Peaks', 'P', 2),
                     'landmark': Landmark('AlphaHelix', 'A', 0, 9),
-                    'subjectOffsets': [0],
+                    'queryLandmarkOffsets': [0],
+                    'queryTrigPointOffsets': [2],
+                    'subjectLandmarkOffsets': [0],
+                    'trigPoint': TrigPoint('Peaks', 'P', 2),
                 },
             ],
         }
@@ -152,8 +178,8 @@ class TestResult(TestCase):
         result = Result(read, matches, hashCount, significanceFraction=0.3,
                         database=database)
         self.assertEqual([0, 1], sorted(list(result.significant())))
-        self.assertEqual(0.4, result.analysis[0]['score'])
-        self.assertEqual(0.4, result.analysis[1]['score'])
+        self.assertEqual(0.4, result.analysis[0]['bestScore'])
+        self.assertEqual(0.4, result.analysis[1]['bestScore'])
 
     def testSaveEmpty(self):
         """
@@ -179,35 +205,39 @@ class TestResult(TestCase):
         """
         read = ScannedRead(AARead('id', 'A'))
         database = Database([], [])
-        result = Result(read, {}, 0, significanceFraction=0.0,
+        result = Result(read, {}, 0, significanceFraction=0.1,
                         database=database)
         fp = StringIO()
         self.assertIs(fp, result.save(fp))
 
     def testSave(self):
         """
-        Save must produce the right JSON format.
+        Save must write results out in the expected JSON format.
         """
         read = ScannedRead(
-            AARead('id', 'FRRRFRRRFRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'))
-        database = Database([], [])
-        database.addSubject(AARead('subject0', 'AAA'))
-        database.addSubject(AARead('subject1', 'AAA'))
+            AARead('id', 'FRRRFRRRFRFRFRFRRRFRRRF'))
+        database = Database([AlphaHelix], [])
+        database.addSubject(AARead('subject0', 'FRRRFRRRFRFRFRFRRRFRRRF'))
+        database.addSubject(AARead('subject1', 'FRRRFRRRFRFRFRFRRRFRRRF'))
         hashCount = 1
         matches = {
             0: [
                 {
-                    'trigPoint': TrigPoint('Peaks', 'P', 1),
                     'landmark': Landmark('AlphaHelix', 'A', 0, 9),
-                    'subjectOffsets': [0],
+                    'queryLandmarkOffsets': [0],
+                    'queryTrigPointOffsets': [1],
+                    'subjectLandmarkOffsets': [0],
+                    'trigPoint': TrigPoint('Peaks', 'P', 1),
                 },
             ],
 
             1: [
                 {
-                    'trigPoint': TrigPoint('Peaks', 'P', 1),
                     'landmark': Landmark('AlphaHelix', 'A', 27, 13),
-                    'subjectOffsets': [27],
+                    'queryLandmarkOffsets': [27],
+                    'queryTrigPointOffsets': [1],
+                    'subjectLandmarkOffsets': [27],
+                    'trigPoint': TrigPoint('Peaks', 'P', 1),
                 },
             ],
         }
@@ -216,65 +246,107 @@ class TestResult(TestCase):
         fp = StringIO()
         result.save(fp=fp)
         result = loads(fp.getvalue())
+        self.maxDiff = None
         self.assertEqual(
             {
                 'alignments': [
                     {
-                        'matchInfo': [
+                        'subjectIndex': 0,
+                        'matchScore': 1.0,
+                        'hsps': [
                             {
-                                'landmarkLength': 9,
-                                'landmarkName': 'AlphaHelix',
-                                'readOffset': 0,
-                                'subjectOffsets': [0],
-                                'trigPointName': 'Peaks',
+                                'hspInfo': [
+                                    {
+                                        'landmark': 'AlphaHelix',
+                                        'landmarkLength': 9,
+                                        'queryLandmarkOffset': 0,
+                                        'queryTrigPointOffset': 1,
+                                        'subjectLandmarkOffset': 0,
+                                        'trigPoint': 'Peaks',
+                                    },
+                                ],
+                                'score': 1.0,
                             },
                         ],
-                        'matchScore': 1.0,
-                        'subjectIndex': 0
                     },
                     {
-                        'matchInfo': [
+                        'subjectIndex': 1,
+                        'matchScore': 1.0,
+                        'hsps': [
                             {
-                                'landmarkLength': 13,
-                                'landmarkName': 'AlphaHelix',
-                                'readOffset': 27,
-                                'subjectOffsets': [27],
-                                'trigPointName': 'Peaks',
+                                'hspInfo': [
+                                    {
+                                        'landmark': 'AlphaHelix',
+                                        'landmarkLength': 13,
+                                        'queryLandmarkOffset': 27,
+                                        'queryTrigPointOffset': 1,
+                                        'subjectLandmarkOffset': 27,
+                                        'trigPoint': 'Peaks',
+                                    },
+                                ],
+                                'score': 1.0,
                             },
                         ],
-                        'matchScore': 1.0,
-                        'subjectIndex': 1,
                     },
                 ],
                 'queryId': 'id',
-                'querySequence': 'FRRRFRRRFRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF',
+                'querySequence': 'FRRRFRRRFRFRFRFRRRFRRRF',
             },
             result)
 
     def testRightNumberOfBucketsDefault(self):
         """
         If no distanceBase is specified for a database, the number of bins must
-        be 20 if the length of the subject is 20 and the length of the read
-        is less. This is because int(log base 1.1 of 20) = 31, which is greater
-        than 20, so the value of 20 should be used. Note that 1.1 is the
-        default distanceBase.
+        be 21 if the length of the subject is 21 and the length of the read
+        is less. This is because int(log base 1.1 of 21) = 31, which is
+        greater than 21, so the value of 21 should be used. Note that 1.1
+        is the default distanceBase.
         """
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
         database = Database([], [])
-        database.addSubject(AARead('subject', 'AAAAAAAAAAAAAAAAAAAA'))
+        database.addSubject(AARead('subject', 'A' * 21))
         hashCount = 1
         matches = {
             0: [
                 {
-                    'trigPoint': TrigPoint('Peaks', 'P', 1),
                     'landmark': Landmark('AlphaHelix', 'A', 1, 9),
-                    'subjectOffsets': [2],
+                    'queryLandmarkOffsets': [1],
+                    'queryTrigPointOffsets': [1],
+                    'subjectLandmarkOffsets': [2],
+                    'trigPoint': TrigPoint('Peaks', 'P', 1),
                 },
             ],
         }
-        result = Result(read, matches, hashCount, significanceFraction=0.0,
+        result = Result(read, matches, hashCount, significanceFraction=0.1,
                         database=database, storeFullAnalysis=True)
-        self.assertEqual(20, len(result.analysis[0]['histogram'].bins))
+        self.assertEqual(21, result.analysis[0]['histogram'].nBins)
+
+    def testRightNumberOfBucketsDefaultNonEven(self):
+        """
+        If no distanceBase is specified for a database, the number of bins must
+        be 21 if the length of the subject is 20 and the length of the read
+        is less. This is because int(log base 1.1 of 20) = 31, which is greater
+        than 20, so the value of 20 should be used but result.py will adjust
+        this to 21 to ensure that the number of bins is odd.
+        """
+        read = ScannedRead(AARead('read', 'AGTARFSDDD'))
+        database = Database([], [])
+        database.addSubject(AARead('subject', 'A' * 20))
+        hashCount = 1
+        matches = {
+            0: [
+                {
+                    'landmark': Landmark('AlphaHelix', 'A', 1, 9),
+                    'queryLandmarkOffsets': [1],
+                    'queryTrigPointOffsets': [1],
+                    'subjectLandmarkOffsets': [2],
+                    'trigPoint': TrigPoint('Peaks', 'P', 1),
+                },
+            ],
+        }
+        result = Result(read, matches, hashCount, significanceFraction=0.1,
+                        database=database, storeFullAnalysis=True)
+        self.assertEqual(21, result.analysis[0]['histogram'].nBins)
 
     def testRightNumberOfBucketsWithNonDefaultDistanceBase(self):
         """
@@ -289,39 +361,44 @@ class TestResult(TestCase):
         matches = {
             0: [
                 {
-                    'trigPoint': TrigPoint('Peaks', 'P', 1),
                     'landmark': Landmark('AlphaHelix', 'A', 1, 9),
-                    'subjectOffsets': [2],
+                    'queryLandmarkOffsets': [1],
+                    'queryTrigPointOffsets': [1],
+                    'subjectLandmarkOffsets': [2],
+                    'trigPoint': TrigPoint('Peaks', 'P', 1),
                 },
             ],
         }
-        result = Result(read, matches, hashCount, significanceFraction=0.0,
+        result = Result(read, matches, hashCount, significanceFraction=0.1,
                         database=database, storeFullAnalysis=True)
-        self.assertEqual(11, len(result.analysis[0]['histogram'].bins))
+        self.assertEqual(11, result.analysis[0]['histogram'].nBins)
 
-    def testPrintWithReadWithNoMatchesDueToNoFinders(self):
+    def testPrintWithQueryWithNoMatchesDueToNoFinders(self):
         """
         Check that the print_ method of a result produces the expected result
-        when asked to print the read and when there are no matches (in this
+        when asked to print the query and when there are no matches (in this
         case due to the database having no finders).
         """
         fp = StringIO()
         read = AARead('read', 'AGTARFSDDD')
         database = Database([], [])
         database.addSubject(read)
-        result = database.find(read, significanceFraction=0.0,
+        result = database.find(read, significanceFraction=0.1,
                                storeFullAnalysis=True)
 
-        result.print_(database, fp)
-        expected = ("Read: read\n"
-                    "  Sequence: AGTARFSDDD\n"
+        result.print_(fp=fp)
+        expected = ("Query title: read\n"
                     "  Length: 10\n"
                     "  Covered indices: 0 (0.00%)\n"
                     "  Landmark count 0, trig point count 0\n"
-                    "Significant matches: 0\nOverall matches: 0\n")
+                    "Overall matches: 0\n"
+                    "Significant matches: 0\n"
+                    "Query hash count: 0\n"
+                    "Significance fraction: 0.100000\n")
+
         self.assertEqual(expected, fp.getvalue())
 
-    def testPrintWithoutReadWithNoMatchesDueToNoFinders(self):
+    def testPrintWithoutQueryWithNoMatchesDueToNoFinders(self):
         """
         Check that the print_ method of a result produces the expected result
         when asked to not print the read and when there are no matches (in this
@@ -331,90 +408,211 @@ class TestResult(TestCase):
         read = AARead('read', 'AGTARFSDDD')
         database = Database([], [])
         database.addSubject(read)
-        result = database.find(read, significanceFraction=0.0,
+        result = database.find(read, significanceFraction=0.1,
                                storeFullAnalysis=True)
 
-        result.print_(database, fp, printRead=False)
-        expected = ("Significant matches: 0\n"
-                    "Overall matches: 0\n")
+        result.print_(fp=fp, printQuery=False)
+        expected = ("Overall matches: 0\n"
+                    "Significant matches: 0\n"
+                    "Query hash count: 0\n"
+                    "Significance fraction: 0.100000\n")
         self.assertEqual(expected, fp.getvalue())
 
-    def testPrintWithoutReadWithNoMatchingSubjects(self):
+    def testPrintNoMatchingSubjects(self):
         """
         Check that the print_ method of a result produces the expected result
-        when asked to not print the read and when there are no matches (in this
-        case due to the database having no finders).
+        when there are no matches.
         """
         fp = StringIO()
-        read = AARead('read', 'FRRRFRRRFRFRFRFRFRFRFFRRRFRRRFRRRF')
+        query = AARead('query', 'FRRRFRRRFRFRFRFRFRFRFFRRRFRRRFRRRF')
         database = Database([AlphaHelix, BetaStrand], [])
         subject = AARead('subject', 'VICVICV')
         database.addSubject(subject)
-        result = database.find(read, storeFullAnalysis=True)
+        result = database.find(query, storeFullAnalysis=True)
 
-        result.print_(database, fp, printRead=False)
-        expected = ("Significant matches: 0\n"
-                    "Overall matches: 0\n")
+        result.print_(fp=fp, printQuery=False)
+        expected = ("Overall matches: 0\n"
+                    "Significant matches: 0\n"
+                    "Query hash count: 1\n"
+                    "Significance fraction: 0.250000\n")
         self.assertEqual(expected, fp.getvalue())
 
-    def testPrintWithoutReadWithMatchesFullAnalysis(self):
+    def testPrintOneMatchStoredAnalysis(self):
         """
         Check that the print_ method of a result produces the expected result
-        when asked to not print the read and when there are matches and the
-        full analysis is stored.
+        when there is a match.
         """
         fp = StringIO()
         sequence = 'FRRRFRRRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'
         database = Database([AlphaHelix], [])
         subject = AARead('subject', sequence)
         database.addSubject(subject)
-        read = AARead('read', sequence)
-        result = database.find(read, significanceFraction=0.0,
+        query = AARead('query', sequence)
+        result = database.find(query, significanceFraction=0.1,
                                storeFullAnalysis=True)
 
-        result.print_(database, fp, printRead=False)
-        expected = ("Significant matches: 1\n"
-                    "Overall matches: 1\n"
-                    "Subject matches:\n"
-                    "  Title: subject\n"
-                    "    Score: 1.0\n"
-                    "    Sequence: FRRRFRRRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF\n"
-                    "    Database subject index: 0\n"
-                    "    Hash count: 1\n"
-                    "    Histogram\n"
-                    "      Number of bins: 38\n"
-                    "      Significance cutoff: 0.0\n"
-                    "      Significant bin count: 1\n"
-                    "      Max bin count: 1\n"
-                    "      Counts: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "
-                    "0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "
-                    "0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]\n"
-                    "      Max offset delta: 0\n"
-                    "      Min offset delta: 0\n")
+        result.print_(fp=fp, printQuery=False)
+
+        expected = ("Overall matches: 1\n"
+                    "Significant matches: 1\n"
+                    "Query hash count: 1\n"
+                    "Significance fraction: 0.100000\n"
+                    "Matched subjects:\n"
+                    "  Subject 1:\n"
+                    "    Title: subject\n"
+                    "    Best HSP score: 1.0\n"
+                    "    Index in database: 0\n"
+                    "    Subject hash count: 1\n"
+                    "    Subject/query min hash count: 1\n"
+                    "    Significance cutoff: 0.100000\n"
+                    "    Number of HSPs: 1\n"
+                    "      HSP 1 has 1 matching hash and score: 1.000000\n"
+                    "        Landmark AlphaHelix symbol='A' offset=0 len=9 "
+                    "detail=2 subjectOffset=0\n"
+                    "        Trig point AlphaHelix symbol='A' offset=25 "
+                    "len=13 detail=3\n")
 
         self.assertEqual(expected, fp.getvalue())
 
-    def testPrintWithoutReadWithMatchesWithoutFullAnalysis(self):
+    def testOneMatchNoFullAnalysis(self):
         """
         Check that the print_ method of a result produces the expected result
-        when asked to not print the read and when there are matches and the
-        full analysis is not stored.
+        when asked to not print the query, when there are matches and the
+        full analysis is not stored, and when sequences are not printed.
         """
         fp = StringIO()
         sequence = 'FRRRFRRRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'
         database = Database([AlphaHelix], [])
         subject = AARead('subject', sequence)
         database.addSubject(subject)
-        read = AARead('read', sequence)
-        result = database.find(read, significanceFraction=0.0)
+        query = AARead('query', sequence)
+        result = database.find(query, significanceFraction=0.1)
 
-        result.print_(database, fp, printRead=False)
-        expected = ("Significant matches: 1\n"
-                    "Overall matches: 1\n"
-                    "Subject matches:\n"
-                    "  Title: subject\n"
-                    "    Score: 1.0\n"
-                    "    Sequence: FRRRFRRRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF\n"
-                    "    Database subject index: 0\n")
+        result.print_(fp=fp, printQuery=False)
+        expected = ("Overall matches: 1\n"
+                    "Significant matches: 1\n"
+                    "Query hash count: 1\n"
+                    "Significance fraction: 0.100000\n"
+                    "Matched subjects:\n"
+                    "  Subject 1:\n"
+                    "    Title: subject\n"
+                    "    Best HSP score: 1.0\n"
+                    "    Index in database: 0\n"
+                    "    Subject hash count: 1\n"
+                    "    Subject/query min hash count: 1\n"
+                    "    Significance cutoff: 0.100000\n"
+                    "    Number of HSPs: 1\n"
+                    "      HSP 1 has 1 matching hash and score: 1.000000\n"
+                    "        Landmark AlphaHelix symbol='A' offset=0 len=9 "
+                    "detail=2 subjectOffset=0\n"
+                    "        Trig point AlphaHelix symbol='A' offset=25 "
+                    "len=13 detail=3\n")
 
         self.assertEqual(expected, fp.getvalue())
+
+    def testOneMatchNoFullAnalysisNoFeatures(self):
+        """
+        Check that the print_ method of a result produces the expected result
+        when asked to not print the query, when there are matches and the
+        full analysis is not stored, and when features are not printed.
+        """
+        fp = StringIO()
+        sequence = 'FRRRFRRRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'
+        database = Database([AlphaHelix], [])
+        subject = AARead('subject', sequence)
+        database.addSubject(subject)
+        query = AARead('query', sequence)
+        result = database.find(query, significanceFraction=0.1)
+
+        result.print_(fp=fp, printQuery=False, printFeatures=False)
+        expected = ("Overall matches: 1\n"
+                    "Significant matches: 1\n"
+                    "Query hash count: 1\n"
+                    "Significance fraction: 0.100000\n"
+                    "Matched subjects:\n"
+                    "  Subject 1:\n"
+                    "    Title: subject\n"
+                    "    Best HSP score: 1.0\n"
+                    "    Index in database: 0\n"
+                    "    Subject hash count: 1\n"
+                    "    Subject/query min hash count: 1\n"
+                    "    Significance cutoff: 0.100000\n"
+                    "    Number of HSPs: 1\n"
+                    "      HSP 1 has 1 matching hash and score: 1.000000\n")
+
+        self.assertEqual(expected, fp.getvalue())
+
+    def testPrintWithoutQueryWithMatchesWithoutFullAnalysisWithSequences(self):
+        """
+        Check that the print_ method of a result produces the expected result
+        when asked to not print the query, when there are matches and the
+        full analysis is not stored, and when sequences are printed.
+        """
+        fp = StringIO()
+        sequence = 'FRRRFRRRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'
+        database = Database([AlphaHelix], [])
+        subject = AARead('subject', sequence)
+        database.addSubject(subject)
+        query = AARead('query', sequence)
+        result = database.find(query, significanceFraction=0.1)
+
+        result.print_(fp=fp, printQuery=False, printSequences=True,
+                      printFeatures=False)
+        expected = ("Overall matches: 1\n"
+                    "Significant matches: 1\n"
+                    "Query hash count: 1\n"
+                    "Significance fraction: 0.100000\n"
+                    "Matched subjects:\n"
+                    "  Subject 1:\n"
+                    "    Title: subject\n"
+                    "    Best HSP score: 1.0\n"
+                    "    Sequence: FRRRFRRRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF\n"
+                    "    Index in database: 0\n"
+                    "    Subject hash count: 1\n"
+                    "    Subject/query min hash count: 1\n"
+                    "    Significance cutoff: 0.100000\n"
+                    "    Number of HSPs: 1\n"
+                    "      HSP 1 has 1 matching hash and score: 1.000000\n")
+
+        self.assertEqual(expected, fp.getvalue())
+
+    def testBinOverflowWarning(self):
+        """
+        When a large distanceBase is used, it scales many distances into the
+        same value. This can cause more deltas to be placed into the same
+        histogram bin than there are hashes in the query. Normally, the
+        maximum number of deltas in a bin will be the number of hashes in
+        the query, so anything more than this indicates that the
+        distanceBase is (in this case) clouding the picture because it is
+        too aggressive. That's not necessarily a bad thing - a high
+        distanceBase might be good overall in some circumstances (e.g.,
+        comparing homologous sequences that have had many insertions /
+        deletions), and just undesirable in one particular bin. So for now
+        a warning is raised in result.py. In this test we trigger the
+        warning and catch it.
+
+        When this condition occurs, the score from find() must be set to 1.0
+        """
+        # Here's a sequence with an alpha helix in the middle of many troughs.
+        sequence = (
+            'ISDLFKKNQHGGLREIYVLTIKSKLLALFLETCSRCLCEQFTVETMTHPDCKMEVIERHKMQVN'
+            'TLAAKTKRSFNSYQCSADKKSWNNNLVMPALSIPLLMLLPKAFHGAIQRTLNMWNQRLIQLPRG'
+            'FRRRFRRRF'
+            'VLKLLTAGVELSDPTYQLMMKEFESPGSTGDSPLFPNAGSGYCILHRGMMQGILHYTSSLLHVN'
+            'YLFVTRELIRSAYKAKFPDTTFLIDQMCSSDDSATIMSVVHPLNESEQGIKVISAFSEIICEVL'
+            'KTFCRYSCFTNSEKSVMGSLNQLEFNSEFIIGNNMAVPILKWVFSAFG')
+        database = Database([AlphaHelix], [Troughs], distanceBase=1.4)
+        subject = AARead('subject', sequence)
+        database.addSubject(subject)
+        query = AARead('query', sequence)
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
+            # This find will trigger a warning due to too many deltas.
+            result = database.find(query)
+            self.assertEqual(1, len(w))
+            self.assertTrue(issubclass(w[0].category, RuntimeWarning))
+            error = ('Bin contains 14 deltas for a query/subject pair with a '
+                     'minimum hash count of only 10.')
+            self.assertIn(error, str(w[0].message))
+            self.assertEqual(1.0, result.analysis[0]['bestScore'])

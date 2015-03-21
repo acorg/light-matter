@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib import patches
 from operator import attrgetter
 from textwrap import fill
+from collections import defaultdict
 
 from light.database import DatabaseSpecifier
 from light.trig import ALL_TRIG_CLASSES
@@ -12,6 +13,9 @@ from light.colors import colors
 
 from dark.fasta import FastaReads
 from dark.reads import AARead
+
+# Number of characters at which to wrap long lines in titles.
+FILL_WIDTH = 120
 
 ALL_FEATURES = [
     (feature.SYMBOL, feature.NAME) for feature in
@@ -87,8 +91,9 @@ def plotHistogram(query, subject, significanceFraction=None, readsAx=None,
         fig = plt.figure()
         readsAx = readsAx or fig.add_subplot(111)
         readsAx.bar(center, counts, align='center', width=width)
-        readsAx.set_title('%s against %s' % (query.id, subject.id))
-        readsAx.set_xlabel("Offsets (database-read)")
+        readsAx.set_title(
+            fill('%s against %s' % (query.id, subject.id), FILL_WIDTH))
+        readsAx.set_xlabel('Offsets (database-read)')
         readsAx.xaxis.tick_bottom()
 
 
@@ -149,10 +154,12 @@ def plotFeatureSquare(read, significanceFraction=None, readsAx=None, **kwargs):
 
     # Set labels, titles, axis limits, legend, etc.
     totalCoveredResidues = len(scannedQuery.coveredIndices())
-    readsAx.set_title('%s\n Length: %d, covered residues: %s' % (fill(read.id),
-                      len(read), totalCoveredResidues), fontsize=20)
-    readsAx.set_xlabel('Offset (landmarks)', fontsize=16)
-    readsAx.set_ylabel('Offset (trig points)', fontsize=16)
+    readsAx.set_title(
+        '%s\n Length: %d, covered residues: %s' % (
+            fill(read.id, FILL_WIDTH), len(read), totalCoveredResidues),
+        fontsize=17)
+    readsAx.set_xlabel('Offset (landmarks)', fontsize=14)
+    readsAx.set_ylabel('Offset (trig points)', fontsize=14)
     readsAx.set_xlim(-0.2, len(read.sequence) + 0.2)
     readsAx.set_ylim(0, len(read.sequence))
     readsAx.legend(handles=legendHandles(namesSeen), loc=2)
@@ -164,7 +171,7 @@ def plotFeatureSquare(read, significanceFraction=None, readsAx=None, **kwargs):
 class PlotHashesInSubjectAndRead(object):
     """
     A class which plots a visualisation of the hashes in subject and query.
-    It will return three types of hashes: 1) Hashes in the query that don't
+    It collects three types of hashes: 1) Hashes in the query that don't
     match in the subject. 2) Hashes in the subject that don't match in the
     query. 3) Hashes that match in subject and query. These will subsequently
     be plotted.
@@ -183,41 +190,38 @@ class PlotHashesInSubjectAndRead(object):
         self.subject = subject
 
         database = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
-        subjectIndex = database.addSubject(self.subject)
+        subjectIndex = database.addSubject(subject)
         result = database.find(self.query, significanceFraction,
                                storeFullAnalysis=True)
-        if len(result.analysis[subjectIndex]) > 0:
-            self.score = result.analysis[subjectIndex]['bestScore']
-            self.signBins = len(result.analysis[subjectIndex][
-                                'significantBins'])
-            self.matchingFeatures = (
-                result.analysis[subjectIndex]['histogram'].bins if
-                subjectIndex in result.analysis else set())
+        if subjectIndex in result.analysis:
+            analysis = result.analysis[subjectIndex]
+            self.score = analysis['bestScore']
+            self.significantBinCount = len(analysis['significantBins'])
+            self.bins = analysis['histogram'].bins
         else:
             self.score = 0.0
-            self.signBins = 0
-            self.matchingFeatures = {}
+            self.significantBinCount = 0
+            self.bins = {}
 
-        self.queryFeatures = result.nonMatchingHashes
+        self.queryHashes = result.nonMatchingHashes
+        self.subjectHashes = database.getHashes(database.scan(subject))
+        self.matchingHashes = defaultdict(list)
 
-        scannedSubject = database.scan(subject)
-        self.subjectFeatures = database.getHashes(scannedSubject)
-
-        for bin_ in self.matchingFeatures:
-            for feature in bin_:
-                hash_ = database.hash(feature['landmark'],
-                                      feature['trigPoint'])
+        for bin_ in self.bins:
+            for match in bin_:
+                hash_ = database.hash(match['landmark'], match['trigPoint'])
+                self.matchingHashes[hash_].append(match)
                 try:
-                    del self.subjectFeatures[hash_]
+                    del self.subjectHashes[hash_]
                 except KeyError:
                     continue
 
     def plotGraph(self, readsAx=None):
         """
         Plots the hashes in a subject and a query. Matching hashes are plotted
-        as a scatter plot, with hashes from each bin coloured differently.
-        Non matching hashes in the subject are plotted on the x-axis, non
-        matchint hashes in the query are plotted on the y-axis.
+        as a scatter plot, with hashes from each histogram bin coloured
+        separately. Non-matching hashes in the subject are plotted on the
+        x-axis, non matching hashes in the query are plotted on the y-axis.
 
         @param readsAx: If not C{None}, use this as the subplot for displaying
             reads.
@@ -225,35 +229,33 @@ class PlotHashesInSubjectAndRead(object):
         height = (len(self.query) * 15) / len(self.subject)
         fig = plt.figure(figsize=(15, height))
         readsAx = readsAx or fig.add_subplot(111)
-        cols = colors.color_palette('hls', len(self.matchingFeatures))
 
-        for feature in self.queryFeatures:
-            for offset in self.queryFeatures[feature]['landmarkOffsets']:
+        for hashInfo in self.queryHashes.itervalues():
+            for offset in hashInfo['landmarkOffsets']:
                 readsAx.plot(offset + uniform(-0.4, 0.4), 0, 'o',
                              markerfacecolor='black', markeredgecolor='white')
 
-        for feature in self.subjectFeatures:
-            for offset in self.subjectFeatures[feature]['landmarkOffsets']:
+        for hashInfo in self.subjectHashes.itervalues():
+            for offset in hashInfo['landmarkOffsets']:
                 readsAx.plot(0, offset + uniform(-0.4, 0.4), 'o',
                              markerfacecolor='black', markeredgecolor='white')
-        matchingFeaturesCount = 0
-        for index, bin_ in enumerate(self.matchingFeatures):
-            col = cols[index]
-            for match in bin_:
-                matchingFeaturesCount += 1
-                readsAx.plot((match['subjectLandmarkOffset'] +
-                              uniform(-0.4, 0.4)),
-                             match['queryLandmarkOffset'] + uniform(-0.4, 0.4),
-                             'o', markerfacecolor=col, markeredgecolor='white')
 
-        readsAx.set_title('Hashes from matching %s against %s\n Score: %.4f, '
-                          'total bins: %d, significant bins: %d\n '
-                          'Matching hashes: %d, subject hashes: %d, '
-                          'query hashes: %d' % (
-                              self.query.id, self.subject.id, self.score,
-                              len(self.matchingFeatures), self.signBins,
-                              matchingFeaturesCount, len(self.subjectFeatures),
-                              len(self.queryFeatures)))
+        binColors = colors.color_palette('hls', len(self.bins))
+        for bin_, binColor in zip(self.bins, binColors):
+            for match in bin_:
+                readsAx.plot(
+                    match['subjectLandmarkOffset'] + uniform(-0.4, 0.4),
+                    match['queryLandmarkOffset'] + uniform(-0.4, 0.4),
+                    'o', markerfacecolor=binColor, markeredgecolor='white')
+
+        firstTitleLine = fill('Hashes from matching %s against %s' % (
+            self.query.id, self.subject.id), FILL_WIDTH)
+        readsAx.set_title(
+            '%s\nScore: %.4f, HSPs: %d\n'
+            'Hashes: matching=%d, subject-only=%d, query-only=%d' % (
+                firstTitleLine, self.score or 0.0, self.significantBinCount,
+                len(self.matchingHashes), len(self.subjectHashes),
+                len(self.queryHashes)))
         readsAx.set_ylabel('Query: %s' % self.query.id)
         readsAx.set_xlabel('Subject: %s' % self.subject.id)
         readsAx.set_xlim(-0.5, len(self.subject))

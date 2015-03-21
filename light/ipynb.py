@@ -11,19 +11,18 @@ from dark.html import (
 
 from .alignments import LightReadsAlignments
 from .database import Database, DatabaseSpecifier
-from .graphics import (
-    plotFeatures, plotHistogram, plotFeaturePanel, plotFeatureSquare)
+from .graphics import (plotHistogram, plotFeatureSquare)
 
 # Keep pyflakes quiet by pretending to make use of all our imports.
 _ = (AARead, FastaReads, LightReadsAlignments, titleCounts, TitlesAlignments,
      summarizeTitlesByLength, summarizeTitlesByMaxScore,
      summarizeTitlesByMedianScore, summarizeTitlesByCount,
-     summarizeTitlesByTitle, plotFeatures, plotHistogram, plotFeaturePanel,
-     plotFeatureSquare, Database, DatabaseSpecifier)
+     summarizeTitlesByTitle, plotHistogram, plotFeatureSquare, Database,
+     DatabaseSpecifier)
 
 __all__ = [
     'AARead', 'FastaReads', 'LightReadsAlignments', 'titleCounts',
     'TitlesAlignments', 'summarizeTitlesByLength', 'summarizeTitlesByMaxScore',
     'summarizeTitlesByMedianScore', 'summarizeTitlesByCount',
-    'summarizeTitlesByTitle', 'plotFeatures', 'plotHistogram',
-    'plotFeaturePanel', 'plotFeatureSquare', 'Database', 'DatabaseSpecifier']
+    'summarizeTitlesByTitle', 'plotHistogram', 'plotFeatureSquare', 'Database',
+    'DatabaseSpecifier']

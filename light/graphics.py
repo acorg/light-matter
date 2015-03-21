@@ -375,7 +375,7 @@ class PlotHashesInSubjectAndRead(object):
                 # can see more of them in case of overlap.
                 xJitter = uniform(-0.2, 0.2)
 
-                # Dotted diagonal line connecting trig point in query and
+                # Dashed diagonal line connecting trig point in query and
                 # subject.  Plot this before the diagonal landmark lines as
                 # it's arguably less important (there's a chance we will
                 # paint over it with the landmark lines).
@@ -383,7 +383,7 @@ class PlotHashesInSubjectAndRead(object):
                 if key not in diagPlotted:
                     diagPlotted.add(key)
                     plt.plot([qyTpOffset + xJitter, sjTpOffset + xJitter],
-                             [qyY, sjY], ':', color=binColor)
+                             [qyY, sjY], '--', color=binColor)
 
                 # Solid diagonal line connecting start of landmark in query
                 # and subject.
@@ -393,14 +393,7 @@ class PlotHashesInSubjectAndRead(object):
                     plt.plot([qyLmOffset + xJitter, sjLmOffset + xJitter],
                              [qyY, sjY], '-', color=binColor)
 
-                # Dashed diagonal line connecting end of landmark in query
-                # and subject.
-                key = (lmName, qyLmOffset + lm.length, sjLmOffset + lm.length)
-                if key not in diagPlotted:
-                    diagPlotted.add(key)
-                    plt.plot([qyLmOffset + lm.length + xJitter,
-                              sjLmOffset + lm.length + xJitter],
-                             [qyY, sjY], '--', color=binColor)
+                # Don't plot the end of the landmark, to reduce clutter.
 
         # Query-only hashes, plotted just below (-missY) the query line.
         for hashInfo in self.queryHashes.itervalues():
@@ -416,12 +409,14 @@ class PlotHashesInSubjectAndRead(object):
                 # Landmark.
                 key = (lmName, lmOffset, lm.length)
                 if key not in qyPlotted:
+                    qyPlotted.add(key)
                     plt.plot([lmOffset, lmOffset + lm.length],
                              [qyY - missY, qyY - missY],
                              '-', color=lmColor, linewidth=3)
                 # Trig point.
                 key = (tpName, tpOffset)
                 if key not in qyPlotted:
+                    qyPlotted.add(key)
                     plt.plot([tpOffset, tpOffset],
                              [qyY - missY + tpY, qyY - missY - tpY],
                              '-', color=tpColor, linewidth=3)
@@ -440,12 +435,14 @@ class PlotHashesInSubjectAndRead(object):
                 # Landmark.
                 key = (lmName, lmOffset, lm.length)
                 if key not in sjPlotted:
+                    sjPlotted.add(key)
                     plt.plot([lmOffset, lmOffset + lm.length],
                              [sjY + missY, sjY + missY],
                              '-', color=lmColor, linewidth=3)
                 # Trig point.
                 key = (tpName, tpOffset)
                 if key not in sjPlotted:
+                    sjPlotted.add(key)
                     plt.plot([tpOffset, tpOffset],
                              [sjY + missY + tpY, sjY + missY - tpY],
                              '-', color=tpColor, linewidth=3)

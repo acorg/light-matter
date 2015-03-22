@@ -118,9 +118,7 @@ def _rectangularPanel(rows, cols, title, makeSubPlot, equalizeXAxes=False,
             # This subplot is not displayed.
             a.axis('off')
 
-    # plt.subplots_adjust(hspace=0.4)
     figure.suptitle(title, fontsize=20)
-    # figure.set_size_inches(5 * cols, 3 * rows, forward=True)
     figure.set_size_inches(15, 3 * rows, forward=True)
     figure.show()
 

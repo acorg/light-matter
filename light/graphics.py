@@ -73,6 +73,7 @@ def plotHistogram(query, subject, significanceFraction=None, readsAx=None,
     @param readsAx: If not None, use this as the subplot for displaying reads.
     @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
         for additional keywords, all of which are optional.
+    @return: The C{light.result.Result} from running the database find.
     """
     database = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
     subjectIndex = database.addSubject(subject)
@@ -95,6 +96,7 @@ def plotHistogram(query, subject, significanceFraction=None, readsAx=None,
             fill('%s against %s' % (query.id, subject.id), FILL_WIDTH))
         readsAx.set_xlabel('Offsets (database-read)')
         readsAx.xaxis.tick_bottom()
+    return result
 
 
 def plotFeatureSquare(read, significanceFraction=None, readsAx=None, **kwargs):

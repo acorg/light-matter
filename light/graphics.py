@@ -5,6 +5,8 @@ from operator import attrgetter
 from textwrap import fill
 from collections import defaultdict
 
+from dark.dimension import dimensionalIterator
+
 from light.database import DatabaseSpecifier
 from light.trig import ALL_TRIG_CLASSES
 from light.landmarks import ALL_LANDMARK_CLASSES
@@ -58,11 +60,121 @@ def legendHandles(names):
             for (symbol, name) in ALL_FEATURES if name in names]
 
 
+def _rectangularPanel(rows, cols, title, makeSubPlot, equalizeXAxes=False,
+                      equalizeYAxes=False):
+    """
+    Create a rectangular panel of plots.
+
+    @param rows: The C{int} number of rows that will appear in the panel.
+    @param cols: The C{int} number of columns that will appear in the panel.
+    @param title: A C{str} title for the figure.
+    @param makeSubPlot: A function that accepts two arguments (an C{int} row
+        and column) and which creates a sub-plot and returns a C{dict}
+        containing information about the created plot or C{None} if no plot
+        should be shown in the given (row, col) location.
+    @param equalizeXAxes: if C{True}, adjust the X axis on each sub-plot
+        to cover the same range (the maximum range of all sub-plots).
+    @param equalizeYAxes: if C{True}, adjust the Y axis on each sub-plot
+        to cover the same range (the maximum range of all sub-plots).
+    """
+    figure, ax = plt.subplots(rows, cols, squeeze=False)
+    subplots = {}
+
+    for row, col in dimensionalIterator((rows, cols)):
+        subplots[(row, col)] = makeSubPlot(row, col, ax[row][col])
+
+    if equalizeXAxes or equalizeYAxes:
+        nonEmpty = filter(lambda x: x, subplots.itervalues())
+        title += '\n'
+        if equalizeXAxes:
+            maxX = max(subplot['maxX'] for subplot in nonEmpty)
+            minX = min(subplot['minX'] for subplot in nonEmpty)
+            title += 'X range: %s to %s' % (minX, maxX)
+            if equalizeYAxes:
+                title += ', '
+        if equalizeYAxes:
+            maxY = max(subplot['maxY'] for subplot in nonEmpty)
+            minY = min(subplot['minY'] for subplot in nonEmpty)
+            title += 'Y range: %s to %s' % (minY, maxY)
+
+    # Post-process graphs to adjust axes, etc.
+    for (row, col), subplot in subplots.iteritems():
+        a = ax[row][col]
+        if subplot:
+            try:
+                subTitle = subplots[(row, col)]['title']
+            except KeyError:
+                # No title, no problem.
+                pass
+            else:
+                a.set_title(subTitle, fontsize=10)
+            if equalizeXAxes:
+                a.set_xlim([minX, maxX])
+                a.set_xticks([])
+            if equalizeYAxes:
+                a.set_ylim([minY, maxY])
+                a.set_yticks([])
+        else:
+            # This subplot is not displayed.
+            a.axis('off')
+
+    # plt.subplots_adjust(hspace=0.4)
+    figure.suptitle(title, fontsize=20)
+    # figure.set_size_inches(5 * cols, 3 * rows, forward=True)
+    figure.set_size_inches(15, 3 * rows, forward=True)
+    figure.show()
+
+
+def plotHistogramPanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
+                       significanceFraction=None, **kwargs):
+    """
+    Plot a panel of histograms of matching hash offset deltas between
+    all pairs of passed sequences.
+
+    @param sequences: Either A C{str} filename of sequences to consider or
+        a C{light.reads.Reads} instance.
+    @param significanceFraction: The C{float} fraction of all (landmark,
+        trig point) pairs for a scannedRead that need to fall into the
+        same histogram bucket for that bucket to be considered a
+        significant match with a database title.
+    @param readsAx: If not None, use this as the subplot for displaying reads.
+    @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
+        for additional keywords, all of which are optional.
+    @param equalizeXAxes: if C{True}, adjust the X axis on each sub-plot
+        to cover the same range (the maximum range of all sub-plots).
+    @param equalizeYAxes: if C{True}, adjust the Y axis on each sub-plot
+        to cover the same range (the maximum range of all sub-plots).
+    @return: The C{light.result.Result} from running the database find.
+    """
+    if isinstance(sequences, basestring):
+        reads = list(FastaReads(sequences, readClass=AARead))
+    else:
+        reads = list(sequences)
+    nReads = len(reads)
+    database = DatabaseSpecifier().getDatabaseFromKeywords(subjects=reads,
+                                                           **kwargs)
+
+    def makeSubPlot(row, col, ax):
+        """
+        @param row: The C{int} panel row.
+        @param col: The C{int} panel column.
+        @param ax: The matplotlib axis for the sub-plot.
+        """
+        if row <= col:
+            return plotHistogram(sequences[row], sequences[col],
+                                 significanceFraction=significanceFraction,
+                                 readsAx=ax, database=database)
+
+    return _rectangularPanel(
+        nReads, nReads, 'Histogram panel', makeSubPlot,
+        equalizeXAxes=equalizeXAxes, equalizeYAxes=equalizeYAxes)
+
+
 def plotHistogram(query, subject, significanceFraction=None, readsAx=None,
                   **kwargs):
     """
-    A function to plot a histogram of matching hash offset deltas between
-    a query and a subject.
+    Plot a histogram of matching hash offset deltas between a query and a
+    subject.
 
     @param query: an AARead instance of the sequence of the query.
     @param subject: an AARead instance of the sequence of the subject.
@@ -82,21 +194,31 @@ def plotHistogram(query, subject, significanceFraction=None, readsAx=None,
     try:
         histogram = result.analysis[subjectIndex]['histogram']
     except KeyError:
-        print 'The query and the subject had no hashes in common.'
+        print 'Query %r and subject %r had no hashes in common.' % (
+            query.id, subject.id)
     else:
         counts = [len(bin) for bin in histogram.bins]
         nBins = len(histogram.bins)
         width = (histogram.max - histogram.min) / float(nBins)
         center = [histogram.min + (i + 0.5) * width for i in xrange(nBins)]
+        title = fill('%s vs %s' % (query.id, subject.id), FILL_WIDTH)
 
-        fig = plt.figure()
-        readsAx = readsAx or fig.add_subplot(111)
+        if readsAx is None:
+            fig = plt.figure()
+            readsAx = fig.add_subplot(111)
+            readsAx.set_title(title)
+            readsAx.set_xlabel('Offsets (database-read)')
+            readsAx.xaxis.tick_bottom()
+
         readsAx.bar(center, counts, align='center', width=width)
-        readsAx.set_title(
-            fill('%s against %s' % (query.id, subject.id), FILL_WIDTH))
-        readsAx.set_xlabel('Offsets (database-read)')
-        readsAx.xaxis.tick_bottom()
-    return result
+        return {
+            'minX': histogram.min,
+            'maxX': histogram.max,
+            'minY': 0,
+            'maxY': max(counts),
+            'result': result,
+            'title': title,
+        }
 
 
 def plotFeatureSquare(read, significanceFraction=None, readsAx=None, **kwargs):

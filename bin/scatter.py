@@ -160,7 +160,7 @@ if __name__ == '__main__':
                                           'lm': 0}
     for subjectIndex in result.significant():
         lightScore = result.analysis[subjectIndex]['score']
-        lightTitle = database.subjectInfo[subjectIndex][0]
+        lightTitle = database.getSubject(subjectIndex).id
         allScores[lightTitle]['lm'] = lightScore
 
     # data for plotting

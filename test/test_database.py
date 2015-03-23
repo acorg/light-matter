@@ -9,7 +9,7 @@ from light.distance import scale
 from light.features import Landmark, TrigPoint
 from light.landmarks import AlphaHelix, BetaStrand
 from light.trig import Peaks, Troughs
-from light.database import Database
+from light.database import Database, Subject
 from light.reads import ScannedRead
 
 
@@ -125,7 +125,7 @@ class TestDatabase(TestCase):
         subjects have been added.
         """
         db = Database([], [])
-        self.assertEqual([], db.subjectInfo)
+        self.assertEqual([], list(db.getSubjects()))
 
     def testAddSubjectReturnsIndex(self):
         """
@@ -134,6 +134,35 @@ class TestDatabase(TestCase):
         """
         db = Database([AlphaHelix], [])
         self.assertEqual(0, db.addSubject(AARead('id', 'FRRRFRRRF')))
+
+    def testGetSubjectIndexError(self):
+        """
+        If an out-of-range subject index is passed to getSubject, an IndexError
+        must be raised.
+        """
+        db = Database([AlphaHelix], [])
+        error = '^list index out of range$'
+        self.assertRaisesRegexp(IndexError, error, db.getSubject, 0)
+        self.assertRaisesRegexp(IndexError, error, db.getSubject, -1)
+
+    def testGetSubject(self):
+        """
+        If a subject is added, getSubject must be able to return it.
+        """
+        db = Database([AlphaHelix], [])
+        subject = AARead('id', 'FRRRFRRRF')
+        index = db.addSubject(subject)
+        self.assertEqual(AARead('id', 'FRRRFRRRF'), db.getSubject(index))
+
+    def testGetSubjectHashCount(self):
+        """
+        If a subject is added, getSubject must return a Subject instance that
+        has the correct hash count.
+        """
+        db = Database([AlphaHelix], [])
+        subject = AARead('id', 'FRRRFRRRFAFRRRFRRRF')
+        index = db.addSubject(subject)
+        self.assertEqual(1, db.getSubject(index).hashCount)
 
     def testOneReadOneLandmark(self):
         """
@@ -144,23 +173,29 @@ class TestDatabase(TestCase):
         db.addSubject(AARead('id', 'FRRRFRRRF'))
         self.assertEqual({}, db.d)
 
-    def testOneReadOneLandmarkSubjectInfo(self):
+    def testOneReadOneLandmarkGetSubjects(self):
         """
         If one subject with just one landmark (and hence no hashes) is added,
-        an entry is appended to the subject info.
+        an entry is appended to the database subject info.
         """
         db = Database([AlphaHelix], [])
         db.addSubject(AARead('id', 'FRRRFRRRF'))
-        self.assertEqual([('id', 'FRRRFRRRF', 0)], db.subjectInfo)
+        subjects = list(db.getSubjects())
+        self.assertEqual(1, len(subjects))
+        subject = subjects[0]
+        self.assertEqual(AARead('id', 'FRRRFRRRF'), subject)
+        self.assertEqual(0, subject.hashCount)
 
-    def testOneReadTwoLandmarksSubjectInfo(self):
+    def testOneReadTwoLandmarksGetSubjects(self):
         """
         If one subject with two landmarks (and hence one hash) is added, an
-        entry is appended to the subject info.
+        entry is appended to the database subject info.
         """
         db = Database([AlphaHelix], [])
         db.addSubject(AARead('id', 'FRRRFRRRFAFRRRFRRRF'))
-        self.assertEqual([('id', 'FRRRFRRRFAFRRRFRRRF', 1)], db.subjectInfo)
+        subject = list(db.getSubjects())[0]
+        self.assertEqual(AARead('id', 'FRRRFRRRFAFRRRFRRRF'), subject)
+        self.assertEqual(1, subject.hashCount)
 
     def testOneReadOneLandmarkStatistics(self):
         """
@@ -600,13 +635,13 @@ class TestDatabase(TestCase):
         query = AARead('query', 'FRRRFRRRFASAVVVVVV')
         db = Database([AlphaHelix, BetaStrand], [Peaks])
         db.addSubject(subject)
-        hashCount1 = db.subjectInfo[0][2]
+        hashCount1 = db.getSubject(0).hashCount
         result = db.find(query, significanceFraction=0.0)
         score1 = result.analysis[0]['bestScore']
 
         db = Database([AlphaHelix, BetaStrand], [Peaks])
         db.addSubject(query)
-        hashCount2 = db.subjectInfo[0][2]
+        hashCount2 = db.getSubject(0).hashCount
         result = db.find(subject, significanceFraction=0.0)
         score2 = result.analysis[0]['bestScore']
 
@@ -1059,3 +1094,26 @@ class TestDatabase(TestCase):
             'Coverage: 0.00%\n'
             'Checksum: 4224788348\n')
         self.assertEqual(expected, fp.getvalue())
+
+
+class TestSubject(TestCase):
+    """
+    Tests for the light.database.Subject class.
+    """
+    def testIsAARead(self):
+        """
+        A Subject is a subclass of AARead.
+        """
+        self.assertTrue(isinstance(Subject('id', 'AA', 0), AARead))
+
+    def testAAProperties(self):
+        """
+        A Subject must call AARead.__init__ with the correct arguments.
+        """
+        self.assertEqual(AARead('id', 'A', '!'), Subject('id', 'A', 6, '!'))
+
+    def testHashCountIsStored(self):
+        """
+        A Subject must store the hashcount it is passed.
+        """
+        self.assertEqual(6, Subject('id', 'AA', 6).hashCount)

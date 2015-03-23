@@ -51,8 +51,8 @@ class LightReadsAlignments(ReadsAlignments):
 
         # Add a dictionary that will allow us to look up database subjects
         # by title.
-        self._subjects = dict(subjectInfo[:2] for subjectInfo in
-                              database.subjectInfo)
+        self._subjects = dict((subject.id, subject.sequence)
+                              for subject in database.getSubjects())
 
         # Prepare application parameters in order to initialize self.
         self._reader = self._getReader(self.resultFilenames[0])
@@ -141,9 +141,8 @@ def jsonDictToAlignments(lightDict, database):
     lightAlignments = []
 
     for alignment in lightDict['alignments']:
-        subjectId, subjectSequence = database.subjectInfo[
-            alignment['subjectIndex']][:2]
-        lightAlignment = LightAlignment(len(subjectSequence), subjectId)
+        subject = database.getSubject(alignment['subjectIndex'])
+        lightAlignment = LightAlignment(len(subject), subject.id)
         for hspDict in alignment['hsps']:
             hsp = HSP(hspDict['score'])
             # This is ugly: manually put the additional light matter HSP

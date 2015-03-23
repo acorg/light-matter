@@ -23,6 +23,23 @@ from light.trig import (
     ALL_TRIG_CLASSES, DEFAULT_TRIG_CLASSES)
 
 
+class Subject(AARead):
+    """
+    Hold information about a database subject.
+
+    @param id: A C{str} describing the read.
+    @param sequence: A C{str} of sequence information (might be
+        nucleotides or proteins).
+    @param hashCount: An C{int} count of the number of hashes found in the
+        subject when it was added (via addSubject).
+    @param quality: An optional C{str} of phred quality scores. If not C{None},
+        it must be the same length as C{sequence}.
+    """
+    def __init__(self, id, sequence, hashCount, quality=None):
+        AARead.__init__(self, id, sequence, quality)
+        self.hashCount = hashCount
+
+
 class Database(object):
     """
     Maintain a collection of sequences ("subjects") and provide for database
@@ -93,7 +110,7 @@ class Database(object):
         self.subjectCount = 0
         self.totalResidues = 0
         self.totalCoveredResidues = 0
-        self.subjectInfo = []
+        self._subjectInfo = []
         # Create instances of the landmark and trig point finder classes.
         self.landmarkFinders = []
         for landmarkClass in self.landmarkClasses:
@@ -244,9 +261,27 @@ class Database(object):
                 subjectDict[str(subjectIndex)] = [landmark.offset]
 
         self._updateChecksum((subject.id, subject.sequence, str(hashCount)))
-        self.subjectInfo.append((subject.id, subject.sequence, hashCount))
+        self._subjectInfo.append((subject.id, subject.sequence, hashCount))
 
         return subjectIndex
+
+    def getSubject(self, subjectIndex):
+        """
+        Return information about a subject, given its index in the database.
+
+        @param subjectIndex: an C{int} subect index.
+        @return: an C{Subject} instance.
+        @raises IndexError: if the subject index is invalid.
+        """
+        return Subject(*self._subjectInfo[subjectIndex])
+
+    def getSubjects(self):
+        """
+        Return information about all database subjects.
+
+        @return: a generator that yields C{Subject} instances.
+        """
+        return (self.getSubject(i) for i in xrange(self.subjectCount))
 
     def __str__(self):
         return '%s: %d sequences, %d residues, %d hashes, %.2f%% coverage' % (
@@ -345,7 +380,7 @@ class Database(object):
             'subjectCount': self.subjectCount,
             'totalResidues': self.totalResidues,
             'totalCoveredResidues': self.totalCoveredResidues,
-            'subjectInfo': self.subjectInfo,
+            '_subjectInfo': self._subjectInfo,
             'distanceBase': self.distanceBase,
         }
         dump(state, fp)
@@ -390,7 +425,7 @@ class Database(object):
 
         # Monkey-patch the new database instance to restore its state.
         for attr in ('checksum', 'd', 'subjectCount', 'totalResidues',
-                     'totalCoveredResidues', 'subjectInfo'):
+                     'totalCoveredResidues', '_subjectInfo'):
             setattr(database, attr, state[attr])
 
         return database
@@ -446,7 +481,7 @@ class Database(object):
                 for subjectIndex, offsets in subjects.iteritems():
                     subjectIndex = int(subjectIndex)
                     print >>fp, '    %s %r' % (
-                        self.subjectInfo[subjectIndex][0], offsets)
+                        self.getSubject(subjectIndex).id, offsets)
 
             print >>fp, 'Landmark symbol counts:'
             for hash_, count in landmarkCount.iteritems():

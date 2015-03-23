@@ -164,7 +164,7 @@ def plotHistogramPanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
         @param ax: The matplotlib axis for the sub-plot.
         """
         if row <= col:
-            return plotHistogram(sequences[row], col,
+            return plotHistogram(reads[row], col,
                                  significanceFraction=significanceFraction,
                                  readsAx=ax, database=database)
 

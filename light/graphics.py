@@ -459,13 +459,15 @@ class PlotHashesInSubjectAndRead(object):
         ax.set_xlim(-horizontalPad, maxLen + horizontalPad)
 
 
-def plotLandmarksInSequences(sequences, **kwargs):
+def plotLandmarksInSequences(sequences, maxTickLabelLength=None, **kwargs):
     """
     Plot the positions of landmarks and trig points on many sequences, with
     sequences stacked above each other.
 
     @param sequences: Either A C{str} filename of sequences to consider or
         a C{light.reads.Reads} instance.
+    @param maxTickLabelLength: An C{int} limit on the length of tick labels
+        on the Y axis. If C{None}, labels will not be truncated.
     @param kwargs: See
         C{database.DatabaseSpecifier.getDatabaseFromKeywords} for
         additional keywords, all of which are optional.
@@ -475,39 +477,47 @@ def plotLandmarksInSequences(sequences, **kwargs):
     else:
         reads = list(sequences)
 
+    nReads = len(reads)
     db = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
-    fig = plt.figure(figsize=(15, len(reads) / 3))
+    fig = plt.figure(figsize=(15, nReads / 3.0))
     ax = fig.add_subplot(111)
     namesSeen = set()
     maxLen = 0
+    yticks = []
 
     for i, read in enumerate(reads):
+        y = nReads - 1 - i
+        yticks.append(read.id if maxTickLabelLength is None else
+                      read.id[:maxTickLabelLength])
         readLen = len(read)
         if readLen > maxLen:
             maxLen = readLen
-        plt.plot([0, len(read.sequence)], [i, i], '-', linewidth=0.5,
+        plt.plot([0, len(read.sequence)], [y, y], '-', linewidth=0.5,
                  color='grey')
         scannedRead = db.scan(read)
         # Landmarks are drawn as colored horizontal lines.
         for landmark in scannedRead.landmarks:
             namesSeen.add(landmark.name)
             plt.plot([landmark.offset, landmark.offset + landmark.length],
-                     [i, i], '-', color=COLORS[landmark.symbol], linewidth=2)
+                     [y, y], '-', color=COLORS[landmark.symbol], linewidth=2)
         # Trig points are drawn as small colored vertical lines.
         for trigPoint in scannedRead.trigPoints:
             namesSeen.add(trigPoint.name)
             plt.plot([trigPoint.offset, trigPoint.offset],
-                     [i - 0.125, i + 0.125], '-',
+                     [y - 0.125, y + 0.125], '-',
                      color=COLORS[trigPoint.symbol], linewidth=2)
 
-    ax.set_title('Landmarks and features')
+    ax.set_title('Landmarks and features\n', fontsize=15)
     ax.spines['top'].set_linewidth(0)
     ax.spines['right'].set_linewidth(0)
     ax.spines['bottom'].set_linewidth(0)
     ax.spines['left'].set_linewidth(0)
     ax.xaxis.grid()
-    ax.set_ylim(-0.1, i + 0.1)
+    ax.set_ylim(-0.1, nReads - 1 + 0.1)
     ax.set_xlim(0, maxLen)
+    yticks.reverse()
+    ax.set_yticklabels(yticks)
+    ax.set_yticks(range(nReads))
     # Add a legend above left on the plot.
     ax.legend(handles=legendHandles(namesSeen),
               bbox_to_anchor=(0.0, 1.02, 1.0, 0.102), loc=3, ncol=2,

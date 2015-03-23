@@ -1,13 +1,10 @@
-.PHONY: check, pep8, pyflakes, lint
+.PHONY: check, tcheck, pep8, pyflakes, lint, wc, clean
 
 check:
 	python -m discover -v
 
 tcheck:
 	trial --rterrors test
-
-colcheck:
-	nosetests
 
 pep8:
 	find . -name '*.py' -print0 | xargs -0 pep8
@@ -18,7 +15,7 @@ pyflakes:
 lint: pep8 pyflakes
 
 wc:
-	find . -name '*.py' -print0 | xargs -0 wc -l
+	find . -path './light/colors' -prune -o -path './test/colors' -prune -o -name '*.py' -print0 | xargs -0 wc -l
 
 clean:
 	find . \( -name '*.pyc' -o -name '*~' \) -print0 | xargs -0 rm

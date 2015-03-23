@@ -34,8 +34,8 @@ def queryDatabase(subjects, queries, database, significanceFraction=None):
         result = database.find(query,
                                significanceFraction=significanceFraction)
         for subjectIndex in result.significant():
-            subject = database.subjectInfo[subjectIndex][0]
+            subject = database.getSubject(subjectIndex)
             score = result.analysis[subjectIndex]['bestScore']
-            resultDict[query.id][subject] = score
+            resultDict[query.id][subject.id] = score
 
     return resultDict

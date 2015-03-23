@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 
 import argparse
-from Bio import SeqIO
-from Bio.Seq import Seq
-from Bio.SeqRecord import SeqRecord
 
 from light.database import DatabaseSpecifier
 
@@ -31,10 +28,8 @@ if __name__ == '__main__':
 
     # Write subjects to file.
     if args.printSubjects:
-        subjects = []
-        for sb in database.subjectInfo:
-            subjects.append(SeqRecord(Seq(sb[1]), id=sb[0], description=''))
         with open(args.printSubjects, 'w') as fp:
-            SeqIO.write(subjects, fp, 'fasta')
-        print 'Wrote %d subjects to %s' % (len(database.subjectInfo),
+            for subject in database.getSubjects():
+                print >>fp, subject.toString('fasta')
+        print 'Wrote %d subjects to %s' % (len(database.subjectCount),
                                            args.printSubjects)

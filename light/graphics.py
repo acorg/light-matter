@@ -68,10 +68,12 @@ def _rectangularPanel(rows, cols, title, makeSubPlot, equalizeXAxes=False,
     @param rows: The C{int} number of rows that will appear in the panel.
     @param cols: The C{int} number of columns that will appear in the panel.
     @param title: A C{str} title for the figure.
-    @param makeSubPlot: A function that accepts two arguments (an C{int} row
-        and column) and which creates a sub-plot and returns a C{dict}
-        containing information about the created plot or C{None} if no plot
-        should be shown in the given (row, col) location.
+    @param makeSubPlot: A function that accepts three arguments (an C{int} row,
+        an C{int} column, and a matplotlib axes instance), which creates a
+        sub-plot using the passed axes, and which returns a C{dict}
+        containing information ('maxX', 'minX', 'maxY', 'minY', and an optional
+        'title') about the created plot or C{None} if no plot should be shown
+        in the given (row, col) location.
     @param equalizeXAxes: if C{True}, adjust the X axis on each sub-plot
         to cover the same range (the maximum range of all sub-plots).
     @param equalizeYAxes: if C{True}, adjust the Y axis on each sub-plot
@@ -149,8 +151,11 @@ def plotHistogramPanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
     else:
         reads = list(sequences)
     nReads = len(reads)
-    database = DatabaseSpecifier().getDatabaseFromKeywords(subjects=reads,
-                                                           **kwargs)
+    # Make a new database. For now we don't allow an existing database to
+    # be passed as we're going to use subject indices from 0 to nReads-1.
+    # This shortcoming can be removed later.
+    specifier = DatabaseSpecifier(allowInMemory=False, allowFromFile=False)
+    database = specifier.getDatabaseFromKeywords(subjects=reads, **kwargs)
 
     def makeSubPlot(row, col, ax):
         """
@@ -159,7 +164,7 @@ def plotHistogramPanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
         @param ax: The matplotlib axis for the sub-plot.
         """
         if row <= col:
-            return plotHistogram(sequences[row], sequences[col],
+            return plotHistogram(sequences[row], col,
                                  significanceFraction=significanceFraction,
                                  readsAx=ax, database=database)
 
@@ -175,7 +180,8 @@ def plotHistogram(query, subject, significanceFraction=None, readsAx=None,
     subject.
 
     @param query: an AARead instance of the sequence of the query.
-    @param subject: an AARead instance of the sequence of the subject.
+    @param subject: either an AARead instance of the sequence of the subject
+        or an C{int} subject index in the database.
     @param significanceFraction: The C{float} fraction of all (landmark,
         trig point) pairs for a scannedRead that need to fall into the
         same histogram bucket for that bucket to be considered a
@@ -184,9 +190,17 @@ def plotHistogram(query, subject, significanceFraction=None, readsAx=None,
     @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
         for additional keywords, all of which are optional.
     @return: The C{light.result.Result} from running the database find.
+    @raises IndexError: If C{subject} is an C{int} and that index does not
+        exist in the database.
     """
     database = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
-    subjectIndex = database.addSubject(subject)
+
+    if isinstance(subject, int):
+        subjectIndex = subject
+        subject = database.getSubject(subjectIndex)
+    else:
+        subjectIndex = database.addSubject(subject)
+
     result = database.find(query, significanceFraction, storeFullAnalysis=True)
 
     try:

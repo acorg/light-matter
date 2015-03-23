@@ -51,10 +51,10 @@ class Result(object):
         # match offset deltas into bins so we can decide which (if any) of
         # the matches is significant.
         for subjectIndex in matches:
-            subjectLen = len(database.subjectInfo[subjectIndex][1])
+            subject = database.getSubject(subjectIndex)
             # Use a histogram to bin scaled (landmark, trigPoint) offset
             # deltas.
-            maxLen = max([queryLen, subjectLen])
+            maxLen = max([queryLen, len(subject)])
             nBins = scale(maxLen, distanceBase)
             # Make sure the number of bins is odd, else Histogram() will raise.
             nBins |= 0x1
@@ -81,8 +81,7 @@ class Result(object):
 
             histogram.finalizeHistogram()
 
-            subjectHashCount = database.subjectInfo[subjectIndex][2]
-            minHashCount = min(queryHashCount, subjectHashCount)
+            minHashCount = min(queryHashCount, subject.hashCount)
             significanceCutoff = significanceFraction * minHashCount
             significantBins = []
             bestScore = None
@@ -249,23 +248,22 @@ class Result(object):
 
         for subjectCount, subjectIndex in enumerate(subjectIndices, start=1):
             analysis = self.analysis[subjectIndex]
-            title, sequence, subjectHashCount = self.database.subjectInfo[
-                subjectIndex]
-            minHashCount = min(self.queryHashCount, subjectHashCount)
+            subject = self.database.getSubject(subjectIndex)
+            minHashCount = min(self.queryHashCount, subject.hashCount)
             significantBins = analysis['significantBins']
 
             result.extend([
                 '  Subject %d:' % subjectCount,
-                '    Title: %s' % title,
+                '    Title: %s' % subject.id,
                 '    Best HSP score: %s' % analysis['bestScore'],
             ])
 
             if printSequences:
-                result.append('    Sequence: %s' % sequence)
+                result.append('    Sequence: %s' % subject.sequence)
 
             result.extend([
                 '    Index in database: %d' % subjectIndex,
-                '    Subject hash count: %s' % subjectHashCount,
+                '    Subject hash count: %s' % subject.hashCount,
                 '    Subject/query min hash count: %s' % minHashCount,
                 '    Significance cutoff: %f' % (self.significanceFraction *
                                                  minHashCount),

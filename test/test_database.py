@@ -1108,9 +1108,9 @@ class TestSubject(TestCase):
 
     def testAAProperties(self):
         """
-        A Subject must have called AARead.__init__ with the correct arguments.
+        A Subject must call AARead.__init__ with the correct arguments.
         """
-        self.assertEqual(AARead('id', 'AA'), Subject('id', 'AA', 6))
+        self.assertEqual(AARead('id', 'A', '!'), Subject('id', 'A', 6, '!'))
 
     def testHashCountIsStored(self):
         """

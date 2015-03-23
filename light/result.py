@@ -88,7 +88,7 @@ class Result(object):
 
             # Look for bins with a significant number of elements (scaled
             # hash offset deltas).
-            for bin_ in histogram.bins:
+            for binIndex, bin_ in enumerate(histogram.bins):
                 binCount = len(bin_)
                 if binCount >= significanceCutoff:
                     try:
@@ -114,6 +114,7 @@ class Result(object):
 
                     significantBins.append({
                         'bin': bin_,
+                        'index': binIndex,
                         'score': score,
                     })
 
@@ -273,9 +274,9 @@ class Result(object):
             for hspCount, bin_ in enumerate(significantBins, start=1):
                 binCount = len(bin_['bin'])
                 result.append(
-                    '      HSP %d has %d matching hash%s and score: %f' %
-                    (hspCount, binCount, '' if binCount == 1 else 'es',
-                     bin_['score']))
+                    '      HSP %d (bin %d): %d matching hash%s, score %f' %
+                    (hspCount, bin_['index'], binCount,
+                     '' if binCount == 1 else 'es', bin_['score']))
 
                 if printFeatures:
                     for binItem in bin_['bin']:
@@ -288,12 +289,29 @@ class Result(object):
 
             if printHistograms and self._storeFullAnalysis:
                 histogram = analysis['histogram']
-                binCounts = [len(b) for b in histogram.bins]
+                significantBinIndices = set([bin_['index']
+                                             for bin_ in significantBins])
                 result.extend([
                     '    Histogram:',
                     '      Number of bins: %d' % len(histogram.bins),
-                    '      Max bin count: %r' % max(binCounts),
-                    '      Counts: %r' % binCounts,
+                    '      Max bin count: %r' % (
+                        max(len(bin_) for bin_ in histogram.bins)),
+                ])
+                nonEmpty = []
+                for binIndex, bin_ in enumerate(histogram.bins):
+                    binCount = len(bin_)
+                    if binCount:
+                        nonEmpty.append('%d:%d%s' % (
+                            binIndex, binCount,
+                            '*' if binIndex in significantBinIndices else ''))
+                if nonEmpty:
+                    result.append(
+                        '      Non-empty bins (index:count; *=significant): %s'
+                        % ', '.join(nonEmpty))
+                else:
+                    result.append('All bins were empty.')
+
+                result.extend([
                     '      Max (scaled) offset delta: %d' % histogram.max,
                     '      Min (scaled) offset delta: %d' % histogram.min,
                 ])

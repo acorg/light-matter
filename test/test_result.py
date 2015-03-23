@@ -440,7 +440,7 @@ class TestResult(TestCase):
     def testPrintOneMatchStoredAnalysis(self):
         """
         Check that the print_ method of a result produces the expected result
-        when there is a match.
+        when there is a match and we keep the full analysis.
         """
         fp = StringIO()
         sequence = 'FRRRFRRRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'
@@ -466,11 +466,56 @@ class TestResult(TestCase):
                     "    Subject/query min hash count: 1\n"
                     "    Significance cutoff: 0.100000\n"
                     "    Number of HSPs: 1\n"
-                    "      HSP 1 has 1 matching hash and score: 1.000000\n"
+                    "      HSP 1 (bin 38): 1 matching hash, score 1.000000\n"
                     "        Landmark AlphaHelix symbol='A' offset=0 len=9 "
                     "detail=2 subjectOffset=0\n"
                     "        Trig point AlphaHelix symbol='A' offset=25 "
                     "len=13 detail=3\n")
+
+        self.assertEqual(expected, fp.getvalue())
+
+    def testPrintOneMatchStoredAnalysisPrintHistogram(self):
+        """
+        Check that the print_ method of a result produces the expected result
+        when there is a match and we keep the full analysis and also ask for
+        the histogram to be printed.
+        """
+        fp = StringIO()
+        sequence = 'FRRRFRRRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'
+        database = Database([AlphaHelix], [])
+        subject = AARead('subject', sequence)
+        database.addSubject(subject)
+        query = AARead('query', sequence)
+        result = database.find(query, significanceFraction=0.1,
+                               storeFullAnalysis=True)
+
+        result.print_(fp=fp, printQuery=False, printHistograms=True)
+
+        expected = ("Overall matches: 1\n"
+                    "Significant matches: 1\n"
+                    "Query hash count: 1\n"
+                    "Significance fraction: 0.100000\n"
+                    "Matched subjects:\n"
+                    "  Subject 1:\n"
+                    "    Title: subject\n"
+                    "    Best HSP score: 1.0\n"
+                    "    Index in database: 0\n"
+                    "    Subject hash count: 1\n"
+                    "    Subject/query min hash count: 1\n"
+                    "    Significance cutoff: 0.100000\n"
+                    "    Number of HSPs: 1\n"
+                    "      HSP 1 (bin 38): 1 matching hash, score 1.000000\n"
+                    "        Landmark AlphaHelix symbol='A' offset=0 len=9 "
+                    "detail=2 subjectOffset=0\n"
+                    "        Trig point AlphaHelix symbol='A' offset=25 "
+                    "len=13 detail=3\n"
+                    "    Histogram:\n"
+                    "      Number of bins: 39\n"
+                    "      Max bin count: 1\n"
+                    "      Non-empty bins (index:count; *=significant): "
+                    "38:1*\n"
+                    "      Max (scaled) offset delta: 0\n"
+                    "      Min (scaled) offset delta: 0\n")
 
         self.assertEqual(expected, fp.getvalue())
 
@@ -502,7 +547,7 @@ class TestResult(TestCase):
                     "    Subject/query min hash count: 1\n"
                     "    Significance cutoff: 0.100000\n"
                     "    Number of HSPs: 1\n"
-                    "      HSP 1 has 1 matching hash and score: 1.000000\n"
+                    "      HSP 1 (bin 38): 1 matching hash, score 1.000000\n"
                     "        Landmark AlphaHelix symbol='A' offset=0 len=9 "
                     "detail=2 subjectOffset=0\n"
                     "        Trig point AlphaHelix symbol='A' offset=25 "
@@ -538,7 +583,7 @@ class TestResult(TestCase):
                     "    Subject/query min hash count: 1\n"
                     "    Significance cutoff: 0.100000\n"
                     "    Number of HSPs: 1\n"
-                    "      HSP 1 has 1 matching hash and score: 1.000000\n")
+                    "      HSP 1 (bin 38): 1 matching hash, score 1.000000\n")
 
         self.assertEqual(expected, fp.getvalue())
 
@@ -572,7 +617,8 @@ class TestResult(TestCase):
                     "    Subject/query min hash count: 1\n"
                     "    Significance cutoff: 0.100000\n"
                     "    Number of HSPs: 1\n"
-                    "      HSP 1 has 1 matching hash and score: 1.000000\n")
+                    "      HSP 1 (bin 38): 1 matching hash, score "
+                    "1.000000\n")
 
         self.assertEqual(expected, fp.getvalue())
 

@@ -109,7 +109,7 @@ def _rectangularPanel(rows, cols, title, makeSubPlot, equalizeXAxes=False,
                 # No title, no problem.
                 pass
             else:
-                a.set_title(subTitle, fontsize=10)
+                a.set_title(fill(subTitle, 50), fontsize=10)
             if equalizeXAxes:
                 a.set_xlim([minX, maxX])
                 a.set_xticks([])

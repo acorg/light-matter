@@ -305,9 +305,9 @@ class Result(object):
                             binIndex, binCount,
                             '*' if binIndex in significantBinIndices else ''))
                 if nonEmpty:
-                    result.append((
+                    result.append(
                         '      Non-empty bins (index:count; *=significant): %s'
-                        % ', '.join(nonEmpty)))
+                        % ', '.join(nonEmpty))
                 else:
                     result.append('All bins were empty.')
 

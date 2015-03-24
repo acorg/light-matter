@@ -61,7 +61,8 @@ def legendHandles(names):
 
 
 def _rectangularPanel(rows, cols, title, makeSubPlot, equalizeXAxes=False,
-                      equalizeYAxes=False):
+                      equalizeYAxes=False, includeUpper=True,
+                      includeLower=True, includeDiagonal=True):
     """
     Create a rectangular panel of plots.
 
@@ -78,12 +79,24 @@ def _rectangularPanel(rows, cols, title, makeSubPlot, equalizeXAxes=False,
         to cover the same range (the maximum range of all sub-plots).
     @param equalizeYAxes: if C{True}, adjust the Y axis on each sub-plot
         to cover the same range (the maximum range of all sub-plots).
+    @param includeUpper: If C{True} make calls to makeSubPlot for the
+        upper triangle part of the C{rows} by C{cols} rectangle, when the row
+        index is less than the column index. (Probably only useful for a square
+        panel.) If C{False}, those sub-plots will be empty.
+    @param includeLower: Like includeUpper, but for the lower triangle.
+    @param includeDiagonal: Like includeUpper and includeLower, but for
+        sub-plots on the diagonal.
     """
     figure, ax = plt.subplots(rows, cols, squeeze=False)
     subplots = {}
 
     for row, col in dimensionalIterator((rows, cols)):
-        subplots[(row, col)] = makeSubPlot(row, col, ax[row][col])
+        if ((row < col and not includeUpper) or
+                (row > col and not includeLower) or
+                (row == col) and not includeDiagonal):
+            subplots[(row, col)] = None
+        else:
+            subplots[(row, col)] = makeSubPlot(row, col, ax[row][col])
 
     if equalizeXAxes or equalizeYAxes:
         nonEmpty = filter(lambda x: x, subplots.itervalues())
@@ -126,9 +139,10 @@ def _rectangularPanel(rows, cols, title, makeSubPlot, equalizeXAxes=False,
 
 
 def plotHistogramPanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
-                       significanceFraction=None, **kwargs):
+                       significanceFraction=None, showUpper=True,
+                       showLower=False, showDiagonal=True, **kwargs):
     """
-    Plot a panel of histograms of matching hash offset deltas between
+    Plot a square panel of histograms of matching hash offset deltas between
     all pairs of passed sequences.
 
     @param sequences: Either A C{str} filename of sequences to consider or
@@ -141,6 +155,12 @@ def plotHistogramPanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
         trig point) pairs for a scannedRead that need to fall into the
         same histogram bucket for that bucket to be considered a
         significant match with a database title.
+    @param showUpper: If C{True}, show the sub-plots in the upper triangle.
+        of the panel.
+    @param showLower: If C{True}, show the sub-plots in the lower triangle.
+        of the panel.
+    @param showDiagonal: If C{True}, show the sub-plots on the diagonal.
+        of the panel.
     @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
         for additional keywords, all of which are optional.
     @return: The C{light.result.Result} from running the database find.
@@ -162,14 +182,15 @@ def plotHistogramPanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
         @param col: The C{int} panel column.
         @param ax: The matplotlib axis for the sub-plot.
         """
-        if row <= col:
-            return plotHistogram(reads[row], col,
-                                 significanceFraction=significanceFraction,
-                                 readsAx=ax, database=database)
+        return plotHistogram(reads[row], col,
+                             significanceFraction=significanceFraction,
+                             readsAx=ax, database=database)
 
     return _rectangularPanel(
         nReads, nReads, 'Histogram panel', makeSubPlot,
-        equalizeXAxes=equalizeXAxes, equalizeYAxes=equalizeYAxes)
+        equalizeXAxes=equalizeXAxes, equalizeYAxes=equalizeYAxes,
+        includeUpper=showUpper, includeLower=showLower,
+        includeDiagonal=showDiagonal)
 
 
 def plotHistogram(query, subject, significanceFraction=None, readsAx=None,
@@ -305,7 +326,8 @@ def plotFeatureSquare(read, significanceFraction=None, readsAx=None, **kwargs):
 
 def plotHorizontalPairPanel(sequences, equalizeXAxes=True,
                             significanceFraction=None, showSignificant=True,
-                            showInsignificant=True, **kwargs):
+                            showInsignificant=True, showUpper=True,
+                            showLower=False, showDiagonal=True, **kwargs):
     """
     Plot a panel of paired horizontally aligned sequences showing matching
     hashes. The individual sub-plots are produced by
@@ -323,6 +345,12 @@ def plotHorizontalPairPanel(sequences, equalizeXAxes=True,
         be included in the set of hashes that match query and subject.
     @param showInsignificant: If C{True}, hashes from igsignificant bins will
         be included in the set of hashes that match query and subject.
+    @param showUpper: If C{True}, show the sub-plots in the upper triangle.
+        of the panel.
+    @param showLower: If C{True}, show the sub-plots in the lower triangle.
+        of the panel.
+    @param showDiagonal: If C{True}, show the sub-plots on the diagonal.
+        of the panel.
     @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
         for additional keywords, all of which are optional.
     @return: The C{light.result.Result} from running the database find.
@@ -344,17 +372,17 @@ def plotHorizontalPairPanel(sequences, equalizeXAxes=True,
         @param col: The C{int} panel column.
         @param ax: The matplotlib axis for the sub-plot.
         """
-        if row <= col:
-            return PlotHashesInSubjectAndRead(
-                reads[row], reads[col],
-                significanceFraction=significanceFraction,
-                showSignificant=showSignificant,
-                showInsignificant=showInsignificant,
-                database=database).plotHorizontal(ax)
+        plotter = PlotHashesInSubjectAndRead(
+            reads[row], reads[col], significanceFraction=significanceFraction,
+            showSignificant=showSignificant,
+            showInsignificant=showInsignificant, database=database)
+        return plotter.plotHorizontal(ax)
 
     return _rectangularPanel(
         nReads, nReads, 'Horizontal pairs panel', makeSubPlot,
-        equalizeXAxes=equalizeXAxes, equalizeYAxes=False)
+        equalizeXAxes=equalizeXAxes, equalizeYAxes=False,
+        includeUpper=showUpper, includeLower=showLower,
+        includeDiagonal=showDiagonal)
 
 
 class PlotHashesInSubjectAndRead(object):

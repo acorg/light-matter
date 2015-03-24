@@ -133,17 +133,16 @@ def plotHistogramPanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
 
     @param sequences: Either A C{str} filename of sequences to consider or
         a C{light.reads.Reads} instance.
-    @param significanceFraction: The C{float} fraction of all (landmark,
-        trig point) pairs for a scannedRead that need to fall into the
-        same histogram bucket for that bucket to be considered a
-        significant match with a database title.
-    @param readsAx: If not None, use this as the subplot for displaying reads.
-    @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
-        for additional keywords, all of which are optional.
     @param equalizeXAxes: if C{True}, adjust the X axis on each sub-plot
         to cover the same range (the maximum range of all sub-plots).
     @param equalizeYAxes: if C{True}, adjust the Y axis on each sub-plot
         to cover the same range (the maximum range of all sub-plots).
+    @param significanceFraction: The C{float} fraction of all (landmark,
+        trig point) pairs for a scannedRead that need to fall into the
+        same histogram bucket for that bucket to be considered a
+        significant match with a database title.
+    @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
+        for additional keywords, all of which are optional.
     @return: The C{light.result.Result} from running the database find.
     """
     if isinstance(sequences, basestring):
@@ -304,6 +303,60 @@ def plotFeatureSquare(read, significanceFraction=None, readsAx=None, **kwargs):
     return scannedQuery
 
 
+def plotHorizontalPairPanel(sequences, equalizeXAxes=True,
+                            significanceFraction=None, showSignificant=True,
+                            showInsignificant=True, **kwargs):
+    """
+    Plot a panel of paired horizontally aligned sequences showing matching
+    hashes. The individual sub-plots are produced by
+    PlotHashesInSubjectAndRead.plotHorizontal.
+
+    @param sequences: Either A C{str} filename of sequences to consider or
+        a C{light.reads.Reads} instance.
+    @param equalizeXAxes: if C{True}, adjust the X axis on each sub-plot
+        to cover the same range (the maximum range of all sub-plots).
+    @param significanceFraction: The C{float} fraction of all (landmark,
+        trig point) pairs for a scannedRead that need to fall into the
+        same histogram bucket for that bucket to be considered a
+        significant match with a database title.
+    @param showSignificant: If C{True}, hashes from significant bins will
+        be included in the set of hashes that match query and subject.
+    @param showInsignificant: If C{True}, hashes from igsignificant bins will
+        be included in the set of hashes that match query and subject.
+    @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
+        for additional keywords, all of which are optional.
+    @return: The C{light.result.Result} from running the database find.
+    """
+    if isinstance(sequences, basestring):
+        reads = list(FastaReads(sequences, readClass=AARead))
+    else:
+        reads = list(sequences)
+    nReads = len(reads)
+    # Make a new database. For now we don't allow an existing database to
+    # be passed as we're going to use subject indices from 0 to nReads-1.
+    # This shortcoming can be removed later.
+    specifier = DatabaseSpecifier(allowInMemory=False, allowFromFile=False)
+    database = specifier.getDatabaseFromKeywords(subjects=reads, **kwargs)
+
+    def makeSubPlot(row, col, ax):
+        """
+        @param row: The C{int} panel row.
+        @param col: The C{int} panel column.
+        @param ax: The matplotlib axis for the sub-plot.
+        """
+        if row <= col:
+            return PlotHashesInSubjectAndRead(
+                reads[row], reads[col],
+                significanceFraction=significanceFraction,
+                showSignificant=showSignificant,
+                showInsignificant=showInsignificant,
+                database=database).plotHorizontal(ax)
+
+    return _rectangularPanel(
+        nReads, nReads, 'Horizontal pairs panel', makeSubPlot,
+        equalizeXAxes=equalizeXAxes, equalizeYAxes=False)
+
+
 class PlotHashesInSubjectAndRead(object):
     """
     A class which plots visualisations of the hashes in subject and query.
@@ -432,8 +485,12 @@ class PlotHashesInSubjectAndRead(object):
         # For consistency, query handling is always done before subject
         # handling, and landmarks are handled befor trig points.
 
-        fig = plt.figure(figsize=(15, 10))
-        ax = ax or fig.add_subplot(111)
+        if ax is None:
+            fig = plt.figure(figsize=(15, 10))
+            ax = fig.add_subplot(111)
+            createdAx = True
+        else:
+            createdAx = False
         namesSeen = set()
         qyY = 0.0
         sjY = 1.0
@@ -490,22 +547,22 @@ class PlotHashesInSubjectAndRead(object):
                 key = (lmName, qyLmOffset, lm.length)
                 if key not in qyPlotted:
                     qyPlotted.add(key)
-                    plt.plot([qyLmOffset, qyLmOffset + lm.length], [qyY, qyY],
-                             '-', color=lmColor, linewidth=3)
+                    ax.plot([qyLmOffset, qyLmOffset + lm.length], [qyY, qyY],
+                            '-', color=lmColor, linewidth=3)
 
                 # Trig point in the query.
                 key = (tpName, qyTpOffset)
                 if key not in qyPlotted:
                     qyPlotted.add(key)
-                    plt.plot([qyTpOffset, qyTpOffset], [qyY + tpY, qyY - tpY],
-                             '-', color=tpColor, linewidth=3)
+                    ax.plot([qyTpOffset, qyTpOffset], [qyY + tpY, qyY - tpY],
+                            '-', color=tpColor, linewidth=3)
 
                 # Landmark in the subject.
                 key = (lmName, sjLmOffset, lm.length)
                 if key not in sjPlotted:
                     sjPlotted.add(key)
-                    plt.plot([sjLmOffset, sjLmOffset + lm.length], [sjY, sjY],
-                             '-', color=lmColor, linewidth=3)
+                    ax.plot([sjLmOffset, sjLmOffset + lm.length], [sjY, sjY],
+                            '-', color=lmColor, linewidth=3)
 
                 # Trig point in the subject.
                 #
@@ -518,8 +575,8 @@ class PlotHashesInSubjectAndRead(object):
                 key = (tpName, sjTpOffset)
                 if key not in sjPlotted:
                     sjPlotted.add(key)
-                    plt.plot([sjTpOffset, sjTpOffset], [sjY + tpY, sjY - tpY],
-                             '-', color=lmColor, linewidth=3)
+                    ax.plot([sjTpOffset, sjTpOffset], [sjY + tpY, sjY - tpY],
+                            '-', color=lmColor, linewidth=3)
 
                 # Add x-axis offset jitter to diagonal line plotting, so we
                 # can see more of them in case of overlap.
@@ -532,16 +589,16 @@ class PlotHashesInSubjectAndRead(object):
                 key = (tpName, qyTpOffset, sjTpOffset)
                 if key not in diagPlotted:
                     diagPlotted.add(key)
-                    plt.plot([qyTpOffset + xJitter, sjTpOffset + xJitter],
-                             [qyY, sjY], '--', color=binColor)
+                    ax.plot([qyTpOffset + xJitter, sjTpOffset + xJitter],
+                            [qyY, sjY], '--', color=binColor)
 
                 # Solid diagonal line connecting start of landmark in query
                 # and subject.
                 key = (lmName, qyLmOffset, sjLmOffset)
                 if key not in diagPlotted:
                     diagPlotted.add(key)
-                    plt.plot([qyLmOffset + xJitter, sjLmOffset + xJitter],
-                             [qyY, sjY], '-', color=binColor)
+                    ax.plot([qyLmOffset + xJitter, sjLmOffset + xJitter],
+                            [qyY, sjY], '-', color=binColor)
 
                 # Don't plot the end of the landmark, to reduce clutter.
 
@@ -560,16 +617,16 @@ class PlotHashesInSubjectAndRead(object):
                 key = (lmName, lmOffset, lm.length)
                 if key not in qyPlotted:
                     qyPlotted.add(key)
-                    plt.plot([lmOffset, lmOffset + lm.length],
-                             [qyY - missY, qyY - missY],
-                             '-', color=lmColor, linewidth=3)
+                    ax.plot([lmOffset, lmOffset + lm.length],
+                            [qyY - missY, qyY - missY],
+                            '-', color=lmColor, linewidth=3)
                 # Trig point.
                 key = (tpName, tpOffset)
                 if key not in qyPlotted:
                     qyPlotted.add(key)
-                    plt.plot([tpOffset, tpOffset],
-                             [qyY - missY + tpY, qyY - missY - tpY],
-                             '-', color=tpColor, linewidth=3)
+                    ax.plot([tpOffset, tpOffset],
+                            [qyY - missY + tpY, qyY - missY - tpY],
+                            '-', color=tpColor, linewidth=3)
 
         # Subject-only hashes, plotted just above (+missY) the subject line.
         for hashInfo in self.subjectHashes.itervalues():
@@ -586,25 +643,41 @@ class PlotHashesInSubjectAndRead(object):
                 key = (lmName, lmOffset, lm.length)
                 if key not in sjPlotted:
                     sjPlotted.add(key)
-                    plt.plot([lmOffset, lmOffset + lm.length],
-                             [sjY + missY, sjY + missY],
-                             '-', color=lmColor, linewidth=3)
+                    ax.plot([lmOffset, lmOffset + lm.length],
+                            [sjY + missY, sjY + missY],
+                            '-', color=lmColor, linewidth=3)
                 # Trig point.
                 key = (tpName, tpOffset)
                 if key not in sjPlotted:
                     sjPlotted.add(key)
-                    plt.plot([tpOffset, tpOffset],
-                             [sjY + missY + tpY, sjY + missY - tpY],
-                             '-', color=tpColor, linewidth=3)
+                    ax.plot([tpOffset, tpOffset],
+                            [sjY + missY + tpY, sjY + missY - tpY],
+                            '-', color=tpColor, linewidth=3)
 
-        ax.legend(handles=legendHandles(namesSeen),
-                  bbox_to_anchor=(0.0, 1.02, 1.0, 0.102), loc=3, ncol=2,
-                  borderaxespad=0.5)
-        ax.set_xlabel(fill('Subject (top): %s\n\n\nQuery (bottom): %s' %
-                           (self.subject.id, self.query.id)), fontsize=17)
-        ax.set_ylim(qyY - missY - verticalPad, sjY + missY + verticalPad)
+        if createdAx:
+            ax.legend(handles=legendHandles(namesSeen),
+                      bbox_to_anchor=(0.0, 1.02, 1.0, 0.102), loc=3, ncol=2,
+                      borderaxespad=0.5)
+            ax.set_xlabel(fill('Subject (top): %s\n\n\nQuery (bottom): %s' %
+                               (self.subject.id, self.query.id)), fontsize=17)
+
+        minX = -horizontalPad
+        maxX = maxLen + horizontalPad
+        ax.set_xlim(minX, maxX)
+
+        minY = qyY - missY - verticalPad
+        maxY = sjY + missY + verticalPad
+        ax.set_ylim(minY, maxY)
         ax.set_yticks([])
-        ax.set_xlim(-horizontalPad, maxLen + horizontalPad)
+
+        return {
+            'minX': minX,
+            'maxX': maxX,
+            'minY': minY,
+            'maxY': maxY,
+            'title': fill('%s vs %s' % (self.subject.id[:20],
+                                        self.query.id[:20])),
+        }
 
 
 def plotLandmarksInSequences(sequences, maxTickLabelLength=None, **kwargs):

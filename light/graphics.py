@@ -318,10 +318,15 @@ class PlotHashesInSubjectAndRead(object):
         trig point) pairs for a scannedRead that need to fall into the
         same histogram bucket for that bucket to be considered a
         significant match with a database title.
+    @param showSignificant: If C{True}, hashes from significant bins will
+        be included in the set of hashes that match query and subject.
+    @param showInsignificant: If C{True}, hashes from igsignificant bins will
+        be included in the set of hashes that match query and subject.
     @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
         for additional keywords, all of which are optional.
     """
-    def __init__(self, query, subject, significanceFraction=None, **kwargs):
+    def __init__(self, query, subject, significanceFraction=None,
+                 showSignificant=True, showInsignificant=True, **kwargs):
         self.query = query
         self.subject = subject
 
@@ -332,8 +337,17 @@ class PlotHashesInSubjectAndRead(object):
         if subjectIndex in self.result.analysis:
             analysis = self.result.analysis[subjectIndex]
             self.score = analysis['bestScore']
-            self.significantBinCount = len(analysis['significantBins'])
-            self.bins = analysis['histogram'].bins
+            significantBinIndices = set(
+                [bin_['index'] for bin_ in analysis['significantBins']])
+            self.significantBinCount = len(significantBinIndices)
+            self.bins = bins = []
+            for binIndex, bin_ in enumerate(analysis['histogram'].bins):
+                if binIndex in significantBinIndices:
+                    if showSignificant:
+                        bins.append(bin_)
+                else:
+                    if showInsignificant:
+                        bins.append(bin_)
         else:
             self.score = 0.0
             self.significantBinCount = 0

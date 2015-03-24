@@ -7,6 +7,7 @@ try:
 except ImportError:
     from json import dump, dumps, load
 from binascii import crc32
+from hashlib import md5
 from operator import attrgetter
 
 from dark.fasta import combineReads, FastaReads
@@ -111,6 +112,7 @@ class Database(object):
         self.totalResidues = 0
         self.totalCoveredResidues = 0
         self._subjectInfo = []
+        self._idSequenceCache = {}
         # Create instances of the landmark and trig point finder classes.
         self.landmarkFinders = []
         for landmarkClass in self.landmarkClasses:
@@ -229,6 +231,36 @@ class Database(object):
 
         return hashes
 
+    def _cacheKey(self, subject):
+        """
+        Calculate the key for a subject in the index cache.
+
+        @param subject: a C{dark.read.AARead} instance.
+        @return: The C{str} cache key for the subject.
+        """
+        m = md5()
+        map(m.update, (subject.id, '\0', subject.sequence))
+        return m.hexdigest()
+
+    def _cacheLookup(self, subject):
+        """
+        Look for a subject in the subject index cache.
+
+        @param subject: a C{dark.read.AARead} instance.
+        @return: The C{int} cached subject index of the passed subject.
+        @raise KeyError: If the subject is not in the cache.
+        """
+        return self._idSequenceCache[self._cacheKey(subject)]
+
+    def _cacheAdd(self, subject, subjectIndex):
+        """
+        Add a subject index to the subject index cache.
+
+        @param subject: a C{dark.read.AARead} instance.
+        @param subjectIndex: The C{int} database index of the subject.
+        """
+        self._idSequenceCache[self._cacheKey(subject)] = subjectIndex
+
     def addSubject(self, subject):
         """
         Examine a sequence for features and add its (landmark, trig point)
@@ -239,7 +271,13 @@ class Database(object):
             be an actual read from a sequencing run.
         @return: The C{int} subject index of the added subject.
         """
+        try:
+            return self._cacheLookup(subject)
+        except KeyError:
+            pass
+
         subjectIndex = self.subjectCount
+        self._cacheAdd(subject, subjectIndex)
         self.subjectCount += 1
         self.totalResidues += len(subject)
         scannedSubject = self.scan(subject)
@@ -265,15 +303,29 @@ class Database(object):
 
         return subjectIndex
 
-    def getSubject(self, subjectIndex):
+    def getSubject(self, subject):
         """
         Return information about a subject, given its index in the database.
+        Or, do the reverse, given a subject return its index.
 
-        @param subjectIndex: an C{int} subect index.
-        @return: an C{Subject} instance.
-        @raises IndexError: if the subject index is invalid.
+        @param subject: Either an C{int} subect index or a C{dark.read.AARead}
+            representing a subject whose index is to be looked up.
+        @return: If an index is passed, return a C{Subject} instance. If an
+            C{AARead} subject is passed, return its index.
+        @raises IndexError: if an C{int} index is passed and it is invalid.
+        @raises KeyError: if an C{AARead} subject is passed and it is not in
+            the database.
         """
-        return Subject(*self._subjectInfo[subjectIndex])
+        if isinstance(subject, int):
+            return Subject(*self._subjectInfo[subject])
+        else:
+            try:
+                return self._cacheLookup(subject)
+            except KeyError:
+                # Be user friendly and raise a key error containing the
+                # subject id, instead of the md5 sum of the id and
+                # sequence.
+                raise KeyError(subject.id)
 
     def getSubjects(self):
         """
@@ -377,10 +429,11 @@ class Database(object):
             'maxDistance': self.maxDistance,
             'minDistance': self.minDistance,
             'd': self.d,
+            '_subjectInfo': self._subjectInfo,
+            '_idSequenceCache': self._idSequenceCache,
             'subjectCount': self.subjectCount,
             'totalResidues': self.totalResidues,
             'totalCoveredResidues': self.totalCoveredResidues,
-            '_subjectInfo': self._subjectInfo,
             'distanceBase': self.distanceBase,
         }
         dump(state, fp)
@@ -392,6 +445,9 @@ class Database(object):
 
         @param fp: A file pointer.
         @return: An instance of L{Database}.
+        @raises ValueError: If a now non-existent landmark or trig point name
+            is found in the saved database file. Or if valid JSON cannot be
+            loaded from C{fp}.
         """
         state = load(fp)
 
@@ -401,10 +457,9 @@ class Database(object):
             if cls:
                 landmarkClasses.append(cls)
             else:
-                print >>sys.stderr, (
-                    'Could not find landscape finder class %r! Has that '
+                raise ValueError(
+                    'Could not find landscape finder class %s. Has that '
                     'class been renamed or removed?' % landmarkClassName)
-                sys.exit(1)
 
         trigPointClasses = []
         for trigPointClassName in state['trigPointClassNames']:
@@ -412,10 +467,9 @@ class Database(object):
             if cls:
                 trigPointClasses.append(cls)
             else:
-                print >>sys.stderr, (
-                    'Could not find trig point finder class %r! Has that '
+                raise ValueError(
+                    'Could not find trig point finder class %s. Has that '
                     'class been renamed or removed?' % trigPointClassName)
-                sys.exit(1)
 
         database = Database(landmarkClasses, trigPointClasses,
                             limitPerLandmark=state['limitPerLandmark'],
@@ -425,8 +479,15 @@ class Database(object):
 
         # Monkey-patch the new database instance to restore its state.
         for attr in ('checksum', 'd', 'subjectCount', 'totalResidues',
-                     'totalCoveredResidues', '_subjectInfo'):
+                     'totalCoveredResidues', '_idSequenceCache'):
             setattr(database, attr, state[attr])
+
+        # The _subjectInfo entries were originally tuples, but JSON I/O
+        # turns these into lists. For safety, convert them back to tuples.
+        _subjectInfo = state['_subjectInfo']
+        for index, subjectInfo in enumerate(_subjectInfo):
+            _subjectInfo[index] = tuple(subjectInfo)
+        database._subjectInfo = _subjectInfo
 
         return database
 

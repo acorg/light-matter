@@ -66,9 +66,9 @@ class TestAffinityMatrix(TestCase):
         read = AARead('id1', 'FRRRFRRRFAAAFRRRFRRRF')
         reads.add(read)
         subjects = Reads()
-        subjects.add(read)
-        subjects.add(read)
-        subjects.add(read)
+        subjects.add(AARead('id2', 'FRRRFRRRFAAAFRRRFRRRF'))
+        subjects.add(AARead('id3', 'FRRRFRRRFAAAFRRRFRRRF'))
+        subjects.add(AARead('id4', 'FRRRFRRRFAAAFRRRFRRRF'))
         matrix = affinityMatrix(reads, landmarkNames=['AlphaHelix'],
                                 subjects=subjects)
         self.assertEqual([[1.0, 1.0, 1.0]], matrix)
@@ -83,9 +83,9 @@ class TestAffinityMatrix(TestCase):
         reads.add(read)
         reads.add(read)
         subjects = Reads()
-        subjects.add(read)
-        subjects.add(read)
-        subjects.add(read)
+        subjects.add(AARead('id2', 'FRRRFRRRFAAAFRRRFRRRF'))
+        subjects.add(AARead('id3', 'FRRRFRRRFAAAFRRRFRRRF'))
+        subjects.add(AARead('id4', 'FRRRFRRRFAAAFRRRFRRRF'))
         matrix = affinityMatrix(reads, landmarkNames=['AlphaHelix'],
                                 subjects=subjects)
         self.assertEqual([

@@ -135,6 +135,26 @@ class TestDatabase(TestCase):
         db = Database([AlphaHelix], [])
         self.assertEqual(0, db.addSubject(AARead('id', 'FRRRFRRRF')))
 
+    def testAddSameSubjectReturnsSameIndex(self):
+        """
+        If an identical subject is added multiple times, the same subject
+        index must be returned.
+        """
+        db = Database([AlphaHelix], [])
+        self.assertEqual(db.addSubject(AARead('id', 'FRRRFRRRF')),
+                         db.addSubject(AARead('id', 'FRRRFRRRF')))
+
+    def testAddSameSubjectLeavesDatabaseSizeTheSame(self):
+        """
+        If an identical subject is added multiple times, the database size
+        does not increase.
+        """
+        db = Database([AlphaHelix], [])
+        db.addSubject(AARead('id', 'FRRRFRRRF'))
+        self.assertEqual(1, db.subjectCount)
+        db.addSubject(AARead('id', 'FRRRFRRRF'))
+        self.assertEqual(1, db.subjectCount)
+
     def testGetSubjectIndexError(self):
         """
         If an out-of-range subject index is passed to getSubject, an IndexError
@@ -145,14 +165,34 @@ class TestDatabase(TestCase):
         self.assertRaisesRegexp(IndexError, error, db.getSubject, 0)
         self.assertRaisesRegexp(IndexError, error, db.getSubject, -1)
 
-    def testGetSubject(self):
+    def testGetSubjectKeyError(self):
         """
-        If a subject is added, getSubject must be able to return it.
+        If a non-existent subject is passed to getSubject, a KeyError
+        must be raised.
+        """
+        db = Database([AlphaHelix], [])
+        error = "^'id'$"
+        self.assertRaisesRegexp(KeyError, error, db.getSubject,
+                                AARead('id', 'FF'))
+
+    def testGetSubjectByIndex(self):
+        """
+        If a subject is added, getSubject must be able to return it given an
+        integer index.
         """
         db = Database([AlphaHelix], [])
         subject = AARead('id', 'FRRRFRRRF')
         index = db.addSubject(subject)
         self.assertEqual(AARead('id', 'FRRRFRRRF'), db.getSubject(index))
+
+    def testGetSubjectBySubject(self):
+        """
+        If a subject is added, getSubject must be able to return it given an
+        identical subject to look up.
+        """
+        db = Database([AlphaHelix], [])
+        index = db.addSubject(AARead('id', 'FRRRFRRRF'))
+        self.assertEqual(index, db.getSubject(AARead('id', 'FRRRFRRRF')))
 
     def testGetSubjectHashCount(self):
         """
@@ -491,6 +531,43 @@ class TestDatabase(TestCase):
         self.assertEqual([], result.trigPointClasses)
         self.assertEqual(0, result.totalResidues)
 
+    def testSaveLoadMissingLandmark(self):
+        """
+        If a database is saved with a landmark class whose name cannot be
+        found when the database is later loaded, a ValueError error must be
+        raised.
+        """
+        db = Database([AlphaHelix], [])
+        fp = StringIO()
+        db.save(fp)
+        newSave = fp.getvalue().replace('AlphaHelix', 'Non-existent')
+        error = ('^Could not find landscape finder class Non-existent. '
+                 'Has that class been renamed or removed\?$')
+        self.assertRaisesRegexp(ValueError, error, db.load, StringIO(newSave))
+
+    def testSaveLoadMissingTrigPoint(self):
+        """
+        If a database is saved with a trig point class whose name cannot be
+        found when the database is later loaded, a ValueError error must be
+        raised.
+        """
+        db = Database([], [Peaks])
+        fp = StringIO()
+        db.save(fp)
+        newSave = fp.getvalue().replace('Peaks', 'Non-existent')
+        error = ('^Could not find trig point finder class Non-existent. '
+                 'Has that class been renamed or removed\?$')
+        self.assertRaisesRegexp(ValueError, error, db.load, StringIO(newSave))
+
+    def testLoadInvalidJSON(self):
+        """
+        If a database is attempted from a file that does not contain valid
+        JSON, a ValueError error must be raised.
+        """
+        db = Database([], [Peaks])
+        error = '^Expected object or value$'
+        self.assertRaisesRegexp(ValueError, error, db.load, StringIO('xxx'))
+
     def testSaveLoadNonEmpty(self):
         """
         When asked to save and then load a non-empty database, the correct
@@ -505,6 +582,8 @@ class TestDatabase(TestCase):
         self.assertEqual(db.subjectCount, result.subjectCount)
         self.assertEqual(db.totalCoveredResidues, result.totalCoveredResidues)
         self.assertEqual(db.d, result.d)
+        self.assertEqual(db._subjectInfo, result._subjectInfo)
+        self.assertEqual(db._idSequenceCache, result._idSequenceCache)
         self.assertEqual(db.landmarkClasses, result.landmarkClasses)
         self.assertEqual(db.limitPerLandmark, result.limitPerLandmark)
         self.assertEqual(db.maxDistance, result.maxDistance)

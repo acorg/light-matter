@@ -64,3 +64,48 @@ class TestPlotHashesInSubjectAndRead(TestCase):
         self.assertEqual(1, len(hashes.matchingHashes))
         self.assertEqual(4, len(hashes.queryHashes))
         self.assertEqual(0, len(hashes.subjectHashes))
+
+    def testHideSignificant(self):
+        """
+        The showSignificant option must work correctly.
+        """
+        seq = AARead('query', 'FRRRFRRRFASAASAFRRRFRRRFFRRRFRRRFFRRRFRRRF')
+
+        # Showing the significant:
+        hashes = PlotHashesInSubjectAndRead(
+            seq, seq, landmarkNames=['AlphaHelix', 'BetaStrand'],
+            trigPointNames=['Peaks'])
+        self.assertEqual(13, len(hashes.matchingHashes))
+        self.assertEqual(0, len(hashes.queryHashes))
+        self.assertEqual(0, len(hashes.subjectHashes))
+
+        # Same input, but hiding the significant:
+        hashes = PlotHashesInSubjectAndRead(
+            seq, seq, landmarkNames=['AlphaHelix', 'BetaStrand'],
+            trigPointNames=['Peaks'], showSignificant=False)
+        self.assertEqual(1, len(hashes.matchingHashes))
+        self.assertEqual(0, len(hashes.queryHashes))
+        self.assertEqual(12, len(hashes.subjectHashes))
+
+    def testHideInsignificant(self):
+        """
+        The showInsignificant option must work correctly.
+        """
+        subject = AARead('subject', 'AFRRRFRRRFASAASAVVVVVVASAVVVASA')
+        query = AARead('query', 'FRRRFRRRFASAASAFRRRFRRRFFRRRFRRRFFRRRFRRRF')
+
+        # Showing the insignificant:
+        hashes = PlotHashesInSubjectAndRead(
+            query, subject, landmarkNames=['AlphaHelix', 'BetaStrand'],
+            trigPointNames=['Peaks'])
+        self.assertEqual(2, len(hashes.matchingHashes))
+        self.assertEqual(11, len(hashes.queryHashes))
+        self.assertEqual(7, len(hashes.subjectHashes))
+
+        # Same input, but hiding the significant:
+        hashes = PlotHashesInSubjectAndRead(
+            query, subject, landmarkNames=['AlphaHelix', 'BetaStrand'],
+            trigPointNames=['Peaks'], showInsignificant=False)
+        self.assertEqual(0, len(hashes.matchingHashes))
+        self.assertEqual(11, len(hashes.queryHashes))
+        self.assertEqual(9, len(hashes.subjectHashes))

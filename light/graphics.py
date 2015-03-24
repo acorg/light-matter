@@ -320,7 +320,7 @@ class PlotHashesInSubjectAndRead(object):
         significant match with a database title.
     @param showSignificant: If C{True}, hashes from significant bins will
         be included in the set of hashes that match query and subject.
-    @param showInsignificant: If C{True}, hashes from igsignificant bins will
+    @param showInsignificant: If C{True}, hashes from insignificant bins will
         be included in the set of hashes that match query and subject.
     @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
         for additional keywords, all of which are optional.

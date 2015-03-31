@@ -1,6 +1,7 @@
 from random import uniform
 import matplotlib.pyplot as plt
 from matplotlib import patches
+import numpy as np
 from operator import attrgetter
 from textwrap import fill
 from collections import defaultdict
@@ -140,7 +141,8 @@ def _rectangularPanel(rows, cols, title, makeSubPlot, equalizeXAxes=False,
 
 def plotHistogramPanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
                        significanceFraction=None, showUpper=True,
-                       showLower=False, showDiagonal=True, **kwargs):
+                       showLower=False, showDiagonal=True, plotMean=False,
+                       plotMedian=False, plotStdev=False, **kwargs):
     """
     Plot a square panel of histograms of matching hash offset deltas between
     all pairs of passed sequences.
@@ -161,6 +163,10 @@ def plotHistogramPanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
         of the panel.
     @param showDiagonal: If C{True}, show the sub-plots on the diagonal.
         of the panel.
+    @param plotMean: If C{True} the mean will be plotted in red.
+    @param plotMedian: If C{True} the median will be plotted in orange.
+    @param plotStdev: If C{True} the standard deviation from the mean will be
+        plotted in magenta.
     @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
         for additional keywords, all of which are optional.
     @return: The C{light.result.Result} from running the database find.
@@ -184,7 +190,9 @@ def plotHistogramPanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
         """
         return plotHistogram(reads[row], col,
                              significanceFraction=significanceFraction,
-                             readsAx=ax, database=database)
+                             readsAx=ax, plotMean=plotMean,
+                             plotMedian=plotMedian, plotStdev=plotStdev,
+                             database=database)
 
     return _rectangularPanel(
         nReads, nReads, 'Histogram panel', makeSubPlot,
@@ -194,7 +202,7 @@ def plotHistogramPanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
 
 
 def plotHistogram(query, subject, significanceFraction=None, readsAx=None,
-                  **kwargs):
+                  plotMean=False, plotMedian=False, plotStdev=False, **kwargs):
     """
     Plot a histogram of matching hash offset deltas between a query and a
     subject.
@@ -207,6 +215,10 @@ def plotHistogram(query, subject, significanceFraction=None, readsAx=None,
         same histogram bucket for that bucket to be considered a
         significant match with a database title.
     @param readsAx: If not None, use this as the subplot for displaying reads.
+    @param plotMean: If C{True} the mean will be plotted in red.
+    @param plotMedian: If C{True} the median will be plotted in orange.
+    @param plotStdev: If C{True} the standard deviation from the mean will be
+        plotted in magenta.
     @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
         for additional keywords, all of which are optional.
     @return: The C{light.result.Result} from running the database find.
@@ -243,6 +255,19 @@ def plotHistogram(query, subject, significanceFraction=None, readsAx=None,
             readsAx.xaxis.tick_bottom()
 
         readsAx.bar(center, counts, align='center', width=width)
+        mean = np.mean(counts)
+        if plotMean:
+            readsAx.plot([histogram.min, histogram.max], [mean, mean], '-',
+                         c='red')
+        if plotMedian:
+            median = np.median(counts)
+            readsAx.plot([histogram.min, histogram.max], [median, median], '-',
+                         c='orange')
+        if plotStdev:
+            stdev = np.std(counts)
+            readsAx.plot([histogram.min, histogram.max],
+                         [mean + stdev, mean + stdev], '-', c='magenta')
+
         return {
             'minX': histogram.min,
             'maxX': histogram.max,
@@ -251,6 +276,184 @@ def plotHistogram(query, subject, significanceFraction=None, readsAx=None,
             'result': result,
             'title': title,
         }
+
+
+def plotHistogramLinePanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
+                           significanceFraction=None, showUpper=True,
+                           showLower=False, showDiagonal=True, plotMean=False,
+                           plotMedian=False, plotStdev=False, **kwargs):
+    """
+    Plot a square panel of histogram line plots of matching hash offset deltas
+    between all pairs of passed sequences.
+
+    @param sequences: Either A C{str} filename of sequences to consider or
+        a C{light.reads.Reads} instance.
+    @param equalizeXAxes: if C{True}, adjust the X axis on each sub-plot
+        to cover the same range (the maximum range of all sub-plots).
+    @param equalizeYAxes: if C{True}, adjust the Y axis on each sub-plot
+        to cover the same range (the maximum range of all sub-plots).
+    @param significanceFraction: The C{float} fraction of all (landmark,
+        trig point) pairs for a scannedRead that need to fall into the
+        same histogram bucket for that bucket to be considered a
+        significant match with a database title.
+    @param showUpper: If C{True}, show the sub-plots in the upper triangle.
+        of the panel.
+    @param showLower: If C{True}, show the sub-plots in the lower triangle.
+        of the panel.
+    @param showDiagonal: If C{True}, show the sub-plots on the diagonal.
+        of the panel.
+    @param plotMean: If C{True} the mean will be plotted in red.
+    @param plotMedian: If C{True} the median will be plotted in orange.
+    @param plotStdev: If C{True} the standard deviation from the mean will be
+        plotted in magenta.
+    @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
+        for additional keywords, all of which are optional.
+    @return: The C{light.result.Result} from running the database find.
+    """
+    if isinstance(sequences, basestring):
+        reads = list(FastaReads(sequences, readClass=AARead))
+    else:
+        reads = list(sequences)
+    nReads = len(reads)
+    # Make a new database. For now we don't allow an existing database to
+    # be passed as we're going to use subject indices from 0 to nReads-1.
+    # This shortcoming can be removed later.
+    specifier = DatabaseSpecifier(allowInMemory=False, allowFromFile=False)
+    database = specifier.getDatabaseFromKeywords(subjects=reads, **kwargs)
+
+    def makeSubPlot(row, col, ax):
+        """
+        @param row: The C{int} panel row.
+        @param col: The C{int} panel column.
+        @param ax: The matplotlib axis for the sub-plot.
+        """
+        return plotHistogramLine(reads[row], col,
+                                 significanceFraction=significanceFraction,
+                                 readsAx=ax, plotMean=plotMean,
+                                 plotMedian=plotMedian, plotStdev=plotStdev,
+                                 database=database)
+
+    return _rectangularPanel(
+        nReads, nReads, 'Histogram line panel', makeSubPlot,
+        equalizeXAxes=equalizeXAxes, equalizeYAxes=equalizeYAxes,
+        includeUpper=showUpper, includeLower=showLower,
+        includeDiagonal=showDiagonal)
+
+
+def plotHistogramLine(query, subject, significanceFraction=None, readsAx=None,
+                      plotMean=False, plotMedian=False, plotStdev=False,
+                      **kwargs):
+    """
+    Plot a line where the hight corresponds to the number of hashes in a
+    histogram bin, but sorted by hight.
+
+    @param query: an AARead instance of the sequence of the query.
+    @param subject: either an AARead instance of the sequence of the subject
+        or an C{int} subject index in the database.
+    @param significanceFraction: The C{float} fraction of all (landmark,
+        trig point) pairs for a scannedRead that need to fall into the
+        same histogram bucket for that bucket to be considered a
+        significant match with a database title.
+    @param readsAx: If not None, use this as the subplot for displaying reads.
+    @param plotMean: If C{True} the mean will be plotted in red.
+    @param plotMedian: If C{True} the median will be plotted in orange.
+    @param plotStdev: If C{True} the standard deviation from the mean will be
+        plotted in magenta.
+    @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
+        for additional keywords, all of which are optional.
+    @return: The C{light.result.Result} from running the database find.
+    @raises IndexError: If C{subject} is an C{int} and that index does not
+        exist in the database.
+    """
+    database = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
+
+    if isinstance(subject, int):
+        subjectIndex = subject
+        subject = database.getSubject(subjectIndex)
+    else:
+        subjectIndex = database.addSubject(subject)
+
+    result = database.find(query, significanceFraction, storeFullAnalysis=True)
+
+    try:
+        histogram = result.analysis[subjectIndex]['histogram']
+    except KeyError:
+        print 'Query %r and subject %r had no hashes in common.' % (
+            query.id, subject.id)
+    else:
+        counts = sorted([len(bin) for bin in histogram.bins])
+        title = fill('%s vs %s' % (query.id, subject.id), FILL_WIDTH)
+
+        if readsAx is None:
+            fig = plt.figure()
+            readsAx = fig.add_subplot(111)
+            readsAx.set_title(title)
+            readsAx.set_ylabel('Number of hashes')
+            readsAx.xaxis.tick_bottom()
+
+        readsAx.plot(range(len(counts)), counts)
+        mean = np.mean(counts)
+        if plotMean:
+            readsAx.plot([0, len(counts)], [mean, mean], '-',
+                         c='red')
+        if plotMedian:
+            median = np.median(counts)
+            readsAx.plot([0, len(counts)], [median, median], '-',
+                         c='orange')
+        if plotStdev:
+            stdev = np.std(counts)
+            readsAx.plot([0, len(counts)], [mean + stdev, mean + stdev],
+                         '-', c='magenta')
+
+        return {
+            'minX': 0,
+            'maxX': len(counts),
+            'minY': 0,
+            'maxY': max(counts),
+            'result': result,
+            'title': title,
+        }
+
+
+def plotHistogramLines(sequences, significanceFraction=None, **kwargs):
+    """
+    Plot lines where the hight corresponds to the number of hashes in a
+    histogram bin, but sorted by hight, do that for many reads.
+
+    @param sequences: Either A C{str} filename of sequences to consider or
+        a C{light.reads.Reads} instance.
+    @param significanceFraction: The C{float} fraction of all (landmark,
+        trig point) pairs for a scannedRead that need to fall into the
+        same histogram bucket for that bucket to be considered a
+        significant match with a database title.
+    @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
+        for additional keywords, all of which are optional.
+    """
+    fig = plt.figure(figsize=(15, 10))
+    readsAx = fig.add_subplot(111)
+    if isinstance(sequences, basestring):
+        reads = list(FastaReads(sequences, readClass=AARead))
+    else:
+        reads = list(sequences)
+    # Make a new database. For now we don't allow an existing database to
+    # be passed as we're going to use subject indices from 0 to nReads-1.
+    # This shortcoming can be removed later.
+    specifier = DatabaseSpecifier(allowInMemory=False, allowFromFile=False)
+    database = specifier.getDatabaseFromKeywords(subjects=reads, **kwargs)
+    for read in reads:
+        database.addSubject(read)
+
+    for read in reads:
+        result = database.find(read, significanceFraction,
+                               storeFullAnalysis=True)
+        for subjectIndex in range(len(reads)):
+            histogram = result.analysis[subjectIndex]['histogram']
+            counts = sorted([len(bin) for bin in histogram.bins])
+            readsAx.plot(range(len(counts)), counts)
+
+    readsAx.set_title('Histogram line plot')
+    readsAx.set_ylabel('Number of hashes')
+    readsAx.xaxis.tick_bottom()
 
 
 def plotFeatureSquare(read, significanceFraction=None, readsAx=None, **kwargs):

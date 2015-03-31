@@ -35,7 +35,7 @@ class Histogram(object):
         """
         if self._finalized:
             raise RuntimeError(
-                'Additional data cannot be added: histogram been finalized')
+                'Additional data cannot be added: histogram already finalized')
         if data is _None:
             data = value
         if self._first:
@@ -49,10 +49,12 @@ class Histogram(object):
 
         self._values.append((value, data))
 
-    def finalizeHistogram(self):
+    def finalize(self):
         """
         Bin all the histogram data.
         """
+        if self._finalized:
+            raise RuntimeError('Histogram already finalized')
         self._finalized = True
         if self._values:
             nBins = self.nBins

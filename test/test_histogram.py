@@ -27,11 +27,11 @@ class TestHistogram(TestCase):
 
     def testFinalizeWithNoData(self):
         """
-        If finalizeHistogram is called and the histogram has no data, all
+        If finalize is called and the histogram has no data, all
         bins must have zero counts.
         """
         h = Histogram(5)
-        h.finalizeHistogram()
+        h.finalize()
         self.assertEqual([0, 0, 0, 0, 0], [len(bin_) for bin_ in h.bins])
 
     def testZeroBins(self):
@@ -61,13 +61,24 @@ class TestHistogram(TestCase):
     def testAddDataAfterFinalized(self):
         """
         If an attempt is made to add to a histogram that has been finalized,
-        an assertion error must be raise.
+        a RuntimeError must be raised.
         """
         h = Histogram()
-        error = '^Additional data cannot be added: histogram been finalized$'
+        error = ('^Additional data cannot be added: histogram already '
+                 'finalized$')
         h.add(3)
-        h.finalizeHistogram()
+        h.finalize()
         self.assertRaisesRegexp(RuntimeError, error, h.add, 3)
+
+    def testRepeatedFinalize(self):
+        """
+        If finalize is called a second time, a RuntimeError must be raised.
+        """
+        h = Histogram()
+        error = ('^Histogram already finalized$')
+        h.add(3)
+        h.finalize()
+        self.assertRaisesRegexp(RuntimeError, error, h.finalize)
 
     def testDefaultNumberOfBins(self):
         """
@@ -100,7 +111,7 @@ class TestHistogram(TestCase):
         element = object()
         h = Histogram(1)
         h.add(3, element)
-        h.finalizeHistogram()
+        h.finalize()
         self.assertIs(element, h.bins[0][0])
 
     def testNoDataValue(self):
@@ -110,7 +121,7 @@ class TestHistogram(TestCase):
         """
         h = Histogram(1)
         h.add(3)
-        h.finalizeHistogram()
+        h.finalize()
         self.assertEqual([[3]], h.bins)
 
     def testOneElementBinWidth(self):
@@ -120,7 +131,7 @@ class TestHistogram(TestCase):
         """
         h = Histogram()
         h.add(3)
-        h.finalizeHistogram()
+        h.finalize()
         self.assertEqual(0.0, h.binWidth)
 
     def testOneElementMaxMin(self):
@@ -130,7 +141,7 @@ class TestHistogram(TestCase):
         """
         h = Histogram()
         h.add(3)
-        h.finalizeHistogram()
+        h.finalize()
         self.assertEqual(3, h.max)
         self.assertEqual(3, h.min)
 
@@ -142,7 +153,7 @@ class TestHistogram(TestCase):
         h = Histogram(5)
         h.add(3)
         h.add(4)
-        h.finalizeHistogram()
+        h.finalize()
         self.assertEqual(0.2, h.binWidth)
 
     def testTwoElementsMaxMin(self):
@@ -153,7 +164,7 @@ class TestHistogram(TestCase):
         h = Histogram()
         h.add(3)
         h.add(4)
-        h.finalizeHistogram()
+        h.finalize()
         self.assertEqual(4, h.max)
         self.assertEqual(3, h.min)
 
@@ -166,7 +177,7 @@ class TestHistogram(TestCase):
         h.add(3)
         h.add(4)
         h.add(5)
-        h.finalizeHistogram()
+        h.finalize()
         self.assertEqual(5, h.max)
         self.assertEqual(3, h.min)
 
@@ -177,7 +188,7 @@ class TestHistogram(TestCase):
         """
         h = Histogram(3)
         map(h.add, range(9))
-        h.finalizeHistogram()
+        h.finalize()
         self.assertEqual([[0, 1, 2], [3, 4, 5], [6, 7, 8]], h.bins)
 
     def testTenElementsInThreeBinsBinWidth(self):
@@ -187,7 +198,7 @@ class TestHistogram(TestCase):
         """
         h = Histogram(3)
         map(h.add, range(10))
-        h.finalizeHistogram()
+        h.finalize()
         self.assertEqual(3.0, h.binWidth)
 
     def testFiveBinsMinusTwoPointFiveToPlusTwoPointFiveIntermediates(self):
@@ -205,7 +216,7 @@ class TestHistogram(TestCase):
             h.add(-2.5)  # Set min value.
             h.add(2.5)  # Set max value.
             h.add(value)
-            h.finalizeHistogram()
+            h.finalize()
             counts = [len(bin_) for bin_ in h.bins]
             # Subract 1 from the first and last bin counts, to adjust for the
             # -2.5 and 2.5 boundary values we added manually.
@@ -229,7 +240,7 @@ class TestHistogram(TestCase):
             h.add(-2.5)  # Set min value.
             h.add(2.5)  # Set max value.
             h.add(value)
-            h.finalizeHistogram()
+            h.finalize()
             counts = [len(bin_) for bin_ in h.bins]
             # Subract 1 from the first and last bin counts, to adjust for the
             # -2.5 and 2.5 boundary values we added manually.
@@ -251,14 +262,14 @@ class TestHistogram(TestCase):
         h1 = Histogram(nBins)
         for value in values:
             h1.add(value)
-        h1.finalizeHistogram()
+        h1.finalize()
         counts1 = [len(bin_) for bin_ in h1.bins]
 
         # Make a histogram of the negative values and get all the bin counts.
         h2 = Histogram(nBins)
         for value in map(lambda x: -x, values):
             h2.add(value)
-        h2.finalizeHistogram()
+        h2.finalize()
         counts2 = [len(bin_) for bin_ in h2.bins]
         counts2.reverse()
 

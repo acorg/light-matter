@@ -1,4 +1,5 @@
 import sys
+from copy import deepcopy
 from json import dumps
 from collections import defaultdict
 from operator import itemgetter
@@ -47,19 +48,33 @@ class Result(object):
         queryLen = len(scannedQuery.read.sequence)
         scoreGetter = itemgetter('score')
 
-        # Go through all the subejcts that were matched at all, and put the
+        # Go through all the subjects that were matched at all, and put the
         # match offset deltas into bins so we can decide which (if any) of
         # the matches is significant.
         for subjectIndex in matches:
             subject = database.getSubject(subjectIndex)
             # Use a histogram to bin scaled (landmark, trigPoint) offset
             # deltas.
-            maxLen = max([queryLen, len(subject)])
+            subjectLen = len(subject)
+            maxLen = max([queryLen, subjectLen])
             nBins = scale(maxLen, distanceBase)
             # Make sure the number of bins is odd, else Histogram() will raise.
             nBins |= 0x1
             histogram = Histogram(nBins)
             add = histogram.add
+            # To ensure the set of query/subject offset deltas is the same
+            # no matter which of sequences is the query and which is the
+            # subject, we negate all deltas if the subject sequence is
+            # shorter than the query sequence. This is just a way of
+            # canonicalizing the set of deltas. If we don't canonicalize,
+            # we get sets of deltas with opposite signs, like {-4, -2, 6}
+            # and {-6, 2, 4} depending on which sequence is the subject and
+            # which the query. This occasionally leads to hard to debug and
+            # awkward to fix differences in the histogram binning at bin
+            # boundaries due to tiny floating point differences. The simple
+            # solution is to canonicalize the deltas based on an arbitrary
+            # consistent difference between the subject and query.
+            negateDeltas = subjectLen < queryLen
 
             for match in matches[subjectIndex]:
                 landmark = match['landmark']
@@ -70,6 +85,8 @@ class Result(object):
                         match['queryTrigPointOffsets']):
                     for subjectOffset in match['subjectLandmarkOffsets']:
                         delta = subjectOffset - queryLandmarkOffset
+                        if negateDeltas:
+                            delta = -delta
                         add(scale(delta, distanceBase),
                             {
                                 'landmark': landmark,
@@ -79,7 +96,7 @@ class Result(object):
                                 'trigPoint': trigPoint,
                             })
 
-            histogram.finalizeHistogram()
+            histogram.finalize()
 
             minHashCount = min(queryHashCount, subject.hashCount)
             significanceCutoff = significanceFraction * minHashCount
@@ -205,7 +222,7 @@ class Result(object):
 
     def print_(self, fp=sys.stdout, printQuery=True, printSequences=False,
                printFeatures=True, printHistograms=False,
-               queryDescription='Query title'):
+               queryDescription='Query title', sortHSPsByScore=True):
         """
         Print a result in a human-readable format. If self._storeFullAnalysis
         is True, full information about all matched subjects (i.e., including
@@ -221,6 +238,9 @@ class Result(object):
         @param printHistograms: If C{True}, print details of histograms.
         @param queryDescription: A C{str} description to print before the query
             (when printQuery is C{True}.
+        @param sortHSPsByScore: If C{True}, HSPs for a subject should be
+            printed in order of decreasing score. If C{False}, print sorted by
+            histogram bin number.
         """
         if printQuery:
             self.scannedQuery.print_(fp=fp, printSequence=printSequences,
@@ -236,6 +256,9 @@ class Result(object):
         subjectIndices = sorted(
             self.analysis.iterkeys(), reverse=True,
             key=lambda index: self.analysis[index]['bestScore'])
+
+        if not sortHSPsByScore:
+            indexGetter = itemgetter('index')
 
         result = [
             'Overall matches: %d' % len(subjectIndices),
@@ -271,6 +294,10 @@ class Result(object):
                 '    Number of HSPs: %d' % len(significantBins),
             ])
 
+            if not sortHSPsByScore:
+                significantBins = deepcopy(significantBins)
+                significantBins.sort(key=indexGetter)
+
             for hspCount, bin_ in enumerate(significantBins, start=1):
                 binCount = len(bin_['bin'])
                 result.append(
@@ -294,6 +321,7 @@ class Result(object):
                 result.extend([
                     '    Histogram:',
                     '      Number of bins: %d' % len(histogram.bins),
+                    '      Bin width: %.10f' % histogram.binWidth,
                     '      Max bin count: %r' % (
                         max(len(bin_) for bin_ in histogram.bins)),
                 ])

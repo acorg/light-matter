@@ -93,12 +93,39 @@ class TestAffinityMatrix(TestCase):
             [1.0, 1.0, 1.0]
         ], matrix)
 
+    def _checkSymmetry(self, sequences, **kwargs):
+        """
+        Create an affinity matrix for a set of sequences and check its
+        symmetry.
+
+        @param sequences: A C{list} of C{AARead} instances.
+        @param kwargs: See
+            C{database.DatabaseSpecifier.getDatabaseFromKeywords} for
+            additional keywords, all of which are optional.
+        """
+        matrix = affinityMatrix(sequences, subjects=sequences, **kwargs)
+
+        for i in xrange(len(sequences)):
+
+            # Test the diagonal score of each sequence against itself is 1.0.
+            self.assertEqual(
+                1.0, matrix[i][i],
+                'Diagonal entry (%d, %d) for %s against itself has non-1.0 '
+                'score of %f.' % (i, i, sequences[i].id, matrix[i][i]))
+
+            # Test that off-diagonal score pairs are identical.
+            for j in xrange(i + 1, len(sequences)):
+                self.assertEqual(
+                    matrix[i][j], matrix[j][i],
+                    'Off-diagonal entries (%d, %d) and (%d, %d) for %s '
+                    'against %s have unequal scores %f and %f.' %
+                    (i, j, j, i, sequences[i].id, sequences[j].id,
+                     matrix[i][j], matrix[j][i]))
+
     def testSandraSymmetry_235(self):
         """
         Make sure we get a symmetric affinity matrix on a few of the sequences
-        received from Sandra Junglen on March 13, 2015. We need 1.0 scores on
-        the diagonal and pairs of corresponding off-diagonal scores must be
-        equal.
+        received from Sandra Junglen on March 13, 2015.
 
         The sequences below are the ones that caused the non-symmetric
         scores issue in https://github.com/acorg/light-matter/issues/235
@@ -133,29 +160,11 @@ class TestAffinityMatrix(TestCase):
                             'FVSLFNIHGEPMSVYGRFLLPSVG')),
         ]
 
-        matrix = affinityMatrix(
+        self._checkSymmetry(
             sequences, significanceFraction=0.05, distanceBase=1.0,
             landmarkNames=[cls.NAME for cls in ALL_LANDMARK_CLASSES],
             trigPointNames=[cls.NAME for cls in ALL_TRIG_CLASSES],
-            limitPerLandmark=50, minDistance=1, maxDistance=100,
-            subjects=sequences)
-
-        for i in xrange(len(sequences)):
-
-            # Test the diagonal score of a sequence against itself is one.
-            self.assertEqual(
-                1.0, matrix[i][i],
-                'Diagonal entry (%d, %d) for %s against itself has non-1.0 '
-                'score of %f.' % (i, i, sequences[i].id, matrix[i][i]))
-
-            # Test that off-diagonal score pairs are identical.
-            for j in xrange(i + 1, len(sequences)):
-                self.assertEqual(
-                    matrix[i][j], matrix[j][i],
-                    'Off-diagonal entries (%d, %d) and (%d, %d) for %s '
-                    'against %s have unequal scores %f and %f.' %
-                    (i, j, j, i, sequences[i].id, sequences[j].id,
-                     matrix[i][j], matrix[j][i]))
+            limitPerLandmark=50, minDistance=1, maxDistance=100)
 
     def testSandraSymmetry_259(self):
         """
@@ -185,29 +194,8 @@ class TestAffinityMatrix(TestCase):
                     'LFEFTSMFFDGEFVSNLAMELPAFT')),
         ]
 
-        matrix = affinityMatrix(
+        self._checkSymmetry(
             sequences, significanceFraction=0.01, distanceBase=1.025,
-            landmarkNames=['AlphaHelix', 'AlphaHelix_3_10', 'AlphaHelix_pi',
-                           'AminoAcidsLm', 'BetaStrand', 'BetaTurn',
-                           'GOR4AlphaHelix', 'GOR4BetaStrand', 'GOR4Coil',
-                           'Prosite'],
-            trigPointNames=['AminoAcids', 'Peaks', 'Troughs'],
-            limitPerLandmark=50, minDistance=1, maxDistance=100,
-            subjects=sequences)
-
-        for i in xrange(len(sequences)):
-
-            # Test the diagonal score of a sequence against itself is one.
-            self.assertEqual(
-                1.0, matrix[i][i],
-                'Diagonal entry (%d, %d) for %s against itself has non-1.0 '
-                'score of %f.' % (i, i, sequences[i].id, matrix[i][i]))
-
-            # Test that off-diagonal score pairs are identical.
-            for j in xrange(i + 1, len(sequences)):
-                self.assertEqual(
-                    matrix[i][j], matrix[j][i],
-                    'Off-diagonal entries (%d, %d) and (%d, %d) for %s '
-                    'against %s have unequal scores %f and %f.' %
-                    (i, j, j, i, sequences[i].id, sequences[j].id,
-                     matrix[i][j], matrix[j][i]))
+            landmarkNames=['GOR4AlphaHelix', 'GOR4Coil'],
+            trigPointNames=['Peaks', 'Troughs'],
+            limitPerLandmark=50, minDistance=1, maxDistance=100)

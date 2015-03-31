@@ -308,7 +308,7 @@ class Database(object):
         Return information about a subject, given its index in the database.
         Or, do the reverse, given a subject return its index.
 
-        @param subject: Either an C{int} subect index or a C{dark.read.AARead}
+        @param subject: Either an C{int} subject index or a C{dark.read.AARead}
             representing a subject whose index is to be looked up.
         @return: If an index is passed, return a C{Subject} instance. If an
             C{AARead} subject is passed, return its index.

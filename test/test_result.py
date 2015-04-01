@@ -9,7 +9,7 @@ from light.result import Result
 from light.features import Landmark, TrigPoint
 from light.reads import ScannedRead
 from light.database import Database
-from light.landmarks import AlphaHelix, BetaStrand
+from light.landmarks import AlphaHelix, BetaStrand, AminoAcids as AminoAcidsLm
 from light.trig import Troughs, AminoAcids
 
 
@@ -511,6 +511,7 @@ class TestResult(TestCase):
                     "len=13 detail=3\n"
                     "    Histogram:\n"
                     "      Number of bins: 39\n"
+                    "      Bin width: 0.0000000000\n"
                     "      Max bin count: 1\n"
                     "      Non-empty bins (index:count; *=significant): "
                     "38:1*\n"
@@ -584,6 +585,86 @@ class TestResult(TestCase):
                     "    Significance cutoff: 0.100000\n"
                     "    Number of HSPs: 1\n"
                     "      HSP 1 (bin 38): 1 matching hash, score 1.000000\n")
+
+        self.assertEqual(expected, fp.getvalue())
+
+    def testOneMatchNoFullAnalysisNoFeaturesSixHSPs(self):
+        """
+        Check that the print_ method of a result produces the expected result
+        when asked to not print the query, when there are matches and the
+        full analysis is not stored, when features are not printed, and when
+        there are six HSPs.
+        """
+        fp = StringIO()
+        subject = 'CACACAAACACA'
+        query = 'CACACA'
+        database = Database([AminoAcidsLm], [])
+        subject = AARead('subject', subject)
+        database.addSubject(subject)
+        query = AARead('query', query)
+        result = database.find(query, significanceFraction=0.1)
+
+        result.print_(fp=fp, printQuery=False, printFeatures=False)
+        expected = ("Overall matches: 1\n"
+                    "Significant matches: 1\n"
+                    "Query hash count: 3\n"
+                    "Significance fraction: 0.100000\n"
+                    "Matched subjects:\n"
+                    "  Subject 1:\n"
+                    "    Title: subject\n"
+                    "    Best HSP score: 1.0\n"
+                    "    Index in database: 0\n"
+                    "    Subject hash count: 10\n"
+                    "    Subject/query min hash count: 3\n"
+                    "    Significance cutoff: 0.300000\n"
+                    "    Number of HSPs: 6\n"
+                    "      HSP 1 (bin 2): 3 matching hashes, score 1.000000\n"
+                    "      HSP 2 (bin 0): 1 matching hash, score 0.333333\n"
+                    "      HSP 3 (bin 5): 1 matching hash, score 0.333333\n"
+                    "      HSP 4 (bin 7): 1 matching hash, score 0.333333\n"
+                    "      HSP 5 (bin 10): 1 matching hash, score 0.333333\n"
+                    "      HSP 6 (bin 12): 1 matching hash, score 0.333333\n")
+
+        self.assertEqual(expected, fp.getvalue())
+
+    def testOneMatchNoFullAnalysisNoFeaturesSixHSPsNotSortedByScore(self):
+        """
+        Check that the print_ method of a result produces the expected result
+        when asked to not print the query, when there are matches and the
+        full analysis is not stored, when features are not printed, and when
+        there are six HSPs and these are not sorted by score (but by histogram
+        bin index).
+        """
+        fp = StringIO()
+        subject = 'CACACAAACACA'
+        query = 'CACACA'
+        database = Database([AminoAcidsLm], [])
+        subject = AARead('subject', subject)
+        database.addSubject(subject)
+        query = AARead('query', query)
+        result = database.find(query, significanceFraction=0.1)
+
+        result.print_(fp=fp, printQuery=False, printFeatures=False,
+                      sortHSPsByScore=False)
+        expected = ("Overall matches: 1\n"
+                    "Significant matches: 1\n"
+                    "Query hash count: 3\n"
+                    "Significance fraction: 0.100000\n"
+                    "Matched subjects:\n"
+                    "  Subject 1:\n"
+                    "    Title: subject\n"
+                    "    Best HSP score: 1.0\n"
+                    "    Index in database: 0\n"
+                    "    Subject hash count: 10\n"
+                    "    Subject/query min hash count: 3\n"
+                    "    Significance cutoff: 0.300000\n"
+                    "    Number of HSPs: 6\n"
+                    "      HSP 1 (bin 0): 1 matching hash, score 0.333333\n"
+                    "      HSP 2 (bin 2): 3 matching hashes, score 1.000000\n"
+                    "      HSP 3 (bin 5): 1 matching hash, score 0.333333\n"
+                    "      HSP 4 (bin 7): 1 matching hash, score 0.333333\n"
+                    "      HSP 5 (bin 10): 1 matching hash, score 0.333333\n"
+                    "      HSP 6 (bin 12): 1 matching hash, score 0.333333\n")
 
         self.assertEqual(expected, fp.getvalue())
 

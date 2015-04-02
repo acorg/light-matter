@@ -221,7 +221,7 @@ class Result(object):
         return fp
 
     def print_(self, fp=sys.stdout, printQuery=True, printSequences=False,
-               printFeatures=True, printHistograms=False,
+               printFeatures=False, printHistograms=False,
                queryDescription='Query title', sortHSPsByScore=True):
         """
         Print a result in a human-readable format. If self._storeFullAnalysis

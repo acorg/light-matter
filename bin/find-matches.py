@@ -52,9 +52,9 @@ if __name__ == '__main__':
               'sequences.'))
 
     parser.add_argument(
-        '--excludeFeatures', default=False, action='store_true',
-        help=('If True, and --human is specified, print details of histogram '
-              'bin counts.'))
+        '--printFeatures', default=False, action='store_true',
+        help=('If True, and --human is specified, print details of features '
+              'found in query and subject sequences.'))
 
     databaseSpecifier = DatabaseSpecifier(allowInMemory=False)
     databaseSpecifier.addArgsToParser(parser)
@@ -87,7 +87,7 @@ if __name__ == '__main__':
 
             result.print_(fp=sys.stdout,
                           printSequences=args.printSequences,
-                          printFeatures=not args.excludeFeatures,
+                          printFeatures=args.printFeatures,
                           printHistograms=args.printHistograms,
                           queryDescription='Query %d title' % count)
             if count > 1:

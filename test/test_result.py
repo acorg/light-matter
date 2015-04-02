@@ -451,7 +451,7 @@ class TestResult(TestCase):
         result = database.find(query, significanceFraction=0.1,
                                storeFullAnalysis=True)
 
-        result.print_(fp=fp, printQuery=False)
+        result.print_(fp=fp, printQuery=False, printFeatures=True)
 
         expected = ("Overall matches: 1\n"
                     "Significant matches: 1\n"
@@ -489,7 +489,8 @@ class TestResult(TestCase):
         result = database.find(query, significanceFraction=0.1,
                                storeFullAnalysis=True)
 
-        result.print_(fp=fp, printQuery=False, printHistograms=True)
+        result.print_(fp=fp, printQuery=False, printHistograms=True,
+                      printFeatures=True)
 
         expected = ("Overall matches: 1\n"
                     "Significant matches: 1\n"
@@ -534,7 +535,7 @@ class TestResult(TestCase):
         query = AARead('query', sequence)
         result = database.find(query, significanceFraction=0.1)
 
-        result.print_(fp=fp, printQuery=False)
+        result.print_(fp=fp, printQuery=False, printFeatures=True)
         expected = ("Overall matches: 1\n"
                     "Significant matches: 1\n"
                     "Query hash count: 1\n"

@@ -85,7 +85,7 @@ if __name__ == '__main__':
                 read, significanceFraction=significanceFraction,
                 storeFullAnalysis=True)
 
-            result.print_(database,
+            result.print_(fp=sys.stdout,
                           printSequences=args.printSequences,
                           printFeatures=not args.excludeFeatures,
                           printHistograms=args.printHistograms,

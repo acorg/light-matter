@@ -5,6 +5,7 @@ from os.path import basename
 import argparse
 
 from dark.fasta import combineReads
+from dark.reads import AARead
 
 from light.database import DatabaseSpecifier
 
@@ -74,7 +75,7 @@ if __name__ == '__main__':
         sys.exit(1)
 
     database = databaseSpecifier.getDatabaseFromArgs(args)
-    reads = combineReads(args.fastaFile, args.sequences)
+    reads = combineReads(args.fastaFile, args.sequences, readClass=AARead)
     significanceFraction = args.significanceFraction
 
     # Look up each read in the database and print its matches, either in

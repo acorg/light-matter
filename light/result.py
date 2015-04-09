@@ -4,6 +4,7 @@ from json import dumps
 from collections import defaultdict
 from operator import itemgetter
 from warnings import warn
+from math import log10, ceil
 
 from light.distance import scale
 from light.histogram import Histogram
@@ -318,6 +319,7 @@ class Result(object):
                 histogram = analysis['histogram']
                 significantBinIndices = set([bin_['index']
                                              for bin_ in significantBins])
+
                 result.extend([
                     '    Histogram:',
                     '      Number of bins: %d' % len(histogram.bins),
@@ -325,18 +327,43 @@ class Result(object):
                     '      Max bin count: %r' % (
                         max(len(bin_) for bin_ in histogram.bins)),
                 ])
-                nonEmpty = []
+
+                # Calculate column widths for displaying ranges neatly.
+                maxAbsoluteValue = max(
+                    [-histogram.min, histogram.max, -histogram.max])
+                if maxAbsoluteValue == 0:
+                    # All printed range values will be '+0.0', of length 4.
+                    rangeWidth = 4
+                else:
+                    # Add 3 because we have the sign, a decimal point, and
+                    # one digit of precision.
+                    rangeWidth = 3 + int(ceil(log10(maxAbsoluteValue)))
+                rangeSeparator = ' to '
+                rangeColumnWidth = 2 * rangeWidth + len(rangeSeparator)
+
+                first = True
                 for binIndex, bin_ in enumerate(histogram.bins):
                     binCount = len(bin_)
                     if binCount:
-                        nonEmpty.append('%d:%d%s' % (
+                        if first:
+                            result.extend([
+                                '      Non-empty bins:',
+                                '        %s %s %*s %s' % (
+                                    'Index', 'Count', rangeColumnWidth,
+                                    'Range', 'Significant'),
+                            ])
+                            first = False
+                        binLow = histogram.min + binIndex * histogram.binWidth
+                        # The 5, 5, 11 below are the lengths of 'Index',
+                        # 'Range', and 'Significant'.
+                        result.append('        %5d %5d %+*.1f%s%+*.1f %11s' % (
                             binIndex, binCount,
-                            '*' if binIndex in significantBinIndices else ''))
-                if nonEmpty:
-                    result.append(
-                        '      Non-empty bins (index:count; *=significant): %s'
-                        % ', '.join(nonEmpty))
-                else:
+                            rangeWidth, binLow,
+                            rangeSeparator,
+                            rangeWidth, binLow + histogram.binWidth,
+                            'Yes' if binIndex in significantBinIndices
+                            else ''))
+                if first:
                     result.append('All bins were empty.')
 
                 result.extend([

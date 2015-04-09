@@ -514,8 +514,9 @@ class TestResult(TestCase):
                     "      Number of bins: 39\n"
                     "      Bin width: 0.0000000000\n"
                     "      Max bin count: 1\n"
-                    "      Non-empty bins (index:count; *=significant): "
-                    "38:1*\n"
+                    "      Non-empty bins:\n"
+                    "        Index Count        Range Significant\n"
+                    "           38     1 +0.0 to +0.0         Yes\n"
                     "      Max (scaled) offset delta: 0\n"
                     "      Min (scaled) offset delta: 0\n")
 

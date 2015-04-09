@@ -319,13 +319,18 @@ class Result(object):
                 histogram = analysis['histogram']
                 significantBinIndices = set([bin_['index']
                                              for bin_ in significantBins])
+                maxCount = max(len(bin_) for bin_ in histogram.bins)
 
                 result.extend([
                     '    Histogram:',
                     '      Number of bins: %d' % len(histogram.bins),
                     '      Bin width: %.10f' % histogram.binWidth,
-                    '      Max bin count: %r' % (
-                        max(len(bin_) for bin_ in histogram.bins)),
+                    '      Max bin count: %r' % maxCount,
+                    '      Max (scaled) offset delta: %d' % histogram.max,
+                    '      Min (scaled) offset delta: %d' % histogram.min,
+                ])
+
+                result.extend([
                 ])
 
                 # Calculate column widths for displaying ranges neatly.
@@ -365,10 +370,5 @@ class Result(object):
                             else ''))
                 if first:
                     result.append('All bins were empty.')
-
-                result.extend([
-                    '      Max (scaled) offset delta: %d' % histogram.max,
-                    '      Min (scaled) offset delta: %d' % histogram.min,
-                ])
 
         print >>fp, '\n'.join(result)

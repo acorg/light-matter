@@ -481,44 +481,49 @@ class TestResult(TestCase):
         the histogram to be printed.
         """
         fp = StringIO()
-        sequence = 'FRRRFRRRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'
-        database = Database([AlphaHelix], [])
-        subject = AARead('subject', sequence)
+        database = Database([AminoAcidsLm], [])
+        subject = AARead('subject', 'CACACAAACACA')
         database.addSubject(subject)
-        query = AARead('query', sequence)
+        query = AARead('query', 'CACACA')
         result = database.find(query, significanceFraction=0.1,
                                storeFullAnalysis=True)
 
         result.print_(fp=fp, printQuery=False, printHistograms=True,
-                      printFeatures=True)
+                      printFeatures=False)
 
         expected = ("Overall matches: 1\n"
                     "Significant matches: 1\n"
-                    "Query hash count: 1\n"
+                    "Query hash count: 3\n"
                     "Significance fraction: 0.100000\n"
                     "Matched subjects:\n"
                     "  Subject 1:\n"
                     "    Title: subject\n"
                     "    Best HSP score: 1.0\n"
                     "    Index in database: 0\n"
-                    "    Subject hash count: 1\n"
-                    "    Subject/query min hash count: 1\n"
-                    "    Significance cutoff: 0.100000\n"
-                    "    Number of HSPs: 1\n"
-                    "      HSP 1 (bin 38): 1 matching hash, score 1.000000\n"
-                    "        Landmark AlphaHelix symbol='A' offset=0 len=9 "
-                    "detail=2 subjectOffset=0\n"
-                    "        Trig point AlphaHelix symbol='A' offset=25 "
-                    "len=13 detail=3\n"
+                    "    Subject hash count: 10\n"
+                    "    Subject/query min hash count: 3\n"
+                    "    Significance cutoff: 0.300000\n"
+                    "    Number of HSPs: 6\n"
+                    "      HSP 1 (bin 2): 3 matching hashes, score 1.000000\n"
+                    "      HSP 2 (bin 0): 1 matching hash, score 0.333333\n"
+                    "      HSP 3 (bin 5): 1 matching hash, score 0.333333\n"
+                    "      HSP 4 (bin 7): 1 matching hash, score 0.333333\n"
+                    "      HSP 5 (bin 10): 1 matching hash, score 0.333333\n"
+                    "      HSP 6 (bin 12): 1 matching hash, score 0.333333\n"
                     "    Histogram:\n"
-                    "      Number of bins: 39\n"
-                    "      Bin width: 0.0000000000\n"
-                    "      Max bin count: 1\n"
-                    "      Max (scaled) offset delta: 0\n"
-                    "      Min (scaled) offset delta: 0\n"
+                    "      Number of bins: 13\n"
+                    "      Bin width: 0.7692307692\n"
+                    "      Max bin count: 3\n"
+                    "      Max (scaled) offset delta: 8\n"
+                    "      Min (scaled) offset delta: -2\n"
                     "      Non-empty bins:\n"
                     "        Index Count        Range Significant\n"
-                    "           38     1 +0.0 to +0.0         Yes\n")
+                    "            0     1 -2.0 to -1.2         Yes\n"
+                    "            2     3 -0.5 to +0.3         Yes\n"
+                    "            5     1 +1.8 to +2.6         Yes\n"
+                    "            7     1 +3.4 to +4.2         Yes\n"
+                    "           10     1 +5.7 to +6.5         Yes\n"
+                    "           12     1 +7.2 to +8.0         Yes\n")
 
         self.assertEqual(expected, fp.getvalue())
 
@@ -598,12 +603,10 @@ class TestResult(TestCase):
         there are six HSPs.
         """
         fp = StringIO()
-        subject = 'CACACAAACACA'
-        query = 'CACACA'
         database = Database([AminoAcidsLm], [])
-        subject = AARead('subject', subject)
+        subject = AARead('subject', 'CACACAAACACA')
         database.addSubject(subject)
-        query = AARead('query', query)
+        query = AARead('query', 'CACACA')
         result = database.find(query, significanceFraction=0.1)
 
         result.print_(fp=fp, printQuery=False, printFeatures=False)
@@ -638,12 +641,10 @@ class TestResult(TestCase):
         bin index).
         """
         fp = StringIO()
-        subject = 'CACACAAACACA'
-        query = 'CACACA'
         database = Database([AminoAcidsLm], [])
-        subject = AARead('subject', subject)
+        subject = AARead('subject', 'CACACAAACACA')
         database.addSubject(subject)
-        query = AARead('query', query)
+        query = AARead('query', 'CACACA')
         result = database.find(query, significanceFraction=0.1)
 
         result.print_(fp=fp, printQuery=False, printFeatures=False,

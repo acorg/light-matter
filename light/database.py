@@ -695,7 +695,7 @@ class DatabaseSpecifier(object):
 
         if self._allowPopulation:
             for read in combineReads(args.databaseFasta,
-                                     args.databaseSequences):
+                                     args.databaseSequences, readClass=AARead):
                 database.addSubject(read)
 
         return database

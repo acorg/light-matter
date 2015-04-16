@@ -73,6 +73,7 @@ class Database(object):
     # bucket for that bucket to be considered a significant match with a
     # database title.
     DEFAULT_SIGNIFICANCE_FRACTION = 0.25
+    DEFAULT_SIGNIFICANCE_METHOD = 'hashFraction'
 
     def __init__(self, landmarkClasses, trigPointClasses,
                  limitPerLandmark=None, maxDistance=None, minDistance=None,
@@ -363,12 +364,15 @@ class Database(object):
 
         return fp
 
-    def find(self, read, significanceFraction=None, storeFullAnalysis=False):
+    def find(self, read, significanceMethod=None, significanceFraction=None,
+             storeFullAnalysis=False):
         """
         A function which takes a read, computes all hashes for it, looks up
         matching hashes and checks which database sequence it matches.
 
         @param read: A C{dark.read.AARead} instance.
+        @param significanceMethod: The name of the method used to calculate
+            which histogram bins are considered significant.
         @param significanceFraction: The C{float} fraction of all (landmark,
             trig point) pairs for a scannedRead that need to fall into the
             same histogram bucket for that bucket to be considered a
@@ -377,6 +381,8 @@ class Database(object):
             significance analysis computed in the Result will be stored.
         @return: A C{light.result.Result} instance.
         """
+        if significanceMethod is None:
+            significanceMethod = self.DEFAULT_SIGNIFICANCE_METHOD
         if significanceFraction is None:
             significanceFraction = self.DEFAULT_SIGNIFICANCE_FRACTION
 
@@ -411,8 +417,8 @@ class Database(object):
                         'trigPoint': hashInfo['trigPoint'],
                     })
 
-        return Result(scannedRead, matches, hashCount, significanceFraction,
-                      self, nonMatchingHashes,
+        return Result(scannedRead, matches, hashCount, significanceMethod,
+                      significanceFraction, self, nonMatchingHashes,
                       storeFullAnalysis=storeFullAnalysis)
 
     def save(self, fp=sys.stdout):

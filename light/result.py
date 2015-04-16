@@ -2,12 +2,12 @@ import sys
 from copy import deepcopy
 from json import dumps
 from collections import defaultdict
-from operator import itemgetter
-from warnings import warn
 from math import log10, ceil
+from operator import itemgetter
 
 from light.distance import scale
 from light.histogram import Histogram
+from light.significance import Significance
 
 
 class Result(object):
@@ -23,6 +23,8 @@ class Result(object):
         'subjectOffsets', and 'trigPoint'.
     @param queryHashCount: The C{int} number of hashes that the query has
         (including those that were not found in the database).
+    @param significanceMethod: The name of the method used to calculate
+        which histogram bins are considered significant.
     @param significanceFraction: The C{float} fraction of all (landmark,
         trig point) pairs for the query that need to fall into the same
         histogram bucket for that bucket to be considered a significant match
@@ -33,13 +35,15 @@ class Result(object):
         C{dict} with keys: 'landmark', 'readOffsets', and 'trigPoint'.
     @param storeFullAnalysis: A C{bool}. If C{True} the full significance
         analysis of each matched subject will be stored.
+    @raises ValueError: If a non-existing significanceMethod is specified.
     """
     def __init__(self, scannedQuery, matches, queryHashCount,
-                 significanceFraction, database, nonMatchingHashes=None,
-                 storeFullAnalysis=False):
+                 significanceMethod, significanceFraction, database,
+                 nonMatchingHashes=None, storeFullAnalysis=False):
         self.scannedQuery = scannedQuery
         self.matches = matches  # Only saved on self for testing.
         self.queryHashCount = queryHashCount
+        self.significanceMethod = significanceMethod
         self.significanceFraction = significanceFraction
         self.database = database
         self.nonMatchingHashes = nonMatchingHashes
@@ -47,7 +51,6 @@ class Result(object):
         self.analysis = defaultdict(dict)
         distanceBase = database.distanceBase
         queryLen = len(scannedQuery.read.sequence)
-        scoreGetter = itemgetter('score')
 
         # Go through all the subjects that were matched at all, and put the
         # match offset deltas into bins so we can decide which (if any) of
@@ -99,47 +102,17 @@ class Result(object):
 
             histogram.finalize()
 
-            minHashCount = min(queryHashCount, subject.hashCount)
-            significanceCutoff = significanceFraction * minHashCount
-            significantBins = []
-            bestScore = None
+            # TODO: add more significanceMethods here.
+            significanceInfo = Significance(histogram)
+            if significanceMethod == 'hashFraction':
+                minHashCount = min(queryHashCount, subject.hashCount)
+                significantBins = significanceInfo.hashFraction(
+                    self.significanceFraction, minHashCount)
+            else:
+                raise ValueError('%s is a non existing significanceMethod.' %
+                                 significanceMethod)
 
-            # Look for bins with a significant number of elements (scaled
-            # hash offset deltas).
-            for binIndex, bin_ in enumerate(histogram.bins):
-                binCount = len(bin_)
-                if binCount >= significanceCutoff:
-                    try:
-                        score = float(binCount) / minHashCount
-                    except ZeroDivisionError:
-                        score = 0.0
-
-                    # It is possible that a bin has more deltas in it than
-                    # the number of hashes in the query / subject. This can
-                    # occur when the distanceBase used to scale distances
-                    # results in multiple different distances being put
-                    # into the same bin. In this case, the distance binning
-                    # is perhaps too aggessive. For now, issue a warning
-                    # and set the score to 1.0
-                    if score > 1.0:
-                        score = 1.0
-                        warn('Bin contains %d deltas for a query/subject pair '
-                             'with a minimum hash count of only %d. The '
-                             'database distanceBase is causing different '
-                             'distances to be scaled into the same bin, which '
-                             'might not be a good thing.' %
-                             (binCount, minHashCount), RuntimeWarning)
-
-                    significantBins.append({
-                        'bin': bin_,
-                        'index': binIndex,
-                        'score': score,
-                    })
-
-            # Sort the significant bins by decreasing score.
-            if significantBins:
-                significantBins.sort(key=scoreGetter, reverse=True)
-                bestScore = significantBins[0]['score']
+            bestScore = significanceInfo.getBestScore()
 
             if storeFullAnalysis:
                 self.analysis[subjectIndex] = {
@@ -153,7 +126,7 @@ class Result(object):
                     'significantBins': significantBins,
                 }
 
-    def significant(self):
+    def significantSubjects(self):
         """
         Which subject matches were significant?
 
@@ -178,7 +151,7 @@ class Result(object):
         @return: The C{fp} we were passed (this is useful in testing).
         """
         alignments = []
-        for subjectIndex in self.significant():
+        for subjectIndex in self.significantSubjects():
             analysis = self.analysis[subjectIndex]
             hsps = []
 
@@ -193,9 +166,9 @@ class Result(object):
                         'landmarkLength': binItem['landmark'].length,
                         'queryLandmarkOffset': binItem['queryLandmarkOffset'],
                         'queryTrigPointOffset':
-                            binItem['queryTrigPointOffset'],
+                        binItem['queryTrigPointOffset'],
                         'subjectLandmarkOffset':
-                            binItem['subjectLandmarkOffset'],
+                        binItem['subjectLandmarkOffset'],
                         'trigPoint': binItem['trigPoint'].name,
                     })
 
@@ -263,7 +236,7 @@ class Result(object):
 
         result = [
             'Overall matches: %d' % len(subjectIndices),
-            'Significant matches: %d' % len(list(self.significant())),
+            'Significant matches: %d' % len(list(self.significantSubjects())),
             'Query hash count: %d' % self.queryHashCount,
             'Significance fraction: %f' % self.significanceFraction,
         ]

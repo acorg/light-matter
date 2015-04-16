@@ -36,6 +36,12 @@ if __name__ == '__main__':
               'database title.'))
 
     parser.add_argument(
+        '--significanceMethod', type=str, default='hashFraction',
+        choices=['hashFraction'],
+        help=('The name of the method used to calculate which histogram bins '
+              'are considered significant.'))
+
+    parser.add_argument(
         '--human', default=False, action='store_true',
         help=('If True, produce human-readable output (this is useful when '
               'informally examining sequences from the command line). Do not '
@@ -77,13 +83,15 @@ if __name__ == '__main__':
     database = databaseSpecifier.getDatabaseFromArgs(args)
     reads = combineReads(args.fastaFile, args.sequences, readClass=AARead)
     significanceFraction = args.significanceFraction
+    significanceMethod = args.significanceMethod
 
     # Look up each read in the database and print its matches, either in
     # human-readable form or as JSON.
     if args.human:
         for count, read in enumerate(reads, start=1):
             result = database.find(
-                read, significanceFraction=significanceFraction,
+                read, significanceMethod=significanceMethod,
+                significanceFraction=significanceFraction,
                 storeFullAnalysis=True)
 
             result.print_(fp=sys.stdout,

@@ -454,6 +454,7 @@ def plotHistogramLines(sequences, significanceFraction=None, **kwargs):
                 counts = sorted([len(bin) for bin in histogram.bins])
                 readsAx.plot(range(len(counts)), counts)
 
+    readsAx.set_ylim(0, 250)
     readsAx.set_title('Histogram line plot')
     readsAx.set_ylabel('Number of hashes')
     readsAx.xaxis.tick_bottom()

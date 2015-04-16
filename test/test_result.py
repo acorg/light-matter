@@ -24,10 +24,10 @@ class TestResult(TestCase):
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
         database = Database([], [])
         hashCount = 0
-        result = Result(read, {}, hashCount, significanceFraction=0.1,
-                        database=database)
+        result = Result(read, {}, hashCount, significanceMethod='hashFraction',
+                        significanceFraction=0.1, database=database)
         self.assertEqual({}, result.matches)
-        self.assertEqual([], list(result.significant()))
+        self.assertEqual([], list(result.significantSubjects()))
         self.assertIs(read, result.scannedQuery)
 
     def testAddOneMatch(self):
@@ -50,8 +50,9 @@ class TestResult(TestCase):
                 },
             ],
         }
-        result = Result(read, matches, hashCount, significanceFraction=0.1,
-                        database=database)
+        result = Result(read, matches, hashCount,
+                        significanceMethod='hashFraction',
+                        significanceFraction=0.1, database=database)
         self.assertEqual(matches, result.matches)
 
     def testNoSignificantMatches(self):
@@ -74,9 +75,10 @@ class TestResult(TestCase):
                 },
             ],
         }
-        result = Result(read, matches, hashCount, significanceFraction=5,
-                        database=database)
-        self.assertEqual([], list(result.significant()))
+        result = Result(read, matches, hashCount,
+                        significanceMethod='hashFraction',
+                        significanceFraction=5, database=database)
+        self.assertEqual([], list(result.significantSubjects()))
 
     def testOneSignificantMatch(self):
         """
@@ -113,9 +115,10 @@ class TestResult(TestCase):
             ],
         }
 
-        result = Result(read, matches, hashCount, significanceFraction=0.25,
-                        database=database)
-        self.assertEqual([0], list(result.significant()))
+        result = Result(read, matches, hashCount,
+                        significanceMethod='hashFraction',
+                        significanceFraction=0.25, database=database)
+        self.assertEqual([0], list(result.significantSubjects()))
         self.assertEqual(0.5, result.analysis[0]['bestScore'])
 
     def testTwoSignificantMatches(self):
@@ -175,9 +178,11 @@ class TestResult(TestCase):
             ],
         }
 
-        result = Result(read, matches, hashCount, significanceFraction=0.3,
+        result = Result(read, matches, hashCount,
+                        significanceMethod='hashFraction',
+                        significanceFraction=0.3,
                         database=database)
-        self.assertEqual([0, 1], sorted(list(result.significant())))
+        self.assertEqual([0, 1], sorted(list(result.significantSubjects())))
         self.assertEqual(0.4, result.analysis[0]['bestScore'])
         self.assertEqual(0.4, result.analysis[1]['bestScore'])
 
@@ -187,7 +192,8 @@ class TestResult(TestCase):
         """
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
         database = Database([], [])
-        result = Result(read, [], 0, 0, database=database)
+        result = Result(read, [], 0, 0, 'hashFraction',
+                        database=database)
         fp = StringIO()
         result.save(fp=fp)
         result = loads(fp.getvalue())
@@ -205,8 +211,8 @@ class TestResult(TestCase):
         """
         read = ScannedRead(AARead('id', 'A'))
         database = Database([], [])
-        result = Result(read, {}, 0, significanceFraction=0.1,
-                        database=database)
+        result = Result(read, {}, 0, significanceMethod='hashFraction',
+                        significanceFraction=0.1, database=database)
         fp = StringIO()
         self.assertIs(fp, result.save(fp))
 
@@ -241,8 +247,9 @@ class TestResult(TestCase):
                 },
             ],
         }
-        result = Result(read, matches, hashCount, significanceFraction=0.1,
-                        database=database)
+        result = Result(read, matches, hashCount,
+                        significanceMethod='hashFraction',
+                        significanceFraction=0.1, database=database)
         fp = StringIO()
         result.save(fp=fp)
         result = loads(fp.getvalue())
@@ -317,8 +324,10 @@ class TestResult(TestCase):
                 },
             ],
         }
-        result = Result(read, matches, hashCount, significanceFraction=0.1,
-                        database=database, storeFullAnalysis=True)
+        result = Result(read, matches, hashCount,
+                        significanceMethod='hashFraction',
+                        significanceFraction=0.1, database=database,
+                        storeFullAnalysis=True)
         self.assertEqual(21, result.analysis[0]['histogram'].nBins)
 
     def testRightNumberOfBucketsDefaultNonEven(self):
@@ -344,8 +353,10 @@ class TestResult(TestCase):
                 },
             ],
         }
-        result = Result(read, matches, hashCount, significanceFraction=0.1,
-                        database=database, storeFullAnalysis=True)
+        result = Result(read, matches, hashCount,
+                        significanceMethod='hashFraction',
+                        significanceFraction=0.1, database=database,
+                        storeFullAnalysis=True)
         self.assertEqual(21, result.analysis[0]['histogram'].nBins)
 
     def testRightNumberOfBucketsWithNonDefaultDistanceBase(self):
@@ -369,8 +380,10 @@ class TestResult(TestCase):
                 },
             ],
         }
-        result = Result(read, matches, hashCount, significanceFraction=0.1,
-                        database=database, storeFullAnalysis=True)
+        result = Result(read, matches, hashCount,
+                        significanceMethod='hashFraction',
+                        significanceFraction=0.1, database=database,
+                        storeFullAnalysis=True)
         self.assertEqual(11, result.analysis[0]['histogram'].nBins)
 
     def testPrintWithQueryWithNoMatchesDueToNoFinders(self):

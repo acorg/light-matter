@@ -110,7 +110,8 @@ class Result(object):
                 significance = HashFraction(
                     histogram, minHashCount, significanceFraction)
             elif significanceMethod == 'maxBinHight':
-                significance = MaxBinHight(histogram, query)
+                significance = MaxBinHight(histogram, scannedQuery.read,
+                                           database)
             else:
                 raise ValueError('Unknown significance method %r' %
                                  significanceMethod)

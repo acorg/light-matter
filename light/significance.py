@@ -28,8 +28,28 @@ class HashFraction(object):
 
 class MaxBinHight(object):
     """
+    Identify significant histogram bins based on the non-significant bins
+    when the query is compared agaist itself.
+
     @param histogram: A C{light.histogram} instance.
-    @param query: A C{dark.read.ScannedRead} instance.
+    @param query: A C{dark.read.AARead} instance.
     @param database: A C{light.database.Database} instance.
     """
-    def __init__(histogram, query, database):
+    def __init__(self, histogram, query, database):
+        self._histogram = histogram
+        db = database.emptyCopy()
+        subjectIndex = db.addSubject(query)
+        result = db.find(query, significanceFraction=0.0,
+                         storeFullAnalysis=True)
+        bins = result.analysis[subjectIndex]['significantBins'][1:]
+        self._significanceCutoff = max([len(h) for h in bins])
+
+    def isSignificant(self, binIndex):
+        """
+        Determine whether a bin is significant.
+
+        @param binIndex: The C{int} index of the bin to examine.
+        @return: A C{bool} indicating whether the bin is significant.
+        """
+        binCount = len(self._histogram[binIndex])
+        return binCount >= self._significanceCutoff

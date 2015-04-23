@@ -37,7 +37,7 @@ if __name__ == '__main__':
 
     parser.add_argument(
         '--significanceMethod', type=str, default='hashFraction',
-        choices=['hashFraction'],
+        choices=['always', 'hashFraction', 'maxBinHeight'],
         help=('The name of the method used to calculate which histogram bins '
               'are considered significant.'))
 

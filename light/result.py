@@ -8,7 +8,7 @@ from warnings import warn
 
 from light.distance import scale
 from light.histogram import Histogram
-from light.significance import HashFraction
+from light.significance import Always, HashFraction, MaxBinHeight
 
 
 class Result(object):
@@ -106,13 +106,17 @@ class Result(object):
 
             minHashCount = min(queryHashCount, subject.hashCount)
 
-            if significanceMethod == 'hashFraction':
+            if significanceMethod == 'always':
+                significance = Always()
+            elif significanceMethod == 'hashFraction':
                 significance = HashFraction(
                     histogram, minHashCount, significanceFraction)
+            elif significanceMethod == 'maxBinHeight':
+                significance = MaxBinHeight(histogram, scannedQuery.read,
+                                            database)
             else:
                 raise ValueError('Unknown significance method %r' %
                                  significanceMethod)
-
             # Look for bins with a significant number of elements (each
             # element is a scaled hash offset delta).
             significantBins = []

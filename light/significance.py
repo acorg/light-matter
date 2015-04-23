@@ -58,6 +58,7 @@ class MaxBinHeight(object):
         subjectIndex = db.addSubject(query)
         result = db.find(query, significanceMethod='always',
                          storeFullAnalysis=True)
+        # The highest scoring bin is ignored.
         bins = result.analysis[subjectIndex]['significantBins'][1:]
         binHeights = [len(h) for h in bins]
         meanBinHeight = np.mean(binHeights)

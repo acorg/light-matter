@@ -64,13 +64,13 @@ class Result(object):
             histogram = Histogram(nBins)
             add = histogram.add
             # To ensure the set of query/subject offset deltas is the same
-            # no matter which of sequences is the query and which is the
-            # subject, we negate all deltas if the subject sorts ahead of
-            # it.  This is just a way of canonicalizing the set of deltas.
-            # If we don't canonicalize, we get sets of deltas with opposite
-            # signs, like {-4, -2, 6} and {-6, 2, 4} depending on which
-            # sequence is the subject and which the query. This
-            # occasionally leads to hard to debug and awkward to fix
+            # no matter which of the sequences is the query and which is
+            # the subject, we negate all deltas if the subject sequence
+            # sorts first.  This is just a way of canonicalizing the set of
+            # deltas.  If we don't canonicalize, we get sets of deltas with
+            # opposite signs, like {-4, -2, 6} and {-6, 2, 4} depending on
+            # which sequence is the subject and which the query. This
+            # occasionally leads to hard-to-debug and awkward-to-fix
             # differences in the histogram binning at bin boundaries due to
             # tiny floating point differences. The simple solution is to
             # canonicalize the deltas based on an arbitrary consistent
@@ -193,9 +193,9 @@ class Result(object):
                         'landmarkLength': binItem['landmark'].length,
                         'queryLandmarkOffset': binItem['queryLandmarkOffset'],
                         'queryTrigPointOffset':
-                            binItem['queryTrigPointOffset'],
+                        binItem['queryTrigPointOffset'],
                         'subjectLandmarkOffset':
-                            binItem['subjectLandmarkOffset'],
+                        binItem['subjectLandmarkOffset'],
                         'trigPoint': binItem['trigPoint'].name,
                     })
 

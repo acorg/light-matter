@@ -560,6 +560,19 @@ class Database(object):
                 print >>fp, '  %s (%s): %d' % (
                     trigNameFromHashkey(hash_), hash_, count)
 
+    def emptyCopy(self):
+        """
+        Returns a version of the current database without any subjects.
+
+        @return: A new L{light.database.Database} instance that doesn't
+            have any reads.
+        """
+        return Database(self.landmarkClasses, self.trigPointClasses,
+                        limitPerLandmark=self.limitPerLandmark,
+                        maxDistance=self.maxDistance,
+                        minDistance=self.minDistance,
+                        distanceBase=self.distanceBase)
+
 
 class DatabaseSpecifier(object):
     """

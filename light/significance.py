@@ -1,3 +1,20 @@
+import numpy as np
+
+
+class Always(object):
+    """
+    Allows every bin passed in to be significant.
+    """
+    def isSignificant(self, binIndex):
+        """
+        Determine whether a bin is significant.
+
+        @param binIndex: The C{int} index of the bin to examine.
+        @return: C{True}.
+        """
+        return True
+
+
 class HashFraction(object):
     """
     Identify significant histogram bins based on the number of hashes in
@@ -26,10 +43,10 @@ class HashFraction(object):
         return binCount >= self._significanceCutoff
 
 
-class MaxBinHight(object):
+class MaxBinHeight(object):
     """
     Identify significant histogram bins based on the non-significant bins
-    when the query is compared agaist itself.
+    when the query is compared against itself.
 
     @param histogram: A C{light.histogram} instance.
     @param query: A C{dark.read.AARead} instance.
@@ -39,10 +56,13 @@ class MaxBinHight(object):
         self._histogram = histogram
         db = database.emptyCopy()
         subjectIndex = db.addSubject(query)
-        result = db.find(query, significanceFraction=0.0,
+        result = db.find(query, significanceMethod='always',
                          storeFullAnalysis=True)
         bins = result.analysis[subjectIndex]['significantBins'][1:]
-        self._significanceCutoff = max([len(h) for h in bins])
+        binHeights = [len(h) for h in bins]
+        meanBinHeight = np.mean(binHeights)
+        std = np.std(binHeights)
+        self._significanceCutoff = meanBinHeight + (2 * std)
 
     def isSignificant(self, binIndex):
         """

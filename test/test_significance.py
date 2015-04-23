@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from light.histogram import Histogram
-from light.significance import HashFraction, MaxBinHight
+from light.significance import Always, HashFraction, MaxBinHeight
 
 from test.sample_data import DB, COWPOX
 
@@ -33,11 +33,11 @@ class TestHashFraction(TestCase):
         self.assertTrue(significance.isSignificant(0))
 
 
-class TestMaxBinHight(TestCase):
+class TestMaxBinHeight(TestCase):
     """
-    Tests for the light.significance.TestMaxBinHight class.
+    Tests for the light.significance.MaxBinHeight class.
     """
-    def testMaxBinHightIsSignificantWhenNotSignificant(self):
+    def testMaxBinHeightIsSignificantWhenNotSignificant(self):
         """
         The isSignificant method must return False if asked about a bin
         that is not significant.
@@ -45,10 +45,10 @@ class TestMaxBinHight(TestCase):
         histogram = Histogram(5)
         map(histogram.add, [1, 1, 1, 1, 1, 6, 7, 8, 9])
         histogram.finalize()
-        significance = MaxBinHight(histogram, COWPOX, DB)
+        significance = MaxBinHeight(histogram, COWPOX, DB)
         self.assertFalse(significance.isSignificant(1))
 
-    def testMaxBinHightIsSignificantWhenSignificant(self):
+    def testMaxBinHeightIsSignificantWhenSignificant(self):
         """
         The isSignificant method must return True if asked about a bin
         that is significant.
@@ -56,5 +56,20 @@ class TestMaxBinHight(TestCase):
         histogram = Histogram(5)
         map(histogram.add, [1, 1, 1, 1, 1, 6, 7, 8, 9])
         histogram.finalize()
-        significance = MaxBinHight(histogram, COWPOX, DB)
+        significance = MaxBinHeight(histogram, COWPOX, DB)
+        self.assertTrue(significance.isSignificant(0))
+
+
+class TestAlways(TestCase):
+    """
+    Tests for the light.significance.Always class.
+    """
+    def testAlwaysMustBeTrue(self):
+        """
+        The Always significance method must return True.
+        """
+        histogram = Histogram(5)
+        map(histogram.add, [1, 1, 1, 1, 1, 6, 7, 8, 9])
+        histogram.finalize()
+        significance = Always()
         self.assertTrue(significance.isSignificant(0))

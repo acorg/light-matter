@@ -560,6 +560,16 @@ class Database(object):
                 print >>fp, '  %s (%s): %d' % (
                     trigNameFromHashkey(hash_), hash_, count)
 
+    def emptyCopy(self):
+        """
+        Returns a version of the current database without any subjects.
+        """
+        return Database(self.landmarkClasses, self.trigPointClasses,
+                        limitPerLandmark=self.limitPerLandmark,
+                        maxDistance=self.maxDistance,
+                        minDistance=self.minDistance,
+                        distanceBase=self.distanceBase)
+
 
 class DatabaseSpecifier(object):
     """

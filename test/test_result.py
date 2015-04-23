@@ -30,6 +30,31 @@ class TestResult(TestCase):
         self.assertEqual([], list(result.significantSubjects()))
         self.assertIs(read, result.scannedQuery)
 
+    def testUnknownSignificanceMethod(self):
+        """
+        The Result class must raise ValueError if passed an unknown
+        significance method.
+        """
+        read = ScannedRead(AARead('read', 'AGTARFSDDD'))
+        database = Database([], [])
+        database.addSubject(AARead('subject', 'AAA'))
+        matches = {
+            0: [
+                {
+                    'landmark': Landmark('AlphaHelix', 'A', 0, 9),
+                    'queryLandmarkOffsets': [0],
+                    'queryTrigPointOffsets': [1],
+                    'subjectLandmarkOffsets': [2],
+                    'trigPoint': TrigPoint('Peaks', 'P', 1),
+                },
+            ],
+        }
+        hashCount = 1
+        error = "^Unknown significance method 'xxx'$"
+        self.assertRaisesRegexp(ValueError, error, Result, read, matches,
+                                hashCount, significanceMethod='xxx',
+                                significanceFraction=0.1, database=database)
+
     def testAddOneMatch(self):
         """
         Adding information about one match should result in that information

@@ -1176,7 +1176,7 @@ class TestDatabase(TestCase):
 
     def testEmptyCopy(self):
         """
-        The emptyCopy method must return an new, empty database.
+        The emptyCopy method must return a new, empty database.
         """
         db = Database([AlphaHelix], [])
         sequence = 'AFRRRFRRRFASAASA'

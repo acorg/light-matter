@@ -563,6 +563,9 @@ class Database(object):
     def emptyCopy(self):
         """
         Returns a version of the current database without any subjects.
+
+        @return: A new L{light.database.Database} instance that doesn't
+            have any reads.
         """
         return Database(self.landmarkClasses, self.trigPointClasses,
                         limitPerLandmark=self.limitPerLandmark,

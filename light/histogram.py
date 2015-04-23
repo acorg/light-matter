@@ -25,6 +25,16 @@ class Histogram(object):
         for _ in xrange(nBins):
             self.bins.append([])
 
+    def __getitem__(self, binIndex):
+        """
+        Return a particular bin, given an index.
+
+        @param binIndex: An C{int} bin index.
+        @return: A bin.
+        @raise IndexError: If the bin index is out of range.
+        """
+        return self.bins[binIndex]
+
     def add(self, value, data=_None):
         """
         Add an element to the histogram.

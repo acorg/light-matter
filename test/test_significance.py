@@ -1,66 +1,31 @@
 from unittest import TestCase
 
 from light.histogram import Histogram
-from light.significance import Significance
+from light.significance import HashFraction
 
 
-class TestSignificance(TestCase):
+class TestHashFraction(TestCase):
     """
-    Tests for the light.significance.Significance class.
+    Tests for the light.significance.HashFraction class.
     """
-    def testHashFractionSignificantBins(self):
+    def testIsSignificantWhenNotSignificant(self):
         """
-        If a histogram with significant bins is passed, significant bins must
-        be returned.
+        The isSignificant method must return False if asked about a bin
+        that is not significant.
         """
-        bins = [1, 1, 1, 1, 1, 6, 7, 8, 9]
         histogram = Histogram(5)
-        for bin_ in bins:
-            histogram.add(bin_)
+        map(histogram.add, [1, 1, 1, 1, 1, 6, 7, 8, 9])
         histogram.finalize()
-        significanceInfo = Significance(histogram)
-        signBins = significanceInfo.hashFraction(0.5, 5)
-        self.assertEqual([{'bin': [1, 1, 1, 1, 1], 'index': 0, 'score': 1.0}],
-                         signBins)
+        significance = HashFraction(histogram, 10, 0.75)
+        self.assertFalse(significance.isSignificant(0))
 
-    def testHashFractionNoSignificantBins(self):
+    def testIsSignificantWhenSignificant(self):
         """
-        If a histogram without significant bins is passed, no significant bins
-        must be returned.
+        The isSignificant method must return True if asked about a bin
+        that is significant.
         """
-        bins = [1, 2, 3, 4, 5]
         histogram = Histogram(5)
-        for bin_ in bins:
-            histogram.add(bin_)
+        map(histogram.add, [1, 1, 1, 1, 1, 6, 7, 8, 9])
         histogram.finalize()
-        significanceInfo = Significance(histogram)
-        signBins = significanceInfo.hashFraction(0.3, 5)
-        self.assertEqual([], signBins)
-
-    def testBestScoreSignificantBins(self):
-        """
-        If no bins are significant, the best score must be None.
-        """
-        bins = [1, 1, 1, 1, 1, 5, 6, 8, 9, 10]
-        histogram = Histogram(5)
-        for bin_ in bins:
-            histogram.add(bin_)
-        histogram.finalize()
-        significanceInfo = Significance(histogram)
-        significanceInfo.hashFraction(0.1, 5)
-        bestScore = significanceInfo.getBestScore()
-        self.assertEqual(1.0, bestScore)
-
-    def testBestScoreNoSignificantBins(self):
-        """
-        If there are significant bins, the right best score must be returned.
-        """
-        bins = [1, 2, 3, 4, 5]
-        histogram = Histogram(5)
-        for bin_ in bins:
-            histogram.add(bin_)
-        histogram.finalize()
-        significanceInfo = Significance(histogram)
-        significanceInfo.hashFraction(0.3, 5)
-        bestScore = significanceInfo.getBestScore()
-        self.assertEqual(None, bestScore)
+        significance = HashFraction(histogram, 10, 0.1)
+        self.assertTrue(significance.isSignificant(0))

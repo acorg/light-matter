@@ -4,10 +4,11 @@ from json import dumps
 from collections import defaultdict
 from math import log10, ceil
 from operator import itemgetter
+from warnings import warn
 
 from light.distance import scale
 from light.histogram import Histogram
-from light.significance import Significance
+from light.significance import HashFraction
 
 
 class Result(object):
@@ -51,6 +52,7 @@ class Result(object):
         self.analysis = defaultdict(dict)
         distanceBase = database.distanceBase
         queryLen = len(scannedQuery.read.sequence)
+        scoreGetter = itemgetter('score')
 
         # Go through all the subjects that were matched at all, and put the
         # match offset deltas into bins so we can decide which (if any) of
@@ -102,17 +104,53 @@ class Result(object):
 
             histogram.finalize()
 
-            # TODO: add more significanceMethods here.
-            significanceInfo = Significance(histogram)
+            minHashCount = min(queryHashCount, subject.hashCount)
+
             if significanceMethod == 'hashFraction':
-                minHashCount = min(queryHashCount, subject.hashCount)
-                significantBins = significanceInfo.hashFraction(
-                    self.significanceFraction, minHashCount)
+                significance = HashFraction(
+                    histogram, minHashCount, significanceFraction)
             else:
-                raise ValueError('%s is a non existing significanceMethod.' %
+                raise ValueError('Unknown significance method %r' %
                                  significanceMethod)
 
-            bestScore = significanceInfo.getBestScore()
+            # Look for bins with a significant number of elements (each
+            # element is a scaled hash offset delta).
+            significantBins = []
+            for binIndex, bin_ in enumerate(histogram.bins):
+                if significance.isSignificant(binIndex):
+                    binCount = len(bin_)
+                    try:
+                        score = float(binCount) / minHashCount
+                    except ZeroDivisionError:
+                        score = 0.0
+
+                    # It is possible that a bin has more deltas in it than
+                    # the number of hashes in the query / subject. This can
+                    # occur when the distanceBase used to scale distances
+                    # results in multiple different distances being put
+                    # into the same bin. In this case, the distance binning
+                    # is perhaps too aggessive. For now, issue a warning
+                    # and set the score to 1.0
+                    if score > 1.0:
+                        score = 1.0
+                        warn('Bin contains %d deltas for a query/subject pair '
+                             'with a minimum hash count of only %d. The '
+                             'database distanceBase is causing different '
+                             'distances to be scaled into the same bin, which '
+                             'might not be a good thing.' %
+                             (binCount, minHashCount), RuntimeWarning)
+
+                    significantBins.append({
+                        'bin': bin_,
+                        'index': binIndex,
+                        'score': score,
+                    })
+
+            if significantBins:
+                significantBins.sort(key=scoreGetter, reverse=True)
+                bestScore = significantBins[0]['score']
+            else:
+                bestScore = None
 
             if storeFullAnalysis:
                 self.analysis[subjectIndex] = {

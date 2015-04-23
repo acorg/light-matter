@@ -655,7 +655,7 @@ class TestDatabase(TestCase):
                     }
                 ]
             }, result.matches)
-        self.assertEqual(0, len(list(result.significant())))
+        self.assertEqual(0, len(list(result.significantSubjects())))
 
     def testFindOneMatchingSignificant(self):
         """

@@ -2,12 +2,13 @@ import sys
 from copy import deepcopy
 from json import dumps
 from collections import defaultdict
+from math import log10, ceil
 from operator import itemgetter
 from warnings import warn
-from math import log10, ceil
 
 from light.distance import scale
 from light.histogram import Histogram
+from light.significance import HashFraction
 
 
 class Result(object):
@@ -23,6 +24,8 @@ class Result(object):
         'subjectOffsets', and 'trigPoint'.
     @param queryHashCount: The C{int} number of hashes that the query has
         (including those that were not found in the database).
+    @param significanceMethod: The name of the method used to calculate
+        which histogram bins are considered significant.
     @param significanceFraction: The C{float} fraction of all (landmark,
         trig point) pairs for the query that need to fall into the same
         histogram bucket for that bucket to be considered a significant match
@@ -33,13 +36,15 @@ class Result(object):
         C{dict} with keys: 'landmark', 'readOffsets', and 'trigPoint'.
     @param storeFullAnalysis: A C{bool}. If C{True} the full significance
         analysis of each matched subject will be stored.
+    @raises ValueError: If a non-existing significanceMethod is specified.
     """
     def __init__(self, scannedQuery, matches, queryHashCount,
-                 significanceFraction, database, nonMatchingHashes=None,
-                 storeFullAnalysis=False):
+                 significanceMethod, significanceFraction, database,
+                 nonMatchingHashes=None, storeFullAnalysis=False):
         self.scannedQuery = scannedQuery
         self.matches = matches  # Only saved on self for testing.
         self.queryHashCount = queryHashCount
+        self.significanceMethod = significanceMethod
         self.significanceFraction = significanceFraction
         self.database = database
         self.nonMatchingHashes = nonMatchingHashes
@@ -100,15 +105,20 @@ class Result(object):
             histogram.finalize()
 
             minHashCount = min(queryHashCount, subject.hashCount)
-            significanceCutoff = significanceFraction * minHashCount
-            significantBins = []
-            bestScore = None
 
-            # Look for bins with a significant number of elements (scaled
-            # hash offset deltas).
+            if significanceMethod == 'hashFraction':
+                significance = HashFraction(
+                    histogram, minHashCount, significanceFraction)
+            else:
+                raise ValueError('Unknown significance method %r' %
+                                 significanceMethod)
+
+            # Look for bins with a significant number of elements (each
+            # element is a scaled hash offset delta).
+            significantBins = []
             for binIndex, bin_ in enumerate(histogram.bins):
-                binCount = len(bin_)
-                if binCount >= significanceCutoff:
+                if significance.isSignificant(binIndex):
+                    binCount = len(bin_)
                     try:
                         score = float(binCount) / minHashCount
                     except ZeroDivisionError:
@@ -136,10 +146,11 @@ class Result(object):
                         'score': score,
                     })
 
-            # Sort the significant bins by decreasing score.
             if significantBins:
                 significantBins.sort(key=scoreGetter, reverse=True)
                 bestScore = significantBins[0]['score']
+            else:
+                bestScore = None
 
             if storeFullAnalysis:
                 self.analysis[subjectIndex] = {
@@ -153,7 +164,7 @@ class Result(object):
                     'significantBins': significantBins,
                 }
 
-    def significant(self):
+    def significantSubjects(self):
         """
         Which subject matches were significant?
 
@@ -178,7 +189,7 @@ class Result(object):
         @return: The C{fp} we were passed (this is useful in testing).
         """
         alignments = []
-        for subjectIndex in self.significant():
+        for subjectIndex in self.significantSubjects():
             analysis = self.analysis[subjectIndex]
             hsps = []
 
@@ -263,7 +274,7 @@ class Result(object):
 
         result = [
             'Overall matches: %d' % len(subjectIndices),
-            'Significant matches: %d' % len(list(self.significant())),
+            'Significant matches: %d' % len(list(self.significantSubjects())),
             'Query hash count: %d' % self.queryHashCount,
             'Significance fraction: %f' % self.significanceFraction,
         ]

@@ -3,7 +3,9 @@ from collections import defaultdict
 from dark.fasta import FastaReads
 
 
-def queryDatabase(subjects, queries, database, significanceFraction=None):
+def queryDatabase(subjects, queries, database,
+                  significanceMethod='hashFraction',
+                  significanceFraction=None):
     """
     Add subjects to a database, query it, return results.
 
@@ -12,6 +14,8 @@ def queryDatabase(subjects, queries, database, significanceFraction=None):
     @param queries: Either an instance of C{dark.reads.Reads} or a C{str}
         filename with sequences that should be looked up in the database.
     @param database: A C{light.database.Database} instance.
+    @param significanceMethod: The name of the method used to calculate
+        which histogram bins are considered significant.
     @param significanceFraction: The C{float} fraction of all (landmark,
         trig point) pairs for a scannedRead that need to fall into the
         same histogram bucket for that bucket to be considered a
@@ -33,7 +37,7 @@ def queryDatabase(subjects, queries, database, significanceFraction=None):
     for query in queries:
         result = database.find(query,
                                significanceFraction=significanceFraction)
-        for subjectIndex in result.significant():
+        for subjectIndex in result.significantSubjects():
             subject = database.getSubject(subjectIndex)
             score = result.analysis[subjectIndex]['bestScore']
             resultDict[query.id][subject.id] = score

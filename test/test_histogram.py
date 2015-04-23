@@ -443,3 +443,24 @@ class TestHistogram(TestCase):
         See docstring for self._checkPositiveNegative (above).
         """
         self._checkPositiveNegative(27, [-5, 0, 3, 3, 5])
+
+    def testGetItem(self):
+        """
+        The __getitem__ method must return the correct bin.
+        """
+        h = Histogram(3)
+        map(h.add, range(9))
+        h.finalize()
+        self.assertEqual([0, 1, 2], h[0])
+        self.assertEqual([3, 4, 5], h[1])
+
+    def testGetItemInvalidIndex(self):
+        """
+        The __getitem__ method must raise IndexError if passed the index
+        of a non-existent bin.
+        """
+        h = Histogram(3)
+        map(h.add, range(9))
+        h.finalize()
+        self.assertRaisesRegexp(IndexError, '^list index out of range$',
+                                h.__getitem__, 4)

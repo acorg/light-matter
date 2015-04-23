@@ -1174,6 +1174,19 @@ class TestDatabase(TestCase):
             'Checksum: 4224788348\n')
         self.assertEqual(expected, fp.getvalue())
 
+    def testEmptyCopy(self):
+        """
+        The emptyCopy method must return a new, empty database.
+        """
+        db = Database([AlphaHelix], [])
+        sequence = 'AFRRRFRRRFASAASA'
+        subject = AARead('id', sequence)
+        db.addSubject(subject)
+        newDb = db.emptyCopy()
+        self.assertEqual(db.landmarkClasses, newDb.landmarkClasses)
+        self.assertEqual(db.limitPerLandmark, newDb.limitPerLandmark)
+        self.assertEqual(0, newDb.subjectCount)
+
 
 class TestSubject(TestCase):
     """

@@ -8,7 +8,7 @@ from warnings import warn
 
 from light.distance import scale
 from light.histogram import Histogram
-from light.significance import HashFraction
+from light.significance import HashFraction, MaxBinHight
 
 
 class Result(object):
@@ -109,10 +109,11 @@ class Result(object):
             if significanceMethod == 'hashFraction':
                 significance = HashFraction(
                     histogram, minHashCount, significanceFraction)
+            elif significanceMethod == 'maxBinHight':
+                significance = MaxBinHight(histogram, query)
             else:
                 raise ValueError('Unknown significance method %r' %
                                  significanceMethod)
-
             # Look for bins with a significant number of elements (each
             # element is a scaled hash offset delta).
             significantBins = []

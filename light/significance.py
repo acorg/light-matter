@@ -24,3 +24,12 @@ class HashFraction(object):
         """
         binCount = len(self._histogram[binIndex])
         return binCount >= self._significanceCutoff
+
+
+class MaxBinHight(object):
+    """
+    @param histogram: A C{light.histogram} instance.
+    @param query: A C{dark.read.ScannedRead} instance.
+    @param database: A C{light.database.Database} instance.
+    """
+    def __init__(histogram, query, database):

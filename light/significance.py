@@ -82,7 +82,7 @@ class MaxBinHeight(object):
         bins = result.analysis[subjectIndex]['histogram'].bins
         # The highest scoring bin is ignored.
         binHeights = sorted([len(h) for h in bins], reverse=True)[1:]
-        self.significanceCutoff = max(binHeights)
+        self.significanceCutoff = binHeights[0]
 
     def isSignificant(self, binIndex):
         """

@@ -5,9 +5,6 @@ class Always(object):
     """
     Allows every bin passed in to be significant.
     """
-    def __init__(self):
-        self.significanceCutoff = 0.0
-
     def isSignificant(self, binIndex):
         """
         Determine whether a bin is significant.
@@ -16,6 +13,16 @@ class Always(object):
         @return: C{True}.
         """
         return True
+
+    def getSignificanceAnalysis(self):
+        """
+        Returns information about the significance analysis performed.
+
+        @return: A C{dict} with information aboutt he significance analysis.
+        """
+        return {
+            'significanceMethod': 'always',
+        }
 
 
 class HashFraction(object):
@@ -45,6 +52,17 @@ class HashFraction(object):
         binCount = len(self._histogram[binIndex])
         return binCount >= self.significanceCutoff
 
+    def getSignificanceAnalysis(self):
+        """
+        Returns information about the significance analysis performed.
+
+        @return: A C{dict} with information aboutt he significance analysis.
+        """
+        return {
+            'significanceMethod': 'hashFraction',
+            'significanceCutoff': self.significanceCutoff,
+        }
+
 
 class MaxBinHeight(object):
     """
@@ -64,9 +82,9 @@ class MaxBinHeight(object):
         # The highest scoring bin is ignored.
         bins = result.analysis[subjectIndex]['significantBins'][1:]
         binHeights = [len(h) for h in bins]
-        meanBinHeight = np.mean(binHeights)
-        std = np.std(binHeights)
-        self.significanceCutoff = meanBinHeight + (2 * std)
+        self.meanBinHeight = np.mean(binHeights)
+        self.std = np.std(binHeights)
+        self.significanceCutoff = self.meanBinHeight + (2 * self.std)
 
     def isSignificant(self, binIndex):
         """
@@ -77,3 +95,16 @@ class MaxBinHeight(object):
         """
         binCount = len(self._histogram[binIndex])
         return binCount >= self.significanceCutoff
+
+    def getSignificanceAnalysis(self):
+        """
+        Returns information about the significance analysis performed.
+
+        @return: A C{dict} with information aboutt he significance analysis.
+        """
+        return {
+            'significanceMethod': 'maxBinHeight',
+            'significanceCutoff': self.significanceCutoff,
+            'standardDeviation': self.std,
+            'meanBinHeight': self.meanBinHeight,
+        }

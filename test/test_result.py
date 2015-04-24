@@ -785,9 +785,9 @@ class TestResult(TestCase):
             self.assertIn(error, str(w[0].message))
             self.assertEqual(1.0, result.analysis[0]['bestScore'])
 
-    def testRightCutoffAlways(self):
+    def testRightSignificaneAnalysisAlways(self):
         """
-        StoreFullAnalysis must keep the right significanceCutoff if the
+        StoreFullAnalysis must keep the right significanceAnalysis if the
         'always' significanceMethod is used.
         """
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
@@ -809,4 +809,5 @@ class TestResult(TestCase):
                         significanceMethod='always',
                         significanceFraction=0.1, database=database,
                         storeFullAnalysis=True)
-        self.assertEqual(0, result.analysis[0]['significanceCutoff'])
+        significanceAnalysis = result.analysis[0]['significanceAnalysis']
+        self.assertEqual('always', significanceAnalysis['significanceMethod'])

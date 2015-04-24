@@ -32,6 +32,19 @@ class TestHashFraction(TestCase):
         significance = HashFraction(histogram, 10, 0.1)
         self.assertTrue(significance.isSignificant(0))
 
+    def testHashFractionSignificanceAnalysis(self):
+        """
+        The right significanceAnalysis must be returned.
+        """
+        histogram = Histogram(5)
+        map(histogram.add, [1, 1, 1, 1, 1, 6, 7, 8, 9])
+        histogram.finalize()
+        significance = HashFraction(histogram, 10, 0.1)
+        significanceAnalysis = significance.getSignificanceAnalysis()
+        self.assertEqual({'significanceCutoff': 1.0,
+                         'significanceMethod': 'hashFraction'},
+                         significanceAnalysis)
+
 
 class TestMaxBinHeight(TestCase):
     """
@@ -59,6 +72,21 @@ class TestMaxBinHeight(TestCase):
         significance = MaxBinHeight(histogram, COWPOX, DB)
         self.assertTrue(significance.isSignificant(0))
 
+    def testMaxBinHeightSignificanceAnalysis(self):
+        """
+        The right significanceAnalysis must be returned.
+        """
+        histogram = Histogram(5)
+        map(histogram.add, [1, 1, 1, 1, 1, 6, 7, 8, 9])
+        histogram.finalize()
+        significance = MaxBinHeight(histogram, COWPOX, DB)
+        significanceAnalysis = significance.getSignificanceAnalysis()
+        self.assertEqual({'meanBinHeight': 3.0,
+                         'significanceCutoff': 3.0,
+                         'significanceMethod': 'maxBinHeight',
+                         'standardDeviation': 0.0},
+                         significanceAnalysis)
+
 
 class TestAlways(TestCase):
     """
@@ -73,3 +101,15 @@ class TestAlways(TestCase):
         histogram.finalize()
         significance = Always()
         self.assertTrue(significance.isSignificant(0))
+
+    def testAlwaysSignificanceAnalysis(self):
+        """
+        The right significanceAnalysis must be returned.
+        """
+        histogram = Histogram(5)
+        map(histogram.add, [1, 1, 1, 1, 1, 6, 7, 8, 9])
+        histogram.finalize()
+        significance = Always()
+        significanceAnalysis = significance.getSignificanceAnalysis()
+        self.assertEqual({'significanceMethod': 'always'},
+                         significanceAnalysis)

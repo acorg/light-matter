@@ -785,7 +785,7 @@ class TestResult(TestCase):
             self.assertIn(error, str(w[0].message))
             self.assertEqual(1.0, result.analysis[0]['bestScore'])
 
-    def testRightSignificaneAnalysisAlways(self):
+    def testRightSignificanceAnalysisAlways(self):
         """
         StoreFullAnalysis must keep the right significanceAnalysis if the
         'always' significanceMethod is used.

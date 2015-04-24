@@ -5,6 +5,9 @@ class Always(object):
     """
     Allows every bin passed in to be significant.
     """
+    def __init__(self):
+        self.significanceCutoff = 0.0
+
     def isSignificant(self, binIndex):
         """
         Determine whether a bin is significant.
@@ -30,7 +33,7 @@ class HashFraction(object):
     """
     def __init__(self, histogram, minHashCount, significanceFraction):
         self._histogram = histogram
-        self._significanceCutoff = significanceFraction * minHashCount
+        self.significanceCutoff = significanceFraction * minHashCount
 
     def isSignificant(self, binIndex):
         """
@@ -40,7 +43,7 @@ class HashFraction(object):
         @return: A C{bool} indicating whether the bin is significant.
         """
         binCount = len(self._histogram[binIndex])
-        return binCount >= self._significanceCutoff
+        return binCount >= self.significanceCutoff
 
 
 class MaxBinHeight(object):
@@ -63,7 +66,7 @@ class MaxBinHeight(object):
         binHeights = [len(h) for h in bins]
         meanBinHeight = np.mean(binHeights)
         std = np.std(binHeights)
-        self._significanceCutoff = meanBinHeight + (2 * std)
+        self.significanceCutoff = meanBinHeight + (2 * std)
 
     def isSignificant(self, binIndex):
         """
@@ -73,4 +76,4 @@ class MaxBinHeight(object):
         @return: A C{bool} indicating whether the bin is significant.
         """
         binCount = len(self._histogram[binIndex])
-        return binCount >= self._significanceCutoff
+        return binCount >= self.significanceCutoff

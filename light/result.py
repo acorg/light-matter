@@ -161,6 +161,7 @@ class Result(object):
                     'histogram': histogram,
                     'bestScore': bestScore,
                     'significantBins': significantBins,
+                    'significanceCutoff': significance.significanceCutoff,
                 }
             elif significantBins:
                 self.analysis[subjectIndex] = {

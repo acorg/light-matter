@@ -8,7 +8,8 @@ from warnings import warn
 
 from light.distance import scale
 from light.histogram import Histogram
-from light.significance import Always, HashFraction, MaxBinHeight
+from light.significance import (Always, HashFraction, MaxBinHeight,
+                                MeanBinHeight)
 
 
 class Result(object):
@@ -114,6 +115,9 @@ class Result(object):
             elif significanceMethod == 'maxBinHeight':
                 significance = MaxBinHeight(histogram, scannedQuery.read,
                                             database)
+            elif significanceMethod == 'meanBinHeight':
+                significance = MeanBinHeight(histogram, scannedQuery.read,
+                                             database)
             else:
                 raise ValueError('Unknown significance method %r' %
                                  significanceMethod)

@@ -79,9 +79,9 @@ class MaxBinHeight(object):
         subjectIndex = db.addSubject(query)
         result = db.find(query, significanceMethod='always',
                          storeFullAnalysis=True)
+        bins = result.analysis[subjectIndex]['histogram'].bins
         # The highest scoring bin is ignored.
-        bins = result.analysis[subjectIndex]['significantBins'][1:]
-        binHeights = [len(h) for h in bins]
+        binHeights = sorted([len(h) for h in bins], reverse=True)[1:]
         self.meanBinHeight = np.mean(binHeights)
         self.std = np.std(binHeights)
         self.significanceCutoff = self.meanBinHeight + (2 * self.std)

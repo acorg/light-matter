@@ -59,7 +59,6 @@ class TestMaxBinHeight(TestCase):
         map(histogram.add, [1, 1, 1, 1, 1, 7, 8, 9])
         histogram.finalize()
         significance = MaxBinHeight(histogram, SQUIRRELPOX, DB)
-        print significance.getSignificanceAnalysis()
         self.assertFalse(significance.isSignificant(1))
 
     def testMaxBinHeightIsSignificantWhenSignificant(self):

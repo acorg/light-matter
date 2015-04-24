@@ -66,7 +66,49 @@ class HashFraction(object):
 
 class MaxBinHeight(object):
     """
-    Identify significant histogram bins based on the non-significant bins
+    Identify significant histogram bins based on the maximum non-significant
+    bins when the query is compared against itself.
+
+    @param histogram: A C{light.histogram} instance.
+    @param query: A C{dark.read.AARead} instance.
+    @param database: A C{light.database.Database} instance.
+    """
+    def __init__(self, histogram, query, database):
+        self._histogram = histogram
+        db = database.emptyCopy()
+        subjectIndex = db.addSubject(query)
+        result = db.find(query, significanceMethod='always',
+                         storeFullAnalysis=True)
+        bins = result.analysis[subjectIndex]['histogram'].bins
+        # The highest scoring bin is ignored.
+        binHeights = sorted([len(h) for h in bins], reverse=True)[1:]
+        self.significanceCutoff = max(binHeights)
+
+    def isSignificant(self, binIndex):
+        """
+        Determine whether a bin is significant.
+
+        @param binIndex: The C{int} index of the bin to examine.
+        @return: A C{bool} indicating whether the bin is significant.
+        """
+        binCount = len(self._histogram[binIndex])
+        return binCount >= self.significanceCutoff
+
+    def getSignificanceAnalysis(self):
+        """
+        Returns information about the significance analysis performed.
+
+        @return: A C{dict} with information aboutt he significance analysis.
+        """
+        return {
+            'significanceMethod': 'maxBinHeight',
+            'significanceCutoff': self.significanceCutoff,
+        }
+
+
+class MeanBinHeight(object):
+    """
+    Identify significant histogram bins based on the mean non-significant bins
     when the query is compared against itself.
 
     @param histogram: A C{light.histogram} instance.
@@ -103,7 +145,7 @@ class MaxBinHeight(object):
         @return: A C{dict} with information aboutt he significance analysis.
         """
         return {
-            'significanceMethod': 'maxBinHeight',
+            'significanceMethod': 'meanBinHeight',
             'significanceCutoff': self.significanceCutoff,
             'standardDeviation': self.std,
             'meanBinHeight': self.meanBinHeight,

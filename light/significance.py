@@ -14,6 +14,16 @@ class Always(object):
         """
         return True
 
+    def getSignificanceAnalysis(self):
+        """
+        Returns information about the significance analysis performed.
+
+        @return: A C{dict} with information aboutt he significance analysis.
+        """
+        return {
+            'significanceMethod': 'always',
+        }
+
 
 class HashFraction(object):
     """
@@ -30,7 +40,7 @@ class HashFraction(object):
     """
     def __init__(self, histogram, minHashCount, significanceFraction):
         self._histogram = histogram
-        self._significanceCutoff = significanceFraction * minHashCount
+        self.significanceCutoff = significanceFraction * minHashCount
 
     def isSignificant(self, binIndex):
         """
@@ -40,7 +50,18 @@ class HashFraction(object):
         @return: A C{bool} indicating whether the bin is significant.
         """
         binCount = len(self._histogram[binIndex])
-        return binCount >= self._significanceCutoff
+        return binCount >= self.significanceCutoff
+
+    def getSignificanceAnalysis(self):
+        """
+        Returns information about the significance analysis performed.
+
+        @return: A C{dict} with information aboutt he significance analysis.
+        """
+        return {
+            'significanceMethod': 'hashFraction',
+            'significanceCutoff': self.significanceCutoff,
+        }
 
 
 class MaxBinHeight(object):
@@ -61,9 +82,9 @@ class MaxBinHeight(object):
         # The highest scoring bin is ignored.
         bins = result.analysis[subjectIndex]['significantBins'][1:]
         binHeights = [len(h) for h in bins]
-        meanBinHeight = np.mean(binHeights)
-        std = np.std(binHeights)
-        self._significanceCutoff = meanBinHeight + (2 * std)
+        self.meanBinHeight = np.mean(binHeights)
+        self.std = np.std(binHeights)
+        self.significanceCutoff = self.meanBinHeight + (2 * self.std)
 
     def isSignificant(self, binIndex):
         """
@@ -73,4 +94,17 @@ class MaxBinHeight(object):
         @return: A C{bool} indicating whether the bin is significant.
         """
         binCount = len(self._histogram[binIndex])
-        return binCount >= self._significanceCutoff
+        return binCount >= self.significanceCutoff
+
+    def getSignificanceAnalysis(self):
+        """
+        Returns information about the significance analysis performed.
+
+        @return: A C{dict} with information aboutt he significance analysis.
+        """
+        return {
+            'significanceMethod': 'maxBinHeight',
+            'significanceCutoff': self.significanceCutoff,
+            'standardDeviation': self.std,
+            'meanBinHeight': self.meanBinHeight,
+        }

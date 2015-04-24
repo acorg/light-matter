@@ -157,10 +157,12 @@ class Result(object):
                 bestScore = None
 
             if storeFullAnalysis:
+                significanceAnalysis = significance.getSignificanceAnalysis()
                 self.analysis[subjectIndex] = {
                     'histogram': histogram,
                     'bestScore': bestScore,
                     'significantBins': significantBins,
+                    'significanceAnalysis': significanceAnalysis,
                 }
             elif significantBins:
                 self.analysis[subjectIndex] = {

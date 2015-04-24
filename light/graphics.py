@@ -140,9 +140,10 @@ def _rectangularPanel(rows, cols, title, makeSubPlot, equalizeXAxes=False,
 
 
 def plotHistogramPanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
-                       significanceFraction=None, showUpper=True,
-                       showLower=False, showDiagonal=True, showMean=False,
-                       showMedian=False, showStdev=False, **kwargs):
+                       significanceMethod=None, significanceFraction=None,
+                       showUpper=True, showLower=False, showDiagonal=True,
+                       showMean=False, showMedian=False, showStdev=False,
+                       showSignificanceCutoff=False, **kwargs):
     """
     Plot a square panel of histograms of matching hash offset deltas between
     all pairs of passed sequences.
@@ -153,6 +154,8 @@ def plotHistogramPanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
         to cover the same range (the maximum range of all sub-plots).
     @param equalizeYAxes: if C{True}, adjust the Y axis on each sub-plot
         to cover the same range (the maximum range of all sub-plots).
+    @param significanceMethod: The name of the method used to calculate
+        which histogram bins are considered significant.
     @param significanceFraction: The C{float} fraction of all (landmark,
         trig point) pairs for a scannedRead that need to fall into the
         same histogram bucket for that bucket to be considered a
@@ -167,6 +170,8 @@ def plotHistogramPanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
     @param showMedian: If C{True} the median will be plotted in orange.
     @param showStdev: If C{True} the standard deviation from the mean will be
         plotted in magenta.
+    @param showSignificanceCutoff: If C{True} the significanceCutoff will be
+        plotted in green.
     @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
         for additional keywords, all of which are optional.
     @return: The C{light.result.Result} from running the database find.
@@ -189,9 +194,11 @@ def plotHistogramPanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
         @param ax: The matplotlib axis for the sub-plot.
         """
         return plotHistogram(reads[row], col,
+                             significanceMethod=significanceMethod,
                              significanceFraction=significanceFraction,
                              readsAx=ax, showMean=showMean,
                              showMedian=showMedian, showStdev=showStdev,
+                             showSignificanceCutoff=showSignificanceCutoff,
                              database=database)
 
     return _rectangularPanel(
@@ -201,8 +208,10 @@ def plotHistogramPanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
         includeDiagonal=showDiagonal)
 
 
-def plotHistogram(query, subject, significanceFraction=None, readsAx=None,
-                  showMean=False, showMedian=False, showStdev=False, **kwargs):
+def plotHistogram(query, subject, significanceMethod=None,
+                  significanceFraction=None, readsAx=None, showMean=False,
+                  showMedian=False, showStdev=False,
+                  showSignificanceCutoff=False, **kwargs):
     """
     Plot a histogram of matching hash offset deltas between a query and a
     subject.
@@ -210,6 +219,8 @@ def plotHistogram(query, subject, significanceFraction=None, readsAx=None,
     @param query: an AARead instance of the sequence of the query.
     @param subject: either an AARead instance of the sequence of the subject
         or an C{int} subject index in the database.
+    @param significanceMethod: The name of the method used to calculate
+        which histogram bins are considered significant.
     @param significanceFraction: The C{float} fraction of all (landmark,
         trig point) pairs for a scannedRead that need to fall into the
         same histogram bucket for that bucket to be considered a
@@ -219,6 +230,8 @@ def plotHistogram(query, subject, significanceFraction=None, readsAx=None,
     @param showMedian: If C{True} the median will be plotted in orange.
     @param showStdev: If C{True} the standard deviation from the mean will be
         plotted in magenta.
+    @param showSignificanceCutoff: If C{True} the significanceCutoff will be
+        plotted in green.
     @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
         for additional keywords, all of which are optional.
     @return: The C{light.result.Result} from running the database find.
@@ -233,7 +246,8 @@ def plotHistogram(query, subject, significanceFraction=None, readsAx=None,
     else:
         subjectIndex = database.addSubject(subject)
 
-    result = database.find(query, significanceFraction, storeFullAnalysis=True)
+    result = database.find(query, significanceMethod, significanceFraction,
+                           storeFullAnalysis=True)
 
     try:
         histogram = result.analysis[subjectIndex]['histogram']
@@ -268,6 +282,12 @@ def plotHistogram(query, subject, significanceFraction=None, readsAx=None,
             readsAx.plot([histogram.min, histogram.max],
                          [mean + stdev, mean + stdev], '-', c='magenta')
 
+        if showSignificanceCutoff:
+            sigAnalysis = result.analysis[subjectIndex]['significanceAnalysis']
+            cutoff = sigAnalysis['significanceCutoff']
+            readsAx.plot([histogram.min, histogram.max],
+                         [cutoff, cutoff], '-', c='green')
+
         return {
             'minX': histogram.min,
             'maxX': histogram.max,
@@ -279,9 +299,10 @@ def plotHistogram(query, subject, significanceFraction=None, readsAx=None,
 
 
 def plotHistogramLinePanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
-                           significanceFraction=None, showUpper=True,
-                           showLower=False, showDiagonal=True, showMean=False,
-                           showMedian=False, showStdev=False, **kwargs):
+                           significanceMethod=None, significanceFraction=None,
+                           showUpper=True, showLower=False, showDiagonal=True,
+                           showMean=False, showMedian=False, showStdev=False,
+                           showSignificanceCutoff=False, **kwargs):
     """
     Plot a square panel of histogram line plots of matching hash offset deltas
     between all pairs of passed sequences.
@@ -292,6 +313,8 @@ def plotHistogramLinePanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
         to cover the same range (the maximum range of all sub-plots).
     @param equalizeYAxes: if C{True}, adjust the Y axis on each sub-plot
         to cover the same range (the maximum range of all sub-plots).
+    @param significanceMethod: The name of the method used to calculate
+        which histogram bins are considered significant.
     @param significanceFraction: The C{float} fraction of all (landmark,
         trig point) pairs for a scannedRead that need to fall into the
         same histogram bucket for that bucket to be considered a
@@ -306,6 +329,8 @@ def plotHistogramLinePanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
     @param showMedian: If C{True} the median will be plotted in orange.
     @param showStdev: If C{True} the standard deviation from the mean will be
         plotted in magenta.
+    @param showSignificanceCutoff: If C{True} the significanceCutoff will be
+        plotted in green.
     @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
         for additional keywords, all of which are optional.
     @return: The C{light.result.Result} from running the database find.
@@ -328,9 +353,11 @@ def plotHistogramLinePanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
         @param ax: The matplotlib axis for the sub-plot.
         """
         return plotHistogramLine(reads[row], reads[col],
+                                 significanceMethod=significanceMethod,
                                  significanceFraction=significanceFraction,
                                  readsAx=ax, showMean=showMean,
                                  showMedian=showMedian, showStdev=showStdev,
+                                 showSignificanceCutoff=showSignificanceCutoff,
                                  database=database)
 
     return _rectangularPanel(
@@ -340,9 +367,10 @@ def plotHistogramLinePanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
         includeDiagonal=showDiagonal)
 
 
-def plotHistogramLine(query, subject, significanceFraction=None, readsAx=None,
-                      showMean=False, showMedian=False, showStdev=False,
-                      **kwargs):
+def plotHistogramLine(query, subject, significanceMethod=False,
+                      significanceFraction=None, readsAx=None, showMean=False,
+                      showMedian=False, showStdev=False,
+                      showSignificanceCutoff=False, **kwargs):
     """
     Plot a line where the height corresponds to the number of hashes in a
     histogram bin, but sorted by height.
@@ -350,6 +378,8 @@ def plotHistogramLine(query, subject, significanceFraction=None, readsAx=None,
     @param query: an AARead instance of the sequence of the query.
     @param subject: either an AARead instance of the sequence of the subject
         or an C{int} subject index in the database.
+    @param significanceMethod: The name of the method used to calculate
+        which histogram bins are considered significant.
     @param significanceFraction: The C{float} fraction of all (landmark,
         trig point) pairs for a scannedRead that need to fall into the
         same histogram bucket for that bucket to be considered a
@@ -359,6 +389,8 @@ def plotHistogramLine(query, subject, significanceFraction=None, readsAx=None,
     @param showMedian: If C{True} the median will be plotted in orange.
     @param showStdev: If C{True} the standard deviation from the mean will be
         plotted in magenta.
+    @param showSignificanceCutoff: If C{True} the significanceCutoff will be
+        plotted in green.
     @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
         for additional keywords, all of which are optional.
     @return: The C{light.result.Result} from running the database find.
@@ -369,7 +401,8 @@ def plotHistogramLine(query, subject, significanceFraction=None, readsAx=None,
 
     subjectIndex = database.addSubject(subject)
 
-    result = database.find(query, significanceFraction, storeFullAnalysis=True)
+    result = database.find(query, significanceMethod, significanceFraction,
+                           storeFullAnalysis=True)
 
     try:
         analysis = result.analysis[subjectIndex]
@@ -402,6 +435,12 @@ def plotHistogramLine(query, subject, significanceFraction=None, readsAx=None,
             stdev = np.std(counts)
             readsAx.plot([0, len(counts)], [mean + stdev, mean + stdev],
                          '-', c='magenta')
+
+        if showSignificanceCutoff:
+            sigAnalysis = result.analysis[subjectIndex]['significanceAnalysis']
+            cutoff = sigAnalysis['significanceCutoff']
+            readsAx.plot([histogram.min, histogram.max],
+                         [cutoff, cutoff], '-', c='green')
 
         return {
             'minX': 0,

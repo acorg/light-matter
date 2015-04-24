@@ -784,3 +784,30 @@ class TestResult(TestCase):
                      'minimum hash count of only 10.')
             self.assertIn(error, str(w[0].message))
             self.assertEqual(1.0, result.analysis[0]['bestScore'])
+
+    def testRightSignificanceAnalysisAlways(self):
+        """
+        StoreFullAnalysis must keep the right significanceAnalysis if the
+        'always' significanceMethod is used.
+        """
+        read = ScannedRead(AARead('read', 'AGTARFSDDD'))
+        database = Database([], [])
+        database.addSubject(AARead('subject', 'A' * 21))
+        hashCount = 1
+        matches = {
+            0: [
+                {
+                    'landmark': Landmark('AlphaHelix', 'A', 1, 9),
+                    'queryLandmarkOffsets': [1],
+                    'queryTrigPointOffsets': [1],
+                    'subjectLandmarkOffsets': [2],
+                    'trigPoint': TrigPoint('Peaks', 'P', 1),
+                },
+            ],
+        }
+        result = Result(read, matches, hashCount,
+                        significanceMethod='always',
+                        significanceFraction=0.1, database=database,
+                        storeFullAnalysis=True)
+        significanceAnalysis = result.analysis[0]['significanceAnalysis']
+        self.assertEqual('always', significanceAnalysis['significanceMethod'])

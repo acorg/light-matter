@@ -3,7 +3,7 @@ from unittest import TestCase
 from light.histogram import Histogram
 from light.significance import Always, HashFraction, MaxBinHeight
 
-from test.sample_data import DB, COWPOX
+from test.sample_data import DB, COWPOX, SQUIRRELPOX
 
 
 class TestHashFraction(TestCase):
@@ -56,9 +56,9 @@ class TestMaxBinHeight(TestCase):
         that is not significant.
         """
         histogram = Histogram(5)
-        map(histogram.add, [1, 1, 1, 1, 1, 6, 7, 8, 9])
+        map(histogram.add, [1, 1, 1, 1, 1, 7, 8, 9])
         histogram.finalize()
-        significance = MaxBinHeight(histogram, COWPOX, DB)
+        significance = MaxBinHeight(histogram, SQUIRRELPOX, DB)
         self.assertFalse(significance.isSignificant(1))
 
     def testMaxBinHeightIsSignificantWhenSignificant(self):
@@ -81,8 +81,8 @@ class TestMaxBinHeight(TestCase):
         histogram.finalize()
         significance = MaxBinHeight(histogram, COWPOX, DB)
         significanceAnalysis = significance.getSignificanceAnalysis()
-        self.assertEqual({'meanBinHeight': 3.0,
-                         'significanceCutoff': 3.0,
+        self.assertEqual({'meanBinHeight': 0.0,
+                         'significanceCutoff': 0.0,
                          'significanceMethod': 'maxBinHeight',
                          'standardDeviation': 0.0},
                          significanceAnalysis)

@@ -22,6 +22,7 @@ from light.landmarks import (
 from light.trig import (
     findTrigPoint, findTrigPoints, trigNameFromHashkey,
     ALL_TRIG_CLASSES, DEFAULT_TRIG_CLASSES)
+from light.score import MinHashesScore
 from light.significance import HashFraction
 
 
@@ -74,6 +75,7 @@ class Database(object):
     # bucket for that bucket to be considered a significant match with a
     # database title.
     DEFAULT_SIGNIFICANCE_FRACTION = 0.25
+    DEFAULT_SCORE_METHOD = MinHashesScore.__name__
     DEFAULT_SIGNIFICANCE_METHOD = HashFraction.__name__
 
     def __init__(self, landmarkClasses, trigPointClasses,
@@ -365,8 +367,8 @@ class Database(object):
 
         return fp
 
-    def find(self, read, significanceMethod=None, significanceFraction=None,
-             storeFullAnalysis=False):
+    def find(self, read, significanceMethod=None, scoreMethod=None,
+             significanceFraction=None, storeFullAnalysis=False):
         """
         A function which takes a read, computes all hashes for it, looks up
         matching hashes and checks which database sequence it matches.
@@ -374,6 +376,8 @@ class Database(object):
         @param read: A C{dark.read.AARead} instance.
         @param significanceMethod: The name of the method used to calculate
             which histogram bins are considered significant.
+        @param scoreMethod: The C{str} name of the method used to calculate the
+            score of a bin which is considered significant.
         @param significanceFraction: The C{float} fraction of all (landmark,
             trig point) pairs for a scannedRead that need to fall into the
             same histogram bucket for that bucket to be considered a
@@ -384,6 +388,8 @@ class Database(object):
         """
         if significanceMethod is None:
             significanceMethod = self.DEFAULT_SIGNIFICANCE_METHOD
+        if scoreMethod is None:
+            scoreMethod = self.DEFAULT_SCORE_METHOD
         if significanceFraction is None:
             significanceFraction = self.DEFAULT_SIGNIFICANCE_FRACTION
 
@@ -419,8 +425,8 @@ class Database(object):
                     })
 
         return Result(scannedRead, matches, hashCount, significanceMethod,
-                      significanceFraction, self, nonMatchingHashes,
-                      storeFullAnalysis=storeFullAnalysis)
+                      scoreMethod, significanceFraction, self,
+                      nonMatchingHashes, storeFullAnalysis=storeFullAnalysis)
 
     def save(self, fp=sys.stdout):
         """

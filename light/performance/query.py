@@ -6,6 +6,7 @@ from light.database import Database
 
 
 def queryDatabase(subjects, queries, database,
+                  scoreMethod=Database.DEFAULT_SCORE_METHOD,
                   significanceMethod=Database.DEFAULT_SIGNIFICANCE_METHOD,
                   significanceFraction=None):
     """

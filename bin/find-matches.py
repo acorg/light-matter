@@ -9,6 +9,7 @@ from dark.reads import AARead
 
 from light.database import Database, DatabaseSpecifier
 from light.score import ALL_SCORE_CLASSES
+from light.significance import ALL_SIGNIFICANCE_CLASSES
 
 
 if __name__ == '__main__':
@@ -37,8 +38,8 @@ if __name__ == '__main__':
               'database title.'))
 
     parser.add_argument(
-        '--significanceMethod', type=str, default='hashFraction',
-        choices=['always', 'hashFraction', 'maxBinHeight', 'meanBinHeight'],
+        '--significanceMethod', default=Database.DEFAULT_SIGNIFICANCE_METHOD,
+        choices=[cls.__name__ for cls in ALL_SIGNIFICANCE_CLASSES],
         help=('The name of the method used to calculate which histogram bins '
               'are considered significant.'))
 
@@ -77,13 +78,13 @@ if __name__ == '__main__':
 
     # Check for argument compatibility. It would be more friendly to
     # automatically turn on --human if any of --printHistograms or
-    # --printSequences or --excludeFeatures is used, but I think that could
+    # --printSequences or --printFeatures is used, but I think that could
     # be confusing, so for now let's be strict.
-    if ((args.printHistograms or args.printSequences or args.excludeFeatures)
+    if ((args.printHistograms or args.printSequences or args.printFeatures)
             and not args.human):
         print >>sys.stderr, (
             '%s: If you specify --printHistograms or --printSequences or '
-            '--excludeFeatures, you must also use --human.'
+            '--printFeatures, you must also use --human.'
             % basename(sys.argv[0]))
         sys.exit(1)
 

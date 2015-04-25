@@ -23,6 +23,7 @@ from light.trig import (
     findTrigPoint, findTrigPoints, trigNameFromHashkey,
     ALL_TRIG_CLASSES, DEFAULT_TRIG_CLASSES)
 from light.score import MinHashesScore
+from light.significance import HashFraction
 
 
 class Subject(AARead):
@@ -74,8 +75,8 @@ class Database(object):
     # bucket for that bucket to be considered a significant match with a
     # database title.
     DEFAULT_SIGNIFICANCE_FRACTION = 0.25
-    DEFAULT_SIGNIFICANCE_METHOD = 'hashFraction'
     DEFAULT_SCORE_METHOD = MinHashesScore.__name__
+    DEFAULT_SIGNIFICANCE_METHOD = HashFraction.__name__
 
     def __init__(self, landmarkClasses, trigPointClasses,
                  limitPerLandmark=None, maxDistance=None, minDistance=None,

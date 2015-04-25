@@ -24,9 +24,9 @@ class TestResult(TestCase):
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
         database = Database([], [])
         hashCount = 0
-        result = Result(read, {}, hashCount, significanceMethod='hashFraction',
-                        scoreMethod='MinHashesScore', significanceFraction=0.1,
-                        database=database)
+        result = Result(read, {}, hashCount,
+                        significanceMethod='HashFraction',
+                        significanceFraction=0.1, database=database)
         self.assertEqual({}, result.matches)
         self.assertEqual([], list(result.significantSubjects()))
         self.assertIs(read, result.scannedQuery)
@@ -78,7 +78,7 @@ class TestResult(TestCase):
             ],
         }
         result = Result(read, matches, hashCount,
-                        significanceMethod='hashFraction',
+                        significanceMethod='HashFraction',
                         scoreMethod='MinHashesScore',
                         significanceFraction=0.1, database=database)
         self.assertEqual(matches, result.matches)
@@ -104,7 +104,7 @@ class TestResult(TestCase):
             ],
         }
         result = Result(read, matches, hashCount,
-                        significanceMethod='hashFraction',
+                        significanceMethod='HashFraction',
                         scoreMethod='MinHashesScore',
                         significanceFraction=5, database=database)
         self.assertEqual([], list(result.significantSubjects()))
@@ -145,7 +145,7 @@ class TestResult(TestCase):
         }
 
         result = Result(read, matches, hashCount,
-                        significanceMethod='hashFraction',
+                        significanceMethod='HashFraction',
                         scoreMethod='MinHashesScore',
                         significanceFraction=0.25, database=database)
         self.assertEqual([0], list(result.significantSubjects()))
@@ -209,7 +209,7 @@ class TestResult(TestCase):
         }
 
         result = Result(read, matches, hashCount,
-                        significanceMethod='hashFraction',
+                        significanceMethod='HashFraction',
                         scoreMethod='MinHashesScore',
                         significanceFraction=0.3,
                         database=database)
@@ -223,7 +223,7 @@ class TestResult(TestCase):
         """
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
         database = Database([], [])
-        result = Result(read, [], 0, 0, 'hashFraction', 'MinHashesScore',
+        result = Result(read, [], 0, 0, 'HashFraction', 'MinHashesScore',
                         database=database)
         fp = StringIO()
         result.save(fp=fp)
@@ -242,7 +242,7 @@ class TestResult(TestCase):
         """
         read = ScannedRead(AARead('id', 'A'))
         database = Database([], [])
-        result = Result(read, {}, 0, significanceMethod='hashFraction',
+        result = Result(read, {}, 0, significanceMethod='HashFraction',
                         scoreMethod='MinHashesScore',
                         significanceFraction=0.1, database=database)
         fp = StringIO()
@@ -280,7 +280,7 @@ class TestResult(TestCase):
             ],
         }
         result = Result(read, matches, hashCount,
-                        significanceMethod='hashFraction',
+                        significanceMethod='HashFraction',
                         scoreMethod='MinHashesScore',
                         significanceFraction=0.1, database=database)
         fp = StringIO()
@@ -358,7 +358,7 @@ class TestResult(TestCase):
             ],
         }
         result = Result(read, matches, hashCount,
-                        significanceMethod='hashFraction',
+                        significanceMethod='HashFraction',
                         scoreMethod='MinHashesScore',
                         significanceFraction=0.1, database=database,
                         storeFullAnalysis=True)
@@ -388,7 +388,7 @@ class TestResult(TestCase):
             ],
         }
         result = Result(read, matches, hashCount,
-                        significanceMethod='hashFraction',
+                        significanceMethod='HashFraction',
                         scoreMethod='MinHashesScore',
                         significanceFraction=0.1, database=database,
                         storeFullAnalysis=True)
@@ -416,7 +416,7 @@ class TestResult(TestCase):
             ],
         }
         result = Result(read, matches, hashCount,
-                        significanceMethod='hashFraction',
+                        significanceMethod='HashFraction',
                         scoreMethod='MinHashesScore',
                         significanceFraction=0.1, database=database,
                         storeFullAnalysis=True)
@@ -807,7 +807,7 @@ class TestResult(TestCase):
     def testRightSignificanceAnalysisAlways(self):
         """
         StoreFullAnalysis must keep the right significanceAnalysis if the
-        'always' significanceMethod is used.
+        Always significanceMethod is used.
         """
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
         database = Database([], [])
@@ -825,8 +825,8 @@ class TestResult(TestCase):
             ],
         }
         result = Result(read, matches, hashCount,
-                        significanceMethod='always',
+                        significanceMethod='Always',
                         scoreMethod='MinHashesScore', significanceFraction=0.1,
                         database=database, storeFullAnalysis=True)
         significanceAnalysis = result.analysis[0]['significanceAnalysis']
-        self.assertEqual('always', significanceAnalysis['significanceMethod'])
+        self.assertEqual('Always', significanceAnalysis['significanceMethod'])

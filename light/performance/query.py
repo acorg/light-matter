@@ -6,8 +6,8 @@ from light.database import Database
 
 
 def queryDatabase(subjects, queries, database,
-                  significanceMethod='hashFraction',
                   scoreMethod=Database.DEFAULT_SCORE_METHOD,
+                  significanceMethod=Database.DEFAULT_SIGNIFICANCE_METHOD,
                   significanceFraction=None):
     """
     Add subjects to a database, query it, return results.

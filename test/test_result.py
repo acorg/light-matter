@@ -26,6 +26,7 @@ class TestResult(TestCase):
         hashCount = 0
         result = Result(read, {}, hashCount,
                         significanceMethod='HashFraction',
+                        scoreMethod='MinHashesScore',
                         significanceFraction=0.1, database=database)
         self.assertEqual({}, result.matches)
         self.assertEqual([], list(result.significantSubjects()))

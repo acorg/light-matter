@@ -7,7 +7,8 @@ import argparse
 from dark.fasta import combineReads
 from dark.reads import AARead
 
-from light.database import DatabaseSpecifier
+from light.database import Database, DatabaseSpecifier
+from light.score import ALL_SCORE_CLASSES
 
 
 if __name__ == '__main__':
@@ -40,6 +41,12 @@ if __name__ == '__main__':
         choices=['always', 'hashFraction', 'maxBinHeight', 'meanBinHeight'],
         help=('The name of the method used to calculate which histogram bins '
               'are considered significant.'))
+
+    parser.add_argument(
+        '--scoreMethod', type=str, default=Database.DEFAULT_SCORE_METHOD,
+        choices=[cls.__name__ for cls in ALL_SCORE_CLASSES],
+        help=('The name of the method used to calculate the score of a '
+              'histogram bin which is considered significant.'))
 
     parser.add_argument(
         '--human', default=False, action='store_true',
@@ -84,6 +91,7 @@ if __name__ == '__main__':
     reads = combineReads(args.fastaFile, args.sequences, readClass=AARead)
     significanceFraction = args.significanceFraction
     significanceMethod = args.significanceMethod
+    scoreMethod = args.scoreMethod
 
     # Look up each read in the database and print its matches, either in
     # human-readable form or as JSON.
@@ -91,6 +99,7 @@ if __name__ == '__main__':
         for count, read in enumerate(reads, start=1):
             result = database.find(
                 read, significanceMethod=significanceMethod,
+                scoreMethod=scoreMethod,
                 significanceFraction=significanceFraction,
                 storeFullAnalysis=True)
 

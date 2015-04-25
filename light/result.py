@@ -4,12 +4,12 @@ from json import dumps
 from collections import defaultdict
 from math import log10, ceil
 from operator import itemgetter
-from warnings import warn
 
 from light.distance import scale
 from light.histogram import Histogram
 from light.significance import (Always, HashFraction, MaxBinHeight,
                                 MeanBinHeight)
+from light.score import MinHashesScore
 
 
 class Result(object):
@@ -25,8 +25,10 @@ class Result(object):
         'subjectOffsets', and 'trigPoint'.
     @param queryHashCount: The C{int} number of hashes that the query has
         (including those that were not found in the database).
-    @param significanceMethod: The name of the method used to calculate
+    @param significanceMethod: The C{str} name of the method used to calculate
         which histogram bins are considered significant.
+    @param scoreMethod: The C{str} name of the method used to calculate the
+        score of a bin which is considered significant.
     @param significanceFraction: The C{float} fraction of all (landmark,
         trig point) pairs for the query that need to fall into the same
         histogram bucket for that bucket to be considered a significant match
@@ -40,12 +42,13 @@ class Result(object):
     @raises ValueError: If a non-existing significanceMethod is specified.
     """
     def __init__(self, scannedQuery, matches, queryHashCount,
-                 significanceMethod, significanceFraction, database,
-                 nonMatchingHashes=None, storeFullAnalysis=False):
+                 significanceMethod, scoreMethod, significanceFraction,
+                 database, nonMatchingHashes=None, storeFullAnalysis=False):
         self.scannedQuery = scannedQuery
         self.matches = matches  # Only saved on self for testing.
         self.queryHashCount = queryHashCount
         self.significanceMethod = significanceMethod
+        self.scoreMethod = scoreMethod
         self.significanceFraction = significanceFraction
         self.database = database
         self.nonMatchingHashes = nonMatchingHashes
@@ -107,46 +110,33 @@ class Result(object):
 
             minHashCount = min(queryHashCount, subject.hashCount)
 
-            if significanceMethod == 'always':
+            if self.significanceMethod == 'always':
                 significance = Always()
-            elif significanceMethod == 'hashFraction':
+            elif self.significanceMethod == 'hashFraction':
                 significance = HashFraction(
                     histogram, minHashCount, significanceFraction)
-            elif significanceMethod == 'maxBinHeight':
+            elif self.significanceMethod == 'maxBinHeight':
                 significance = MaxBinHeight(histogram, scannedQuery.read,
                                             database)
-            elif significanceMethod == 'meanBinHeight':
+            elif self.significanceMethod == 'meanBinHeight':
                 significance = MeanBinHeight(histogram, scannedQuery.read,
                                              database)
             else:
                 raise ValueError('Unknown significance method %r' %
-                                 significanceMethod)
+                                 self.significanceMethod)
+
+            if self.scoreMethod == 'MinHashesScore':
+                calculateScore = MinHashesScore(histogram, minHashCount)
+            else:
+                raise ValueError('Unknown score method %r' %
+                                 self.scoreMethod)
+
             # Look for bins with a significant number of elements (each
             # element is a scaled hash offset delta).
             significantBins = []
             for binIndex, bin_ in enumerate(histogram.bins):
                 if significance.isSignificant(binIndex):
-                    binCount = len(bin_)
-                    try:
-                        score = float(binCount) / minHashCount
-                    except ZeroDivisionError:
-                        score = 0.0
-
-                    # It is possible that a bin has more deltas in it than
-                    # the number of hashes in the query / subject. This can
-                    # occur when the distanceBase used to scale distances
-                    # results in multiple different distances being put
-                    # into the same bin. In this case, the distance binning
-                    # is perhaps too aggessive. For now, issue a warning
-                    # and set the score to 1.0
-                    if score > 1.0:
-                        score = 1.0
-                        warn('Bin contains %d deltas for a query/subject pair '
-                             'with a minimum hash count of only %d. The '
-                             'database distanceBase is causing different '
-                             'distances to be scaled into the same bin, which '
-                             'might not be a good thing.' %
-                             (binCount, minHashCount), RuntimeWarning)
+                    score = calculateScore.calculateScore(binIndex)
 
                     significantBins.append({
                         'bin': bin_,

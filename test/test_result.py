@@ -25,7 +25,8 @@ class TestResult(TestCase):
         database = Database([], [])
         hashCount = 0
         result = Result(read, {}, hashCount, significanceMethod='hashFraction',
-                        significanceFraction=0.1, database=database)
+                        scoreMethod='MinHashesScore', significanceFraction=0.1,
+                        database=database)
         self.assertEqual({}, result.matches)
         self.assertEqual([], list(result.significantSubjects()))
         self.assertIs(read, result.scannedQuery)
@@ -53,6 +54,7 @@ class TestResult(TestCase):
         error = "^Unknown significance method 'xxx'$"
         self.assertRaisesRegexp(ValueError, error, Result, read, matches,
                                 hashCount, significanceMethod='xxx',
+                                scoreMethod='MinHashesScore',
                                 significanceFraction=0.1, database=database)
 
     def testAddOneMatch(self):
@@ -77,6 +79,7 @@ class TestResult(TestCase):
         }
         result = Result(read, matches, hashCount,
                         significanceMethod='hashFraction',
+                        scoreMethod='MinHashesScore',
                         significanceFraction=0.1, database=database)
         self.assertEqual(matches, result.matches)
 
@@ -102,6 +105,7 @@ class TestResult(TestCase):
         }
         result = Result(read, matches, hashCount,
                         significanceMethod='hashFraction',
+                        scoreMethod='MinHashesScore',
                         significanceFraction=5, database=database)
         self.assertEqual([], list(result.significantSubjects()))
 
@@ -142,6 +146,7 @@ class TestResult(TestCase):
 
         result = Result(read, matches, hashCount,
                         significanceMethod='hashFraction',
+                        scoreMethod='MinHashesScore',
                         significanceFraction=0.25, database=database)
         self.assertEqual([0], list(result.significantSubjects()))
         self.assertEqual(0.5, result.analysis[0]['bestScore'])
@@ -205,6 +210,7 @@ class TestResult(TestCase):
 
         result = Result(read, matches, hashCount,
                         significanceMethod='hashFraction',
+                        scoreMethod='MinHashesScore',
                         significanceFraction=0.3,
                         database=database)
         self.assertEqual([0, 1], sorted(list(result.significantSubjects())))
@@ -217,7 +223,7 @@ class TestResult(TestCase):
         """
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
         database = Database([], [])
-        result = Result(read, [], 0, 0, 'hashFraction',
+        result = Result(read, [], 0, 0, 'hashFraction', 'MinHashesScore',
                         database=database)
         fp = StringIO()
         result.save(fp=fp)
@@ -237,6 +243,7 @@ class TestResult(TestCase):
         read = ScannedRead(AARead('id', 'A'))
         database = Database([], [])
         result = Result(read, {}, 0, significanceMethod='hashFraction',
+                        scoreMethod='MinHashesScore',
                         significanceFraction=0.1, database=database)
         fp = StringIO()
         self.assertIs(fp, result.save(fp))
@@ -274,6 +281,7 @@ class TestResult(TestCase):
         }
         result = Result(read, matches, hashCount,
                         significanceMethod='hashFraction',
+                        scoreMethod='MinHashesScore',
                         significanceFraction=0.1, database=database)
         fp = StringIO()
         result.save(fp=fp)
@@ -351,6 +359,7 @@ class TestResult(TestCase):
         }
         result = Result(read, matches, hashCount,
                         significanceMethod='hashFraction',
+                        scoreMethod='MinHashesScore',
                         significanceFraction=0.1, database=database,
                         storeFullAnalysis=True)
         self.assertEqual(21, result.analysis[0]['histogram'].nBins)
@@ -380,6 +389,7 @@ class TestResult(TestCase):
         }
         result = Result(read, matches, hashCount,
                         significanceMethod='hashFraction',
+                        scoreMethod='MinHashesScore',
                         significanceFraction=0.1, database=database,
                         storeFullAnalysis=True)
         self.assertEqual(21, result.analysis[0]['histogram'].nBins)
@@ -407,6 +417,7 @@ class TestResult(TestCase):
         }
         result = Result(read, matches, hashCount,
                         significanceMethod='hashFraction',
+                        scoreMethod='MinHashesScore',
                         significanceFraction=0.1, database=database,
                         storeFullAnalysis=True)
         self.assertEqual(11, result.analysis[0]['histogram'].nBins)
@@ -422,6 +433,7 @@ class TestResult(TestCase):
         database = Database([], [])
         database.addSubject(read)
         result = database.find(read, significanceFraction=0.1,
+                               scoreMethod='MinHashesScore',
                                storeFullAnalysis=True)
 
         result.print_(fp=fp)
@@ -487,6 +499,7 @@ class TestResult(TestCase):
         database.addSubject(subject)
         query = AARead('query', sequence)
         result = database.find(query, significanceFraction=0.1,
+                               scoreMethod='MinHashesScore',
                                storeFullAnalysis=True)
 
         result.print_(fp=fp, printQuery=False, printFeatures=True)
@@ -524,6 +537,7 @@ class TestResult(TestCase):
         database.addSubject(subject)
         query = AARead('query', 'CACACA')
         result = database.find(query, significanceFraction=0.1,
+                               scoreMethod='MinHashesScore',
                                storeFullAnalysis=True)
 
         result.print_(fp=fp, printQuery=False, printHistograms=True,
@@ -577,7 +591,8 @@ class TestResult(TestCase):
         subject = AARead('subject', sequence)
         database.addSubject(subject)
         query = AARead('query', sequence)
-        result = database.find(query, significanceFraction=0.1)
+        result = database.find(query, significanceFraction=0.1,
+                               scoreMethod='MinHashesScore')
 
         result.print_(fp=fp, printQuery=False, printFeatures=True)
         expected = ("Overall matches: 1\n"
@@ -613,7 +628,8 @@ class TestResult(TestCase):
         subject = AARead('subject', sequence)
         database.addSubject(subject)
         query = AARead('query', sequence)
-        result = database.find(query, significanceFraction=0.1)
+        result = database.find(query, significanceFraction=0.1,
+                               scoreMethod='MinHashesScore')
 
         result.print_(fp=fp, printQuery=False, printFeatures=False)
         expected = ("Overall matches: 1\n"
@@ -645,7 +661,8 @@ class TestResult(TestCase):
         subject = AARead('subject', 'CACACAAACACA')
         database.addSubject(subject)
         query = AARead('query', 'CACACA')
-        result = database.find(query, significanceFraction=0.1)
+        result = database.find(query, significanceFraction=0.1,
+                               scoreMethod='MinHashesScore')
 
         result.print_(fp=fp, printQuery=False, printFeatures=False)
         expected = ("Overall matches: 1\n"
@@ -683,7 +700,8 @@ class TestResult(TestCase):
         subject = AARead('subject', 'CACACAAACACA')
         database.addSubject(subject)
         query = AARead('query', 'CACACA')
-        result = database.find(query, significanceFraction=0.1)
+        result = database.find(query, significanceFraction=0.1,
+                               scoreMethod='MinHashesScore')
 
         result.print_(fp=fp, printQuery=False, printFeatures=False,
                       sortHSPsByScore=False)
@@ -721,7 +739,8 @@ class TestResult(TestCase):
         subject = AARead('subject', sequence)
         database.addSubject(subject)
         query = AARead('query', sequence)
-        result = database.find(query, significanceFraction=0.1)
+        result = database.find(query, significanceFraction=0.1,
+                               scoreMethod='MinHashesScore')
 
         result.print_(fp=fp, printQuery=False, printSequences=True,
                       printFeatures=False)
@@ -807,7 +826,7 @@ class TestResult(TestCase):
         }
         result = Result(read, matches, hashCount,
                         significanceMethod='always',
-                        significanceFraction=0.1, database=database,
-                        storeFullAnalysis=True)
+                        scoreMethod='MinHashesScore', significanceFraction=0.1,
+                        database=database, storeFullAnalysis=True)
         significanceAnalysis = result.analysis[0]['significanceAnalysis']
         self.assertEqual('always', significanceAnalysis['significanceMethod'])

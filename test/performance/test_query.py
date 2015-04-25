@@ -26,7 +26,7 @@ class TestQueryDatabase(TestCase):
         queries = Reads()
         queries.add(AARead('query', 'FRRRFRRRFASAASA'))
         result = queryDatabase(subjects, queries, database,
-                               significanceMethod='hashFraction',
+                               significanceMethod='HashFraction',
                                significanceFraction=0.1)
         self.assertEqual({}, result)
 

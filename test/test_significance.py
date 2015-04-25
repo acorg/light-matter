@@ -43,7 +43,7 @@ class TestHashFraction(TestCase):
         significance = HashFraction(histogram, 10, 0.1)
         significanceAnalysis = significance.getSignificanceAnalysis()
         self.assertEqual({'significanceCutoff': 1.0,
-                         'significanceMethod': 'hashFraction'},
+                          'significanceMethod': 'HashFraction'},
                          significanceAnalysis)
 
 
@@ -84,7 +84,7 @@ class TestMeanBinHeight(TestCase):
         significanceAnalysis = significance.getSignificanceAnalysis()
         self.assertEqual({'meanBinHeight': 0.0,
                           'significanceCutoff': 0.0,
-                          'significanceMethod': 'meanBinHeight',
+                          'significanceMethod': 'MeanBinHeight',
                           'standardDeviation': 0.0},
                          significanceAnalysis)
 
@@ -125,7 +125,7 @@ class TestMaxBinHeight(TestCase):
         significance = MaxBinHeight(histogram, COWPOX, DB)
         significanceAnalysis = significance.getSignificanceAnalysis()
         self.assertEqual({'significanceCutoff': 0.0,
-                          'significanceMethod': 'maxBinHeight'},
+                          'significanceMethod': 'MaxBinHeight'},
                          significanceAnalysis)
 
 
@@ -152,5 +152,5 @@ class TestAlways(TestCase):
         histogram.finalize()
         significance = Always()
         significanceAnalysis = significance.getSignificanceAnalysis()
-        self.assertEqual({'significanceMethod': 'always'},
+        self.assertEqual({'significanceMethod': 'Always'},
                          significanceAnalysis)

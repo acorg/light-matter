@@ -107,15 +107,15 @@ class Result(object):
 
             minHashCount = min(queryHashCount, subject.hashCount)
 
-            if significanceMethod == 'always':
+            if significanceMethod == 'Always':
                 significance = Always()
-            elif significanceMethod == 'hashFraction':
+            elif significanceMethod == 'HashFraction':
                 significance = HashFraction(
                     histogram, minHashCount, significanceFraction)
-            elif significanceMethod == 'maxBinHeight':
+            elif significanceMethod == 'MaxBinHeight':
                 significance = MaxBinHeight(histogram, scannedQuery.read,
                                             database)
-            elif significanceMethod == 'meanBinHeight':
+            elif significanceMethod == 'MeanBinHeight':
                 significance = MeanBinHeight(histogram, scannedQuery.read,
                                              database)
             else:

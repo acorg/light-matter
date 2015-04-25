@@ -21,7 +21,7 @@ class Always(object):
         @return: A C{dict} with information aboutt he significance analysis.
         """
         return {
-            'significanceMethod': 'always',
+            'significanceMethod': self.__class__.__name__,
         }
 
 
@@ -59,7 +59,7 @@ class HashFraction(object):
         @return: A C{dict} with information aboutt he significance analysis.
         """
         return {
-            'significanceMethod': 'hashFraction',
+            'significanceMethod': self.__class__.__name__,
             'significanceCutoff': self.significanceCutoff,
         }
 
@@ -77,7 +77,7 @@ class MaxBinHeight(object):
         self._histogram = histogram
         db = database.emptyCopy()
         subjectIndex = db.addSubject(query)
-        result = db.find(query, significanceMethod='always',
+        result = db.find(query, significanceMethod='Always',
                          storeFullAnalysis=True)
         bins = result.analysis[subjectIndex]['histogram'].bins
         # The highest scoring bin is ignored.
@@ -101,7 +101,7 @@ class MaxBinHeight(object):
         @return: A C{dict} with information aboutt he significance analysis.
         """
         return {
-            'significanceMethod': 'maxBinHeight',
+            'significanceMethod': self.__class__.__name__,
             'significanceCutoff': self.significanceCutoff,
         }
 
@@ -119,7 +119,7 @@ class MeanBinHeight(object):
         self._histogram = histogram
         db = database.emptyCopy()
         subjectIndex = db.addSubject(query)
-        result = db.find(query, significanceMethod='always',
+        result = db.find(query, significanceMethod='Always',
                          storeFullAnalysis=True)
         bins = result.analysis[subjectIndex]['histogram'].bins
         # The highest scoring bin is ignored.
@@ -145,8 +145,11 @@ class MeanBinHeight(object):
         @return: A C{dict} with information aboutt he significance analysis.
         """
         return {
-            'significanceMethod': 'meanBinHeight',
+            'significanceMethod': self.__class__.__name__,
             'significanceCutoff': self.significanceCutoff,
             'standardDeviation': self.std,
             'meanBinHeight': self.meanBinHeight,
         }
+
+
+ALL_SIGNIFICANCE_CLASSES = (Always, HashFraction, MaxBinHeight, MeanBinHeight)

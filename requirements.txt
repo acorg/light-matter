@@ -9,3 +9,6 @@ pyflakes==0.8.1
 scipy==0.14.0
 twisted==14.0.2
 ujson==1.33
+--allow-external mysql-connector-python
+mysql-connector-python==2.0.3
+scikit-learn==0.16.1

@@ -115,7 +115,7 @@ class TestSpineUtils(object):
         for side in self.inner_sides:
             nt.assert_true(ax.spines[side].get_visible())
 
-        utils.despine(**dict(zip(self.sides, [True] * 4)))
+        utils.despine(**dict(list(zip(self.sides, [True] * 4))))
         for side in self.sides:
             nt.assert_true(~ax.spines[side].get_visible())
 

@@ -43,7 +43,7 @@ class _SubjectAddMixin(object):
         read = AARead('id', self.FEATURE_SEQUENCE * self.FEATURE_COUNT)
         database = Database(self.LANDMARKS, self.TRIG_POINTS)
         startTime = time.time()
-        for _ in xrange(self.SUBJECT_COUNT):
+        for _ in range(self.SUBJECT_COUNT):
             database.addSubject(read)
         elapsed = time.time() - startTime
         self.details = elapsed

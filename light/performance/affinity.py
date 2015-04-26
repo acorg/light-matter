@@ -21,7 +21,7 @@ def affinityMatrix(sequences, significanceFraction=None, **kwargs):
     @return: A two-dimensional array of match scores. The first dimension is
         the read number, the second is the database subject index.
     """
-    if isinstance(sequences, basestring):
+    if isinstance(sequences, str):
         reads = FastaReads(sequences, readClass=AARead)
     else:
         reads = sequences
@@ -35,7 +35,7 @@ def affinityMatrix(sequences, significanceFraction=None, **kwargs):
         append = row.append
         analysis = db.find(
             read, significanceFraction=significanceFraction).analysis
-        for subjectIndex in xrange(subjectCount):
+        for subjectIndex in range(subjectCount):
             # Be careful how we access the analysis. It is a defaultdict,
             # so its keys are created upon access. I.e., don't use a
             # try/except below because analysis[subjectIndex] will never

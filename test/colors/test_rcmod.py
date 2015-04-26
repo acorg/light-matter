@@ -13,13 +13,13 @@ class RCParamTester(object):
 
     def flatten_list(self, orig_list):
 
-        iter_list = map(np.atleast_1d, orig_list)
+        iter_list = list(map(np.atleast_1d, orig_list))
         flat_list = [item for sublist in iter_list for item in sublist]
         return flat_list
 
     def assert_rc_params(self, params):
 
-        for k, v in params.items():
+        for k, v in list(params.items()):
             if k == "svg.embed_char_paths":
                 # This param causes test issues and is deprecated anyway
                 continue

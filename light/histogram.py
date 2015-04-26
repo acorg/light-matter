@@ -22,7 +22,7 @@ class Histogram(object):
         self._values = []
         self._finalized = False
         self.bins = []
-        for _ in xrange(nBins):
+        for _ in range(nBins):
             self.bins.append([])
 
     def __getitem__(self, binIndex):

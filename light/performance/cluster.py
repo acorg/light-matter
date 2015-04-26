@@ -36,7 +36,7 @@ class ClusterAnalysis(object):
         @raises ValueError: If the id of a read is not in labels and no default
             label has been set, or if there are no reads in C{sequences}.
         """
-        if isinstance(sequences, basestring):
+        if isinstance(sequences, str):
             reads = FastaReads(sequences, readClass=AARead)
         else:
             reads = sequences
@@ -71,7 +71,7 @@ class ClusterAnalysis(object):
         affinity = np.ones((nReads, nReads))
 
         for row, offsetDeltas in enumerate(allOffsetDeltas):
-            for col in xrange(row + 1, nReads):
+            for col in range(row + 1, nReads):
                 affinity[row, col] = affinity[col, row] = (
                     self.affinityFromOffsetDeltas(
                         allOffsetDeltas[row], allOffsetDeltas[col]))
@@ -139,25 +139,25 @@ class AffinityPropagationAnalysis(ClusterAnalysis):
 
         trueLabels, clusterLabels = self.trueLabels, self.clusterLabels
 
-        print >>fp, 'Estimated number of clusters: %d' % self.nClusters
+        print('Estimated number of clusters: %d' % self.nClusters, file=fp)
 
-        print >>fp, 'Homogeneity: %0.3f' % (
-            homogeneity_score(trueLabels, clusterLabels))
+        print('Homogeneity: %0.3f' % (
+            homogeneity_score(trueLabels, clusterLabels)), file=fp)
 
-        print >>fp, 'Completeness: %0.3f' % (
-            completeness_score(trueLabels, clusterLabels))
+        print('Completeness: %0.3f' % (
+            completeness_score(trueLabels, clusterLabels)), file=fp)
 
-        print >>fp, 'V-measure: %0.3f' % (
-            v_measure_score(trueLabels, clusterLabels))
+        print('V-measure: %0.3f' % (
+            v_measure_score(trueLabels, clusterLabels)), file=fp)
 
-        print >>fp, 'Adjusted Rand Index: %0.3f' % (
-            adjusted_rand_score(trueLabels, clusterLabels))
+        print('Adjusted Rand Index: %0.3f' % (
+            adjusted_rand_score(trueLabels, clusterLabels)), file=fp)
 
-        print >>fp, 'Adjusted Mutual Information: %0.3f' % (
-            adjusted_mutual_info_score(trueLabels, clusterLabels))
+        print('Adjusted Mutual Information: %0.3f' % (
+            adjusted_mutual_info_score(trueLabels, clusterLabels)), file=fp)
 
-        print >>fp, 'Silhouette Coefficient: %0.3f' % silhouette_score(
-            self.affinity, clusterLabels, metric='sqeuclidean')
+        print('Silhouette Coefficient: %0.3f' % silhouette_score(
+            self.affinity, clusterLabels, metric='sqeuclidean'), file=fp)
 
 
 class KMeansAnalysis(ClusterAnalysis):
@@ -191,21 +191,21 @@ class KMeansAnalysis(ClusterAnalysis):
             # seeing as we don't want to silently use a default value of k.
             raise RuntimeError('Did you forget to run cluster()?')
 
-        print >>fp, 'Homogeneity: %0.3f' % (
-            homogeneity_score(trueLabels, clusterLabels))
+        print('Homogeneity: %0.3f' % (
+            homogeneity_score(trueLabels, clusterLabels)), file=fp)
 
-        print >>fp, 'Completeness: %0.3f' % (
-            completeness_score(trueLabels, clusterLabels))
+        print('Completeness: %0.3f' % (
+            completeness_score(trueLabels, clusterLabels)), file=fp)
 
-        print >>fp, 'V-measure: %0.3f' % (
-            v_measure_score(trueLabels, clusterLabels))
+        print('V-measure: %0.3f' % (
+            v_measure_score(trueLabels, clusterLabels)), file=fp)
 
-        print >>fp, 'Adjusted Rand Index: %0.3f' % (
-            adjusted_rand_score(trueLabels, clusterLabels))
+        print('Adjusted Rand Index: %0.3f' % (
+            adjusted_rand_score(trueLabels, clusterLabels)), file=fp)
 
-        print >>fp, 'Adjusted Mutual Information: %0.3f' % (
-            adjusted_mutual_info_score(trueLabels, clusterLabels))
+        print('Adjusted Mutual Information: %0.3f' % (
+            adjusted_mutual_info_score(trueLabels, clusterLabels)), file=fp)
 
-        print >>fp, 'Silhouette Coefficient: %0.3f' % silhouette_score(
+        print('Silhouette Coefficient: %0.3f' % silhouette_score(
             self.affinity, clusterLabels, metric='sqeuclidean',
-            sample_size=300)
+            sample_size=300), file=fp)

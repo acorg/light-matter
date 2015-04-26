@@ -173,12 +173,12 @@ class Result(object):
         """
         if self._storeFullAnalysis:
             return (subjectIndex for subjectIndex, analysis in
-                    self.analysis.iteritems()
+                    self.analysis.items()
                     if analysis['significantBins'])
         else:
             # When the full analysis isn't being stored, all keys (i.e.,
             # subject indices) in self.analysis were significant.
-            return self.analysis.iterkeys()
+            return iter(self.analysis.keys())
 
     def save(self, fp=sys.stdout):
         """
@@ -222,13 +222,13 @@ class Result(object):
             })
 
         read = self.scannedQuery.read
-        print >>fp, dumps(
+        print(dumps(
             {
                 'alignments': alignments,
                 'queryId': read.id,
                 'querySequence': read.sequence,
             },
-            separators=(',', ':'))
+            separators=(',', ':')), file=fp)
 
         return fp
 
@@ -266,7 +266,7 @@ class Result(object):
         # Python 3 because bestScore is None when there are no significant
         # matches (which can happen when self._storeFullAnalysis is True).
         subjectIndices = sorted(
-            self.analysis.iterkeys(), reverse=True,
+            iter(self.analysis.keys()), reverse=True,
             key=lambda index: self.analysis[index]['bestScore'])
 
         if not sortHSPsByScore:
@@ -382,4 +382,4 @@ class Result(object):
                 if first:
                     result.append('All bins were empty.')
 
-        print >>fp, '\n'.join(result)
+        print('\n'.join(result), file=fp)

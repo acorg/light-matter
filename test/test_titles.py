@@ -1,8 +1,9 @@
+import builtins
 from unittest import TestCase, skip
-from mock import patch
+from unittest.mock import patch
 
-from mocking import mockOpen
-from sample_data import (
+from .mocking import mockOpen
+from .sample_data import (
     DB, PARAMS,
     CATPOX, COWPOX, MONKEYPOX, MUMMYPOX, SQUIRRELPOX,
     RECORD0, RECORD1, RECORD2, RECORD3, RECORD4,
@@ -29,7 +30,7 @@ class TestTitleCounts(TestCase):
         empty dictionary.
         """
         mockOpener = mockOpen(read_data=PARAMS)
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             self.assertEqual({}, titleCounts(readsAlignments))
 
@@ -39,7 +40,7 @@ class TestTitleCounts(TestCase):
         return the correct title counts.
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             self.assertEqual(
                 {
@@ -57,7 +58,7 @@ class TestTitleCounts(TestCase):
         must be correct.
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD2 + RECORD3))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             self.assertEqual(
                 {
@@ -77,17 +78,17 @@ class TestTitlesAlignments(TestCase):
         empty readsAlignments instance.
         """
         mockOpener = mockOpen(read_data=(PARAMS))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
-            self.assertEqual([], titlesAlignments.keys())
+            self.assertEqual([], list(titlesAlignments.keys()))
 
     def testExpectedTitles(self):
         """
         An instance of TitlesAlignments must have the expected titles.
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
             self.assertEqual(
@@ -106,7 +107,7 @@ class TestTitlesAlignments(TestCase):
         have the expected attributes.
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
 
             readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
@@ -135,7 +136,7 @@ class TestTitlesAlignments(TestCase):
         the data from those reads collected properly.
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD2 + RECORD3))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
 
@@ -161,15 +162,15 @@ class TestTitlesAlignments(TestCase):
         to add a pre-existing title to a TitlesAlignments instance.
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
             title = SQUIRRELPOX.id
             titleAlignments = TitleAlignments(title, 55)
             error = ("Title 'Squirrelpox' already present in "
                      "TitlesAlignments instance\.")
-            self.assertRaisesRegexp(KeyError, error, titlesAlignments.addTitle,
-                                    title, titleAlignments)
+            self.assertRaisesRegex(KeyError, error, titlesAlignments.addTitle,
+                                   title, titleAlignments)
 
     def testAddTitle(self):
         """
@@ -177,7 +178,7 @@ class TestTitlesAlignments(TestCase):
         instance.
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
             title = 'Squirrelpox virus 23'
@@ -192,7 +193,7 @@ class TestTitlesAlignments(TestCase):
         TitlesAlignments instance.
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = list(titlesAlignments.hsps())
@@ -217,19 +218,19 @@ class TestTitlesAlignmentsFiltering(TestCase):
         the titles of the original when called with no arguments.
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = titlesAlignments.filter()
-            self.assertItemsEqual(
-                [
+            self.assertEqual(
+                sorted([
                     COWPOX.id,
                     MONKEYPOX.id,
                     MUMMYPOX.id,
                     SQUIRRELPOX.id,
                     CATPOX.id,
-                ],
-                result.keys())
+                ]),
+                sorted(iter(result)))
 
     def testMinMatchingReads(self):
         """
@@ -238,7 +239,7 @@ class TestTitlesAlignmentsFiltering(TestCase):
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2 +
                                          RECORD3))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = titlesAlignments.filter(minMatchingReads=2)
@@ -246,7 +247,7 @@ class TestTitlesAlignmentsFiltering(TestCase):
                 [
                     COWPOX.id,
                 ],
-                result.keys())
+                list(result.keys()))
 
     def testMinMedianScore(self):
         """
@@ -255,7 +256,7 @@ class TestTitlesAlignmentsFiltering(TestCase):
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2 +
                                          RECORD3))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = titlesAlignments.filter(minMedianScore=0.9)
@@ -263,7 +264,7 @@ class TestTitlesAlignmentsFiltering(TestCase):
                 [
                     SQUIRRELPOX.id,
                 ],
-                result.keys())
+                list(result.keys()))
 
     def testWithScoreBetterThan(self):
         """
@@ -272,7 +273,7 @@ class TestTitlesAlignmentsFiltering(TestCase):
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2 +
                                          RECORD3))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = titlesAlignments.filter(withScoreBetterThan=0.9)
@@ -280,7 +281,7 @@ class TestTitlesAlignmentsFiltering(TestCase):
                 [
                     SQUIRRELPOX.id,
                 ],
-                result.keys())
+                list(result.keys()))
 
     def testReadSetFilterAllowAnything(self):
         """
@@ -289,19 +290,19 @@ class TestTitlesAlignmentsFiltering(TestCase):
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2 +
                                          RECORD3))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = titlesAlignments.filter(minNewReads=0.0)
-            self.assertItemsEqual(
+            self.assertEqual(sorted(
                 [
                     CATPOX.id,
                     COWPOX.id,
                     MONKEYPOX.id,
                     MUMMYPOX.id,
                     SQUIRRELPOX.id,
-                ],
-                result.keys())
+                ]),
+                sorted(iter(result)))
 
     def testReadSetFilterStrict(self):
         """
@@ -310,7 +311,7 @@ class TestTitlesAlignmentsFiltering(TestCase):
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2 +
                                          RECORD3))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = titlesAlignments.filter(minNewReads=1.0)
@@ -339,7 +340,7 @@ class TestTitlesAlignmentsFiltering(TestCase):
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2 +
                                          RECORD3))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = titlesAlignments.filter(minCoverage=0.1)
@@ -353,7 +354,7 @@ class TestTitlesAlignmentsFiltering(TestCase):
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2 +
                                          RECORD3))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = titlesAlignments.filter(minCoverage=0.0)
@@ -376,7 +377,7 @@ class TestTitlesAlignmentsFiltering(TestCase):
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2 +
                                          RECORD3))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
             # To understand why the following produces the result it does,
@@ -402,7 +403,7 @@ class TestTitleSorting(TestCase):
         Sorting on an unknown attribute must raise C{ValueError}.
         """
         mockOpener = mockOpen(read_data=PARAMS)
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
             self.assertRaises(ValueError, titlesAlignments.sortTitles, 'xxx')
@@ -412,7 +413,7 @@ class TestTitleSorting(TestCase):
         Sorting when there are no titles must return the empty list.
         """
         mockOpener = mockOpen(read_data=PARAMS)
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = titlesAlignments.sortTitles('title')
@@ -424,7 +425,7 @@ class TestTitleSorting(TestCase):
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2 +
                                          RECORD3 + RECORD4))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = titlesAlignments.sortTitles('medianScore')
@@ -442,7 +443,7 @@ class TestTitleSorting(TestCase):
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2 +
                                          RECORD3))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = titlesAlignments.sortTitles('maxScore')
@@ -460,7 +461,7 @@ class TestTitleSorting(TestCase):
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2 +
                                          RECORD3))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = titlesAlignments.sortTitles('readCount')
@@ -478,7 +479,7 @@ class TestTitleSorting(TestCase):
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2 +
                                          RECORD3))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = titlesAlignments.sortTitles('length')
@@ -496,7 +497,7 @@ class TestTitleSorting(TestCase):
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2 +
                                          RECORD3))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             titlesAlignments = TitlesAlignments(readsAlignments)
             result = titlesAlignments.sortTitles('title')

@@ -1,5 +1,5 @@
 from unittest import TestCase
-from cStringIO import StringIO
+from io import StringIO
 import numpy as np
 from collections import Counter
 from sklearn.cluster import AffinityPropagation, KMeans
@@ -22,8 +22,8 @@ class TestClusterAnalysis(TestCase):
         """
         reads = Reads()
         error = 'No sequences were found in'
-        self.assertRaisesRegexp(ValueError, error, ClusterAnalysis, reads, {},
-                                landmarkNames=['AlphaHelix'])
+        self.assertRaisesRegex(ValueError, error, ClusterAnalysis, reads, {},
+                               landmarkNames=['AlphaHelix'])
 
     def testMissingLabelNoDefault(self):
         """
@@ -33,8 +33,8 @@ class TestClusterAnalysis(TestCase):
         reads = Reads()
         reads.add(AARead('id', 'MMM'))
         error = "Read 'id' has no corresponding label"
-        self.assertRaisesRegexp(ValueError, error, ClusterAnalysis, reads, {},
-                                landmarkNames=['AlphaHelix'])
+        self.assertRaisesRegex(ValueError, error, ClusterAnalysis, reads, {},
+                               landmarkNames=['AlphaHelix'])
 
     def testDefaultLabel(self):
         """
@@ -360,7 +360,7 @@ class TestKMeansAnalysis(TestCase):
         reads.add(AARead('id4', 'MMM'))
         km = KMeansAnalysis(reads, {}, defaultLabel=0,
                             landmarkNames=['AlphaHelix'])
-        self.assertRaisesRegexp(RuntimeError, '', km.print_)
+        self.assertRaisesRegex(RuntimeError, '', km.print_)
 
     def testFourReadsTwoIdenticalPrint(self):
         """

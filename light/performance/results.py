@@ -45,7 +45,7 @@ class PerformanceResults(object):
         """
         allTests = set()
         for test in self.tests:
-            allTests.update(test['results'].iterkeys())
+            allTests.update(iter(test['results'].keys()))
         return allTests
 
     def resultsForTest(self, testName):

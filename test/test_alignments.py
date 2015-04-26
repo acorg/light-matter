@@ -1,10 +1,11 @@
+import builtins
 from json import dumps, loads
 import bz2
 from unittest import TestCase, skip
-from mock import patch
+from unittest.mock import patch
 
-from mocking import mockOpen
-from sample_data import (
+from .mocking import mockOpen
+from .sample_data import (
     DB, PARAMS, RECORD0, RECORD1, RECORD2, RECORD3,
     CATPOX, COWPOX, MUMMYPOX, MONKEYPOX, SQUIRRELPOX,
     READ1, READ2,
@@ -52,9 +53,9 @@ class TestLightReadsAlignments(TestCase):
         on trying to read it.
         """
         mockOpener = mockOpen()
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             error = "JSON file 'file.json' was empty."
-            self.assertRaisesRegexp(
+            self.assertRaisesRegex(
                 ValueError, error, LightReadsAlignments, 'file.json', DB)
 
     def testNonJSONInput(self):
@@ -63,11 +64,11 @@ class TestLightReadsAlignments(TestCase):
         read the light matter results from it must raise a C{ValueError}.
         """
         mockOpener = mockOpen(read_data='not JSON\n')
-        with patch('__builtin__.open', mockOpener, create=True):
-            error = ("Could not convert first line of 'file.json' to JSON "
-                     "\(No JSON object could be decoded\). "
-                     "Line is 'not JSON'.")
-            self.assertRaisesRegexp(
+        with patch.object(builtins, 'open', mockOpener):
+            error = ("^Could not convert first line of 'file\.json' to JSON "
+                     "\(Expecting value: line 1 column 1 \(char 0\)\)\. "
+                     "Line is 'not JSON'\.$")
+            self.assertRaisesRegex(
                 ValueError, error, LightReadsAlignments, 'file.json', DB)
 
     def testScoreTitle(self):
@@ -75,7 +76,7 @@ class TestLightReadsAlignments(TestCase):
         The score title must be as expected.
         """
         mockOpener = mockOpen(read_data=PARAMS)
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             self.assertEqual('Score', readsAlignments.params.scoreTitle)
 
@@ -84,7 +85,7 @@ class TestLightReadsAlignments(TestCase):
         The subject is nucleotide parameter must be false.
         """
         mockOpener = mockOpen(read_data=PARAMS)
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             self.assertEqual('light', readsAlignments.params.application)
             self.assertFalse(readsAlignments.params.subjectIsNucleotides)
@@ -95,7 +96,7 @@ class TestLightReadsAlignments(TestCase):
         stored correctly.
         """
         mockOpener = mockOpen(read_data=PARAMS)
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             self.assertEqual(loads(PARAMS),
                              readsAlignments.params.applicationParams)
@@ -107,7 +108,7 @@ class TestLightReadsAlignments(TestCase):
         not yield anything.
         """
         mockOpener = mockOpen(read_data=PARAMS)
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             self.assertEqual([], list(readsAlignments))
 
@@ -219,11 +220,11 @@ class TestLightReadsAlignments(TestCase):
             error = ("Incompatible light matter parameters found. The "
                      "parameters in file2.json.bz2 differ from those "
                      "originally found in file1.json.bz2. Summary of "
-                     "differences:\n\tParam u'limitPerLandmark' initial value "
+                     "differences:\n\tParam 'limitPerLandmark' initial value "
                      "10 differs from later value 100")
             readsAlignments = LightReadsAlignments(
                 ['file1.json.bz2', 'file2.json.bz2'], DB)
-            self.assertRaisesRegexp(ValueError, error, list, readsAlignments)
+            self.assertRaisesRegex(ValueError, error, list, readsAlignments)
 
     def testIncompatibleChecksum(self):
         """
@@ -243,8 +244,8 @@ class TestLightReadsAlignments(TestCase):
         with patch.object(bz2, 'BZ2File') as mockMethod:
             mockMethod.side_effect = sideEffect.sideEffect
             error = 'Database and output file have different checksums.'
-            self.assertRaisesRegexp(ValueError, error, LightReadsAlignments,
-                                    ['file.json.bz2'], DB)
+            self.assertRaisesRegex(ValueError, error, LightReadsAlignments,
+                                   ['file.json.bz2'], DB)
 
     def testGetSubjectSequence(self):
         """
@@ -252,7 +253,7 @@ class TestLightReadsAlignments(TestCase):
         instance.
         """
         mockOpener = mockOpen(read_data=PARAMS)
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             subject = readsAlignments.getSubjectSequence(COWPOX.id)
             self.assertEqual(COWPOX.sequence, subject.sequence)
@@ -264,7 +265,7 @@ class TestLightReadsAlignments(TestCase):
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2 +
                                          RECORD3))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             self.assertEqual(
                 sorted([HSP(READ0_SQUIRRELPOX_SCORE),
@@ -289,7 +290,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         that yields no result.
         """
         mockOpener = mockOpen(read_data=PARAMS)
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             result = list(readsAlignments.filter())
             self.assertEqual(0, len(result))
@@ -301,7 +302,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         yields that hit.
         """
         mockOpener = mockOpen(read_data=PARAMS + RECORD0)
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             result = list(readsAlignments.filter())
             self.assertEqual(1, len(result))
@@ -313,7 +314,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         be respected.
         """
         mockOpener = mockOpen(read_data=PARAMS + RECORD0)
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             result = list(readsAlignments.filter(limit=0))
             self.assertEqual(0, len(result))
@@ -324,7 +325,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         be respected.
         """
         mockOpener = mockOpen(read_data=PARAMS + RECORD0 + RECORD1)
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             result = list(readsAlignments.filter(limit=1))
             self.assertEqual(1, len(result))
@@ -336,7 +337,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         for each read, that must be respected.
         """
         mockOpener = mockOpen(read_data=PARAMS + RECORD0)
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             result = list(readsAlignments.filter(oneAlignmentPerRead=True))
             self.assertEqual(1, len(result))
@@ -350,7 +351,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         HSPs, then the alignment must be removed entirely.
         """
         mockOpener = mockOpen(read_data=PARAMS + RECORD0)
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             result = list(readsAlignments.filter(
                 scoreCutoff=READ0_SQUIRRELPOX_SCORE - 0.01))
@@ -363,7 +364,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         Filtering with a title regex must work independent of case.
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             result = list(readsAlignments.filter(titleRegex='sqUIRRel'))
             self.assertEqual(1, len(result))
@@ -376,7 +377,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         for a hit match the regex.
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             result = list(readsAlignments.filter(titleRegex='squirrel'))
             self.assertEqual(1, len(result))
@@ -389,7 +390,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         alignments for a hit match the regex.
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             result = list(readsAlignments.filter(titleRegex='Mummy'))
             self.assertEqual(1, len(result))
@@ -403,7 +404,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         alignments must be removed but the hit is still valid).
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             result = list(readsAlignments.filter(negativeTitleRegex='Mummy'))
             self.assertEqual(3, len(result))
@@ -417,7 +418,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         must remove everything and return an empty result.
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             result = list(readsAlignments.filter(negativeTitleRegex='pox'))
             self.assertEqual(0, len(result))
@@ -429,7 +430,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         whitelisted titles.
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             title = SQUIRRELPOX.id
             result = list(readsAlignments.filter(negativeTitleRegex='pox',
@@ -445,7 +446,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         must keep everything, except for any blacklisted titles.
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             blacklist = [SQUIRRELPOX.id, CATPOX.id]
             result = list(readsAlignments.filter(titleRegex='pox',
@@ -460,7 +461,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         length.
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             result = list(readsAlignments.filter(
                 minSequenceLen=len(MUMMYPOX.sequence)))
@@ -476,7 +477,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         alignments must be returned.
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             result = list(readsAlignments.filter(minSequenceLen=1000000))
             self.assertEqual(0, len(result))
@@ -487,7 +488,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         length.
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             result = list(readsAlignments.filter(
                 maxSequenceLen=len(COWPOX.sequence) + 1))
@@ -503,7 +504,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         list of alignments must be returned.
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             result = list(readsAlignments.filter(
                 maxSequenceLen=len(COWPOX.sequence) - 1))
@@ -515,7 +516,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         maximum hit sequence length.
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             result = list(readsAlignments.filter(
                 minSequenceLen=len(COWPOX.sequence),
@@ -532,7 +533,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         the hit sequence.
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             result = list(readsAlignments.filter(minStart=15300))
             self.assertEqual(1, len(result))
@@ -549,7 +550,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         must be returned.
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             result = list(readsAlignments.filter(minStart=100000))
             self.assertEqual(0, len(result))
@@ -561,7 +562,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         the hit sequence.
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             result = list(readsAlignments.filter(maxStop=1500))
             self.assertEqual(1, len(result))
@@ -577,7 +578,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         be returned.
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             result = list(readsAlignments.filter(maxStop=100))
             self.assertEqual(0, len(result))
@@ -589,7 +590,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         mininum and maximum offset in the hit sequence.
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             result = list(readsAlignments.filter(minStart=9000, maxStop=12000))
             self.assertEqual(1, len(result))
@@ -603,7 +604,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         filter parameters.
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             readsAlignments.filter(minStart=9000)
             readsAlignments.filter(minStart=9000)
@@ -619,7 +620,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         filter parameters.
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             readsAlignments.filter(minStart=9000)
             readsAlignments.filter(maxStop=12000)
@@ -652,7 +653,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         read ids that matches no ids, an empty generator must be returned.
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             result = list(readsAlignments.filter(readIdRegex='blah'))
             self.assertEqual(0, len(result))
@@ -663,7 +664,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         read ids.
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             result = list(readsAlignments.filter(readIdRegex='read[12]'))
             self.assertEqual(2, len(result))
@@ -676,7 +677,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         read ids that is anchored at start and end.
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             result = list(readsAlignments.filter(readIdRegex='^read0$'))
             self.assertEqual(1, len(result))
@@ -688,7 +689,7 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         sensitive.
         """
         mockOpener = mockOpen(read_data=(PARAMS + RECORD0 + RECORD1 + RECORD2))
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
             result = list(readsAlignments.filter(readIdRegex='^READ0$'))
             self.assertEqual(0, len(result))

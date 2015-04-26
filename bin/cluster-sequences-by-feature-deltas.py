@@ -62,18 +62,19 @@ if __name__ == '__main__':
 
     if args.algorithm == 'kMeans':
         if args.k is None:
-            print >>sys.stderr, (
+            print(
                 '%s: If you use "--algorithm kMeans", you must also use '
                 '"--k N" to specify the desired number of clusters.' %
-                basename(sys.argv[0]))
+                basename(sys.argv[0]), file=sys.stderr)
             sys.exit(1)
     else:
         if args.k is not None:
-            print >>sys.stderr, (
+            print(
                 '%s: If you use "--algorithm affinityPropagation", you cannot '
                 'also use "--k N" to specify a desired number of clusters. '
                 'The --k option only applies to clustering via '
-                '"--algorithm kMeans".' % basename(sys.argv[0]))
+                '"--algorithm kMeans".' % basename(sys.argv[0]),
+                file=sys.stderr)
             sys.exit(1)
 
     database = databaseSpecifier.getDatabaseFromArgs(args)
@@ -91,9 +92,9 @@ if __name__ == '__main__':
             try:
                 labels[fields[1]] = int(fields[0])
             except ValueError:
-                print >>sys.stderr, (
+                print(
                     '%s: Non-integer label in --label argument %r.' %
-                    (basename(sys.argv[0]), labelArg))
+                    (basename(sys.argv[0]), labelArg), file=sys.stderr)
                 sys.exit(1)
 
     # Read labels from a file, if --labelFile is given.
@@ -110,10 +111,10 @@ if __name__ == '__main__':
                 try:
                     labels[fields[1]] = int(fields[0])
                 except ValueError:
-                    print >>sys.stderr, (
+                    print(
                         '%s: Non-integer label %r found on line %d of %s.' %
                         (basename(sys.argv[0]), fields[0], count,
-                         args.labelFile))
+                         args.labelFile), file=sys.stderr)
                     sys.exit(1)
 
     if args.algorithm == 'kMeans':
@@ -129,8 +130,8 @@ if __name__ == '__main__':
 
     analysis.print_()
 
-    print '%d read%s assigned to %d clusters. Read id by cluster label:' % (
+    print('%d read%s assigned to %d clusters. Read id by cluster label:' % (
         analysis.nReads, '' if analysis.nReads == 1 else 's',
-        analysis.nClusters)
+        analysis.nClusters))
     for read, label in zip(reads, analysis.clusterLabels):
-        print '%s: %s' % (label, read.id)
+        print('%s: %s' % (label, read.id))

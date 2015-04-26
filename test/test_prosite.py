@@ -1,7 +1,8 @@
-from cStringIO import StringIO
+import builtins
+from io import StringIO
 from unittest import TestCase
-from mocking import mockOpen
-from mock import patch
+from unittest.mock import patch
+from .mocking import mockOpen
 from json import load
 
 from light.prosite import prositeToJSON, patternToRegex
@@ -30,7 +31,7 @@ class TestProsite(TestCase):
                           'DO   PDOC00001;',
                           '//'])
         mockOpener = mockOpen(read_data=data)
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             fp = StringIO()
             prositeToJSON('prosite.dat', fp=fp)
             fp.seek(0)

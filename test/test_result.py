@@ -1,5 +1,5 @@
 from unittest import TestCase
-from cStringIO import StringIO
+from io import StringIO
 from json import loads
 import warnings
 
@@ -53,10 +53,10 @@ class TestResult(TestCase):
         }
         hashCount = 1
         error = "^Unknown significance method 'xxx'$"
-        self.assertRaisesRegexp(ValueError, error, Result, read, matches,
-                                hashCount, significanceMethod='xxx',
-                                scoreMethod='MinHashesScore',
-                                significanceFraction=0.1, database=database)
+        self.assertRaisesRegex(ValueError, error, Result, read, matches,
+                               hashCount, significanceMethod='xxx',
+                               scoreMethod='MinHashesScore',
+                               significanceFraction=0.1, database=database)
 
     def testAddOneMatch(self):
         """

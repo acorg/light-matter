@@ -82,10 +82,10 @@ if __name__ == '__main__':
     # be confusing, so for now let's be strict.
     if ((args.printHistograms or args.printSequences or args.printFeatures)
             and not args.human):
-        print >>sys.stderr, (
+        print((
             '%s: If you specify --printHistograms or --printSequences or '
             '--printFeatures, you must also use --human.'
-            % basename(sys.argv[0]))
+            % basename(sys.argv[0])), file=sys.stderr)
         sys.exit(1)
 
     database = databaseSpecifier.getDatabaseFromArgs(args)
@@ -110,7 +110,7 @@ if __name__ == '__main__':
                           printHistograms=args.printHistograms,
                           queryDescription='Query %d title' % count)
             if count > 1:
-                print '---'
+                print('---')
     else:
         database.saveParamsAsJSON()
         for read in reads:

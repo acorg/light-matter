@@ -4,7 +4,7 @@ from unittest import TestCase
 from light.alignments import jsonDictToAlignments
 from light.database import Database
 
-from sample_data import (
+from .sample_data import (
     DB, PARAMS, COWPOX, MONKEYPOX, MUMMYPOX, CATPOX, SQUIRRELPOX,
     RECORD0, RECORD1, RECORD2, RECORD3, RECORD4,
     READ0_SQUIRRELPOX_SCORE, READ0_CATPOX_SCORE,

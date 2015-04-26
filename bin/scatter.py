@@ -102,7 +102,7 @@ def makeScatterplot(lightScores, otherScores, scoreType, outFile, dataset,
     ax.spines['bottom'].set_linewidth(0.5)
     ax.spines['left'].set_linewidth(0.5)
     fig.savefig(outFile)
-    print >>sys.stderr, 'Wrote scatterplot to %s.' % outFile
+    print('Wrote scatterplot to %s.' % outFile, file=sys.stderr)
 
 if __name__ == '__main__':
     startTime = time()
@@ -112,7 +112,7 @@ if __name__ == '__main__':
         'either percent sequence identity, Z-score or RMSD.')
 
     parser.add_argument(
-        '--dataset', choices=(DATASETS.keys()),
+        '--dataset', choices=(list(DATASETS.keys())),
         help='The name of the dataset which should be used.')
 
     parser.add_argument(
@@ -143,11 +143,12 @@ if __name__ == '__main__':
         raise KeyError('%s is not a valid dataset.' % args.dataset)
 
     database = databaseSpecifier.getDatabase(args)
-    map(database.addSubject, FastaReads(databaseFile, readClass=AARead))
+    list(map(database.addSubject, FastaReads(databaseFile, readClass=AARead)))
 
     lookupTime = time()
     result = database.find(read)
-    print >>sys.stderr, 'Look up done in %.2f seconds.' % (time() - lookupTime)
+    print('Look up done in %.2f seconds.' % (time() - lookupTime),
+          file=sys.stderr)
 
     # Read the daliResultFile
     allScores = {}

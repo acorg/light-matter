@@ -20,8 +20,8 @@ if __name__ == '__main__':
     database = databaseSpecifier.getDatabaseFromArgs(args)
     database.print_(fp=sys.stderr)
 
-    print >>sys.stderr, 'Database built in %.2f seconds. Saving...' % (
-        time() - startTime),
+    print('Database built in %.2f seconds. Saving...' % (
+        time() - startTime), end=' ', file=sys.stderr)
     saveStartTime = time()
     database.save()
-    print >>sys.stderr, 'saved in %.2f seconds.' % (time() - saveStartTime)
+    print('saved in %.2f seconds.' % (time() - saveStartTime), file=sys.stderr)

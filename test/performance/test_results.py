@@ -1,10 +1,11 @@
+import builtins
 from unittest import TestCase
+from unittest.mock import patch
 from json import dumps
-from mock import patch
 import bz2
 
 from light.performance.results import PerformanceResults
-from sample_data import RESULT1, RESULT2
+from .sample_data import RESULT1, RESULT2
 from test.mocking import mockOpen
 
 
@@ -39,9 +40,9 @@ class TestPerformanceResults(TestCase):
         trying to read it.
         """
         mockOpener = mockOpen()
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             error = "^Result JSON file 'file\\.json' was empty\\.$"
-            self.assertRaisesRegexp(
+            self.assertRaisesRegex(
                 ValueError, error, PerformanceResults, ['file.json'])
 
     def testNonJSONInput(self):
@@ -50,10 +51,11 @@ class TestPerformanceResults(TestCase):
         read the light matter results from it must raise a C{ValueError}.
         """
         mockOpener = mockOpen(read_data='not JSON\n')
-        with patch('__builtin__.open', mockOpener, create=True):
-            error = ("^Content of file 'file\\.json' could not be converted "
-                     "to JSON \\(No JSON object could be decoded\\)\\.$")
-            self.assertRaisesRegexp(
+        with patch.object(builtins, 'open', mockOpener):
+            error = ("^Content of file 'file\.json' could not be converted "
+                     "to JSON \(Expecting value: line 1 column 1 \(char "
+                     "0\)\)\.$")
+            self.assertRaisesRegex(
                 ValueError, error, PerformanceResults, ['file.json'])
 
     def testCorrectJSONDictOneFile(self):
@@ -62,7 +64,7 @@ class TestPerformanceResults(TestCase):
         """
         test = 'performance.perf_database.TestDatabase.testCreation'
         mockOpener = mockOpen(read_data=dumps(RESULT1) + '\n')
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             performance = PerformanceResults(['file.json'])
             self.assertEqual({'elapsed': 4.3869e-05,
                               'status': 'success',
@@ -125,7 +127,7 @@ class TestPerformanceResults(TestCase):
             mockMethod.side_effect = sideEffect.sideEffect
             performance = PerformanceResults(['f1.json.bz2', 'f2.json.bz2'])
             allTests = list(performance.testNames())
-            self.assertItemsEqual(
+            self.assertEqual(sorted(
                 [
                     'performance.perf_database.TestDatabase.testAddSubjects',
                     'performance.perf_database.TestDatabase.testChecksum',
@@ -133,8 +135,8 @@ class TestPerformanceResults(TestCase):
                     'performance.perf_database.TestDatabase.testCreation',
                     'performance.perf_database.TestDatabase.testSomething',
                     'performance.perf_findSelf.TestFindSelf.testFindIdentical',
-                ],
-                allTests)
+                ]),
+                sorted(allTests))
 
     def testResultsForTestNameNotPresent(self):
         """

@@ -33,8 +33,8 @@ class Landmark(_Feature):
         used to represent an instance of this class. For example, it
         could contain a repeat count if the landmark is made up of
         potentially many repeating sub-units. This value will be converted
-        to a C{str} for use in the C{hashkey} function, and so must have a
-        string representation.
+        to a C{str} for use in the C{hashkey} and __lt__ functions, and so must
+        have a string representation.
     """
 
     def __init__(self, name, symbol, offset, length, symbolDetail=''):
@@ -52,19 +52,16 @@ class Landmark(_Feature):
             self.symbolDetail)
 
     def __eq__(self, other):
-        # There is no need to compare names, as symbols are already
-        # guaranteed to be unique.
         return (self.offset == other.offset and
                 self.length == other.length and
                 self.symbol == other.symbol and
-                self.symbolDetail == other.symbolDetail)
+                self.name == other.name and
+                str(self.symbolDetail) == str(other.symbolDetail))
 
     def __lt__(self, other):
-        # This will fail under Python 3 because the symbol detail can be an
-        # int or a string, so the following might try to compare one
-        # against the other and get a TypeError.
-        return ((self.name, self.offset, self.length, self.symbolDetail) <
-                (other.name, other.offset, other.length, other.symbolDetail))
+        return (
+            (self.name, self.offset, self.length, str(self.symbolDetail)) <
+            (other.name, other.offset, other.length, str(other.symbolDetail)))
 
     def __hash__(self):
         return ('%s:%d:%d:%s' % (self.symbol, self.offset, self.length,
@@ -99,9 +96,8 @@ class TrigPoint(_Feature):
         return '%s symbol=%s offset=%d' % (self.name, self.symbol, self.offset)
 
     def __eq__(self, other):
-        # There is no need to compare names, as symbols are already
-        # guaranteed to be unique.
-        return self.offset == other.offset and self.symbol == other.symbol
+        return (self.offset == other.offset and self.symbol == other.symbol
+                and self.name == other.name)
 
     def __lt__(self, other):
         return (self.name, self.offset) < (other.name, other.offset)

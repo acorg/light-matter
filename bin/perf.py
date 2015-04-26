@@ -36,8 +36,8 @@ if __name__ == '__main__':
     if args.testIdPattern:
         suite = filterTestSuite(args.testIdPattern, suite)
         if suite.countTestCases() == 0:
-            print >>sys.stderr, '%s: No test cases match %r.' % (
-                basename(sys.argv[0]), args.testIdPattern)
+            print('%s: No test cases match %r.' % (
+                basename(sys.argv[0]), args.testIdPattern), file=sys.stderr)
             sys.exit(1)
 
     result = PerformanceTestRunner(verbosity=args.verbosity).run(suite)

@@ -1,4 +1,3 @@
-
 import colorsys
 from itertools import cycle
 

@@ -236,7 +236,7 @@ def offset_spines(offset=10, fig=None, ax=None):
         axes = [ax]
 
     for ax_i in axes:
-        for spine in list(ax_i.spines.values()):
+        for spine in ax_i.spines.values():
             _set_spine_position(spine, ('outward', offset))
 
 

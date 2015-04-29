@@ -355,7 +355,7 @@ def plotting_context(context=None, font_scale=1, rc=None):
 
         # Scale all the parameters by the same factor depending on the context
         scaling = dict(paper=.8, notebook=1, talk=1.3, poster=1.6)[context]
-        context_dict = {k: v * scaling for k, v in list(base_context.items())}
+        context_dict = {k: v * scaling for k, v in base_context.items()}
 
         # Now independently scale the fonts
         font_keys = ["axes.labelsize", "axes.titlesize", "legend.fontsize",
@@ -372,7 +372,7 @@ def plotting_context(context=None, font_scale=1, rc=None):
 
     # Override these settings with the provided rc dictionary
     if rc is not None:
-        rc = {k: v for k, v in list(rc.items()) if k in _context_keys}
+        rc = {k: v for k, v in rc.items() if k in _context_keys}
         context_dict.update(rc)
 
     # Wrap in a _PlottingContext object so this can be used in a with statement

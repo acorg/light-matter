@@ -187,7 +187,7 @@ class TestHistogram(TestCase):
         bins must contain the expected values.
         """
         h = Histogram(3)
-        list(map(h.add, list(range(9))))
+        list(map(h.add, range(9)))
         h.finalize()
         self.assertEqual([[0, 1, 2], [3, 4, 5], [6, 7, 8]], h.bins)
 
@@ -197,7 +197,7 @@ class TestHistogram(TestCase):
         the bin width must be 3.0.
         """
         h = Histogram(3)
-        list(map(h.add, list(range(10))))
+        list(map(h.add, range(10)))
         h.finalize()
         self.assertEqual(3.0, h.binWidth)
 
@@ -449,7 +449,7 @@ class TestHistogram(TestCase):
         The __getitem__ method must return the correct bin.
         """
         h = Histogram(3)
-        list(map(h.add, list(range(9))))
+        list(map(h.add, range(9)))
         h.finalize()
         self.assertEqual([0, 1, 2], h[0])
         self.assertEqual([3, 4, 5], h[1])
@@ -460,7 +460,7 @@ class TestHistogram(TestCase):
         of a non-existent bin.
         """
         h = Histogram(3)
-        list(map(h.add, list(range(9))))
+        list(map(h.add, range(9)))
         h.finalize()
         self.assertRaisesRegex(IndexError, '^list index out of range$',
                                h.__getitem__, 4)

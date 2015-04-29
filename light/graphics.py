@@ -46,7 +46,7 @@ for i in range(len(TABLEAU20)):
 assert len(ALL_FEATURES) <= len(TABLEAU20)
 
 # The following maps from feature symbol to matplotlib color.
-COLORS = dict(list(zip([feature[0] for feature in ALL_FEATURES], TABLEAU20)))
+COLORS = dict(zip([feature[0] for feature in ALL_FEATURES], TABLEAU20))
 
 
 def legendHandles(names):
@@ -422,7 +422,7 @@ def plotHistogramLine(query, subject, significanceMethod=False,
             readsAx.set_ylabel('Number of hashes')
             readsAx.xaxis.tick_bottom()
 
-        readsAx.plot(list(range(len(counts))), counts)
+        readsAx.plot(range(len(counts)), counts)
         mean = np.mean(counts)
         if showMean:
             readsAx.plot([0, len(counts)], [mean, mean], '-',
@@ -491,7 +491,7 @@ def plotHistogramLines(sequences, significanceFraction=None, **kwargs):
             else:
                 histogram = analysis['histogram']
                 counts = sorted([len(bin) for bin in histogram.bins])
-                readsAx.plot(list(range(len(counts))), counts)
+                readsAx.plot(range(len(counts)), counts)
 
     readsAx.set_title('Histogram line plot')
     readsAx.set_ylabel('Number of hashes')
@@ -1011,7 +1011,7 @@ def plotLandmarksInSequences(sequences, maxTickLabelLength=None, **kwargs):
     ax.set_xlim(0, maxLen)
     yticks.reverse()
     ax.set_yticklabels(yticks)
-    ax.set_yticks(list(range(nReads)))
+    ax.set_yticks(range(nReads))
     # Add a legend above left on the plot.
     ax.legend(handles=legendHandles(namesSeen),
               bbox_to_anchor=(0.0, 1.02, 1.0, 0.102), loc=3, ncol=2,

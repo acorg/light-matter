@@ -559,14 +559,12 @@ class Database(object):
                         self.getSubject(subjectIndex).id, offsets), file=fp)
 
             print('Landmark symbol counts:', file=fp)
-            for hash_ in sorted(iter(landmarkCount)):
-                count = landmarkCount[hash_]
+            for hash_, count in sorted(landmarkCount.items()):
                 print('  %s (%s): %d' % (
                     landmarkNameFromHashkey(hash_), hash_, count), file=fp)
 
             print('Trig point symbol counts:', file=fp)
-            for hash_ in sorted(iter(trigCount)):
-                count = trigCount[hash_]
+            for hash_, count in sorted(trigCount.items()):
                 print('  %s (%s): %d' % (
                     trigNameFromHashkey(hash_), hash_, count), file=fp)
 

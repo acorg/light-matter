@@ -546,16 +546,14 @@ class Database(object):
             print('Subjects (with offsets) by hash:', file=fp)
             landmarkCount = defaultdict(int)
             trigCount = defaultdict(int)
-            for hash_ in sorted(iter(self.d)):
-                subjects = self.d[hash_]
+            for hash_, subjects in sorted(self.d.items()):
                 print('  ', hash_, file=fp)
                 # The split on ':' corresponds to the use of ':' above in
                 # self.hash() to make a hash key.
                 landmarkHashkey, trigHashkey, distance = hash_.split(':')
                 landmarkCount[landmarkHashkey] += 1
                 trigCount[trigHashkey] += 1
-                for subjectIndex in sorted(iter(subjects)):
-                    offsets = subjects[subjectIndex]
+                for subjectIndex, offsets in sorted(subjects.items()):
                     subjectIndex = int(subjectIndex)
                     print('    %s %r' % (
                         self.getSubject(subjectIndex).id, offsets), file=fp)

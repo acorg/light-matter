@@ -192,13 +192,13 @@ def rgb_to_hex(triple):
 
 
 def xyz_to_rgb(triple):
-    xyz = map(lambda row: dot_product(row, triple), m)
+    xyz = [dot_product(row, triple) for row in m]
     return list(map(from_linear, xyz))
 
 
 def rgb_to_xyz(triple):
     rgbl = list(map(to_linear, triple))
-    return list(map(lambda row: dot_product(row, rgbl), m_inv))
+    return list([dot_product(row, rgbl) for row in m_inv])
 
 
 def xyz_to_luv(triple):

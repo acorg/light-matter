@@ -26,7 +26,7 @@ class TestAminoAcids(TestCase):
         read = AARead('id', 'ASAACAASAAA')
         aas = AminoAcids()
         result = list(aas.find(read))
-        self.assertEqual([Landmark('AminoAcids', 'N', 4, 1)], result)
+        self.assertEqual([Landmark('AminoAcidsLm', 'N', 4, 1)], result)
 
     def testFindWithTwoAAC(self):
         """
@@ -36,8 +36,8 @@ class TestAminoAcids(TestCase):
         read = AARead('id', 'ASAACAACAAA')
         aas = AminoAcids()
         result = list(aas.find(read))
-        self.assertEqual([Landmark('AminoAcids', 'N', 4, 1),
-                          Landmark('AminoAcids', 'N', 7, 1)], result)
+        self.assertEqual([Landmark('AminoAcidsLm', 'N', 4, 1),
+                          Landmark('AminoAcidsLm', 'N', 7, 1)], result)
 
     def testFindWithTwoAABeginningAndEndC(self):
         """
@@ -47,8 +47,8 @@ class TestAminoAcids(TestCase):
         read = AARead('id', 'CASAAAAAAAC')
         aas = AminoAcids()
         result = list(aas.find(read))
-        self.assertEqual([Landmark('AminoAcids', 'N', 0, 1),
-                          Landmark('AminoAcids', 'N', 10, 1)], result)
+        self.assertEqual([Landmark('AminoAcidsLm', 'N', 0, 1),
+                          Landmark('AminoAcidsLm', 'N', 10, 1)], result)
 
     def testFindRightNonDefaultAA(self):
         """
@@ -57,4 +57,4 @@ class TestAminoAcids(TestCase):
         read = AARead('id', 'ASAACAAWAAA')
         aas = AminoAcids()
         result = list(aas.find(read, aa=['S']))
-        self.assertEqual([Landmark('AminoAcids', 'N', 1, 1)], result)
+        self.assertEqual([Landmark('AminoAcidsLm', 'N', 1, 1)], result)

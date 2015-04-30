@@ -96,7 +96,7 @@ class TestLandmarks(TestCase):
             Landmark('nameC', 'L', 50, 22, 0),
         ]
 
-        for _ in xrange(100):
+        for _ in range(100):
             self.assertEqual(expected, sorted(shuffle(expected)))
 
     def testSortOnSymbol(self):
@@ -118,7 +118,7 @@ class TestLandmarks(TestCase):
             Landmark('name', 'L', 52, 22, 0),
         ]
 
-        for _ in xrange(100):
+        for _ in range(100):
             self.assertEqual(expected, sorted(shuffle(expected)))
 
     def testSortOnLength(self):
@@ -131,7 +131,7 @@ class TestLandmarks(TestCase):
             Landmark('name', 'L', 50, 22, 0),
         ]
 
-        for _ in xrange(100):
+        for _ in range(100):
             self.assertEqual(expected, sorted(shuffle(expected)))
 
     def testSortOnSymbolDetail(self):
@@ -144,7 +144,7 @@ class TestLandmarks(TestCase):
             Landmark('name', 'L', 52, 22, 2),
         ]
 
-        for _ in xrange(100):
+        for _ in range(100):
             self.assertEqual(expected, sorted(shuffle(expected)))
 
 
@@ -201,7 +201,7 @@ class TestTrigPoints(TestCase):
             TrigPoint('nameC', 'L', 50),
         ]
 
-        for _ in xrange(100):
+        for _ in range(100):
             self.assertEqual(expected, sorted(shuffle(expected)))
 
     def testSortOnSymbol(self):
@@ -223,7 +223,7 @@ class TestTrigPoints(TestCase):
             TrigPoint('name', 'L', 52),
         ]
 
-        for _ in xrange(100):
+        for _ in range(100):
             self.assertEqual(expected, sorted(shuffle(expected)))
 
 

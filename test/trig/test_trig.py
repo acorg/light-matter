@@ -38,7 +38,7 @@ class TestFindTrigPoints(TestCase):
         classes.
         """
         error = '^Unknown trig point finders: x, y\.$'
-        self.assertRaisesRegexp(ValueError, error, findTrigPoints, ['x', 'y'])
+        self.assertRaisesRegex(ValueError, error, findTrigPoints, ['x', 'y'])
 
     def testFindNone(self):
         """

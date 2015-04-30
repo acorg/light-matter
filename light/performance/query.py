@@ -27,13 +27,13 @@ def queryDatabase(subjects, queries, database,
         that map subject ids to scores. I.e., for each read we provide a
         C{dict} showing what subjects it matched, and with what score.
     """
-    if isinstance(queries, basestring):
+    if isinstance(queries, str):
         queries = FastaReads(queries)
 
-    if isinstance(subjects, basestring):
+    if isinstance(subjects, str):
         subjects = FastaReads(subjects)
 
-    map(database.addSubject, subjects)
+    list(map(database.addSubject, subjects))
 
     resultDict = defaultdict(dict)
 

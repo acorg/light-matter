@@ -1,6 +1,7 @@
+import builtins
 from unittest import TestCase
+from unittest.mock import patch
 from test.mocking import mockOpen
-from mock import patch
 
 from dark.reads import AARead
 
@@ -26,7 +27,7 @@ class TestProsite(TestCase):
         """
         read = AARead('id', 'FFFFFFFFFFFFFFFFFFFFFFFFFFF')
         mockOpener = mockOpen(read_data=self.SIMPLE_DB)
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             landmark = Prosite()
             result = list(landmark.find(read))
             self.assertEqual([], result)
@@ -37,7 +38,7 @@ class TestProsite(TestCase):
         """
         read = AARead('id', 'EGGELGYAAAAAAAA')
         mockOpener = mockOpen(read_data=self.SIMPLE_DB)
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             landmark = Prosite()
             result = list(landmark.find(read))
             self.assertEqual([Landmark('Prosite', 'PS', 0, 7, '60002')],
@@ -49,7 +50,7 @@ class TestProsite(TestCase):
         """
         read = AARead('id', 'AAAAAAAAEGGELGYAAAAAAAA')
         mockOpener = mockOpen(read_data=self.SIMPLE_DB)
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             landmark = Prosite()
             result = list(landmark.find(read))
             self.assertEqual([Landmark('Prosite', 'PS', 8, 7, '60002')],
@@ -61,7 +62,7 @@ class TestProsite(TestCase):
         """
         read = AARead('id', 'AAAAAAAAEGGELGY')
         mockOpener = mockOpen(read_data=self.SIMPLE_DB)
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             landmark = Prosite()
             result = list(landmark.find(read))
             self.assertEqual([Landmark('Prosite', 'PS', 8, 7, '60002')],
@@ -73,7 +74,7 @@ class TestProsite(TestCase):
         """
         read = AARead('id', 'EGGELGYAAAAAAAAEGGELGY')
         mockOpener = mockOpen(read_data=self.SIMPLE_DB)
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             landmark = Prosite()
             result = list(landmark.find(read))
             self.assertEqual([Landmark('Prosite', 'PS', 0, 7, '60002'),
@@ -86,7 +87,7 @@ class TestProsite(TestCase):
         """
         read = AARead('id', 'EGGELGYEGGELGY')
         mockOpener = mockOpen(read_data=self.SIMPLE_DB)
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             landmark = Prosite()
             result = list(landmark.find(read))
             self.assertEqual([Landmark('Prosite', 'PS', 0, 7, '60002'),
@@ -99,7 +100,7 @@ class TestProsite(TestCase):
         """
         read = AARead('id', 'RGDFRRRFEGGELGY')
         mockOpener = mockOpen(read_data=self.SIMPLE_DB)
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             landmark = Prosite()
             result = list(landmark.find(read))
             self.assertEqual([Landmark('Prosite', 'PS', 0, 3, '00016'),
@@ -112,7 +113,7 @@ class TestProsite(TestCase):
         """
         read = AARead('id', 'EGGELGYARGDAAARGDAAEGGELGY')
         mockOpener = mockOpen(read_data=self.SIMPLE_DB)
-        with patch('__builtin__.open', mockOpener, create=True):
+        with patch.object(builtins, 'open', mockOpener):
             landmark = Prosite()
             result = list(landmark.find(read))
             self.assertEqual([Landmark('Prosite', 'PS', 8, 3, '00016'),

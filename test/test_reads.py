@@ -1,4 +1,4 @@
-from cStringIO import StringIO
+from io import StringIO
 from unittest import TestCase
 
 from dark.reads import AARead

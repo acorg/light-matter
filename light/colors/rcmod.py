@@ -245,7 +245,7 @@ def axes_style(style=None, rc=None):
 
     # Override these settings with the provided rc dictionary
     if rc is not None:
-        rc = {k: v for k, v in rc.items() if k in _style_keys}
+        rc = {k: v for k, v in list(rc.items()) if k in _style_keys}
         style_dict.update(rc)
 
     # Wrap in an _AxesStyle object so this can be used in a with statement

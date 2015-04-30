@@ -47,8 +47,8 @@ def prositeToJSON(prositeDb, fp=sys.stdout):
         seen[accession] = None
         pattern = patternToRegex(record.pattern[:-1])
         if pattern:
-            print >>fp, dumps(
+            print(dumps(
                 {
                     'accession': accession[2:],
                     'pattern': pattern,
-                }, separators=(',', ':'))
+                }, separators=(',', ':')), file=fp)

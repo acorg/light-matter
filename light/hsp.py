@@ -5,8 +5,8 @@
 
 
 def printHSP(hsp, indent=''):
-    for key, value in hsp.iteritems():
-        print '%s%s: %s' % (indent, key, value)
+    for key, value in hsp.items():
+        print('%s%s: %s' % (indent, key, value))
 
 
 def normalizeHSP(hsp, readLen):
@@ -37,13 +37,13 @@ def normalizeHSP(hsp, readLen):
         @param locals: A C{dict} of local variables.
         @param msg: A C{str} message to raise C{AssertionError} with.
         """
-        print 'normalizeHSP error:'
-        print '  readLen: %d' % readLen
+        print('normalizeHSP error:')
+        print('  readLen: %d' % readLen)
         for var in sorted(locals.keys()):
             if var in ('debugPrint', 'hsp'):
                 continue
-            print '  %s: %s' % (var, locals[var])
-        print '  Original HSP:'
+            print('  %s: %s' % (var, locals[var]))
+        print('  Original HSP:')
         printHSP(hsp, '    ')
         if msg:
             raise AssertionError(msg)

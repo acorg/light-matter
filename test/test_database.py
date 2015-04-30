@@ -1,6 +1,6 @@
 from unittest import TestCase
 from json import loads
-from cStringIO import StringIO
+from io import StringIO
 from binascii import crc32
 
 from dark.reads import AARead
@@ -28,7 +28,9 @@ class TestDatabase(TestCase):
         @param strings: A C{list} of strings to compute the checksum for.
         @return: An C{int} checksum.
         """
-        return crc32('\0'.join(map(str, strings)) + '\0', 0x0) & 0xFFFFFFFF
+        return crc32(
+            b'\0'.join(map(lambda s: str(s).encode('UTF-8'), strings)) +
+            b'\0', 0x0) & 0xFFFFFFFF
 
     def testSignificanceFractionDefault(self):
         """
@@ -162,8 +164,8 @@ class TestDatabase(TestCase):
         """
         db = Database([AlphaHelix], [])
         error = '^list index out of range$'
-        self.assertRaisesRegexp(IndexError, error, db.getSubject, 0)
-        self.assertRaisesRegexp(IndexError, error, db.getSubject, -1)
+        self.assertRaisesRegex(IndexError, error, db.getSubject, 0)
+        self.assertRaisesRegex(IndexError, error, db.getSubject, -1)
 
     def testGetSubjectKeyError(self):
         """
@@ -172,8 +174,8 @@ class TestDatabase(TestCase):
         """
         db = Database([AlphaHelix], [])
         error = "^'id'$"
-        self.assertRaisesRegexp(KeyError, error, db.getSubject,
-                                AARead('id', 'FF'))
+        self.assertRaisesRegex(KeyError, error, db.getSubject,
+                               AARead('id', 'FF'))
 
     def testGetSubjectByIndex(self):
         """
@@ -543,7 +545,7 @@ class TestDatabase(TestCase):
         newSave = fp.getvalue().replace('AlphaHelix', 'Non-existent')
         error = ('^Could not find landscape finder class Non-existent. '
                  'Has that class been renamed or removed\?$')
-        self.assertRaisesRegexp(ValueError, error, db.load, StringIO(newSave))
+        self.assertRaisesRegex(ValueError, error, db.load, StringIO(newSave))
 
     def testSaveLoadMissingTrigPoint(self):
         """
@@ -557,7 +559,7 @@ class TestDatabase(TestCase):
         newSave = fp.getvalue().replace('Peaks', 'Non-existent')
         error = ('^Could not find trig point finder class Non-existent. '
                  'Has that class been renamed or removed\?$')
-        self.assertRaisesRegexp(ValueError, error, db.load, StringIO(newSave))
+        self.assertRaisesRegex(ValueError, error, db.load, StringIO(newSave))
 
     def testLoadInvalidJSON(self):
         """
@@ -566,7 +568,7 @@ class TestDatabase(TestCase):
         """
         db = Database([], [Peaks])
         error = '^Expected object or value$'
-        self.assertRaisesRegexp(ValueError, error, db.load, StringIO('xxx'))
+        self.assertRaisesRegex(ValueError, error, db.load, StringIO('xxx'))
 
     def testSaveLoadNonEmpty(self):
         """
@@ -957,16 +959,16 @@ class TestDatabase(TestCase):
         If the distanceBase is zero, a ValueError must be raised.
         """
         error = 'distanceBase must be > 0\\.'
-        self.assertRaisesRegexp(ValueError, error, Database, [], [],
-                                distanceBase=0.0)
+        self.assertRaisesRegex(ValueError, error, Database, [], [],
+                               distanceBase=0.0)
 
     def testDistanceBaseLessThanZeroValueError(self):
         """
         If the distanceBase is < 0, a ValueError must be raised.
         """
         error = 'distanceBase must be > 0\\.'
-        self.assertRaisesRegexp(ValueError, error, Database, [], [],
-                                distanceBase=-1.0)
+        self.assertRaisesRegex(ValueError, error, Database, [], [],
+                               distanceBase=-1.0)
 
     def testScan(self):
         """
@@ -1116,7 +1118,7 @@ class TestDatabase(TestCase):
         print hash information.
         """
         fp = StringIO()
-        subject = AARead('id', 'FRRRFRRRFASAASA')
+        subject = AARead('subject-id', 'FRRRFRRRFASAASA')
         db = Database([AlphaHelix, BetaStrand], [Peaks, Troughs],
                       limitPerLandmark=16, maxDistance=10, minDistance=0,
                       distanceBase=1)
@@ -1133,14 +1135,14 @@ class TestDatabase(TestCase):
             'Hash count: 3\n'
             'Total residues: 15\n'
             'Coverage: 73.33%\n'
-            'Checksum: 3279991028\n'
+            'Checksum: 1144016651\n'
             'Subjects (with offsets) by hash:\n'
             '   A2:P:10\n'
-            '    id [0]\n'
-            '   A2:T:8\n'
-            '    id [0]\n'
+            '    subject-id [0]\n'
             '   A2:T:4\n'
-            '    id [0]\n'
+            '    subject-id [0]\n'
+            '   A2:T:8\n'
+            '    subject-id [0]\n'
             'Landmark symbol counts:\n'
             '  AlphaHelix (A2): 3\n'
             'Trig point symbol counts:\n'

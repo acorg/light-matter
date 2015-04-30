@@ -1,4 +1,3 @@
-from __future__ import division
 import colorsys
 from itertools import cycle
 
@@ -6,13 +5,13 @@ import numpy as np
 import matplotlib as mpl
 from matplotlib.colors import LinearSegmentedColormap
 
-import husl
-from six import string_types
-from six.moves import range
+from . import husl
+from .six import string_types
+from .six.moves import range
 
-from utils import desaturate, set_hls_values
-from xkcd_rgb import xkcd_rgb
-from miscplot import palplot
+from .utils import desaturate, set_hls_values
+from .xkcd_rgb import xkcd_rgb
+from .miscplot import palplot
 
 
 class _ColorPalette(list):
@@ -21,14 +20,14 @@ class _ColorPalette(list):
     """
     def __enter__(self):
         # Open the context.
-        from rcmod import set_palette
+        from .rcmod import set_palette
         self._orig_palette = color_palette()
         set_palette(self, len(self))
         return self
 
     def __exit__(self, *args):
         # Close the context.
-        from rcmod import set_palette
+        from .rcmod import set_palette
         set_palette(self._orig_palette, len(self._orig_palette))
 
 
@@ -95,7 +94,7 @@ def color_palette(name=None, n_colors=6, desat=None):
 
     # Always return in r, g, b tuple format
     try:
-        palette = map(mpl.colors.colorConverter.to_rgb, palette)
+        palette = list(map(mpl.colors.colorConverter.to_rgb, palette))
         palette = _ColorPalette(palette)
     except ValueError:
         raise ValueError("Could not generate a palette for %s" % str(name))

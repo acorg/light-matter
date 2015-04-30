@@ -143,8 +143,8 @@ class Database(object):
             [f.SYMBOL for f in landmarkFinders] +
             [f.NAME for f in trigPointFinders] +
             [f.SYMBOL for f in trigPointFinders] +
-            map(str, (self.limitPerLandmark, self.maxDistance,
-                      self.minDistance, self.distanceBase)))
+            list(map(str, (self.limitPerLandmark, self.maxDistance,
+                           self.minDistance, self.distanceBase))))
 
     def _updateChecksum(self, strings):
         """
@@ -153,7 +153,7 @@ class Database(object):
         @param strings: A C{list} of strings to update the current checksum
             with.
         """
-        update = '\0'.join(strings) + '\0'
+        update = b'\0'.join(map(lambda s: s.encode('UTF-8'), strings)) + b'\0'
         self.checksum = crc32(update, self.checksum) & 0xFFFFFFFF
 
     def hash(self, landmark, trigPoint):
@@ -243,7 +243,8 @@ class Database(object):
         @return: The C{str} cache key for the subject.
         """
         m = md5()
-        map(m.update, (subject.id, '\0', subject.sequence))
+        list(map(m.update, (subject.id.encode('UTF-8'), b'\0',
+                            subject.sequence.encode('UTF-8'))))
         return m.hexdigest()
 
     def _cacheLookup(self, subject):
@@ -337,7 +338,7 @@ class Database(object):
 
         @return: a generator that yields C{Subject} instances.
         """
-        return (self.getSubject(i) for i in xrange(self.subjectCount))
+        return (self.getSubject(i) for i in range(self.subjectCount))
 
     def __str__(self):
         return '%s: %d sequences, %d residues, %d hashes, %.2f%% coverage' % (
@@ -352,7 +353,7 @@ class Database(object):
         @param fp: A file pointer.
         @return: The C{fp} we were passed (this is useful in testing).
         """
-        print >>fp, dumps({
+        print(dumps({
             'checksum': self.checksum,
             'landmarkClasses': [cls.NAME for cls in self.landmarkClasses],
             'trigPointClasses': [cls.NAME for cls in self.trigPointClasses],
@@ -363,7 +364,7 @@ class Database(object):
             'totalResidues': self.totalResidues,
             'totalCoveredResidues': self.totalCoveredResidues,
             'distanceBase': self.distanceBase,
-        })
+        }), file=fp)
 
         return fp
 
@@ -398,7 +399,7 @@ class Database(object):
         hashCount = 0
         scannedRead = self.scan(read)
 
-        for hash_, hashInfo in self.getHashes(scannedRead).iteritems():
+        for hash_, hashInfo in self.getHashes(scannedRead).items():
             # Note that hashCount is incremented for every hash, even those
             # that are not in the database. Basing significance (in
             # result.py) on a fraction of that overall count therefore
@@ -415,7 +416,7 @@ class Database(object):
                     nonMatchingHashes[hash_] = hashInfo
             else:
                 for (subjectIndex,
-                     subjectLandmarkOffsets) in subjectDict.iteritems():
+                     subjectLandmarkOffsets) in subjectDict.items():
                     matches[int(subjectIndex)].append({
                         'landmark': hashInfo['landmark'],
                         'queryLandmarkOffsets': hashInfo['landmarkOffsets'],
@@ -521,51 +522,51 @@ class Database(object):
 
         # Print basic database information.
         if self.landmarkFinders:
-            print >>fp, 'Landmark finders:'
-            print >>fp, '  ' + '\n  '.join(sorted(
-                finder.NAME for finder in self.landmarkFinders))
+            print('Landmark finders:', file=fp)
+            print('  ' + '\n  '.join(sorted(
+                finder.NAME for finder in self.landmarkFinders)), file=fp)
         else:
-            print >>fp, 'Landmark finders: none'
+            print('Landmark finders: none', file=fp)
 
         if self.trigPointFinders:
-            print >>fp, 'Trig point finders:'
-            print >>fp, '  ' + '\n  '.join(sorted(
-                finder.NAME for finder in self.trigPointFinders))
+            print('Trig point finders:', file=fp)
+            print('  ' + '\n  '.join(sorted(
+                finder.NAME for finder in self.trigPointFinders)), file=fp)
         else:
-            print >>fp, 'Trig point finders: none'
+            print('Trig point finders: none', file=fp)
 
-        print >>fp, 'Subject count: %s' % self.subjectCount
-        print >>fp, 'Hash count: %d' % len(self.d)
-        print >>fp, 'Total residues: %d' % self.totalResidues
-        print >>fp, 'Coverage: %.2f%%' % coverage
-        print >>fp, 'Checksum: %s' % self.checksum
+        print('Subject count: %s' % self.subjectCount, file=fp)
+        print('Hash count: %d' % len(self.d), file=fp)
+        print('Total residues: %d' % self.totalResidues, file=fp)
+        print('Coverage: %.2f%%' % coverage, file=fp)
+        print('Checksum: %s' % self.checksum, file=fp)
 
         # Print hashes.
         if printHashes and self.d:
-            print >>fp, 'Subjects (with offsets) by hash:'
+            print('Subjects (with offsets) by hash:', file=fp)
             landmarkCount = defaultdict(int)
             trigCount = defaultdict(int)
-            for hash_, subjects in self.d.iteritems():
-                print >>fp, '  ', hash_
+            for hash_, subjects in sorted(self.d.items()):
+                print('  ', hash_, file=fp)
                 # The split on ':' corresponds to the use of ':' above in
                 # self.hash() to make a hash key.
                 landmarkHashkey, trigHashkey, distance = hash_.split(':')
                 landmarkCount[landmarkHashkey] += 1
                 trigCount[trigHashkey] += 1
-                for subjectIndex, offsets in subjects.iteritems():
+                for subjectIndex, offsets in sorted(subjects.items()):
                     subjectIndex = int(subjectIndex)
-                    print >>fp, '    %s %r' % (
-                        self.getSubject(subjectIndex).id, offsets)
+                    print('    %s %r' % (
+                        self.getSubject(subjectIndex).id, offsets), file=fp)
 
-            print >>fp, 'Landmark symbol counts:'
-            for hash_, count in landmarkCount.iteritems():
-                print >>fp, '  %s (%s): %d' % (
-                    landmarkNameFromHashkey(hash_), hash_, count)
+            print('Landmark symbol counts:', file=fp)
+            for hash_, count in sorted(landmarkCount.items()):
+                print('  %s (%s): %d' % (
+                    landmarkNameFromHashkey(hash_), hash_, count), file=fp)
 
-            print >>fp, 'Trig point symbol counts:'
-            for hash_, count in trigCount.iteritems():
-                print >>fp, '  %s (%s): %d' % (
-                    trigNameFromHashkey(hash_), hash_, count)
+            print('Trig point symbol counts:', file=fp)
+            for hash_, count in sorted(trigCount.items()):
+                print('  %s (%s): %d' % (
+                    trigNameFromHashkey(hash_), hash_, count), file=fp)
 
     def emptyCopy(self):
         """

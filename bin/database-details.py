@@ -30,6 +30,6 @@ if __name__ == '__main__':
     if args.printSubjects:
         with open(args.printSubjects, 'w') as fp:
             for subject in database.getSubjects():
-                print >>fp, subject.toString('fasta')
-        print 'Wrote %d subjects to %s' % (len(database.subjectCount),
-                                           args.printSubjects)
+                print(subject.toString('fasta'), file=fp)
+        print('Wrote %d subjects to %s' % (len(database.subjectCount),
+                                           args.printSubjects))

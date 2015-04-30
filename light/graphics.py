@@ -100,7 +100,7 @@ def _rectangularPanel(rows, cols, title, makeSubPlot, equalizeXAxes=False,
             subplots[(row, col)] = makeSubPlot(row, col, ax[row][col])
 
     if equalizeXAxes or equalizeYAxes:
-        nonEmpty = filter(lambda x: x, subplots.itervalues())
+        nonEmpty = [x for x in iter(subplots.values()) if x]
         title += '\n'
         if equalizeXAxes:
             maxX = max(subplot['maxX'] for subplot in nonEmpty)
@@ -114,7 +114,7 @@ def _rectangularPanel(rows, cols, title, makeSubPlot, equalizeXAxes=False,
             title += 'Y range: %s to %s' % (minY, maxY)
 
     # Post-process graphs to adjust axes, etc.
-    for (row, col), subplot in subplots.iteritems():
+    for (row, col), subplot in subplots.items():
         a = ax[row][col]
         if subplot:
             try:
@@ -176,7 +176,7 @@ def plotHistogramPanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
         for additional keywords, all of which are optional.
     @return: The C{light.result.Result} from running the database find.
     """
-    if isinstance(sequences, basestring):
+    if isinstance(sequences, str):
         reads = list(FastaReads(sequences, readClass=AARead))
     else:
         reads = list(sequences)
@@ -252,13 +252,13 @@ def plotHistogram(query, subject, significanceMethod=None,
     try:
         histogram = result.analysis[subjectIndex]['histogram']
     except KeyError:
-        print 'Query %r and subject %r had no hashes in common.' % (
-            query.id, subject.id)
+        print('Query %r and subject %r had no hashes in common.' % (
+            query.id, subject.id))
     else:
         counts = [len(bin) for bin in histogram.bins]
         nBins = len(histogram.bins)
         width = (histogram.max - histogram.min) / float(nBins)
-        center = [histogram.min + (i + 0.5) * width for i in xrange(nBins)]
+        center = [histogram.min + (i + 0.5) * width for i in range(nBins)]
         title = fill('%s vs %s' % (query.id, subject.id), FILL_WIDTH)
 
         if readsAx is None:
@@ -335,7 +335,7 @@ def plotHistogramLinePanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
         for additional keywords, all of which are optional.
     @return: The C{light.result.Result} from running the database find.
     """
-    if isinstance(sequences, basestring):
+    if isinstance(sequences, str):
         reads = list(FastaReads(sequences, readClass=AARead))
     else:
         reads = list(sequences)
@@ -407,8 +407,8 @@ def plotHistogramLine(query, subject, significanceMethod=False,
     try:
         analysis = result.analysis[subjectIndex]
     except KeyError:
-        print 'Query %r and subject %r had no hashes in common.' % (
-            query.id, subject.id)
+        print('Query %r and subject %r had no hashes in common.' % (
+            query.id, subject.id))
     else:
         histogram = analysis['histogram']
 
@@ -468,7 +468,7 @@ def plotHistogramLines(sequences, significanceFraction=None, **kwargs):
     """
     fig = plt.figure(figsize=(15, 10))
     readsAx = fig.add_subplot(111)
-    if isinstance(sequences, basestring):
+    if isinstance(sequences, str):
         reads = list(FastaReads(sequences, readClass=AARead))
     else:
         reads = list(sequences)
@@ -486,8 +486,8 @@ def plotHistogramLines(sequences, significanceFraction=None, **kwargs):
                 analysis = result.analysis[subjectIndex]
             except KeyError:
                 subject = database.getSubject(subjectIndex)
-                print 'Query %r and subject %r had no hashes in common.' % (
-                    read.id, subject.id)
+                print('Query %r and subject %r had no hashes in common.' % (
+                    read.id, subject.id))
             else:
                 histogram = analysis['histogram']
                 counts = sorted([len(bin) for bin in histogram.bins])
@@ -600,7 +600,7 @@ def plotHorizontalPairPanel(sequences, equalizeXAxes=True,
         for additional keywords, all of which are optional.
     @return: The C{light.result.Result} from running the database find.
     """
-    if isinstance(sequences, basestring):
+    if isinstance(sequences, str):
         reads = list(FastaReads(sequences, readClass=AARead))
     else:
         reads = list(sequences)
@@ -706,17 +706,17 @@ class PlotHashesInSubjectAndRead(object):
         fig = plt.figure(figsize=(15, height))
         readsAx = readsAx or fig.add_subplot(111)
 
-        for hashInfo in self.queryHashes.itervalues():
+        for hashInfo in self.queryHashes.values():
             for offset in hashInfo['landmarkOffsets']:
                 readsAx.plot(offset + uniform(-0.4, 0.4), 0, 'o',
                              markerfacecolor='black', markeredgecolor='white')
 
-        for hashInfo in self.subjectHashes.itervalues():
+        for hashInfo in self.subjectHashes.values():
             for offset in hashInfo['landmarkOffsets']:
                 readsAx.plot(0, offset + uniform(-0.4, 0.4), 'o',
                              markerfacecolor='black', markeredgecolor='white')
 
-        nonEmptyBins = filter(lambda b: len(b), self.bins)
+        nonEmptyBins = [b for b in self.bins if len(b)]
         binColors = colors.color_palette('hls', len(nonEmptyBins))
         for bin_, binColor in zip(nonEmptyBins, binColors):
             for match in bin_:
@@ -800,7 +800,7 @@ class PlotHashesInSubjectAndRead(object):
         # as well as diagonal lines between the two (in colors that
         # correspond to histogram bins).
 
-        nonEmptyBins = filter(lambda b: len(b), self.bins)
+        nonEmptyBins = [b for b in self.bins if len(b)]
         binColors = colors.color_palette('hls', len(nonEmptyBins))
 
         for bin_, binColor in zip(nonEmptyBins, binColors):
@@ -876,7 +876,7 @@ class PlotHashesInSubjectAndRead(object):
                 # Don't plot the end of the landmark, to reduce clutter.
 
         # Query-only hashes, plotted just below (-missY) the query line.
-        for hashInfo in self.queryHashes.itervalues():
+        for hashInfo in self.queryHashes.values():
             lm = hashInfo['landmark']
             tp = hashInfo['trigPoint']
             lmName = lm.name
@@ -902,7 +902,7 @@ class PlotHashesInSubjectAndRead(object):
                             '-', color=tpColor, linewidth=3)
 
         # Subject-only hashes, plotted just above (+missY) the subject line.
-        for hashInfo in self.subjectHashes.itervalues():
+        for hashInfo in self.subjectHashes.values():
             lm = hashInfo['landmark']
             tp = hashInfo['trigPoint']
             lmName = lm.name
@@ -966,7 +966,7 @@ def plotLandmarksInSequences(sequences, maxTickLabelLength=None, **kwargs):
         C{database.DatabaseSpecifier.getDatabaseFromKeywords} for
         additional keywords, all of which are optional.
     """
-    if isinstance(sequences, basestring):
+    if isinstance(sequences, str):
         reads = list(FastaReads(sequences, readClass=AARead))
     else:
         reads = list(sequences)
@@ -1034,8 +1034,8 @@ def confusionMatrix(confusionMatrix):
     ax.set_aspect('equal')
     plt.imshow(confusionMatrix, interpolation='nearest', cmap=plt.cm.GnBu)
     plt.title('Confusion matrix \n')
-    colorbar = plt.colorbar(ticks=[range(0,
-                            max(confusionMatrix.max(axis=1)) + 1)])
+    colorbar = plt.colorbar(ticks=[list(range(0,
+                            max(confusionMatrix.max(axis=1)) + 1))])
     colorbar.outline.remove()
     plt.tick_params(axis='x', which='both', bottom='off', top='off',
                     labelbottom='off', labeltop='on')

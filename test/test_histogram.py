@@ -40,7 +40,7 @@ class TestHistogram(TestCase):
         must be raised.
         """
         error = '^Number of bins must be at least one\.$'
-        self.assertRaisesRegexp(ValueError, error, Histogram, 0)
+        self.assertRaisesRegex(ValueError, error, Histogram, 0)
 
     def testEvenNumberOfBins(self):
         """
@@ -48,7 +48,7 @@ class TestHistogram(TestCase):
         must be raised.
         """
         error = '^Number of bins must be odd\.$'
-        self.assertRaisesRegexp(ValueError, error, Histogram, 6)
+        self.assertRaisesRegex(ValueError, error, Histogram, 6)
 
     def testNegativeBins(self):
         """
@@ -56,7 +56,7 @@ class TestHistogram(TestCase):
         must be raised.
         """
         error = '^Number of bins must be at least one\.$'
-        self.assertRaisesRegexp(ValueError, error, Histogram, -1)
+        self.assertRaisesRegex(ValueError, error, Histogram, -1)
 
     def testAddDataAfterFinalized(self):
         """
@@ -68,7 +68,7 @@ class TestHistogram(TestCase):
                  'finalized$')
         h.add(3)
         h.finalize()
-        self.assertRaisesRegexp(RuntimeError, error, h.add, 3)
+        self.assertRaisesRegex(RuntimeError, error, h.add, 3)
 
     def testRepeatedFinalize(self):
         """
@@ -78,7 +78,7 @@ class TestHistogram(TestCase):
         error = ('^Histogram already finalized$')
         h.add(3)
         h.finalize()
-        self.assertRaisesRegexp(RuntimeError, error, h.finalize)
+        self.assertRaisesRegex(RuntimeError, error, h.finalize)
 
     def testDefaultNumberOfBins(self):
         """
@@ -187,7 +187,7 @@ class TestHistogram(TestCase):
         bins must contain the expected values.
         """
         h = Histogram(3)
-        map(h.add, range(9))
+        list(map(h.add, range(9)))
         h.finalize()
         self.assertEqual([[0, 1, 2], [3, 4, 5], [6, 7, 8]], h.bins)
 
@@ -197,7 +197,7 @@ class TestHistogram(TestCase):
         the bin width must be 3.0.
         """
         h = Histogram(3)
-        map(h.add, range(10))
+        list(map(h.add, range(10)))
         h.finalize()
         self.assertEqual(3.0, h.binWidth)
 
@@ -267,7 +267,7 @@ class TestHistogram(TestCase):
 
         # Make a histogram of the negative values and get all the bin counts.
         h2 = Histogram(nBins)
-        for value in map(lambda x: -x, values):
+        for value in [-x for x in values]:
             h2.add(value)
         h2.finalize()
         counts2 = [len(bin_) for bin_ in h2.bins]
@@ -275,7 +275,7 @@ class TestHistogram(TestCase):
 
         # Prepare a useful error message, in case there are any differences.
         differences = ['Counts differ']
-        for i in xrange(len(counts1)):
+        for i in range(len(counts1)):
             if counts1[i] != counts2[i]:
                 h1Low = h1.min + i * h1.binWidth
                 h1High = h1Low + h1.binWidth
@@ -449,7 +449,7 @@ class TestHistogram(TestCase):
         The __getitem__ method must return the correct bin.
         """
         h = Histogram(3)
-        map(h.add, range(9))
+        list(map(h.add, range(9)))
         h.finalize()
         self.assertEqual([0, 1, 2], h[0])
         self.assertEqual([3, 4, 5], h[1])
@@ -460,7 +460,7 @@ class TestHistogram(TestCase):
         of a non-existent bin.
         """
         h = Histogram(3)
-        map(h.add, range(9))
+        list(map(h.add, range(9)))
         h.finalize()
-        self.assertRaisesRegexp(IndexError, '^list index out of range$',
-                                h.__getitem__, 4)
+        self.assertRaisesRegex(IndexError, '^list index out of range$',
+                               h.__getitem__, 4)

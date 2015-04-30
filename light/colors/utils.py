@@ -1,5 +1,5 @@
 """Small plotting-related utility functions."""
-from __future__ import division
+
 import colorsys
 import warnings
 

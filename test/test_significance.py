@@ -17,7 +17,7 @@ class TestHashFraction(TestCase):
         that is not significant.
         """
         histogram = Histogram(5)
-        map(histogram.add, [1, 1, 1, 1, 1, 6, 7, 8, 9])
+        list(map(histogram.add, [1, 1, 1, 1, 1, 6, 7, 8, 9]))
         histogram.finalize()
         significance = HashFraction(histogram, 10, 0.75)
         self.assertFalse(significance.isSignificant(0))
@@ -28,7 +28,7 @@ class TestHashFraction(TestCase):
         that is significant.
         """
         histogram = Histogram(5)
-        map(histogram.add, [1, 1, 1, 1, 1, 6, 7, 8, 9])
+        list(map(histogram.add, [1, 1, 1, 1, 1, 6, 7, 8, 9]))
         histogram.finalize()
         significance = HashFraction(histogram, 10, 0.1)
         self.assertTrue(significance.isSignificant(0))
@@ -38,7 +38,7 @@ class TestHashFraction(TestCase):
         The right significanceAnalysis must be returned.
         """
         histogram = Histogram(5)
-        map(histogram.add, [1, 1, 1, 1, 1, 6, 7, 8, 9])
+        list(map(histogram.add, [1, 1, 1, 1, 1, 6, 7, 8, 9]))
         histogram.finalize()
         significance = HashFraction(histogram, 10, 0.1)
         significanceAnalysis = significance.getSignificanceAnalysis()
@@ -57,7 +57,7 @@ class TestMeanBinHeight(TestCase):
         that is not significant.
         """
         histogram = Histogram(5)
-        map(histogram.add, [1, 1, 1, 1, 1, 7, 8, 9])
+        list(map(histogram.add, [1, 1, 1, 1, 1, 7, 8, 9]))
         histogram.finalize()
         significance = MeanBinHeight(histogram, SQUIRRELPOX, DB)
         self.assertFalse(significance.isSignificant(1))
@@ -68,7 +68,7 @@ class TestMeanBinHeight(TestCase):
         that is significant.
         """
         histogram = Histogram(5)
-        map(histogram.add, [1, 1, 1, 1, 1, 6, 7, 8, 9])
+        list(map(histogram.add, [1, 1, 1, 1, 1, 6, 7, 8, 9]))
         histogram.finalize()
         significance = MeanBinHeight(histogram, COWPOX, DB)
         self.assertTrue(significance.isSignificant(0))
@@ -78,7 +78,7 @@ class TestMeanBinHeight(TestCase):
         The right significanceAnalysis must be returned.
         """
         histogram = Histogram(5)
-        map(histogram.add, [1, 1, 1, 1, 1, 6, 7, 8, 9])
+        list(map(histogram.add, [1, 1, 1, 1, 1, 6, 7, 8, 9]))
         histogram.finalize()
         significance = MeanBinHeight(histogram, COWPOX, DB)
         significanceAnalysis = significance.getSignificanceAnalysis()
@@ -99,7 +99,7 @@ class TestMaxBinHeight(TestCase):
         that is not significant.
         """
         histogram = Histogram(5)
-        map(histogram.add, [1, 1, 1, 1, 1, 7, 8, 9])
+        list(map(histogram.add, [1, 1, 1, 1, 1, 7, 8, 9]))
         histogram.finalize()
         significance = MaxBinHeight(histogram, SQUIRRELPOX, DB)
         self.assertFalse(significance.isSignificant(1))
@@ -110,7 +110,7 @@ class TestMaxBinHeight(TestCase):
         that is significant.
         """
         histogram = Histogram(5)
-        map(histogram.add, [1, 1, 1, 1, 1, 6, 7, 8, 9])
+        list(map(histogram.add, [1, 1, 1, 1, 1, 6, 7, 8, 9]))
         histogram.finalize()
         significance = MaxBinHeight(histogram, COWPOX, DB)
         self.assertTrue(significance.isSignificant(0))
@@ -120,7 +120,7 @@ class TestMaxBinHeight(TestCase):
         The right significanceAnalysis must be returned.
         """
         histogram = Histogram(5)
-        map(histogram.add, [1, 1, 1, 1, 1, 6, 7, 8, 9])
+        list(map(histogram.add, [1, 1, 1, 1, 1, 6, 7, 8, 9]))
         histogram.finalize()
         significance = MaxBinHeight(histogram, COWPOX, DB)
         significanceAnalysis = significance.getSignificanceAnalysis()
@@ -138,7 +138,7 @@ class TestAlways(TestCase):
         The Always significance method must return True.
         """
         histogram = Histogram(5)
-        map(histogram.add, [1, 1, 1, 1, 1, 6, 7, 8, 9])
+        list(map(histogram.add, [1, 1, 1, 1, 1, 6, 7, 8, 9]))
         histogram.finalize()
         significance = Always()
         self.assertTrue(significance.isSignificant(0))
@@ -148,7 +148,7 @@ class TestAlways(TestCase):
         The right significanceAnalysis must be returned.
         """
         histogram = Histogram(5)
-        map(histogram.add, [1, 1, 1, 1, 1, 6, 7, 8, 9])
+        list(map(histogram.add, [1, 1, 1, 1, 1, 6, 7, 8, 9]))
         histogram.finalize()
         significance = Always()
         significanceAnalysis = significance.getSignificanceAnalysis()

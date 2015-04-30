@@ -1,4 +1,3 @@
-from __future__ import division
 import colorsys
 from itertools import cycle
 
@@ -113,7 +112,7 @@ def color_palette(name=None, n_colors=6, desat=None):
 
     # Always return in r, g, b tuple format
     try:
-        palette = map(mpl.colors.colorConverter.to_rgb, palette)
+        palette = list(map(mpl.colors.colorConverter.to_rgb, palette))
         palette = _ColorPalette(palette)
     except ValueError:
         raise ValueError("Could not generate a palette for %s" % str(name))

@@ -295,7 +295,7 @@ if __name__ == '__main__':
     # run tests
     # 1) A complete sequence must match itself:
     oneStart = time()
-    print >>sys.stderr, '1) A complete sequence must find itself.'
+    print('1) A complete sequence must find itself.', file=sys.stderr)
     database = databaseSpecifier.getDatabaseFromArgs(args)
     oneResult = queryDatabase(T1DB, T1READ, database,
                               significanceFraction=args.significanceFraction)
@@ -305,7 +305,7 @@ if __name__ == '__main__':
 
     # 2) Reads made from a sequence must match itself:
     twoStart = time()
-    print >>sys.stderr, '2) Reads made from a sequence must match itself.'
+    print('2) Reads made from a sequence must match itself.', file=sys.stderr)
     database = databaseSpecifier.getDatabaseFromArgs(args)
     twoResult = queryDatabase(T2DB, T2READ, database,
                               significanceFraction=args.significanceFraction)
@@ -315,7 +315,7 @@ if __name__ == '__main__':
 
     # 3) A sequence must find related sequences:
     threeStart = time()
-    print >>sys.stderr, '3) A sequence must match related sequences.'
+    print('3) A sequence must match related sequences.', file=sys.stderr)
     database = databaseSpecifier.getDatabaseFromArgs(args)
     threeResult = queryDatabase(T3DB, T3READ, database,
                                 significanceFraction=args.significanceFraction)
@@ -325,8 +325,8 @@ if __name__ == '__main__':
 
     # 4) Reads made from a sequence must match related sequences:
     fourStart = time()
-    print >>sys.stderr, ('4) Reads made from a sequence must match related '
-                         'sequences.')
+    print(('4) Reads made from a sequence must match related '
+           'sequences.'), file=sys.stderr)
     database = databaseSpecifier.getDatabaseFromArgs(args)
     fourResult = queryDatabase(T4DB, T4READ, database,
                                significanceFraction=args.significanceFraction)
@@ -337,10 +337,10 @@ if __name__ == '__main__':
     # 5) The Z-scores and light matter score must correlate:
     # 6) The BLASTp bit scores and light matter scores must correlate:
     fiveSixStart = time()
-    print >>sys.stderr, ('5) The Z-scores and light matter score must '
-                         'correlate.')
-    print >>sys.stderr, ('6) The BLASTp bit scores and light matter scores '
-                         'must correlate.')
+    print(('5) The Z-scores and light matter score must '
+           'correlate.'), file=sys.stderr)
+    print(('6) The BLASTp bit scores and light matter scores '
+           'must correlate.'), file=sys.stderr)
     database = databaseSpecifier.getDatabaseFromArgs(args)
     fiveSixResult = queryDatabase(
         T56DB, T56READ, database,

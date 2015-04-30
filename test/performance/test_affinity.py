@@ -105,7 +105,7 @@ class TestAffinityMatrix(TestCase):
         """
         matrix = affinityMatrix(sequences, subjects=sequences, **kwargs)
 
-        for i in xrange(len(sequences)):
+        for i in range(len(sequences)):
 
             # Test the diagonal score of each sequence against itself is 1.0.
             self.assertEqual(
@@ -114,7 +114,7 @@ class TestAffinityMatrix(TestCase):
                 'score of %f.' % (i, i, sequences[i].id, matrix[i][i]))
 
             # Test that off-diagonal score pairs are identical.
-            for j in xrange(i + 1, len(sequences)):
+            for j in range(i + 1, len(sequences)):
                 self.assertEqual(
                     matrix[i][j], matrix[j][i],
                     'Off-diagonal entries (%d, %d) and (%d, %d) for %s '

@@ -218,9 +218,9 @@ class PerformanceTestRunner(object):
             self.stream.writeln()
 
         try:
-            results = map(len, (result.expectedFailures,
-                                result.unexpectedSuccesses,
-                                result.skipped))
+            results = list(map(len, (result.expectedFailures,
+                                     result.unexpectedSuccesses,
+                                     result.skipped)))
         except AttributeError:
             expectedFails = unexpectedSuccesses = skipped = 0
         else:
@@ -229,7 +229,7 @@ class PerformanceTestRunner(object):
         infos = []
         if not result.wasSuccessful():
             self.stream.write('FAILED')
-            failed, errored = map(len, (result.failures, result.errors))
+            failed, errored = list(map(len, (result.failures, result.errors)))
             if failed:
                 infos.append('failures=%d' % failed)
             if errored:

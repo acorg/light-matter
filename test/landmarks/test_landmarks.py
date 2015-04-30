@@ -38,7 +38,7 @@ class TestFindLandmarks(TestCase):
         classes.
         """
         error = '^Unknown landmark finders: x, y\.$'
-        self.assertRaisesRegexp(ValueError, error, findLandmarks, ['x', 'y'])
+        self.assertRaisesRegex(ValueError, error, findLandmarks, ['x', 'y'])
 
     def testFindNone(self):
         """

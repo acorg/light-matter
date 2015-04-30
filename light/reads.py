@@ -27,13 +27,13 @@ class ScannedRead(object):
         indices = set()
         for landmark in self.landmarks:
             offset = landmark.offset
-            for index in xrange(offset, offset + landmark.length):
+            for index in range(offset, offset + landmark.length):
                 indices.add(index)
         for trigPoint in self.trigPoints:
             offset = trigPoint.offset
             # Trig points are always length one, but use trigPoint.length
             # in case that ever changes.
-            for index in xrange(offset, offset + trigPoint.length):
+            for index in range(offset, offset + trigPoint.length):
                 indices.add(index)
         return indices
 
@@ -70,7 +70,7 @@ class ScannedRead(object):
 
             while limitPerLandmark is None or count < limitPerLandmark:
                 try:
-                    feature = nearest.next()
+                    feature = next(nearest)
                 except StopIteration:
                     break
                 else:
@@ -100,18 +100,19 @@ class ScannedRead(object):
         read = self.read
         coveredIndices = len(self.coveredIndices())
 
-        print >>fp, '%s: %s' % (description, read.id)
+        print('%s: %s' % (description, read.id), file=fp)
         if printSequence:
-            print >>fp, '  Sequence: %s' % read.sequence
-        print >>fp, '  Length: %d' % len(read.sequence)
-        print >>fp, '  Covered indices: %d (%.2f%%)' % (
-            coveredIndices, coveredIndices / float(len(read.sequence)) * 100.0)
+            print('  Sequence: %s' % read.sequence, file=fp)
+        print('  Length: %d' % len(read.sequence), file=fp)
+        print('  Covered indices: %d (%.2f%%)' % (
+            coveredIndices,
+            coveredIndices / float(len(read.sequence)) * 100.0), file=fp)
 
         # Print read landmarks and trig points.
-        print >>fp, '  Landmark count %d, trig point count %d' % (
-            len(self.landmarks), len(self.trigPoints))
+        print('  Landmark count %d, trig point count %d' % (
+            len(self.landmarks), len(self.trigPoints)), file=fp)
         if printFeatures:
             for landmark in self.landmarks:
-                print >>fp, '    ', landmark
+                print('    ', landmark, file=fp)
             for trigPoint in self.trigPoints:
-                print >>fp, '    ', trigPoint
+                print('    ', trigPoint, file=fp)

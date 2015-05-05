@@ -134,7 +134,7 @@ class Database(object):
         self.checksum = 0x0  # An arbitrary starting checksum.
         # Add landmark and trig point finders in sorted order so databases
         # with the same finders will have identical checksums (all else
-        # bing equal).
+        # being equal).
         key = attrgetter('NAME')
         landmarkFinders = sorted(self.landmarkFinders, key=key)
         trigPointFinders = sorted(self.trigPointFinders, key=key)

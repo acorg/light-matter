@@ -1,8 +1,9 @@
 *.pyc
 *~
 .DS_Store
-_trial_temp
+__pycache__
 build
 dist
 dark_matter.egg-info
 light.sublime-workspace
+crossbar/.crossbar/node.pid

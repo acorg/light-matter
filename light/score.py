@@ -46,4 +46,4 @@ class MinHashesScore(object):
         return score
 
 
-ALL_SCORE_CLASSES = (MinHashesScore)
+ALL_SCORE_CLASSES = (MinHashesScore,)

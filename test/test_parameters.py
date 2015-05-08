@@ -165,3 +165,102 @@ class TestParameters(TestCase):
         error = '^Expected object or value$'
         self.assertRaisesRegex(ValueError, error, Parameters.restore,
                                StringIO('xxx'))
+
+    def testCompareIdentical(self):
+        """
+        The compare method must return None when two parameter instances
+        have the same values.
+        """
+        params1 = Parameters([AlphaHelix, BetaStrand], [Peaks, Troughs],
+                            distanceBase=3.0, limitPerLandmark=10,
+                            maxDistance=77, minDistance=66)
+        params2 = Parameters([AlphaHelix, BetaStrand], [Peaks, Troughs],
+                            distanceBase=3.0, limitPerLandmark=10,
+                            maxDistance=77, minDistance=66)
+        self.assertIs(None, params1.compare(params2))
+
+    def testCompareDifferentLandmarkFinders(self):
+        """
+        The compare method must return a description of parameter differences
+        when two parameter instances have different landmark finders.
+        """
+        params1 = Parameters([AlphaHelix, BetaStrand], [])
+        params2 = Parameters([AlphaHelix], [])
+        expected = ("Summary of differences:\n"
+                    "\tParam 'landmarkClasses' values "
+                    "[<class 'light.landmarks.alpha_helix.AlphaHelix'>, "
+                    "<class 'light.landmarks.beta_strand.BetaStrand'>] and "
+                    "[<class 'light.landmarks.alpha_helix.AlphaHelix'>] "
+                    "differ.")
+        self.assertEqual(expected, params1.compare(params2))
+
+    def testCompareDifferentTrigPointFinders(self):
+        """
+        The compare method must return a description of parameter differences
+        when two parameter instances have different trig point finders.
+        """
+        params1 = Parameters([], [Peaks, Troughs])
+        params2 = Parameters([], [Peaks])
+        expected = ("Summary of differences:\n"
+                    "\tParam 'trigPointClasses' values "
+                    "[<class 'light.trig.peaks.Peaks'>, "
+                    "<class 'light.trig.troughs.Troughs'>] and "
+                    "[<class 'light.trig.peaks.Peaks'>] "
+                    "differ.")
+        self.assertEqual(expected, params1.compare(params2))
+
+    def testCompareDifferentDistanceBase(self):
+        """
+        The compare method must return a description of parameter differences
+        when two parameter instances have different distance bases.
+        """
+        params1 = Parameters([], [], distanceBase=1.0)
+        params2 = Parameters([], [], distanceBase=2.0)
+        expected = ("Summary of differences:\n"
+                    "\tParam 'distanceBase' values 1.0 and 2.0 differ.")
+        self.assertEqual(expected, params1.compare(params2))
+
+    def testCompareDifferentLimitPerLandmark(self):
+        """
+        The compare method must return a description of parameter differences
+        when two parameter instances have different limit per landmark.
+        """
+        params1 = Parameters([], [], limitPerLandmark=10)
+        params2 = Parameters([], [], limitPerLandmark=20)
+        expected = ("Summary of differences:\n"
+                    "\tParam 'limitPerLandmark' values 10 and 20 differ.")
+        self.assertEqual(expected, params1.compare(params2))
+
+    def testCompareDifferentMaxDistance(self):
+        """
+        The compare method must return a description of parameter differences
+        when two parameter instances have different max distances.
+        """
+        params1 = Parameters([], [], maxDistance=10)
+        params2 = Parameters([], [], maxDistance=20)
+        expected = ("Summary of differences:\n"
+                    "\tParam 'maxDistance' values 10 and 20 differ.")
+        self.assertEqual(expected, params1.compare(params2))
+
+    def testCompareDifferentMinDistance(self):
+        """
+        The compare method must return a description of parameter differences
+        when two parameter instances have different min distances.
+        """
+        params1 = Parameters([], [], minDistance=10)
+        params2 = Parameters([], [], minDistance=20)
+        expected = ("Summary of differences:\n"
+                    "\tParam 'minDistance' values 10 and 20 differ.")
+        self.assertEqual(expected, params1.compare(params2))
+
+    def testCompareDifferentMaxDistanceAndMinDistance(self):
+        """
+        The compare method must return a description of parameter differences
+        when two parameter instances have multiple different attributes.
+        """
+        params1 = Parameters([], [], maxDistance=10, minDistance=30)
+        params2 = Parameters([], [], maxDistance=20, minDistance=40)
+        expected = ("Summary of differences:\n"
+                    "\tParam 'maxDistance' values 10 and 20 differ.\n"
+                    "\tParam 'minDistance' values 30 and 40 differ.")
+        self.assertEqual(expected, params1.compare(params2))

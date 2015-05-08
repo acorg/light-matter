@@ -172,11 +172,11 @@ class TestParameters(TestCase):
         have the same values.
         """
         params1 = Parameters([AlphaHelix, BetaStrand], [Peaks, Troughs],
-                            distanceBase=3.0, limitPerLandmark=10,
-                            maxDistance=77, minDistance=66)
+                             distanceBase=3.0, limitPerLandmark=10,
+                             maxDistance=77, minDistance=66)
         params2 = Parameters([AlphaHelix, BetaStrand], [Peaks, Troughs],
-                            distanceBase=3.0, limitPerLandmark=10,
-                            maxDistance=77, minDistance=66)
+                             distanceBase=3.0, limitPerLandmark=10,
+                             maxDistance=77, minDistance=66)
         self.assertIs(None, params1.compare(params2))
 
     def testCompareDifferentLandmarkFinders(self):

@@ -8,7 +8,7 @@ from light.features import Landmark, TrigPoint
 from light.landmarks import AlphaHelix, BetaStrand
 from light.trig import Peaks, Troughs
 from light.checksum import Checksum
-from light.database import Parameters, Database, Backend
+from light.database import Parameters, Database, Backend, SimpleConnector
 from light.reads import ScannedRead
 
 
@@ -260,9 +260,9 @@ class TestDatabase(TestCase):
         self.assertEqual(72, db.totalResidues)
         self.assertEqual(44, db.totalCoveredResidues)
 
-    def testSaveLoadEmpty(self):
+    def testSaveRestoreEmpty(self):
         """
-        When asked to save and then load an empty database, the correct
+        When asked to save and then restore an empty database, the correct
         database must result.
         """
         params = Parameters([], [])
@@ -345,7 +345,7 @@ class TestDatabase(TestCase):
 
         self.assertEqual(db1.checksum, db2.checksum)
 
-    def testFindNotMatching(self):
+    def testFindNoMatching(self):
         """
         A non-matching key must not be found.
         """
@@ -415,6 +415,65 @@ class TestDatabase(TestCase):
             },
             result.matches)
 
+    def testFindNoneMatchingTooSmallDistance(self):
+        """
+        No matches should be found if the max distance is too small.
+        """
+        sequence = 'AFRRRFRRRFASAASA'
+        subject = AARead('subject', sequence)
+        query = AARead('query', sequence)
+        params = Parameters([AlphaHelix], [Peaks], maxDistance=1)
+        db = Database(params)
+        db.addSubject(subject)
+        result = db.find(query)
+        self.assertEqual({}, result.matches)
+
+    def testFindNoneMatchingNoTrigPoint(self):
+        """
+        No matches should be found if there is only one landmark and there are
+        no trig point finders.
+        """
+        sequence = 'AFRRRFRRRFASAASA'
+        subject = AARead('subject', sequence)
+        query = AARead('query', sequence)
+        params = Parameters([AlphaHelix], [])
+        db = Database(params)
+        db.addSubject(subject)
+        result = db.find(query)
+        self.assertEqual({}, result.matches)
+
+    def testFindTwoMatchingInSameSubject(self):
+        """
+        Two matching hashes in the subject must be found correctly.
+        """
+        sequence = 'FRRRFRRRFASAASA'
+        subject = AARead('subject', sequence)
+        query = AARead('query', sequence)
+        params = Parameters([AlphaHelix], [Peaks])
+        db = Database(params)
+        db.addSubject(subject)
+        result = db.find(query)
+        self.assertEqual(
+            {
+                0: [
+                    {
+                        'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
+                        'queryLandmarkOffsets': [0],
+                        'queryTrigPointOffsets': [10],
+                        'subjectLandmarkOffsets': [0],
+                        'trigPoint': TrigPoint('Peaks', 'P', 10),
+                    },
+                    {
+                        'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
+                        'queryLandmarkOffsets': [0],
+                        'queryTrigPointOffsets': [13],
+                        'subjectLandmarkOffsets': [0],
+                        'trigPoint': TrigPoint('Peaks', 'P', 13),
+                    }
+                ],
+            },
+            result.matches)
+
     def testSymmetricFindScoresSameSubjectAndQuery(self):
         """
         The score of matching a sequence A against a sequence B must
@@ -465,64 +524,6 @@ class TestDatabase(TestCase):
         self.assertEqual(score1, score2)
         self.assertNotEqual(1.0, score1)
 
-    def testFindNoneMatchingTooSmallDistance(self):
-        """
-        One matching key must be found.
-        """
-        sequence = 'AFRRRFRRRFASAASA'
-        subject = AARead('subject', sequence)
-        query = AARead('query', sequence)
-        params = Parameters([AlphaHelix], [Peaks], maxDistance=1)
-        db = Database(params)
-        db.addSubject(subject)
-        result = db.find(query)
-        self.assertEqual({}, result.matches)
-
-    def testFindNoneMatchingNoTrigPoint(self):
-        """
-        One matching key must be found.
-        """
-        sequence = 'AFRRRFRRRFASAASA'
-        subject = AARead('subject', sequence)
-        query = AARead('query', sequence)
-        params = Parameters([AlphaHelix], [])
-        db = Database(params)
-        db.addSubject(subject)
-        result = db.find(query)
-        self.assertEqual({}, result.matches)
-
-    def testFindTwoMatchingInSameSubject(self):
-        """
-        Two matching hashes in the subject must be found correctly.
-        """
-        sequence = 'FRRRFRRRFASAASA'
-        subject = AARead('subject', sequence)
-        query = AARead('query', sequence)
-        params = Parameters([AlphaHelix], [Peaks])
-        db = Database(params)
-        db.addSubject(subject)
-        result = db.find(query)
-        self.assertEqual(
-            {
-                0: [
-                    {
-                        'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                        'queryLandmarkOffsets': [0],
-                        'queryTrigPointOffsets': [10],
-                        'subjectLandmarkOffsets': [0],
-                        'trigPoint': TrigPoint('Peaks', 'P', 10),
-                    },
-                    {
-                        'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                        'queryLandmarkOffsets': [0],
-                        'queryTrigPointOffsets': [13],
-                        'subjectLandmarkOffsets': [0],
-                        'trigPoint': TrigPoint('Peaks', 'P', 13),
-                    }
-                ],
-            },
-            result.matches)
-
     def testChecksumEmptyDatabase(self):
         """
         The database checksum must be the same as the checksum for its
@@ -562,10 +563,7 @@ class TestDatabase(TestCase):
         db.save(fp)
         fp.seek(0)
         result = db.restore(fp)
-        self.assertEqual(16, result.params.limitPerLandmark)
-        self.assertEqual(17, result.params.maxDistance)
-        self.assertEqual(18, result.params.minDistance)
-        self.assertEqual(19.0, result.params.distanceBase)
+        self.assertIs(None, params.compare(result.params))
 
     def testScan(self):
         """
@@ -750,7 +748,7 @@ class TestDatabase(TestCase):
             'Total residues: 15\n'
             'Coverage: 73.33%\n'
             'Checksum: 1144016651\n'
-            'Backend 0:\n'
+            'Backend \'localhost\':\n'
             'Hash count: 3\n'
             'Checksum: 1144016651\n'
             'Subjects (with offsets) by hash:\n'
@@ -818,7 +816,15 @@ class TestBackend(TestCase):
     """
     Tests for the light.database.Backend class.
     """
-    def testInitialDatabaseIsEmpty(self):
+    def testParametersAreStored(self):
+        """
+        The backend must call its super class so its parameters are stored.
+        """
+        params = Parameters([AlphaHelix], [Peaks])
+        be = Backend(params)
+        self.assertIs(params, be.params)
+
+    def testInitialBackendIsEmpty(self):
         """
         The index must be empty if no reads have been added.
         """
@@ -826,10 +832,51 @@ class TestBackend(TestCase):
         be = Backend(params)
         self.assertEqual({}, be.d)
 
+    def testAddSubjectReturnsCorrectResult(self):
+        """
+        If one subject is added, addSubject must return the index ('0') of the
+        added subject, the correct number of covered residues, and the correct
+        hash count.
+        """
+        params = Parameters([AlphaHelix], [])
+        be = Backend(params)
+        subject = AARead('id', 'FRRRFRRRF')
+        subjectIndex, coveredResidues, hashCount = be.addSubject(subject)
+        self.assertEqual('0', subjectIndex)
+        self.assertEqual(9, coveredResidues)
+        self.assertEqual(0, hashCount)
+
+    def testAddSameSubjectReturnsDifferentIndex(self):
+        """
+        If an identical subject is added multiple times, different subject
+        indices must be returned because the backend does not detect
+        duplicates, only the Database frontend does.
+        """
+        params = Parameters([AlphaHelix], [])
+        be = Backend(params)
+        subject = AARead('id', 'FRRRFRRRF')
+        subjectIndex1, _, _ = be.addSubject(subject)
+        subjectIndex2, _, _ = be.addSubject(subject)
+        self.assertEqual('0', subjectIndex1)
+        self.assertEqual('1', subjectIndex2)
+
+    def testAddSameSubjectIncreasesBackendSize(self):
+        """
+        If an identical subject is added multiple times, the backend size
+        increases, because the backend does not detect duplicates, only the
+        Database frontend does.
+        """
+        params = Parameters([AlphaHelix], [])
+        be = Backend(params)
+        be.addSubject(AARead('id', 'FRRRFRRRF'))
+        self.assertEqual(1, be.subjectCount)
+        be.addSubject(AARead('id', 'FRRRFRRRF'))
+        self.assertEqual(2, be.subjectCount)
+
     def testOneReadOneLandmark(self):
         """
         If one subject is added but it only has one landmark, nothing is added
-        to the database.
+        to the backend.
         """
         params = Parameters([AlphaHelix], [])
         be = Backend(params)
@@ -839,7 +886,7 @@ class TestBackend(TestCase):
     def testOneReadTwoLandmarks(self):
         """
         If one subject is added and it has two landmarks, one key is added
-        to the database.
+        to the backend.
         """
         params = Parameters([AlphaHelix], [])
         be = Backend(params)
@@ -865,10 +912,10 @@ class TestBackend(TestCase):
     def testTwoReadsTwoLandmarksDifferentOffsets(self):
         """
         If two subjects are added, both with two landmarks separated by the
-        same distance, only one key is added to the database and both reads are
+        same distance, only one key is added to the backend and both reads are
         listed in the dictionary values for the key.
 
-        Note that A3:A2:-23 is not added to the database since that would be
+        Note that A3:A2:-23 is not added to the backend since that would be
         redundant (it's the same two landmarks, with the same separation,
         just with the sign changed).
         """
@@ -886,7 +933,7 @@ class TestBackend(TestCase):
     def testOneReadOneLandmarkOnePeak(self):
         """
         If one subject is added and it has one landmark and one peak, one pair
-        is added to the database.
+        is added to the backend.
         """
         params = Parameters([AlphaHelix], [Peaks])
         be = Backend(params)
@@ -921,7 +968,7 @@ class TestBackend(TestCase):
     def testOneReadOneLandmarkOnePeakNoTrigFinders(self):
         """
         If one subject is added and it has one landmark and one peak, but no
-        trig finders are in use, nothing is added to the database.
+        trig finders are in use, nothing is added to the backend.
         """
         params = Parameters([AlphaHelix], [])
         be = Backend(params)
@@ -931,7 +978,7 @@ class TestBackend(TestCase):
     def testOneReadOneLandmarkTwoPeaks(self):
         """
         If one subject is added and it has one landmark and two peaks, two
-        pairs are added to the database.
+        pairs are added to the backend.
         """
         params = Parameters([AlphaHelix], [Peaks])
         be = Backend(params)
@@ -949,7 +996,7 @@ class TestBackend(TestCase):
         """
         If one subject is added and it has one landmark and two peaks, but a
         limit of one pair per landmarks is imposed, only one key is added to
-        the database.
+        the backend.
         """
         params = Parameters([AlphaHelix], [Peaks], limitPerLandmark=1)
         be = Backend(params)
@@ -965,7 +1012,7 @@ class TestBackend(TestCase):
         """
         If one subject is added and it has one landmark and two peaks, but a
         severe maximum distance is imposed, no keys are added to
-        the database.
+        the backend.
         """
         params = Parameters([AlphaHelix], [Peaks], maxDistance=1)
         be = Backend(params)
@@ -976,7 +1023,7 @@ class TestBackend(TestCase):
         """
         If one subject is added and it has one landmark and two peaks, but a
         maximum distance is imposed that makes one of the peaks too far
-        away, only one key is added to the database.
+        away, only one key is added to the backend.
         """
         params = Parameters([AlphaHelix], [Peaks], maxDistance=11)
         be = Backend(params)
@@ -992,7 +1039,7 @@ class TestBackend(TestCase):
         """
         If one subject is added and it has one landmark and two peaks, and a
         maximum distance is imposed that is greater than the distance to the
-        peaks, two keys are added to the database.
+        peaks, two keys are added to the backend.
         """
         params = Parameters([AlphaHelix], [Peaks], maxDistance=15)
         be = Backend(params)
@@ -1010,7 +1057,7 @@ class TestBackend(TestCase):
         """
         If one subject is added and it has one landmark and two peaks, but a
         permissive minimum distance is imposed, all keys are added to
-        the database.
+        the backend.
         """
         params = Parameters([AlphaHelix], [Peaks], minDistance=1)
         be = Backend(params)
@@ -1028,7 +1075,7 @@ class TestBackend(TestCase):
         """
         If one subject is added and it has one landmark and two peaks, but an
         intermediate minimum distance is imposed, only the key for the pair
-        that exceeds the minimum distance is added to the database.
+        that exceeds the minimum distance is added to the backend.
         """
         params = Parameters([AlphaHelix], [Peaks], minDistance=11)
         be = Backend(params)
@@ -1044,7 +1091,7 @@ class TestBackend(TestCase):
         """
         If one subject is added and it has one landmark and two peaks, but a
         severe minimum distance is imposed, no keys are added to
-        the database.
+        the backend.
         """
         params = Parameters([AlphaHelix], [Peaks], minDistance=100)
         be = Backend(params)
@@ -1055,7 +1102,7 @@ class TestBackend(TestCase):
         """
         If one subject is added and it has one landmark and one peak separated
         by 10 bases and then, later in the subject, the same pair with the
-        same separation, one key must be added to the database and it
+        same separation, one key must be added to the backend and it
         should have two subject offsets.  Note that minDistance and
         maxDistance are used to discard the matches some longer and shorter
         distance pairs that only have one subject offset (i.e., that only
@@ -1076,10 +1123,10 @@ class TestBackend(TestCase):
     def testTwoReadsTwoLandmarksSameOffsets(self):
         """
         If two identical reads are added, both with two landmarks at the same
-        offsets, only one key is added to the database and both reads are
+        offsets, only one key is added to the backend and both reads are
         listed in the dictionary values for the key.
 
-        Note that A3:A2:-23 is not added to the database since that would be
+        Note that A3:A2:-23 is not added to the backend since that would be
         redundant (it's the same two landmarks, with the same separation,
         just with the sign changed).
         """
@@ -1094,9 +1141,371 @@ class TestBackend(TestCase):
             },
             be.d)
 
+    def testFindNoMatch(self):
+        """
+        A query against an empty backend must produce no results.
+        """
+        subject = AARead('subject', 'FRRRFRRRFASAASA')
+        query = AARead('query', 'FRRR')
+        params = Parameters([AlphaHelix], [Peaks])
+        be = Backend(params)
+        be.addSubject(subject)
+        matches, hashCount, nonMatchingHashes = be.find(
+            query, Parameters.DEFAULT_SIGNIFICANCE_METHOD,
+            Parameters.DEFAULT_SCORE_METHOD,
+            Parameters.DEFAULT_SIGNIFICANCE_FRACTION, False)
+
+        self.assertEqual({}, matches)
+        self.assertEqual(0, hashCount)
+        self.assertEqual({}, nonMatchingHashes)
+
+    def testFindOneMatchingHashInOneLocation(self):
+        """
+        One matching subject with one matching hash (that occurs in one
+        location) must be found correctly.
+        """
+        sequence = 'AFRRRFRRRFASAASA'
+        subject = AARead('subject', sequence)
+        query = AARead('query', sequence)
+        params = Parameters([AlphaHelix], [Peaks], maxDistance=11)
+        be = Backend(params)
+        be.addSubject(subject)
+        matches, hashCount, nonMatchingHashes = be.find(
+            query, 0.0, Parameters.DEFAULT_SCORE_METHOD,
+            Parameters.DEFAULT_SIGNIFICANCE_FRACTION, False)
+
+        self.assertEqual(
+            {
+                '0': [
+                    {
+                        'landmark': Landmark('AlphaHelix', 'A', 1, 9, 2),
+                        'queryLandmarkOffsets': [1],
+                        'queryTrigPointOffsets': [11],
+                        'subjectLandmarkOffsets': [1],
+                        'trigPoint': TrigPoint('Peaks', 'P', 11),
+                    },
+                ],
+            },
+            matches)
+        self.assertEqual(1, hashCount)
+        self.assertEqual({}, nonMatchingHashes)
+
+    def testFindOneMatchingHashInTwoLocations(self):
+        """
+        One matching subject with one matching hash (that occurs in two
+        locations) must be found correctly.
+        """
+        subject = AARead('subject', 'AFRRRFRRRFASAASAVVVVVVASAVVVASA')
+        query = AARead('query', 'FRRRFRRRFASAASAFRRRFRRRFFRRRFRRRFFRRRFRRRF')
+        params = Parameters([AlphaHelix, BetaStrand], [Peaks])
+        be = Backend(params)
+        be.addSubject(subject)
+        matches, hashCount, nonMatchingHashes = be.find(
+            query, Parameters.DEFAULT_SIGNIFICANCE_METHOD,
+            Parameters.DEFAULT_SCORE_METHOD,
+            Parameters.DEFAULT_SIGNIFICANCE_FRACTION, False)
+
+        self.assertEqual(
+            {
+                '0': [
+                    {
+                        'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
+                        'queryLandmarkOffsets': [0],
+                        'queryTrigPointOffsets': [10],
+                        'subjectLandmarkOffsets': [1],
+                        'trigPoint': TrigPoint('Peaks', 'P', 10),
+                    },
+                    {
+                        'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
+                        'queryLandmarkOffsets': [0],
+                        'queryTrigPointOffsets': [13],
+                        'subjectLandmarkOffsets': [1],
+                        'trigPoint': TrigPoint('Peaks', 'P', 13),
+                    }
+                ]
+            }, matches)
+        self.assertEqual(14, hashCount)
+        self.assertEqual({}, nonMatchingHashes)
+
+    def testFindWithNonMatchingHashes(self):
+        """
+        Non-matching hashes must be found correctly when storeFullAnalysis is
+        passed to find() as True.
+        """
+        subject = AARead('subject', 'F')
+        query = AARead('query', 'AFRRRFRRRFASAASAVV')
+        params = Parameters([AlphaHelix, BetaStrand], [Peaks])
+        be = Backend(params)
+        be.addSubject(subject)
+        matches, hashCount, nonMatchingHashes = be.find(
+            query, Parameters.DEFAULT_SIGNIFICANCE_METHOD,
+            Parameters.DEFAULT_SCORE_METHOD,
+            Parameters.DEFAULT_SIGNIFICANCE_FRACTION, True)
+
+        self.assertEqual({}, matches)
+        self.assertEqual(2, hashCount)
+        self.assertEqual(
+            {
+                'A2:P:10': {
+                    'landmark':
+                        Landmark(AlphaHelix.NAME, AlphaHelix.SYMBOL, 1, 9, 2),
+                    'landmarkOffsets': [1],
+                    'trigPoint': TrigPoint(Peaks.NAME, Peaks.SYMBOL, 11),
+                    'trigPointOffsets': [11],
+                },
+                'A2:P:13': {
+                    'landmark':
+                        Landmark(AlphaHelix.NAME, AlphaHelix.SYMBOL, 1, 9, 2),
+                    'landmarkOffsets': [1],
+                    'trigPoint': TrigPoint(Peaks.NAME, Peaks.SYMBOL, 14),
+                    'trigPointOffsets': [14],
+                }
+            },
+            nonMatchingHashes)
+
+    def testFindNoneMatchingTooSmallDistance(self):
+        """
+        No matches should be found if the max distance is too small.
+        """
+        sequence = 'AFRRRFRRRFASAASA'
+        subject = AARead('subject', sequence)
+        query = AARead('query', sequence)
+        params = Parameters([AlphaHelix], [Peaks], maxDistance=1)
+        be = Backend(params)
+        be.addSubject(subject)
+        matches, hashCount, nonMatchingHashes = be.find(
+            query, Parameters.DEFAULT_SIGNIFICANCE_METHOD,
+            Parameters.DEFAULT_SCORE_METHOD,
+            Parameters.DEFAULT_SIGNIFICANCE_FRACTION, False)
+
+        self.assertEqual({}, matches)
+        self.assertEqual(0, hashCount)
+        self.assertEqual({}, nonMatchingHashes)
+
+    def testFindNoneMatchingNoTrigPoint(self):
+        """
+        No matches should be found if there is only one landmark and there are
+        no trig point finders.
+        """
+        sequence = 'AFRRRFRRRFASAASA'
+        subject = AARead('subject', sequence)
+        query = AARead('query', sequence)
+        params = Parameters([AlphaHelix], [])
+        be = Backend(params)
+        be.addSubject(subject)
+        matches, hashCount, nonMatchingHashes = be.find(
+            query, Parameters.DEFAULT_SIGNIFICANCE_METHOD,
+            Parameters.DEFAULT_SCORE_METHOD,
+            Parameters.DEFAULT_SIGNIFICANCE_FRACTION, False)
+
+        self.assertEqual({}, matches)
+        self.assertEqual(0, hashCount)
+        self.assertEqual({}, nonMatchingHashes)
+
+    def testFindTwoMatchingInSameSubject(self):
+        """
+        Two matching hashes in the subject must be found correctly.
+        """
+        sequence = 'FRRRFRRRFASAASA'
+        subject = AARead('subject', sequence)
+        query = AARead('query', sequence)
+        params = Parameters([AlphaHelix], [Peaks])
+        be = Backend(params)
+        be.addSubject(subject)
+        matches, hashCount, nonMatchingHashes = be.find(
+            query, Parameters.DEFAULT_SIGNIFICANCE_METHOD,
+            Parameters.DEFAULT_SCORE_METHOD,
+            Parameters.DEFAULT_SIGNIFICANCE_FRACTION, False)
+
+        self.assertEqual(
+            {
+                '0': [
+                    {
+                        'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
+                        'queryLandmarkOffsets': [0],
+                        'queryTrigPointOffsets': [10],
+                        'subjectLandmarkOffsets': [0],
+                        'trigPoint': TrigPoint('Peaks', 'P', 10),
+                    },
+                    {
+                        'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
+                        'queryLandmarkOffsets': [0],
+                        'queryTrigPointOffsets': [13],
+                        'subjectLandmarkOffsets': [0],
+                        'trigPoint': TrigPoint('Peaks', 'P', 13),
+                    }
+                ],
+            },
+            matches)
+        self.assertEqual(2, hashCount)
+        self.assertEqual({}, nonMatchingHashes)
+
+    def testChecksumEmptyBackend(self):
+        """
+        The backend checksum must be the same as the checksum for its
+        parameters when no subjects have been added to the backend.
+        """
+        params = Parameters([], [])
+        be = Backend(params)
+        self.assertEqual(params.checksum, be.checksum)
+
+    def testChecksumAfterSubjectAdded(self):
+        """
+        The backend checksum must be as expected when a subject has been
+        added to the backend.
+        """
+        params = Parameters([AlphaHelix], [])
+        be = Backend(params)
+        sequence = 'AFRRRFRRRFASAASA'
+        subject = AARead('id', sequence)
+        be.addSubject(subject)
+
+        checksum = Checksum(params.checksum).update([
+            'id',
+            sequence,
+            '0',  # Hash count.
+        ]).checksum
+        self.assertEqual(checksum, be.checksum)
+
+    def testSaveLoadWithNonDefaultParameters(self):
+        """
+        When asked to save and then load a backend with non-default
+        parameters, a backend with the correct parameters must result.
+        """
+        params = Parameters([], [], limitPerLandmark=16, maxDistance=17,
+                            minDistance=18, distanceBase=19.0)
+        be = Backend(params)
+        fp = StringIO()
+        be.save(fp)
+        fp.seek(0)
+        result = be.restore(fp)
+        self.assertIs(None, params.compare(result.params))
+
+    def testScan(self):
+        """
+        The scan method must return a scanned subject.
+        """
+        subject = AARead('subject', 'FRRRFRRRFASAASA')
+        params = Parameters([AlphaHelix], [Peaks])
+        be = Backend(params)
+        be.addSubject(subject)
+        scannedSubject = be.scan(subject)
+        self.assertIsInstance(scannedSubject, ScannedRead)
+
+    def testGetScannedPairs(self):
+        """
+        The getSequencePairs method must return pairs of
+        (landmark, trigPoints).
+        """
+        subject = AARead('subject', 'FRRRFRRRFASAASA')
+        params = Parameters([AlphaHelix], [Peaks], distanceBase=1.0)
+        be = Backend(params)
+        be.addSubject(subject)
+        scannedSubject = be.scan(subject)
+        pairs = list(be.getScannedPairs(scannedSubject))
+        # First pair.
+        landmark, trigPoint = pairs[0]
+        self.assertEqual(Landmark(AlphaHelix.NAME, AlphaHelix.SYMBOL,
+                                  0, 9, 2), landmark)
+        self.assertEqual(TrigPoint(Peaks.NAME, Peaks.SYMBOL, 10), trigPoint)
+        # Second pair.
+        landmark, trigPoint = pairs[1]
+        self.assertEqual(Landmark(AlphaHelix.NAME, AlphaHelix.SYMBOL,
+                                  0, 9, 2), landmark)
+        self.assertEqual(TrigPoint(Peaks.NAME, Peaks.SYMBOL, 13), trigPoint)
+        self.assertEqual(2, len(pairs))
+
+    def testCollectReadHashesWithNoHashes(self):
+        """
+        The getHashes method must return a dict keyed by (landmark, trigPoints)
+        hash with values containing the read offsets. The result should be
+        empty if there are no landmarks in the read.
+        """
+        params = Parameters([AlphaHelix], [])
+        be = Backend(params)
+        query = AARead('query', 'AAA')
+        scannedQuery = be.scan(query)
+        hashCount = be.getHashes(scannedQuery)
+        self.assertEqual({}, hashCount)
+
+    def testCollectReadHashesWithOneLandmark(self):
+        """
+        The getHashes method must return a dict keyed by (landmark, trigPoints)
+        hash with values containing the read offsets. The result should be
+        empty if there is only one landmark in the read.
+        """
+        params = Parameters([AlphaHelix], [])
+        be = Backend(params)
+        query = AARead('query', 'FRRRFRRRF')
+        scannedQuery = be.scan(query)
+        hashCount = be.getHashes(scannedQuery)
+        self.assertEqual({}, hashCount)
+
+    def testCollectReadHashes(self):
+        """
+        The getHashes method must return a dict keyed by (landmark, trigPoints)
+        hash with values containing the read offsets.
+        """
+        params = Parameters([AlphaHelix], [Peaks], distanceBase=1.0)
+        be = Backend(params)
+        query = AARead('query', 'FRRRFRRRFASAASAFRRRFRRRFASAASA')
+        scannedQuery = be.scan(query)
+        hashCount = be.getHashes(scannedQuery)
+        helixAt0 = Landmark(AlphaHelix.NAME, AlphaHelix.SYMBOL, 0, 9, 2)
+        helixAt15 = Landmark(AlphaHelix.NAME, AlphaHelix.SYMBOL, 15, 9, 2)
+        peakAt10 = TrigPoint(Peaks.NAME, Peaks.SYMBOL, 10)
+        peakAt13 = TrigPoint(Peaks.NAME, Peaks.SYMBOL, 13)
+        peakAt25 = TrigPoint(Peaks.NAME, Peaks.SYMBOL, 25)
+        peakAt28 = TrigPoint(Peaks.NAME, Peaks.SYMBOL, 28)
+        self.assertEqual(
+            {
+                'A2:A2:15': {
+                    'landmark': helixAt0,
+                    'landmarkOffsets': [0],
+                    'trigPointOffsets': [15],
+                    'trigPoint': helixAt15,
+                },
+                'A2:P:-2': {
+                    'landmark': helixAt15,
+                    'landmarkOffsets': [15],
+                    'trigPointOffsets': [13],
+                    'trigPoint': peakAt13,
+                },
+                'A2:P:-5': {
+                    'landmark': helixAt15,
+                    'landmarkOffsets': [15],
+                    'trigPointOffsets': [10],
+                    'trigPoint': peakAt10,
+                },
+                'A2:P:10': {
+                    'landmark': helixAt0,
+                    'landmarkOffsets': [0, 15],
+                    'trigPointOffsets': [10, 25],
+                    'trigPoint': peakAt10,
+                },
+                'A2:P:13': {
+                    'landmark': helixAt0,
+                    'landmarkOffsets': [0, 15],
+                    'trigPointOffsets': [13, 28],
+                    'trigPoint': peakAt13,
+                },
+                'A2:P:25': {
+                    'landmark': helixAt0,
+                    'landmarkOffsets': [0],
+                    'trigPointOffsets': [25],
+                    'trigPoint': peakAt25,
+                },
+                'A2:P:28': {
+                    'landmark': helixAt0,
+                    'landmarkOffsets': [0],
+                    'trigPointOffsets': [28],
+                    'trigPoint': peakAt28,
+                },
+            }, hashCount)
+
     def testRestoreInvalidJSON(self):
         """
-        If a database restore is attempted from a file that does not contain
+        If a backend restore is attempted from a file that does not contain
         valid JSON, a ValueError error must be raised.
         """
         error = '^Expected object or value$'
@@ -1105,8 +1514,8 @@ class TestBackend(TestCase):
 
     def testSaveLoadNonEmpty(self):
         """
-        When asked to save and then load a non-empty database, the correct
-        database must result.
+        When asked to save and then load a non-empty backend, the correct
+        backend must result.
         """
         params = Parameters([AlphaHelix, BetaStrand], [Peaks, Troughs])
         be = Backend(params)
@@ -1129,9 +1538,9 @@ class TestBackend(TestCase):
 
     def testChecksumAfterSaveLoad(self):
         """
-        A database that has a sequence added to it, which is then saved and
+        A backend that has a sequence added to it, which is then saved and
         then re-loaded, and then has a second sequence is added to it must have
-        the same checksum as a database that simply has the two sequences added
+        the same checksum as a backend that simply has the two sequences added
         to it without interruption.
         """
         seq1 = 'FRRRFRRRFASAASA'
@@ -1151,3 +1560,157 @@ class TestBackend(TestCase):
         be2.addSubject(AARead('id2', seq2))
 
         self.assertEqual(be1.checksum, be2.checksum)
+
+    def testEmptyCopy(self):
+        """
+        The emptyCopy method must return a new, empty backend.
+        """
+        params = Parameters([AlphaHelix], [])
+        be = Backend(params)
+        sequence = 'AFRRRFRRRFASAASA'
+        subject = AARead('id', sequence)
+        be.addSubject(subject)
+        newBe = be.emptyCopy()
+        self.assertIs(None, be.params.compare(newBe.params))
+        self.assertEqual({}, newBe.d)
+        self.assertEqual(0, newBe.subjectCount)
+
+    def testPrint(self):
+        """
+        The print_ function should produce the expected output.
+        """
+        fp = StringIO()
+        subject = AARead('subject-id', 'FRRRFRRRFASAASA')
+        params = Parameters([AlphaHelix, BetaStrand], [Peaks, Troughs],
+                            limitPerLandmark=16, maxDistance=10, minDistance=0,
+                            distanceBase=1)
+        be = Backend(params)
+        be.addSubject(subject)
+        be.print_(fp)
+        expected = (
+            'Hash count: 3\n'
+            'Checksum: 1144016651\n'
+            'Subjects (with offsets) by hash:\n'
+            '   A2:P:10\n'
+            '    0 [0]\n'
+            '   A2:T:4\n'
+            '    0 [0]\n'
+            '   A2:T:8\n'
+            '    0 [0]\n'
+            'Landmark symbol counts:\n'
+            '  AlphaHelix (A2): 3\n'
+            'Trig point symbol counts:\n'
+            '  Peaks (P): 1\n'
+            '  Troughs (T): 2\n')
+        self.assertEqual(expected, fp.getvalue())
+
+
+class TestSimpleConnector(TestCase):
+    """
+    Tests for the light.database.SimpleConnector class.
+    """
+
+    def testAddSubjectReturnsCorrectResult(self):
+        """
+        If one subject is added, addSubject must return the name of the
+        backend, the index ('0') of the added subject, the correct number
+        of covered residues, and the correct hash count.
+        """
+        params = Parameters([AlphaHelix], [])
+        be = Backend(params)
+        sc = SimpleConnector(be)
+        subject = AARead('id', 'FRRRFRRRF')
+        name, subjectIndex, coveredResidues, hashCount = sc.addSubject(subject)
+        self.assertEqual('localhost', name)
+        self.assertEqual('0', subjectIndex)
+        self.assertEqual(9, coveredResidues)
+        self.assertEqual(0, hashCount)
+
+    def testFindNoMatch(self):
+        """
+        A query on a simple connector that has an empty backend must produce
+        no results.
+        """
+        subject = AARead('subject', 'FRRRFRRRFASAASA')
+        query = AARead('query', 'FRRR')
+        params = Parameters([AlphaHelix], [Peaks])
+        be = Backend(params)
+        sc = SimpleConnector(be)
+        sc.addSubject(subject)
+        result = sc.find(
+            query, Parameters.DEFAULT_SIGNIFICANCE_METHOD,
+            Parameters.DEFAULT_SCORE_METHOD,
+            Parameters.DEFAULT_SIGNIFICANCE_FRACTION, False)
+        self.assertEqual(1, len(result))
+        name, matches, hashCount, nonMatchingHashes = result[0]
+
+        self.assertEqual(name, SimpleConnector.NAME)
+        self.assertEqual({}, matches)
+        self.assertEqual(0, hashCount)
+        self.assertEqual({}, nonMatchingHashes)
+
+    def testFindOneMatchingHashInOneLocation(self):
+        """
+        One matching subject with one matching hash (that occurs in one
+        location) must be found correctly.
+        """
+        sequence = 'AFRRRFRRRFASAASA'
+        subject = AARead('subject', sequence)
+        query = AARead('query', sequence)
+        params = Parameters([AlphaHelix], [Peaks], maxDistance=11)
+        be = Backend(params)
+        sc = SimpleConnector(be)
+        sc.addSubject(subject)
+        result = sc.find(
+            query, 0.0, Parameters.DEFAULT_SCORE_METHOD,
+            Parameters.DEFAULT_SIGNIFICANCE_FRACTION, False)
+        self.assertEqual(1, len(result))
+        name, matches, hashCount, nonMatchingHashes = result[0]
+
+        self.assertEqual(name, SimpleConnector.NAME)
+        self.assertEqual(
+            {
+                '0': [
+                    {
+                        'landmark': Landmark('AlphaHelix', 'A', 1, 9, 2),
+                        'queryLandmarkOffsets': [1],
+                        'queryTrigPointOffsets': [11],
+                        'subjectLandmarkOffsets': [1],
+                        'trigPoint': TrigPoint('Peaks', 'P', 11),
+                    },
+                ],
+            },
+            matches)
+        self.assertEqual(1, hashCount)
+        self.assertEqual({}, nonMatchingHashes)
+
+    def testPrint(self):
+        """
+        The print_ function should produce the expected output.
+        """
+        fp = StringIO()
+        subject = AARead('subject-id', 'FRRRFRRRFASAASA')
+        params = Parameters([AlphaHelix, BetaStrand], [Peaks, Troughs],
+                            limitPerLandmark=16, maxDistance=10, minDistance=0,
+                            distanceBase=1)
+        be = Backend(params)
+        sc = SimpleConnector(be)
+        sc.addSubject(subject)
+        sc.print_(fp)
+        expected = (
+            'Backend \'localhost\':\n'
+            'Hash count: 3\n'
+            'Checksum: 1144016651\n'
+            'Subjects (with offsets) by hash:\n'
+            '   A2:P:10\n'
+            '    0 [0]\n'
+            '   A2:T:4\n'
+            '    0 [0]\n'
+            '   A2:T:8\n'
+            '    0 [0]\n'
+            'Landmark symbol counts:\n'
+            '  AlphaHelix (A2): 3\n'
+            'Trig point symbol counts:\n'
+            '  Peaks (P): 1\n'
+            '  Troughs (T): 2\n')
+        self.assertEqual(expected, fp.getvalue())

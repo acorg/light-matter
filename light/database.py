@@ -571,11 +571,11 @@ class Backend(_DatabaseMixin):
         return self.__class__(self.params)
 
 
-class SimpleConnector():
+class SimpleConnector(object):
     """
     Connect a Database instance to a single Backend instances.
 
-    @param params: A C{Parameters} instance.
+    @param backend: A C{Backend} instance.
     """
     NAME = 'localhost'
 
@@ -635,16 +635,16 @@ class SimpleConnector():
 
     def print_(self, fp=sys.stdout):
         """
-        Print information about the database backends.
+        Print information about the database backend.
 
         @param fp: A file pointer to write to.
         """
-        print('Backend 0:', file=fp)
+        print('Backend %r:' % self.NAME, file=fp)
         return self._backend.print_(fp)
 
     def emptyCopy(self):
         """
-        Copy the current connector, with an empty index.
+        Copy the current connector, with an empty backend.
 
         @return: A new L{light.database.SimpleConnector} instance with a
             backend with an empty index.

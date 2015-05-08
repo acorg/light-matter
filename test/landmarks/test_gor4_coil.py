@@ -4,7 +4,7 @@ from dark.reads import AARead
 
 from light.distance import scale
 from light.features import Landmark
-from light.database import Database
+from light.parameters import Parameters
 from light.landmarks.gor4_coil import GOR4Coil
 
 
@@ -27,7 +27,7 @@ class TestGOR4Coil(TestCase):
         read = AARead('id', 'VICVIC')
         landmark = GOR4Coil()
         result = list(landmark.find(read))
-        len1 = scale(1, Database.DEFAULT_DISTANCE_BASE)
+        len1 = scale(1, Parameters.DEFAULT_DISTANCE_BASE)
         # The GOR IV secondary structure prediction is 'EECEEC'.
         self.assertEqual([Landmark('GOR4Coil', 'GC', 2, len1, len1),
                           Landmark('GOR4Coil', 'GC', 5, len1, len1)],
@@ -41,7 +41,7 @@ class TestGOR4Coil(TestCase):
         read = AARead('id', 'EA')
         landmark = GOR4Coil()
         result = list(landmark.find(read))
-        len2 = scale(2, Database.DEFAULT_DISTANCE_BASE)
+        len2 = scale(2, Parameters.DEFAULT_DISTANCE_BASE)
         # The GOR IV secondary structure prediction is 'CC'.
         self.assertEqual([Landmark('GOR4Coil', 'GC', 0, len2, len2)],
                          result)
@@ -56,10 +56,10 @@ class TestGOR4Coil(TestCase):
         read = AARead('id', seq)
         landmark = GOR4Coil()
         result = list(landmark.find(read))
-        len1 = scale(1, Database.DEFAULT_DISTANCE_BASE)
-        len2 = scale(2, Database.DEFAULT_DISTANCE_BASE)
-        len4 = scale(4, Database.DEFAULT_DISTANCE_BASE)
-        len10 = scale(10, Database.DEFAULT_DISTANCE_BASE)
+        len1 = scale(1, Parameters.DEFAULT_DISTANCE_BASE)
+        len2 = scale(2, Parameters.DEFAULT_DISTANCE_BASE)
+        len4 = scale(4, Parameters.DEFAULT_DISTANCE_BASE)
+        len10 = scale(10, Parameters.DEFAULT_DISTANCE_BASE)
         # The GOR IV secondary structure prediction is
         # 'CCCCCCCCCCHHHHHHHCCHHHHHHHHHHHCCCCEEEEECCEEEEEEEEC'.
         self.assertEqual([Landmark('GOR4Coil', 'GC', 0, len10, len10),

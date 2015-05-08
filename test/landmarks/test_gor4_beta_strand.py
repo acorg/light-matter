@@ -4,7 +4,7 @@ from dark.reads import AARead
 
 from light.distance import scale
 from light.features import Landmark
-from light.database import Database
+from light.parameters import Parameters
 from light.landmarks.gor4_beta_strand import GOR4BetaStrand
 
 
@@ -38,8 +38,8 @@ class TestGOR4BetaStrand(TestCase):
         read = AARead('id', 'VICVICV')
         landmark = GOR4BetaStrand()
         result = list(landmark.find(read))
-        len2 = scale(2, Database.DEFAULT_DISTANCE_BASE)
-        len3 = scale(3, Database.DEFAULT_DISTANCE_BASE)
+        len2 = scale(2, Parameters.DEFAULT_DISTANCE_BASE)
+        len3 = scale(3, Parameters.DEFAULT_DISTANCE_BASE)
         # The GOR IV secondary structure prediction is 'EECEEEC'.
         self.assertEqual([Landmark('GOR4BetaStrand', 'GB', 0, len2, len2),
                           Landmark('GOR4BetaStrand', 'GB', 3, len3, len3)],
@@ -53,7 +53,7 @@ class TestGOR4BetaStrand(TestCase):
         read = AARead('id', 'LHV')
         landmark = GOR4BetaStrand()
         result = list(landmark.find(read))
-        len2 = scale(2, Database.DEFAULT_DISTANCE_BASE)
+        len2 = scale(2, Parameters.DEFAULT_DISTANCE_BASE)
         # The GOR IV secondary structure prediction is 'CEE'.
         self.assertEqual([Landmark('GOR4BetaStrand', 'GB', 1, len2, len2)],
                          result)
@@ -68,8 +68,8 @@ class TestGOR4BetaStrand(TestCase):
         read = AARead('id', seq)
         landmark = GOR4BetaStrand()
         result = list(landmark.find(read))
-        len5 = scale(5, Database.DEFAULT_DISTANCE_BASE)
-        len8 = scale(8, Database.DEFAULT_DISTANCE_BASE)
+        len5 = scale(5, Parameters.DEFAULT_DISTANCE_BASE)
+        len8 = scale(8, Parameters.DEFAULT_DISTANCE_BASE)
         # The GOR IV secondary structure prediction is
         # 'CCCCCCCCCCHHHHHHHCCHHHHHHHHHHHCCCCEEEEECCEEEEEEEEC'
         self.assertEqual([Landmark('GOR4BetaStrand', 'GB', 34, len5, len5),

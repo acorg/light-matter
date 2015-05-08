@@ -54,7 +54,7 @@ class Result(object):
         self.nonMatchingHashes = nonMatchingHashes
         self._storeFullAnalysis = storeFullAnalysis
         self.analysis = defaultdict(dict)
-        distanceBase = database.distanceBase
+        distanceBase = database.params.distanceBase
         queryLen = len(scannedQuery.read.sequence)
         scoreGetter = itemgetter('score')
 

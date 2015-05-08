@@ -2,13 +2,16 @@ from io import StringIO
 
 from dark.reads import AARead
 
-from light.database import Database
+from light.database import Database, Parameters
 from light.landmarks.alpha_helix import AlphaHelix
 from light.landmarks.beta_strand import BetaStrand
 from light.trig.amino_acids import AminoAcids
 
 
-DB = Database([AlphaHelix, BetaStrand], [AminoAcids])
+_params = Parameters([AlphaHelix, BetaStrand], [AminoAcids])
+DB = Database(_params)
+
+PARAMS = _params.save(StringIO()).getvalue()
 
 _ALPHA = 'ADDDADDDAM'
 _BETA = 'VVVVVVM'
@@ -34,8 +37,6 @@ _COWPOX_INDEX = DB.addSubject(COWPOX)
 _MONKEYPOX_INDEX = DB.addSubject(MONKEYPOX)
 _MUMMYPOX_INDEX = DB.addSubject(MUMMYPOX)
 _SQUIRRELPOX_INDEX = DB.addSubject(SQUIRRELPOX)
-
-PARAMS = DB.saveParamsAsJSON(StringIO()).getvalue()
 
 # Run find on a read that matches squirrelpox and catpox.
 READ0 = AARead('read0', _ALPHA + _BETA + _BETA + _ALPHA + _BETA)

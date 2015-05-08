@@ -6,6 +6,7 @@ import warnings
 from dark.reads import AARead
 
 from light.result import Result
+from light.parameters import Parameters
 from light.features import Landmark, TrigPoint
 from light.reads import ScannedRead
 from light.database import Database
@@ -22,7 +23,8 @@ class TestResult(TestCase):
         A result with no matches added to it must have the expected attributes.
         """
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
-        database = Database([], [])
+        params = Parameters([], [])
+        database = Database(params)
         hashCount = 0
         result = Result(read, {}, hashCount,
                         significanceMethod='HashFraction',
@@ -38,7 +40,8 @@ class TestResult(TestCase):
         significance method.
         """
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
-        database = Database([], [])
+        params = Parameters([], [])
+        database = Database(params)
         database.addSubject(AARead('subject', 'AAA'))
         matches = {
             0: [
@@ -64,7 +67,8 @@ class TestResult(TestCase):
         being stored in the result instance.
         """
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
-        database = Database([], [])
+        params = Parameters([], [])
+        database = Database(params)
         database.addSubject(AARead('subject', 'AAA'))
         hashCount = 1
         matches = {
@@ -90,7 +94,8 @@ class TestResult(TestCase):
         above the mean number of deltas.
         """
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
-        database = Database([AlphaHelix], [AminoAcids])
+        params = Parameters([AlphaHelix], [AminoAcids])
+        database = Database(params)
         database.addSubject(AARead('subject', 'ADDDADDDAWW'))
         hashCount = 1
         matches = {
@@ -116,7 +121,8 @@ class TestResult(TestCase):
         (the maximum number of identical distances) must be too.
         """
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
-        database = Database([AlphaHelix], [AminoAcids])
+        params = Parameters([AlphaHelix], [AminoAcids])
+        database = Database(params)
         database.addSubject(AARead('subject', 'ADDDADDDAWWWW'))
         hashCount = 4
         matches = {
@@ -158,7 +164,8 @@ class TestResult(TestCase):
         different subjects, and their scores must be correct.
         """
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
-        database = Database([AlphaHelix], [AminoAcids])
+        params = Parameters([AlphaHelix], [AminoAcids])
+        database = Database(params)
         # Note that both subject added here have a hash count of 5 (the
         # same as the passed query hash count). If we use anything less,
         # the score will change because its calculation uses the min
@@ -223,7 +230,8 @@ class TestResult(TestCase):
         If self.matches is empty, return an empty output.
         """
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
-        database = Database([], [])
+        params = Parameters([], [])
+        database = Database(params)
         result = Result(read, [], 0, 0, 'HashFraction', 'MinHashesScore',
                         database=database)
         fp = StringIO()
@@ -242,7 +250,8 @@ class TestResult(TestCase):
         The save function must return its (fp) argument.
         """
         read = ScannedRead(AARead('id', 'A'))
-        database = Database([], [])
+        params = Parameters([], [])
+        database = Database(params)
         result = Result(read, {}, 0, significanceMethod='HashFraction',
                         scoreMethod='MinHashesScore',
                         significanceFraction=0.1, database=database)
@@ -255,7 +264,8 @@ class TestResult(TestCase):
         """
         read = ScannedRead(
             AARead('id', 'FRRRFRRRFRFRFRFRRRFRRRF'))
-        database = Database([AlphaHelix], [])
+        params = Parameters([AlphaHelix], [])
+        database = Database(params)
         database.addSubject(AARead('subject0', 'FRRRFRRRFRFRFRFRRRFRRRF'))
         database.addSubject(AARead('subject1', 'FRRRFRRRFRFRFRFRRRFRRRF'))
         hashCount = 1
@@ -344,7 +354,8 @@ class TestResult(TestCase):
         is the default distanceBase.
         """
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
-        database = Database([], [])
+        params = Parameters([], [])
+        database = Database(params)
         database.addSubject(AARead('subject', 'A' * 21))
         hashCount = 1
         matches = {
@@ -374,7 +385,8 @@ class TestResult(TestCase):
         this to 21 to ensure that the number of bins is odd.
         """
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
-        database = Database([], [])
+        params = Parameters([], [])
+        database = Database(params)
         database.addSubject(AARead('subject', 'A' * 20))
         hashCount = 1
         matches = {
@@ -402,7 +414,8 @@ class TestResult(TestCase):
         (because int(log base 1.3 of 20) = 11).
         """
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
-        database = Database([], [], distanceBase=1.3)
+        params = Parameters([], [], distanceBase=1.3)
+        database = Database(params)
         database.addSubject(AARead('subject', 'AAAAAAAAAAAAAAAAAAAA'))
         hashCount = 1
         matches = {
@@ -431,7 +444,8 @@ class TestResult(TestCase):
         """
         fp = StringIO()
         read = AARead('read', 'AGTARFSDDD')
-        database = Database([], [])
+        params = Parameters([], [])
+        database = Database(params)
         database.addSubject(read)
         result = database.find(read, significanceFraction=0.1,
                                scoreMethod='MinHashesScore',
@@ -457,7 +471,8 @@ class TestResult(TestCase):
         """
         fp = StringIO()
         read = AARead('read', 'AGTARFSDDD')
-        database = Database([], [])
+        params = Parameters([], [])
+        database = Database(params)
         database.addSubject(read)
         result = database.find(read, significanceFraction=0.1,
                                storeFullAnalysis=True)
@@ -476,7 +491,8 @@ class TestResult(TestCase):
         """
         fp = StringIO()
         query = AARead('query', 'FRRRFRRRFRFRFRFRFRFRFFRRRFRRRFRRRF')
-        database = Database([AlphaHelix, BetaStrand], [])
+        params = Parameters([AlphaHelix, BetaStrand], [])
+        database = Database(params)
         subject = AARead('subject', 'VICVICV')
         database.addSubject(subject)
         result = database.find(query, storeFullAnalysis=True)
@@ -495,7 +511,8 @@ class TestResult(TestCase):
         """
         fp = StringIO()
         sequence = 'FRRRFRRRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'
-        database = Database([AlphaHelix], [])
+        params = Parameters([AlphaHelix], [])
+        database = Database(params)
         subject = AARead('subject', sequence)
         database.addSubject(subject)
         query = AARead('query', sequence)
@@ -533,7 +550,8 @@ class TestResult(TestCase):
         the histogram to be printed.
         """
         fp = StringIO()
-        database = Database([AminoAcidsLm], [])
+        params = Parameters([AminoAcidsLm], [])
+        database = Database(params)
         subject = AARead('subject', 'CACACAAACACA')
         database.addSubject(subject)
         query = AARead('query', 'CACACA')
@@ -588,7 +606,8 @@ class TestResult(TestCase):
         """
         fp = StringIO()
         sequence = 'FRRRFRRRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'
-        database = Database([AlphaHelix], [])
+        params = Parameters([AlphaHelix], [])
+        database = Database(params)
         subject = AARead('subject', sequence)
         database.addSubject(subject)
         query = AARead('query', sequence)
@@ -625,7 +644,8 @@ class TestResult(TestCase):
         """
         fp = StringIO()
         sequence = 'FRRRFRRRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'
-        database = Database([AlphaHelix], [])
+        params = Parameters([AlphaHelix], [])
+        database = Database(params)
         subject = AARead('subject', sequence)
         database.addSubject(subject)
         query = AARead('query', sequence)
@@ -658,7 +678,8 @@ class TestResult(TestCase):
         there are six HSPs.
         """
         fp = StringIO()
-        database = Database([AminoAcidsLm], [])
+        params = Parameters([AminoAcidsLm], [])
+        database = Database(params)
         subject = AARead('subject', 'CACACAAACACA')
         database.addSubject(subject)
         query = AARead('query', 'CACACA')
@@ -697,7 +718,8 @@ class TestResult(TestCase):
         bin index).
         """
         fp = StringIO()
-        database = Database([AminoAcidsLm], [])
+        params = Parameters([AminoAcidsLm], [])
+        database = Database(params)
         subject = AARead('subject', 'CACACAAACACA')
         database.addSubject(subject)
         query = AARead('query', 'CACACA')
@@ -736,7 +758,8 @@ class TestResult(TestCase):
         """
         fp = StringIO()
         sequence = 'FRRRFRRRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'
-        database = Database([AlphaHelix], [])
+        params = Parameters([AlphaHelix], [])
+        database = Database(params)
         subject = AARead('subject', sequence)
         database.addSubject(subject)
         query = AARead('query', sequence)
@@ -789,7 +812,8 @@ class TestResult(TestCase):
             'VLKLLTAGVELSDPTYQLMMKEFESPGSTGDSPLFPNAGSGYCILHRGMMQGILHYTSSLLHVN'
             'YLFVTRELIRSAYKAKFPDTTFLIDQMCSSDDSATIMSVVHPLNESEQGIKVISAFSEIICEVL'
             'KTFCRYSCFTNSEKSVMGSLNQLEFNSEFIIGNNMAVPILKWVFSAFG')
-        database = Database([AlphaHelix], [Troughs], distanceBase=1.4)
+        params = Parameters([AlphaHelix], [Troughs], distanceBase=1.4)
+        database = Database(params)
         subject = AARead('subject', sequence)
         database.addSubject(subject)
         query = AARead('query', sequence)
@@ -811,7 +835,8 @@ class TestResult(TestCase):
         Always significanceMethod is used.
         """
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
-        database = Database([], [])
+        params = Parameters([], [])
+        database = Database(params)
         database.addSubject(AARead('subject', 'A' * 21))
         hashCount = 1
         matches = {

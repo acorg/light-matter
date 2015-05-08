@@ -2,46 +2,15 @@ from json import loads
 from unittest import TestCase
 
 from light.alignments import jsonDictToAlignments
-from light.database import Database
 
 from .sample_data import (
-    DB, PARAMS, COWPOX, MONKEYPOX, MUMMYPOX, CATPOX, SQUIRRELPOX,
+    DB, COWPOX, MONKEYPOX, MUMMYPOX, CATPOX, SQUIRRELPOX,
     RECORD0, RECORD1, RECORD2, RECORD3, RECORD4,
     READ0_SQUIRRELPOX_SCORE, READ0_CATPOX_SCORE,
     READ1_MONKEYPOX_SCORE, READ1_MONKEYPOX_HSP2_SCORE, READ1_MUMMYPOX_SCORE,
     READ2_COWPOX_SCORE,
     READ3_COWPOX_SCORE,
     READ4_COWPOX_SCORE)
-
-
-class TestParams(TestCase):
-    """
-    Test the database parameters.
-    """
-    def testPARAMS(self):
-        """
-        The saved (JSON format) database parameters must be as expected.
-        """
-        self.maxDiff = None
-        self.assertEqual(
-            {
-                'checksum': 3043375176,
-                'distanceBase': 1.1,
-                'landmarkClasses': [
-                    'AlphaHelix',
-                    'BetaStrand',
-                ],
-                'limitPerLandmark': Database.DEFAULT_LIMIT_PER_LANDMARK,
-                'maxDistance': Database.DEFAULT_MAX_DISTANCE,
-                'minDistance': Database.DEFAULT_MIN_DISTANCE,
-                'subjectCount': 5,
-                'totalCoveredResidues': 164,
-                'totalResidues': 184,
-                'trigPointClasses': [
-                    'AminoAcids',
-                ],
-            },
-            loads(PARAMS))
 
 
 class TestRecords(TestCase):

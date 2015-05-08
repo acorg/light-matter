@@ -54,7 +54,7 @@ class ClusterAnalysis(object):
             scannedRead = database.scan(read)
             for landmark, trigPoint in database.getScannedPairs(scannedRead):
                 delta = scale(trigPoint.offset - landmark.offset,
-                              database.distanceBase)
+                              database.params.distanceBase)
                 offsetDeltas[delta] += 1
             allOffsetDeltas.append(offsetDeltas)
 

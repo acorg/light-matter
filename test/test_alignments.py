@@ -1,6 +1,7 @@
 import builtins
 from json import dumps, loads
 import bz2
+from io import StringIO
 from unittest import TestCase, skip
 from unittest.mock import patch
 
@@ -17,7 +18,11 @@ from .sample_data import (
 from dark.hsp import HSP
 from dark.reads import AARead
 
+from light.landmarks.alpha_helix import AlphaHelix
+from light.landmarks.beta_strand import BetaStrand
+from light.trig.amino_acids import AminoAcids
 from light.database import Database
+from light.parameters import Parameters
 from light.alignments import LightReadsAlignments, jsonDictToAlignments
 
 
@@ -54,7 +59,8 @@ class TestLightReadsAlignments(TestCase):
         """
         mockOpener = mockOpen()
         with patch.object(builtins, 'open', mockOpener):
-            error = "JSON file 'file.json' was empty."
+            error = ("^Could not convert first line of 'file.json' to "
+                     "JSON \(Expected object or value\)\.$")
             self.assertRaisesRegex(
                 ValueError, error, LightReadsAlignments, 'file.json', DB)
 
@@ -66,8 +72,7 @@ class TestLightReadsAlignments(TestCase):
         mockOpener = mockOpen(read_data='not JSON\n')
         with patch.object(builtins, 'open', mockOpener):
             error = ("^Could not convert first line of 'file\.json' to JSON "
-                     "\(Expecting value: line 1 column 1 \(char 0\)\)\. "
-                     "Line is 'not JSON'\.$")
+                     "\(Unexpected character found when decoding 'null'\)\.$")
             self.assertRaisesRegex(
                 ValueError, error, LightReadsAlignments, 'file.json', DB)
 
@@ -95,11 +100,14 @@ class TestLightReadsAlignments(TestCase):
         Light matter parameters must be extracted from the input JSON file and
         stored correctly.
         """
-        mockOpener = mockOpen(read_data=PARAMS)
+        params = Parameters([AlphaHelix, BetaStrand], [AminoAcids])
+        savedParams = params.save(StringIO()).getvalue()
+
+        mockOpener = mockOpen(read_data=savedParams)
         with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
-            self.assertEqual(loads(PARAMS),
-                             readsAlignments.params.applicationParams)
+            diffs = readsAlignments.params.applicationParams.compare(params)
+            self.assertIs(diffs, None)
 
     def testJSONParamsButNoHits(self):
         """
@@ -217,35 +225,14 @@ class TestLightReadsAlignments(TestCase):
         sideEffect = SideEffect()
         with patch.object(bz2, 'BZ2File') as mockMethod:
             mockMethod.side_effect = sideEffect.sideEffect
-            error = ("Incompatible light matter parameters found. The "
-                     "parameters in file2.json.bz2 differ from those "
-                     "originally found in file1.json.bz2. Summary of "
-                     "differences:\n\tParam 'limitPerLandmark' initial value "
-                     "10 differs from later value 100")
+            error = ("^Incompatible light matter parameters found\. The "
+                     "parameters in file2\.json\.bz2 differ from those "
+                     "originally found in file1\.json\.bz2\. Summary of "
+                     "differences:\n\tParam 'limitPerLandmark' values 10 "
+                     "and 100 differ\.$")
             readsAlignments = LightReadsAlignments(
                 ['file1.json.bz2', 'file2.json.bz2'], DB)
             self.assertRaisesRegex(ValueError, error, list, readsAlignments)
-
-    def testIncompatibleChecksum(self):
-        """
-        If an output file and a database with incompatible checksums are given
-        to L{LightReadsAlignments}, a C{ValueError} must be raised when the
-        files are read.
-        """
-
-        class SideEffect(object):
-
-            def sideEffect(self, _ignoredFilename):
-                params = loads(PARAMS)
-                params['checksum'] = 'abc'
-                return BZ2([dumps(params) + '\n', RECORD1])
-
-        sideEffect = SideEffect()
-        with patch.object(bz2, 'BZ2File') as mockMethod:
-            mockMethod.side_effect = sideEffect.sideEffect
-            error = 'Database and output file have different checksums.'
-            self.assertRaisesRegex(ValueError, error, LightReadsAlignments,
-                                   ['file.json.bz2'], DB)
 
     def testGetSubjectSequence(self):
         """
@@ -706,7 +693,8 @@ class TestJSONDictToAlignments(TestCase):
         a light matter result dict (as would be read from a JSON file) with
         no alignments.
         """
-        database = Database([], [])
+        params = Parameters([], [])
+        database = Database(params)
         lightDict = {
             'alignments': [],
         }
@@ -718,7 +706,8 @@ class TestJSONDictToAlignments(TestCase):
         passed a light matter result dict (as would be read from a JSON file)
         that has two alignments in it.
         """
-        database = Database([], [])
+        params = Parameters([], [])
+        database = Database(params)
         subject0 = AARead('subject0', 'AAA')
         subject1 = AARead('subject1', 'VVV')
         database.addSubject(subject0)

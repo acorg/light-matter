@@ -2,12 +2,12 @@ from collections import defaultdict
 
 from dark.fasta import FastaReads
 
-from light.database import Database
+from light.parameters import Parameters
 
 
 def queryDatabase(subjects, queries, database,
-                  scoreMethod=Database.DEFAULT_SCORE_METHOD,
-                  significanceMethod=Database.DEFAULT_SIGNIFICANCE_METHOD,
+                  scoreMethod=Parameters.DEFAULT_SCORE_METHOD,
+                  significanceMethod=Parameters.DEFAULT_SIGNIFICANCE_METHOD,
                   significanceFraction=None):
     """
     Add subjects to a database, query it, return results.

@@ -142,6 +142,8 @@ class Database(_DatabaseMixin):
     insertion and look-up operations on them.
 
     @param params: A C{Parameters} instance.
+    @param backendConnector: A C{Database} to C{Backend} connector, for now
+        always an instance of C{SimpleConnector}.
     """
     def __init__(self, params, backendConnector=None):
         super().__init__(params)

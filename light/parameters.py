@@ -46,6 +46,9 @@ class Parameters(object):
     # bucket for that bucket to be considered a significant match with a
     # database title.
     DEFAULT_SIGNIFICANCE_FRACTION = 0.25
+
+    # The methods to be used to calculate match scores and whether matches
+    # are significant (i.e., worth reporting).
     DEFAULT_SCORE_METHOD = MinHashesScore.__name__
     DEFAULT_SIGNIFICANCE_METHOD = HashFraction.__name__
 
@@ -64,29 +67,25 @@ class Parameters(object):
             DEFAULT_LANDMARK_CLASSES if landmarkClasses is None
             else landmarkClasses)
 
-        self.landmarkFinders = []
-        for landmarkClass in self.landmarkClasses:
-            self.landmarkFinders.append(landmarkClass(self.distanceBase))
+        self.landmarkFinders = [landmarkClass(self.distanceBase)
+                                for landmarkClass in self.landmarkClasses]
 
         self.trigPointClasses = (
             DEFAULT_TRIG_CLASSES if trigPointClasses is None
             else trigPointClasses)
 
-        self.trigPointFinders = []
-        for trigPointClass in self.trigPointClasses:
-            self.trigPointFinders.append(trigPointClass(self.distanceBase))
+        self.trigPointFinders = [trigPointClass(self.distanceBase)
+                                 for trigPointClass in self.trigPointClasses]
 
         self.limitPerLandmark = (
             self.DEFAULT_LIMIT_PER_LANDMARK if limitPerLandmark is None
             else limitPerLandmark)
 
         self.maxDistance = (
-            self.DEFAULT_MAX_DISTANCE if maxDistance is None
-            else maxDistance)
+            self.DEFAULT_MAX_DISTANCE if maxDistance is None else maxDistance)
 
         self.minDistance = (
-            self.DEFAULT_MIN_DISTANCE if minDistance is None
-            else minDistance)
+            self.DEFAULT_MIN_DISTANCE if minDistance is None else minDistance)
 
     @property
     def checksum(self):

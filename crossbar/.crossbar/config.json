@@ -1,4 +1,3 @@
-
 {
     "controller": {
     },
@@ -10,7 +9,7 @@
             },
             "realms": [
                 {
-                    "name": "realm1",
+                    "name": "light-matter",
                     "roles": [
                         {
                             "name": "authenticator",
@@ -46,7 +45,7 @@
                             ]
                         },
                         {
-                            "name": "quit",
+                            "name": "shutdown",
                             "permissions": [
                                 {
                                     "uri": "*",
@@ -100,7 +99,7 @@
                 {
                     "type": "class",
                     "classname": "auth.AppSession",
-                    "realm": "realm1",
+                    "realm": "light-matter",
                     "role": "authenticator"
                 }
             ]

@@ -3,9 +3,9 @@
 #
 # All our other WAMP components are written in Python3 and use asyncio. For
 # now though, crossbar.io only runs under Twisted in Python2 (because
-# Twisted is not yet Python3 ready). The authentication component must be
-# internal to the WAMP router and so must also be in Python2. When the
-# necessary parts of Twisted move to Python3, it will be possible to run
+# Twisted is not yet quite Python3 ready). The authentication component
+# must be internal to the WAMP router and so must also be in Python2. When
+# Twisted works on Python3 (any day now), it will be possible to run
 # crossbar.io in Python3 also and we can adjust the code below to use
 # asyncio like the rest of our WAMP components.
 #
@@ -27,6 +27,10 @@ from autobahn.wamp.exception import ApplicationError
 
 class AppSession(ApplicationSession):
 
+    # Note that the realm CANNOT be changed unless you make corresponding
+    # changes elsewhere. See the explanation in README.md
+    REALM = 'light-matter'
+
     # TODO: Get the secrets from the environment.
     USER_DB = {
         'coordinator': {
@@ -37,8 +41,8 @@ class AppSession(ApplicationSession):
             'role': 'database',
             'secret': 'secret2',
         },
-        'quit': {
-            'role': 'quit',
+        'shutdown': {
+            'role': 'shutdown',
             'secret': 'secret2',
         },
         'find': {
@@ -51,12 +55,15 @@ class AppSession(ApplicationSession):
     def onJoin(self, details):
 
         def authenticate(realm, authid, details):
+            if realm != self.REALM:
+                raise ApplicationError('unknown_realm',
+                                       'Unknown realm %r' % realm)
+
             try:
                 return self.USER_DB[authid]
             except KeyError:
-                raise ApplicationError(
-                    'no_such_user',
-                    'could not authenticate unknown user %r' % authid)
+                raise ApplicationError('unknown_user',
+                                       'Unknown user %r' % authid)
 
         try:
             yield self.register(authenticate, 'authenticate')

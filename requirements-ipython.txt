@@ -1,0 +1,4 @@
+Jinja2==2.7.3
+jsonschema==2.4.0
+pyzmq==14.6.0
+tornado==4.1

@@ -6,7 +6,7 @@ numpy==1.9.1
 pandas==0.15.2
 pep8==1.5.7
 pyflakes==0.8.1
-scipy==0.14.0
+scipy==0.13.0
 twisted==14.0.2
 ujson==1.33
 --allow-external mysql-connector-python

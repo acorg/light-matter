@@ -841,24 +841,21 @@ class TestBackend(TestCase):
         params = Parameters([AlphaHelix], [])
         be = Backend(params)
         subject = AARead('id', 'FRRRFRRRF')
-        subjectIndex, coveredResidues, hashCount = be.addSubject(subject)
-        self.assertEqual('0', subjectIndex)
+        coveredResidues, hashCount = be.addSubject(subject, '0')
         self.assertEqual(9, coveredResidues)
         self.assertEqual(0, hashCount)
 
-    def testAddSameSubjectReturnsDifferentIndex(self):
+    def testAddSameSubjectIndex(self):
         """
-        If an identical subject is added multiple times, different subject
-        indices must be returned because the backend does not detect
-        duplicates, only the Database frontend does.
+        If the same subject index is passed more tha once to addSubject, it
+        must raise ValueError.
         """
-        params = Parameters([AlphaHelix], [])
+        params = Parameters([], [])
         be = Backend(params)
         subject = AARead('id', 'FRRRFRRRF')
-        subjectIndex1, _, _ = be.addSubject(subject)
-        subjectIndex2, _, _ = be.addSubject(subject)
-        self.assertEqual('0', subjectIndex1)
-        self.assertEqual('1', subjectIndex2)
+        be.addSubject(subject, '0')
+        error = "^Subject index '0' has already been used\.$"
+        self.assertRaisesRegex(ValueError, error, be.addSubject, subject, '0')
 
     def testAddSameSubjectIncreasesBackendSize(self):
         """
@@ -868,9 +865,9 @@ class TestBackend(TestCase):
         """
         params = Parameters([AlphaHelix], [])
         be = Backend(params)
-        be.addSubject(AARead('id', 'FRRRFRRRF'))
+        be.addSubject(AARead('id', 'FRRRFRRRF'), '0')
         self.assertEqual(1, be.subjectCount)
-        be.addSubject(AARead('id', 'FRRRFRRRF'))
+        be.addSubject(AARead('id', 'FRRRFRRRF'), '1')
         self.assertEqual(2, be.subjectCount)
 
     def testOneReadOneLandmark(self):
@@ -880,7 +877,7 @@ class TestBackend(TestCase):
         """
         params = Parameters([AlphaHelix], [])
         be = Backend(params)
-        be.addSubject(AARead('id', 'FRRRFRRRF'))
+        be.addSubject(AARead('id', 'FRRRFRRRF'), '0')
         self.assertEqual({}, be.d)
 
     def testOneReadTwoLandmarks(self):
@@ -890,7 +887,8 @@ class TestBackend(TestCase):
         """
         params = Parameters([AlphaHelix], [])
         be = Backend(params)
-        be.addSubject(AARead('id', 'FRRRFRRRFAAAAAAAAAAAAAAFRRRFRRRFRRRF'))
+        be.addSubject(
+            AARead('id', 'FRRRFRRRFAAAAAAAAAAAAAAFRRRFRRRFRRRF'), '0')
         distance23 = str(scale(23, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
             {
@@ -905,8 +903,10 @@ class TestBackend(TestCase):
         """
         params = Parameters([AlphaHelix], [], limitPerLandmark=0)
         be = Backend(params)
-        be.addSubject(AARead('id1', 'FRRRFRRRFAAAAAAAAAAAAAAFRRRFRRRFRRRF'))
-        be.addSubject(AARead('id2', 'FRRRFRRRFAAAAAAAAAAAAAAFRRRFRRRFRRRF'))
+        be.addSubject(
+            AARead('id1', 'FRRRFRRRFAAAAAAAAAAAAAAFRRRFRRRFRRRF'), '0')
+        be.addSubject(
+            AARead('id2', 'FRRRFRRRFAAAAAAAAAAAAAAFRRRFRRRFRRRF'), '1')
         self.assertEqual({}, be.d)
 
     def testTwoReadsTwoLandmarksDifferentOffsets(self):
@@ -921,8 +921,10 @@ class TestBackend(TestCase):
         """
         params = Parameters([AlphaHelix], [])
         be = Backend(params)
-        be.addSubject(AARead('id1', 'AFRRRFRRRFAAAAAAAAAAAAAAFRRRFRRRFRRRF'))
-        be.addSubject(AARead('id2', 'FRRRFRRRFAAAAAAAAAAAAAAFRRRFRRRFRRRF'))
+        be.addSubject(
+            AARead('id1', 'AFRRRFRRRFAAAAAAAAAAAAAAFRRRFRRRFRRRF'), '0')
+        be.addSubject(
+            AARead('id2', 'FRRRFRRRFAAAAAAAAAAAAAAFRRRFRRRFRRRF'), '1')
         distance23 = str(scale(23, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
             {
@@ -937,7 +939,7 @@ class TestBackend(TestCase):
         """
         params = Parameters([AlphaHelix], [Peaks])
         be = Backend(params)
-        be.addSubject(AARead('id', 'FRRRFRRRFASA'))
+        be.addSubject(AARead('id', 'FRRRFRRRFASA'), '0')
         distance10 = str(scale(10, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
             {
@@ -957,7 +959,7 @@ class TestBackend(TestCase):
         distanceBase = 2.0
         params = Parameters([AlphaHelix], [Peaks], distanceBase=distanceBase)
         be = Backend(params)
-        be.addSubject(AARead('id', 'FRRRFRRRFASA'))
+        be.addSubject(AARead('id', 'FRRRFRRRFASA'), '0')
         distance10 = str(scale(10, distanceBase))
         self.assertEqual(
             {
@@ -972,7 +974,7 @@ class TestBackend(TestCase):
         """
         params = Parameters([AlphaHelix], [])
         be = Backend(params)
-        be.addSubject(AARead('id', 'FRRRFRRRFASA'))
+        be.addSubject(AARead('id', 'FRRRFRRRFASA'), '0')
         self.assertEqual({}, be.d)
 
     def testOneReadOneLandmarkTwoPeaks(self):
@@ -982,7 +984,7 @@ class TestBackend(TestCase):
         """
         params = Parameters([AlphaHelix], [Peaks])
         be = Backend(params)
-        be.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
+        be.addSubject(AARead('id', 'FRRRFRRRFASAASA'), '0')
         distance13 = str(scale(13, Parameters.DEFAULT_DISTANCE_BASE))
         distance10 = str(scale(10, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
@@ -1000,7 +1002,7 @@ class TestBackend(TestCase):
         """
         params = Parameters([AlphaHelix], [Peaks], limitPerLandmark=1)
         be = Backend(params)
-        be.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
+        be.addSubject(AARead('id', 'FRRRFRRRFASAASA'), '0')
         distance10 = str(scale(10, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
             {
@@ -1016,7 +1018,7 @@ class TestBackend(TestCase):
         """
         params = Parameters([AlphaHelix], [Peaks], maxDistance=1)
         be = Backend(params)
-        be.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
+        be.addSubject(AARead('id', 'FRRRFRRRFASAASA'), '0')
         self.assertEqual({}, be.d)
 
     def testOneReadOneLandmarkTwoPeaksIntermediateMaxDistance(self):
@@ -1027,7 +1029,7 @@ class TestBackend(TestCase):
         """
         params = Parameters([AlphaHelix], [Peaks], maxDistance=11)
         be = Backend(params)
-        be.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
+        be.addSubject(AARead('id', 'FRRRFRRRFASAASA'), '0')
         distance10 = str(scale(10, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
             {
@@ -1043,7 +1045,7 @@ class TestBackend(TestCase):
         """
         params = Parameters([AlphaHelix], [Peaks], maxDistance=15)
         be = Backend(params)
-        be.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
+        be.addSubject(AARead('id', 'FRRRFRRRFASAASA'), '0')
         distance13 = str(scale(13, Parameters.DEFAULT_DISTANCE_BASE))
         distance10 = str(scale(10, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
@@ -1061,7 +1063,7 @@ class TestBackend(TestCase):
         """
         params = Parameters([AlphaHelix], [Peaks], minDistance=1)
         be = Backend(params)
-        be.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
+        be.addSubject(AARead('id', 'FRRRFRRRFASAASA'), '0')
         distance13 = str(scale(13, Parameters.DEFAULT_DISTANCE_BASE))
         distance10 = str(scale(10, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
@@ -1079,7 +1081,7 @@ class TestBackend(TestCase):
         """
         params = Parameters([AlphaHelix], [Peaks], minDistance=11)
         be = Backend(params)
-        be.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
+        be.addSubject(AARead('id', 'FRRRFRRRFASAASA'), '0')
         distance13 = str(scale(13, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
             {
@@ -1095,7 +1097,7 @@ class TestBackend(TestCase):
         """
         params = Parameters([AlphaHelix], [Peaks], minDistance=100)
         be = Backend(params)
-        be.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
+        be.addSubject(AARead('id', 'FRRRFRRRFASAASA'), '0')
         self.assertEqual({}, be.d)
 
     def testMultipleSubjectOffsets(self):
@@ -1112,7 +1114,7 @@ class TestBackend(TestCase):
         params = Parameters([AlphaHelix], [Peaks], minDistance=5,
                             maxDistance=10)
         be = Backend(params)
-        be.addSubject(AARead('id', seq + seq))
+        be.addSubject(AARead('id', seq + seq), '0')
         distance10 = str(scale(10, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
             {
@@ -1132,8 +1134,10 @@ class TestBackend(TestCase):
         """
         params = Parameters([AlphaHelix], [])
         be = Backend(params)
-        be.addSubject(AARead('id1', 'FRRRFRRRFAAAAAAAAAAAAAAFRRRFRRRFRRRF'))
-        be.addSubject(AARead('id2', 'FRRRFRRRFAAAAAAAAAAAAAAFRRRFRRRFRRRF'))
+        be.addSubject(
+            AARead('id1', 'FRRRFRRRFAAAAAAAAAAAAAAFRRRFRRRFRRRF'), '0')
+        be.addSubject(
+            AARead('id2', 'FRRRFRRRFAAAAAAAAAAAAAAFRRRFRRRFRRRF'), '1')
         distance23 = str(scale(23, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
             {
@@ -1149,7 +1153,7 @@ class TestBackend(TestCase):
         query = AARead('query', 'FRRR')
         params = Parameters([AlphaHelix], [Peaks])
         be = Backend(params)
-        be.addSubject(subject)
+        be.addSubject(subject, '0')
         matches, hashCount, nonMatchingHashes = be.find(
             query, Parameters.DEFAULT_SIGNIFICANCE_METHOD,
             Parameters.DEFAULT_SCORE_METHOD,
@@ -1169,7 +1173,7 @@ class TestBackend(TestCase):
         query = AARead('query', sequence)
         params = Parameters([AlphaHelix], [Peaks], maxDistance=11)
         be = Backend(params)
-        be.addSubject(subject)
+        be.addSubject(subject, '0')
         matches, hashCount, nonMatchingHashes = be.find(
             query, 0.0, Parameters.DEFAULT_SCORE_METHOD,
             Parameters.DEFAULT_SIGNIFICANCE_FRACTION, False)
@@ -1199,7 +1203,7 @@ class TestBackend(TestCase):
         query = AARead('query', 'FRRRFRRRFASAASAFRRRFRRRFFRRRFRRRFFRRRFRRRF')
         params = Parameters([AlphaHelix, BetaStrand], [Peaks])
         be = Backend(params)
-        be.addSubject(subject)
+        be.addSubject(subject, '0')
         matches, hashCount, nonMatchingHashes = be.find(
             query, Parameters.DEFAULT_SIGNIFICANCE_METHOD,
             Parameters.DEFAULT_SCORE_METHOD,
@@ -1236,7 +1240,7 @@ class TestBackend(TestCase):
         query = AARead('query', 'AFRRRFRRRFASAASAVV')
         params = Parameters([AlphaHelix, BetaStrand], [Peaks])
         be = Backend(params)
-        be.addSubject(subject)
+        be.addSubject(subject, '0')
         matches, hashCount, nonMatchingHashes = be.find(
             query, Parameters.DEFAULT_SIGNIFICANCE_METHOD,
             Parameters.DEFAULT_SCORE_METHOD,
@@ -1272,7 +1276,7 @@ class TestBackend(TestCase):
         query = AARead('query', sequence)
         params = Parameters([AlphaHelix], [Peaks], maxDistance=1)
         be = Backend(params)
-        be.addSubject(subject)
+        be.addSubject(subject, '0')
         matches, hashCount, nonMatchingHashes = be.find(
             query, Parameters.DEFAULT_SIGNIFICANCE_METHOD,
             Parameters.DEFAULT_SCORE_METHOD,
@@ -1292,7 +1296,7 @@ class TestBackend(TestCase):
         query = AARead('query', sequence)
         params = Parameters([AlphaHelix], [])
         be = Backend(params)
-        be.addSubject(subject)
+        be.addSubject(subject, '0')
         matches, hashCount, nonMatchingHashes = be.find(
             query, Parameters.DEFAULT_SIGNIFICANCE_METHOD,
             Parameters.DEFAULT_SCORE_METHOD,
@@ -1311,7 +1315,7 @@ class TestBackend(TestCase):
         query = AARead('query', sequence)
         params = Parameters([AlphaHelix], [Peaks])
         be = Backend(params)
-        be.addSubject(subject)
+        be.addSubject(subject, '0')
         matches, hashCount, nonMatchingHashes = be.find(
             query, Parameters.DEFAULT_SIGNIFICANCE_METHOD,
             Parameters.DEFAULT_SCORE_METHOD,
@@ -1358,7 +1362,7 @@ class TestBackend(TestCase):
         be = Backend(params)
         sequence = 'AFRRRFRRRFASAASA'
         subject = AARead('id', sequence)
-        be.addSubject(subject)
+        be.addSubject(subject, '0')
 
         checksum = Checksum(params.checksum).update([
             'id',
@@ -1388,7 +1392,7 @@ class TestBackend(TestCase):
         subject = AARead('subject', 'FRRRFRRRFASAASA')
         params = Parameters([AlphaHelix], [Peaks])
         be = Backend(params)
-        be.addSubject(subject)
+        be.addSubject(subject, '0')
         scannedSubject = be.scan(subject)
         self.assertIsInstance(scannedSubject, ScannedRead)
 
@@ -1400,7 +1404,7 @@ class TestBackend(TestCase):
         subject = AARead('subject', 'FRRRFRRRFASAASA')
         params = Parameters([AlphaHelix], [Peaks], distanceBase=1.0)
         be = Backend(params)
-        be.addSubject(subject)
+        be.addSubject(subject, '0')
         scannedSubject = be.scan(subject)
         pairs = list(be.getScannedPairs(scannedSubject))
         # First pair.
@@ -1519,7 +1523,7 @@ class TestBackend(TestCase):
         """
         params = Parameters([AlphaHelix, BetaStrand], [Peaks, Troughs])
         be = Backend(params)
-        be.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
+        be.addSubject(AARead('id', 'FRRRFRRRFASAASA'), '0')
         fp = StringIO()
         be.save(fp)
         fp.seek(0)
@@ -1547,17 +1551,17 @@ class TestBackend(TestCase):
         seq2 = 'MMMMMMMMMFRRRFR'
         params1 = Parameters([AlphaHelix, BetaStrand], [Peaks, Troughs])
         be1 = Backend(params1)
-        be1.addSubject(AARead('id1', seq1))
+        be1.addSubject(AARead('id1', seq1), '0')
         fp = StringIO()
         be1.save(fp)
         fp.seek(0)
         be1 = Backend.restore(fp)
-        be1.addSubject(AARead('id2', seq2))
+        be1.addSubject(AARead('id2', seq2), '1')
 
         params2 = Parameters([AlphaHelix, BetaStrand], [Peaks, Troughs])
         be2 = Backend(params2)
-        be2.addSubject(AARead('id1', seq1))
-        be2.addSubject(AARead('id2', seq2))
+        be2.addSubject(AARead('id1', seq1), '0')
+        be2.addSubject(AARead('id2', seq2), '1')
 
         self.assertEqual(be1.checksum, be2.checksum)
 
@@ -1569,7 +1573,7 @@ class TestBackend(TestCase):
         be = Backend(params)
         sequence = 'AFRRRFRRRFASAASA'
         subject = AARead('id', sequence)
-        be.addSubject(subject)
+        be.addSubject(subject, '0')
         newBe = be.emptyCopy()
         self.assertIs(None, be.params.compare(newBe.params))
         self.assertEqual({}, newBe.d)
@@ -1585,7 +1589,7 @@ class TestBackend(TestCase):
                             limitPerLandmark=16, maxDistance=10, minDistance=0,
                             distanceBase=1)
         be = Backend(params)
-        be.addSubject(subject)
+        be.addSubject(subject, '0')
         be.print_(fp)
         expected = (
             'Hash count: 3\n'
@@ -1620,9 +1624,7 @@ class TestSimpleConnector(TestCase):
         be = Backend(params)
         sc = SimpleConnector(be)
         subject = AARead('id', 'FRRRFRRRF')
-        name, subjectIndex, coveredResidues, hashCount = sc.addSubject(subject)
-        self.assertEqual('localhost', name)
-        self.assertEqual('0', subjectIndex)
+        coveredResidues, hashCount = sc.addSubject(subject, '0')
         self.assertEqual(9, coveredResidues)
         self.assertEqual(0, hashCount)
 
@@ -1636,15 +1638,14 @@ class TestSimpleConnector(TestCase):
         params = Parameters([AlphaHelix], [Peaks])
         be = Backend(params)
         sc = SimpleConnector(be)
-        sc.addSubject(subject)
+        sc.addSubject(subject, '0')
         result = sc.find(
             query, Parameters.DEFAULT_SIGNIFICANCE_METHOD,
             Parameters.DEFAULT_SCORE_METHOD,
             Parameters.DEFAULT_SIGNIFICANCE_FRACTION, False)
         self.assertEqual(1, len(result))
-        name, matches, hashCount, nonMatchingHashes = result[0]
+        matches, hashCount, nonMatchingHashes = result[0]
 
-        self.assertEqual(name, SimpleConnector.NAME)
         self.assertEqual({}, matches)
         self.assertEqual(0, hashCount)
         self.assertEqual({}, nonMatchingHashes)
@@ -1660,14 +1661,13 @@ class TestSimpleConnector(TestCase):
         params = Parameters([AlphaHelix], [Peaks], maxDistance=11)
         be = Backend(params)
         sc = SimpleConnector(be)
-        sc.addSubject(subject)
+        sc.addSubject(subject, '0')
         result = sc.find(
             query, 0.0, Parameters.DEFAULT_SCORE_METHOD,
             Parameters.DEFAULT_SIGNIFICANCE_FRACTION, False)
         self.assertEqual(1, len(result))
-        name, matches, hashCount, nonMatchingHashes = result[0]
+        matches, hashCount, nonMatchingHashes = result[0]
 
-        self.assertEqual(name, SimpleConnector.NAME)
         self.assertEqual(
             {
                 '0': [
@@ -1695,7 +1695,7 @@ class TestSimpleConnector(TestCase):
                             distanceBase=1)
         be = Backend(params)
         sc = SimpleConnector(be)
-        sc.addSubject(subject)
+        sc.addSubject(subject, '0')
         sc.print_(fp)
         expected = (
             'Backend \'localhost\':\n'

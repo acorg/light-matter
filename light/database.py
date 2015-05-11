@@ -154,7 +154,6 @@ class Database(_DatabaseMixin):
         self._idSequenceCache = {}
         self._backendConnector = backendConnector or SimpleConnector(
             Backend(params))
-        self._backendSubjectIndex = {}
 
     def __str__(self):
         return '%s: %d sequences, %d residues, %.2f%% coverage' % (
@@ -179,24 +178,13 @@ class Database(_DatabaseMixin):
         subjectIndex = self.subjectCount
         self.subjectCount += 1
         self._idSequenceCache[subject] = subjectIndex
-        self.totalResidues += len(subject)
-
-        backendName, backendSubjectIndex, coveredResidues, hashCount = \
-            self._backendConnector.addSubject(subject)
-
-        self.hashCount += hashCount
-
-        try:
-            indexMap = self._backendSubjectIndex[backendName]
-        except KeyError:
-            indexMap = self._backendSubjectIndex[backendName] = {}
-
-        indexMap[backendSubjectIndex] = subjectIndex
-
+        coveredResidues, hashCount = self._backendConnector.addSubject(
+            subject, str(subjectIndex))
         self.totalCoveredResidues += coveredResidues
+        self.totalResidues += len(subject)
+        self.hashCount += hashCount
         self._checksum.update((subject.id, subject.sequence, str(hashCount)))
         self._subjectInfo.append((subject.id, subject.sequence, hashCount))
-
         return subjectIndex
 
     def getSubject(self, subject):
@@ -204,13 +192,13 @@ class Database(_DatabaseMixin):
         Return information about a subject, given its index in the database.
         Or, do the reverse, given a subject return its index.
 
-        @param subject: Either an C{int} subject index or a C{dark.read.AARead}
-            representing a subject whose index is to be looked up.
-        @return: If an index is passed, return a C{Subject} instance. If an
-            C{AARead} subject is passed, return its index.
+        @param subject: Either an C{int} subject index or a C{Subject} instance
+            whose index is to be looked up.
+        @return: If an index is passed, return a C{Subject} instance. If a
+            C{Subject} subject is passed, return its C{int} index.
         @raises IndexError: if an C{int} index is passed and it is invalid.
-        @raises KeyError: if an C{AARead} subject is passed and it is not in
-            the database.
+        @raises KeyError: if a C{Subject} instance is passed and the subject is
+            not in the database.
         """
         if isinstance(subject, int):
             return Subject(*self._subjectInfo[subject])
@@ -264,23 +252,20 @@ class Database(_DatabaseMixin):
         for result in self._backendConnector.find(
                 read, significanceMethod, scoreMethod,
                 significanceFraction, storeFullAnalysis):
-            backendName, matches, hashCount, nonMatchingHashes = result
+            matches, hashCount, nonMatchingHashes = result
             # TODO: This is probably wrong...
             for nonMatchingHash in nonMatchingHashes:
                 if nonMatchingHash not in allNonMatchingHashes:
                     allNonMatchingHashes[nonMatchingHash] = nonMatchingHashes[
                         nonMatchingHash]
-            for backendSubjectIndex in matches:
+            for subjectIndex in matches:
                 # Make sure we have not have seen this subject before. If
                 # we have, it would mean that two backends are reporting
                 # results for the same subject. We may allow that later,
                 # but for now it should be an error.
-                assert(backendSubjectIndex not in allMatches)
-
-                # Convert the backend subject index to one of our indices.
-                subjectIndex = self._backendSubjectIndex[backendName][
-                    backendSubjectIndex]
-                allMatches[subjectIndex] = matches[backendSubjectIndex]
+                intSubjectIndex = int(subjectIndex)
+                assert(intSubjectIndex not in allMatches)
+                allMatches[intSubjectIndex] = matches[subjectIndex]
 
         return Result(self.scan(read), allMatches, hashCount,
                       significanceMethod, scoreMethod, significanceFraction,
@@ -302,7 +287,6 @@ class Database(_DatabaseMixin):
             '_subjectInfo': self._subjectInfo,
             '_backendConnectorClass':
                 self._backendConnector.__class__.__name__,
-            '_backendSubjectIndex': self._backendSubjectIndex,
         }
         dump(state, fp)
         fp.write('\n')
@@ -331,8 +315,7 @@ class Database(_DatabaseMixin):
 
         # Monkey-patch the new database instance to restore the rest of its
         # state.
-        for attr in ('subjectCount', 'totalResidues', 'totalCoveredResidues',
-                     '_backendSubjectIndex'):
+        for attr in ('subjectCount', 'totalResidues', 'totalCoveredResidues'):
             setattr(database, attr, state[attr])
 
         # Re-initialize the database checksum.
@@ -400,23 +383,31 @@ class Backend(_DatabaseMixin):
         # will not work because a database JSON save followed by a load
         # will restore the defaultdict as a vanilla dict.
         self.d = {}
+        # Keep track of which subject indices we've seen so we can raise
+        # an exception if a repeat subject index is passed to addSubject.
+        self._subjectIndices = set()
 
-    def addSubject(self, subject):
+    def addSubject(self, subject, subjectIndex):
         """
         Examine a sequence for features and add its (landmark, trig point)
         pairs to the search dictionary.
 
-        @param subject: a C{dark.read.AARead} instance. The subject sequence
+        @param subject: A C{dark.read.AARead} instance. The subject sequence
             is passed as a read instance even though in many cases it will not
             be an actual read from a sequencing run.
-        @return: A list of length three, containing
-            1. The C{str} subject index of the added subject.
-            2. The number of residues covered in the subject by its landmarks
+        @param subjectIndex: A C{str} representing the index of the subject in
+            the database front end.
+        @return: A list of length two containing
+            1. The number of residues covered in the subject by its landmarks
                and trig points.
-            3. The number of hashes in the subject (a hash is a landmark /
+            2. The number of hashes in the subject (a hash is a landmark /
                trigpoint / distance combination).
         """
-        subjectIndex = str(self.subjectCount)
+        if subjectIndex in self._subjectIndices:
+            raise ValueError('Subject index %r has already been used.' %
+                             subjectIndex)
+
+        self._subjectIndices.add(subjectIndex)
         self.subjectCount += 1
         scannedSubject = self.scan(subject)
         coveredResidues = len(scannedSubject.coveredIndices())
@@ -437,7 +428,7 @@ class Backend(_DatabaseMixin):
 
         self._checksum.update((subject.id, subject.sequence, str(hashCount)))
 
-        return subjectIndex, coveredResidues, hashCount
+        return coveredResidues, hashCount
 
     def find(self, read, significanceMethod, scoreMethod, significanceFraction,
              storeFullAnalysis):
@@ -584,7 +575,7 @@ class SimpleConnector(object):
     def __init__(self, backend):
         self._backend = backend
 
-    def addSubject(self, subject):
+    def addSubject(self, subject, subjectIndex):
         """
         Examine a sequence for features and add its (landmark, trig point)
         pairs to the search dictionary.
@@ -592,17 +583,11 @@ class SimpleConnector(object):
         @param subject: a C{dark.read.AARead} instance. The subject sequence
             is passed as a read instance even though in many cases it will not
             be an actual read from a sequencing run.
-        @return: A tuple of length four, containing
-            1. The name of this backend.
-            2. The C{int} subject index of the added subject.
-            3. The number of residues covered in the subject by its landmarks
-               and trig points, and
-            4. the number of hashes in the subject (a hash is a landmark /
-               trigpoint / distance combination).
+        @param subjectIndex: A C{str} representing the index of the subject in
+            the database front end.
+        @return: The result of calling addSubject in the backend.
         """
-        subjectIndex, coveredResidues, hashCount = self._backend.addSubject(
-            subject)
-        return (self.NAME, str(subjectIndex), coveredResidues, hashCount)
+        return self._backend.addSubject(subject, subjectIndex)
 
     def find(self, read, significanceMethod, scoreMethod, significanceFraction,
              storeFullAnalysis):
@@ -621,19 +606,12 @@ class SimpleConnector(object):
             significant match with a database title.
         @param storeFullAnalysis: A C{bool}. If C{True} the intermediate
             significance analysis computed in the Result will be stored.
-        @return: A C{tuple} containing a single C{tuple} of length four,
-            containing:
-            1. The C{str} name of this backend.
-            2. Matches, a C{dict} keyed by subject index and whose values are
-               as shown below.
-            3. The number of hashes found in the read.
-            4. A C{dict} of non-matching hashes, keyed by hash with values as
-               returned by self.getHashes.
+        @return: A tuple with one value, the result of calling the backend
+            find function.
         """
-        matches, hashCount, nonMatchingHashes = self._backend.find(
+        return (self._backend.find(
             read, significanceMethod, scoreMethod, significanceFraction,
-            storeFullAnalysis)
-        return ((self.NAME, matches, hashCount, nonMatchingHashes),)
+            storeFullAnalysis),)
 
     def print_(self, fp=sys.stdout):
         """

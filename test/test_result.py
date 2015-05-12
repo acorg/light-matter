@@ -47,9 +47,8 @@ class TestResult(TestCase):
             0: [
                 {
                     'landmark': Landmark('AlphaHelix', 'A', 0, 9),
-                    'queryLandmarkOffsets': [0],
-                    'queryTrigPointOffsets': [1],
-                    'subjectLandmarkOffsets': [2],
+                    'queryOffsets': [(0, 1)],
+                    'subjectOffsets': [(0, 1)],
                     'trigPoint': TrigPoint('Peaks', 'P', 1),
                 },
             ],
@@ -63,8 +62,8 @@ class TestResult(TestCase):
 
     def testAddOneMatch(self):
         """
-        Adding information about one match should result in that information
-        being stored in the result instance.
+        Passing information in which one match is present should result in
+        that information being stored in the result instance.
         """
         read = ScannedRead(AARead('read', 'AGTARFSDDD'))
         params = Parameters([], [])
@@ -75,9 +74,8 @@ class TestResult(TestCase):
             0: [
                 {
                     'landmark': Landmark('AlphaHelix', 'A', 0, 9),
-                    'queryLandmarkOffsets': [0],
-                    'queryTrigPointOffsets': [1],
-                    'subjectLandmarkOffsets': [2],
+                    'queryOffsets': [(0, 1)],
+                    'subjectOffsets': [(0, 1)],
                     'trigPoint': TrigPoint('Peaks', 'P', 1),
                 },
             ],
@@ -102,10 +100,9 @@ class TestResult(TestCase):
             0: [
                 {
                     'landmark': Landmark('AlphaHelix', 'A', 1, 9),
-                    'queryLandmarkOffsets': [1],
-                    'queryTrigPointOffsets': [1],
-                    'subjectLandmarkOffsets': [2, 10],
-                    'trigPoint': TrigPoint('Peaks', 'P', 1),
+                    'queryOffsets': [(0, 1)],  # These are fictitious.
+                    'subjectOffsets': [(0, 9), (0, 10)],
+                    'trigPoint': TrigPoint('AminoAcids', 'M', 1),
                 },
             ],
         }
@@ -129,23 +126,20 @@ class TestResult(TestCase):
             0: [
                 {
                     'landmark': Landmark('AlphaHelix', 'A', 0, 9),
-                    'queryLandmarkOffsets': [0],
-                    'queryTrigPointOffsets': [1],
-                    'subjectLandmarkOffsets': [0],
+                    'queryOffsets': [(0, 1)],
+                    'subjectOffsets': [(0, 0)],
                     'trigPoint': TrigPoint('Peaks', 'P', 1),
                 },
                 {
                     'landmark': Landmark('AlphaHelix', 'A', 0, 9),
-                    'queryLandmarkOffsets': [0],
-                    'queryTrigPointOffsets': [2],
-                    'subjectLandmarkOffsets': [0],
+                    'queryOffsets': [(0, 2)],
+                    'subjectOffsets': [(0, 0)],
                     'trigPoint': TrigPoint('Peaks', 'P', 2),
                 },
                 {
                     'landmark': Landmark('AlphaHelix', 'A', 0, 9),
-                    'queryLandmarkOffsets': [0],
-                    'queryTrigPointOffsets': [3],
-                    'subjectLandmarkOffsets': [10],
+                    'queryOffsets': [(0, 3)],
+                    'subjectOffsets': [(10, 0)],
                     'trigPoint': TrigPoint('Peaks', 'P', 3),
                 },
             ],
@@ -177,23 +171,20 @@ class TestResult(TestCase):
             0: [
                 {
                     'landmark': Landmark('AlphaHelix', 'A', 0, 9),
-                    'queryLandmarkOffsets': [0],
-                    'queryTrigPointOffsets': [1],
-                    'subjectLandmarkOffsets': [0],
+                    'queryOffsets': [(0, 1)],
+                    'subjectOffsets': [(0, 0)],
                     'trigPoint': TrigPoint('Peaks', 'P', 1),
                 },
                 {
                     'landmark': Landmark('AlphaHelix', 'A', 0, 9),
-                    'queryLandmarkOffsets': [0],
-                    'queryTrigPointOffsets': [2],
-                    'subjectLandmarkOffsets': [0],
+                    'queryOffsets': [(0, 2)],
+                    'subjectOffsets': [(0, 0)],
                     'trigPoint': TrigPoint('Peaks', 'P', 2),
                 },
                 {
                     'landmark': Landmark('AlphaHelix', 'A', 0, 9),
-                    'queryLandmarkOffsets': [0],
-                    'queryTrigPointOffsets': [3],
-                    'subjectLandmarkOffsets': [10],
+                    'queryOffsets': [(0, 3)],
+                    'subjectOffsets': [(10, 0)],
                     'trigPoint': TrigPoint('Peaks', 'P', 3),
                 },
             ],
@@ -201,16 +192,14 @@ class TestResult(TestCase):
             1: [
                 {
                     'landmark': Landmark('AlphaHelix', 'A', 0, 9),
-                    'queryLandmarkOffsets': [0],
-                    'queryTrigPointOffsets': [1],
-                    'subjectLandmarkOffsets': [0],
+                    'queryOffsets': [(0, 1)],
+                    'subjectOffsets': [(0, 0)],
                     'trigPoint': TrigPoint('Peaks', 'P', 1),
                 },
                 {
                     'landmark': Landmark('AlphaHelix', 'A', 0, 9),
-                    'queryLandmarkOffsets': [0],
-                    'queryTrigPointOffsets': [2],
-                    'subjectLandmarkOffsets': [0],
+                    'queryOffsets': [(0, 2)],
+                    'subjectOffsets': [(0, 0)],
                     'trigPoint': TrigPoint('Peaks', 'P', 2),
                 },
             ],
@@ -273,9 +262,8 @@ class TestResult(TestCase):
             0: [
                 {
                     'landmark': Landmark('AlphaHelix', 'A', 0, 9),
-                    'queryLandmarkOffsets': [0],
-                    'queryTrigPointOffsets': [1],
-                    'subjectLandmarkOffsets': [0],
+                    'queryOffsets': [(0, 1)],
+                    'subjectOffsets': [(0, 0)],
                     'trigPoint': TrigPoint('Peaks', 'P', 1),
                 },
             ],
@@ -283,9 +271,8 @@ class TestResult(TestCase):
             1: [
                 {
                     'landmark': Landmark('AlphaHelix', 'A', 27, 13),
-                    'queryLandmarkOffsets': [27],
-                    'queryTrigPointOffsets': [1],
-                    'subjectLandmarkOffsets': [27],
+                    'queryOffsets': [(27, 1)],
+                    'subjectOffsets': [(27, 0)],
                     'trigPoint': TrigPoint('Peaks', 'P', 1),
                 },
             ],
@@ -297,7 +284,6 @@ class TestResult(TestCase):
         fp = StringIO()
         result.save(fp=fp)
         result = loads(fp.getvalue())
-        self.maxDiff = None
         self.assertEqual(
             {
                 'alignments': [
@@ -310,9 +296,8 @@ class TestResult(TestCase):
                                     {
                                         'landmark': 'AlphaHelix',
                                         'landmarkLength': 9,
-                                        'queryLandmarkOffset': 0,
-                                        'queryTrigPointOffset': 1,
-                                        'subjectLandmarkOffset': 0,
+                                        'queryOffsets': [0, 1],
+                                        'subjectOffsets': [0, 0],
                                         'trigPoint': 'Peaks',
                                     },
                                 ],
@@ -329,9 +314,8 @@ class TestResult(TestCase):
                                     {
                                         'landmark': 'AlphaHelix',
                                         'landmarkLength': 13,
-                                        'queryLandmarkOffset': 27,
-                                        'queryTrigPointOffset': 1,
-                                        'subjectLandmarkOffset': 27,
+                                        'queryOffsets': [27, 1],
+                                        'subjectOffsets': [27, 0],
                                         'trigPoint': 'Peaks',
                                     },
                                 ],
@@ -362,9 +346,8 @@ class TestResult(TestCase):
             0: [
                 {
                     'landmark': Landmark('AlphaHelix', 'A', 1, 9),
-                    'queryLandmarkOffsets': [1],
-                    'queryTrigPointOffsets': [1],
-                    'subjectLandmarkOffsets': [2],
+                    'queryOffsets': [(1, 1)],
+                    'subjectOffsets': [(2, 0)],
                     'trigPoint': TrigPoint('Peaks', 'P', 1),
                 },
             ],
@@ -393,9 +376,8 @@ class TestResult(TestCase):
             0: [
                 {
                     'landmark': Landmark('AlphaHelix', 'A', 1, 9),
-                    'queryLandmarkOffsets': [1],
-                    'queryTrigPointOffsets': [1],
-                    'subjectLandmarkOffsets': [2],
+                    'queryOffsets': [(1, 1)],
+                    'subjectOffsets': [(2, 0)],
                     'trigPoint': TrigPoint('Peaks', 'P', 1),
                 },
             ],
@@ -422,9 +404,8 @@ class TestResult(TestCase):
             0: [
                 {
                     'landmark': Landmark('AlphaHelix', 'A', 1, 9),
-                    'queryLandmarkOffsets': [1],
-                    'queryTrigPointOffsets': [1],
-                    'subjectLandmarkOffsets': [2],
+                    'queryOffsets': [(1, 1)],
+                    'subjectOffsets': [(2, 0)],
                     'trigPoint': TrigPoint('Peaks', 'P', 1),
                 },
             ],
@@ -537,7 +518,7 @@ class TestResult(TestCase):
                     "    Number of HSPs: 1\n"
                     "      HSP 1 (bin 38): 1 matching hash, score 1.000000\n"
                     "        Landmark AlphaHelix symbol='A' offset=0 len=9 "
-                    "detail=2 subjectOffset=0\n"
+                    "detail=2 subjectOffsets=[0, 25]\n"
                     "        Trig point AlphaHelix symbol='A' offset=25 "
                     "len=13 detail=3\n")
 
@@ -630,7 +611,7 @@ class TestResult(TestCase):
                     "    Number of HSPs: 1\n"
                     "      HSP 1 (bin 38): 1 matching hash, score 1.000000\n"
                     "        Landmark AlphaHelix symbol='A' offset=0 len=9 "
-                    "detail=2 subjectOffset=0\n"
+                    "detail=2 subjectOffsets=[0, 25]\n"
                     "        Trig point AlphaHelix symbol='A' offset=25 "
                     "len=13 detail=3\n")
 
@@ -843,9 +824,8 @@ class TestResult(TestCase):
             0: [
                 {
                     'landmark': Landmark('AlphaHelix', 'A', 1, 9),
-                    'queryLandmarkOffsets': [1],
-                    'queryTrigPointOffsets': [1],
-                    'subjectLandmarkOffsets': [2],
+                    'queryOffsets': [(1, 1)],
+                    'subjectOffsets': [(2, 0)],
                     'trigPoint': TrigPoint('Peaks', 'P', 1),
                 },
             ],

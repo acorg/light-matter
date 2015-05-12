@@ -373,16 +373,14 @@ class TestDatabase(TestCase):
                 0: [
                     {
                         'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                        'queryLandmarkOffsets': [0],
-                        'queryTrigPointOffsets': [10],
-                        'subjectLandmarkOffsets': [1],
+                        'queryOffsets': [[0, 10]],
+                        'subjectOffsets': [[1, 11]],
                         'trigPoint': TrigPoint('Peaks', 'P', 10),
                     },
                     {
                         'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                        'queryLandmarkOffsets': [0],
-                        'queryTrigPointOffsets': [13],
-                        'subjectLandmarkOffsets': [1],
+                        'queryOffsets': [[0, 13]],
+                        'subjectOffsets': [[1, 14]],
                         'trigPoint': TrigPoint('Peaks', 'P', 13),
                     }
                 ]
@@ -406,9 +404,8 @@ class TestDatabase(TestCase):
                 0: [
                     {
                         'landmark': Landmark('AlphaHelix', 'A', 1, 9, 2),
-                        'queryLandmarkOffsets': [1],
-                        'queryTrigPointOffsets': [11],
-                        'subjectLandmarkOffsets': [1],
+                        'queryOffsets': [[1, 11]],
+                        'subjectOffsets': [[1, 11]],
                         'trigPoint': TrigPoint('Peaks', 'P', 11),
                     },
                 ],
@@ -458,16 +455,14 @@ class TestDatabase(TestCase):
                 0: [
                     {
                         'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                        'queryLandmarkOffsets': [0],
-                        'queryTrigPointOffsets': [10],
-                        'subjectLandmarkOffsets': [0],
+                        'queryOffsets': [[0, 10]],
+                        'subjectOffsets': [[0, 10]],
                         'trigPoint': TrigPoint('Peaks', 'P', 10),
                     },
                     {
                         'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                        'queryLandmarkOffsets': [0],
-                        'queryTrigPointOffsets': [13],
-                        'subjectLandmarkOffsets': [0],
+                        'queryOffsets': [[0, 13]],
+                        'subjectOffsets': [[0, 13]],
                         'trigPoint': TrigPoint('Peaks', 'P', 13),
                     }
                 ],
@@ -645,44 +640,37 @@ class TestDatabase(TestCase):
             {
                 'A2:A2:15': {
                     'landmark': helixAt0,
-                    'landmarkOffsets': [0],
-                    'trigPointOffsets': [15],
+                    'offsets': [[0, 15]],
                     'trigPoint': helixAt15,
                 },
                 'A2:P:-2': {
                     'landmark': helixAt15,
-                    'landmarkOffsets': [15],
-                    'trigPointOffsets': [13],
+                    'offsets': [[15, 13]],
                     'trigPoint': peakAt13,
                 },
                 'A2:P:-5': {
                     'landmark': helixAt15,
-                    'landmarkOffsets': [15],
-                    'trigPointOffsets': [10],
+                    'offsets': [[15, 10]],
                     'trigPoint': peakAt10,
                 },
                 'A2:P:10': {
                     'landmark': helixAt0,
-                    'landmarkOffsets': [0, 15],
-                    'trigPointOffsets': [10, 25],
+                    'offsets': [[0, 10], [15, 25]],
                     'trigPoint': peakAt10,
                 },
                 'A2:P:13': {
                     'landmark': helixAt0,
-                    'landmarkOffsets': [0, 15],
-                    'trigPointOffsets': [13, 28],
+                    'offsets': [[0, 13], [15, 28]],
                     'trigPoint': peakAt13,
                 },
                 'A2:P:25': {
                     'landmark': helixAt0,
-                    'landmarkOffsets': [0],
-                    'trigPointOffsets': [25],
+                    'offsets': [[0, 25]],
                     'trigPoint': peakAt25,
                 },
                 'A2:P:28': {
                     'landmark': helixAt0,
-                    'landmarkOffsets': [0],
-                    'trigPointOffsets': [28],
+                    'offsets': [[0, 28]],
                     'trigPoint': peakAt28,
                 },
             }, hashCount)
@@ -753,11 +741,11 @@ class TestDatabase(TestCase):
             'Checksum: 1144016651\n'
             'Subjects (with offsets) by hash:\n'
             '   A2:P:10\n'
-            '    0 [0]\n'
+            '    0 [[0, 10]]\n'
             '   A2:T:4\n'
-            '    0 [0]\n'
+            '    0 [[0, 4]]\n'
             '   A2:T:8\n'
-            '    0 [0]\n'
+            '    0 [[0, 8]]\n'
             'Landmark symbol counts:\n'
             '  AlphaHelix (A2): 3\n'
             'Trig point symbol counts:\n'
@@ -892,7 +880,7 @@ class TestBackend(TestCase):
         distance23 = str(scale(23, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
             {
-                'A2:A3:' + distance23: {'0': [0]},
+                'A2:A3:' + distance23: {'0': [[0, 23]]},
             },
             be.d)
 
@@ -928,7 +916,7 @@ class TestBackend(TestCase):
         distance23 = str(scale(23, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
             {
-                'A2:A3:' + distance23: {'0': [1], '1': [0]},
+                'A2:A3:' + distance23: {'0': [[1, 24]], '1': [[0, 23]]},
             },
             be.d)
 
@@ -943,7 +931,7 @@ class TestBackend(TestCase):
         distance10 = str(scale(10, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
             {
-                'A2:P:' + distance10: {'0': [0]},
+                'A2:P:' + distance10: {'0': [[0, 10]]},
             },
             be.d)
 
@@ -963,7 +951,7 @@ class TestBackend(TestCase):
         distance10 = str(scale(10, distanceBase))
         self.assertEqual(
             {
-                'A2:P:' + distance10: {'0': [0]},
+                'A2:P:' + distance10: {'0': [[0, 10]]},
             },
             be.d)
 
@@ -989,8 +977,8 @@ class TestBackend(TestCase):
         distance10 = str(scale(10, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
             {
-                'A2:P:' + distance13: {'0': [0]},
-                'A2:P:' + distance10: {'0': [0]},
+                'A2:P:' + distance13: {'0': [[0, 13]]},
+                'A2:P:' + distance10: {'0': [[0, 10]]},
             },
             be.d)
 
@@ -1006,7 +994,7 @@ class TestBackend(TestCase):
         distance10 = str(scale(10, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
             {
-                'A2:P:' + distance10: {'0': [0]},
+                'A2:P:' + distance10: {'0': [[0, 10]]},
             },
             be.d)
 
@@ -1033,7 +1021,7 @@ class TestBackend(TestCase):
         distance10 = str(scale(10, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
             {
-                'A2:P:' + distance10: {'0': [0]},
+                'A2:P:' + distance10: {'0': [[0, 10]]},
             },
             be.d)
 
@@ -1050,8 +1038,8 @@ class TestBackend(TestCase):
         distance10 = str(scale(10, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
             {
-                'A2:P:' + distance13: {'0': [0]},
-                'A2:P:' + distance10: {'0': [0]},
+                'A2:P:' + distance13: {'0': [[0, 13]]},
+                'A2:P:' + distance10: {'0': [[0, 10]]},
             },
             be.d)
 
@@ -1068,8 +1056,8 @@ class TestBackend(TestCase):
         distance10 = str(scale(10, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
             {
-                'A2:P:' + distance13: {'0': [0]},
-                'A2:P:' + distance10: {'0': [0]},
+                'A2:P:' + distance13: {'0': [[0, 13]]},
+                'A2:P:' + distance10: {'0': [[0, 10]]},
             },
             be.d)
 
@@ -1085,7 +1073,7 @@ class TestBackend(TestCase):
         distance13 = str(scale(13, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
             {
-                'A2:P:' + distance13: {'0': [0]},
+                'A2:P:' + distance13: {'0': [[0, 13]]},
             },
             be.d)
 
@@ -1118,7 +1106,7 @@ class TestBackend(TestCase):
         distance10 = str(scale(10, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
             {
-                'A2:P:' + distance10: {'0': [0, 12]},
+                'A2:P:' + distance10: {'0': [[0, 10], [12, 22]]},
             },
             be.d)
 
@@ -1141,7 +1129,7 @@ class TestBackend(TestCase):
         distance23 = str(scale(23, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
             {
-                'A2:A3:' + distance23: {'0': [0], '1': [0]},
+                'A2:A3:' + distance23: {'0': [[0, 23]], '1': [[0, 23]]},
             },
             be.d)
 
@@ -1183,9 +1171,8 @@ class TestBackend(TestCase):
                 '0': [
                     {
                         'landmark': Landmark('AlphaHelix', 'A', 1, 9, 2),
-                        'queryLandmarkOffsets': [1],
-                        'queryTrigPointOffsets': [11],
-                        'subjectLandmarkOffsets': [1],
+                        'queryOffsets': [[1, 11]],
+                        'subjectOffsets': [[1, 11]],
                         'trigPoint': TrigPoint('Peaks', 'P', 11),
                     },
                 ],
@@ -1214,16 +1201,14 @@ class TestBackend(TestCase):
                 '0': [
                     {
                         'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                        'queryLandmarkOffsets': [0],
-                        'queryTrigPointOffsets': [10],
-                        'subjectLandmarkOffsets': [1],
+                        'queryOffsets': [[0, 10]],
+                        'subjectOffsets': [[1, 11]],
                         'trigPoint': TrigPoint('Peaks', 'P', 10),
                     },
                     {
                         'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                        'queryLandmarkOffsets': [0],
-                        'queryTrigPointOffsets': [13],
-                        'subjectLandmarkOffsets': [1],
+                        'queryOffsets': [[0, 13]],
+                        'subjectOffsets': [[1, 14]],
                         'trigPoint': TrigPoint('Peaks', 'P', 13),
                     }
                 ]
@@ -1253,16 +1238,14 @@ class TestBackend(TestCase):
                 'A2:P:10': {
                     'landmark':
                         Landmark(AlphaHelix.NAME, AlphaHelix.SYMBOL, 1, 9, 2),
-                    'landmarkOffsets': [1],
+                    'offsets': [[1, 11]],
                     'trigPoint': TrigPoint(Peaks.NAME, Peaks.SYMBOL, 11),
-                    'trigPointOffsets': [11],
                 },
                 'A2:P:13': {
                     'landmark':
                         Landmark(AlphaHelix.NAME, AlphaHelix.SYMBOL, 1, 9, 2),
-                    'landmarkOffsets': [1],
+                    'offsets': [[1, 14]],
                     'trigPoint': TrigPoint(Peaks.NAME, Peaks.SYMBOL, 14),
-                    'trigPointOffsets': [14],
                 }
             },
             nonMatchingHashes)
@@ -1326,16 +1309,14 @@ class TestBackend(TestCase):
                 '0': [
                     {
                         'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                        'queryLandmarkOffsets': [0],
-                        'queryTrigPointOffsets': [10],
-                        'subjectLandmarkOffsets': [0],
+                        'queryOffsets': [[0, 10]],
+                        'subjectOffsets': [[0, 10]],
                         'trigPoint': TrigPoint('Peaks', 'P', 10),
                     },
                     {
                         'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                        'queryLandmarkOffsets': [0],
-                        'queryTrigPointOffsets': [13],
-                        'subjectLandmarkOffsets': [0],
+                        'queryOffsets': [[0, 13]],
+                        'subjectOffsets': [[0, 13]],
                         'trigPoint': TrigPoint('Peaks', 'P', 13),
                     }
                 ],
@@ -1465,44 +1446,37 @@ class TestBackend(TestCase):
             {
                 'A2:A2:15': {
                     'landmark': helixAt0,
-                    'landmarkOffsets': [0],
-                    'trigPointOffsets': [15],
+                    'offsets': [[0, 15]],
                     'trigPoint': helixAt15,
                 },
                 'A2:P:-2': {
                     'landmark': helixAt15,
-                    'landmarkOffsets': [15],
-                    'trigPointOffsets': [13],
+                    'offsets': [[15, 13]],
                     'trigPoint': peakAt13,
                 },
                 'A2:P:-5': {
                     'landmark': helixAt15,
-                    'landmarkOffsets': [15],
-                    'trigPointOffsets': [10],
+                    'offsets': [[15, 10]],
                     'trigPoint': peakAt10,
                 },
                 'A2:P:10': {
                     'landmark': helixAt0,
-                    'landmarkOffsets': [0, 15],
-                    'trigPointOffsets': [10, 25],
+                    'offsets': [[0, 10], [15, 25]],
                     'trigPoint': peakAt10,
                 },
                 'A2:P:13': {
                     'landmark': helixAt0,
-                    'landmarkOffsets': [0, 15],
-                    'trigPointOffsets': [13, 28],
+                    'offsets': [[0, 13], [15, 28]],
                     'trigPoint': peakAt13,
                 },
                 'A2:P:25': {
                     'landmark': helixAt0,
-                    'landmarkOffsets': [0],
-                    'trigPointOffsets': [25],
+                    'offsets': [[0, 25]],
                     'trigPoint': peakAt25,
                 },
                 'A2:P:28': {
                     'landmark': helixAt0,
-                    'landmarkOffsets': [0],
-                    'trigPointOffsets': [28],
+                    'offsets': [[0, 28]],
                     'trigPoint': peakAt28,
                 },
             }, hashCount)
@@ -1596,11 +1570,11 @@ class TestBackend(TestCase):
             'Checksum: 1144016651\n'
             'Subjects (with offsets) by hash:\n'
             '   A2:P:10\n'
-            '    0 [0]\n'
+            '    0 [[0, 10]]\n'
             '   A2:T:4\n'
-            '    0 [0]\n'
+            '    0 [[0, 4]]\n'
             '   A2:T:8\n'
-            '    0 [0]\n'
+            '    0 [[0, 8]]\n'
             'Landmark symbol counts:\n'
             '  AlphaHelix (A2): 3\n'
             'Trig point symbol counts:\n'
@@ -1673,9 +1647,8 @@ class TestSimpleConnector(TestCase):
                 '0': [
                     {
                         'landmark': Landmark('AlphaHelix', 'A', 1, 9, 2),
-                        'queryLandmarkOffsets': [1],
-                        'queryTrigPointOffsets': [11],
-                        'subjectLandmarkOffsets': [1],
+                        'queryOffsets': [[1, 11]],
+                        'subjectOffsets': [[1, 11]],
                         'trigPoint': TrigPoint('Peaks', 'P', 11),
                     },
                 ],
@@ -1703,11 +1676,11 @@ class TestSimpleConnector(TestCase):
             'Checksum: 1144016651\n'
             'Subjects (with offsets) by hash:\n'
             '   A2:P:10\n'
-            '    0 [0]\n'
+            '    0 [[0, 10]]\n'
             '   A2:T:4\n'
-            '    0 [0]\n'
+            '    0 [[0, 4]]\n'
             '   A2:T:8\n'
-            '    0 [0]\n'
+            '    0 [[0, 8]]\n'
             'Landmark symbol counts:\n'
             '  AlphaHelix (A2): 3\n'
             'Trig point symbol counts:\n'

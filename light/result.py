@@ -90,21 +90,19 @@ class Result(object):
                 landmark = match['landmark']
                 trigPoint = match['trigPoint']
 
-                for queryLandmarkOffset, queryTrigPointOffset in zip(
-                        match['queryLandmarkOffsets'],
-                        match['queryTrigPointOffsets']):
-                    for subjectOffset in match['subjectLandmarkOffsets']:
-                        delta = subjectOffset - queryLandmarkOffset
+                for queryOffsets in match['queryOffsets']:
+                    for subjectOffsets in match['subjectOffsets']:
+                        # The delta is the difference between the
+                        # corresponding landmark offsets.
+                        delta = subjectOffsets[0] - queryOffsets[0]
                         if negateDeltas:
                             delta = -delta
-                        add(scale(delta, distanceBase),
-                            {
-                                'landmark': landmark,
-                                'queryLandmarkOffset': queryLandmarkOffset,
-                                'queryTrigPointOffset': queryTrigPointOffset,
-                                'subjectLandmarkOffset': subjectOffset,
-                                'trigPoint': trigPoint,
-                            })
+                        add(scale(delta, distanceBase), {
+                            'landmark': landmark,
+                            'queryOffsets': queryOffsets,
+                            'subjectOffsets': subjectOffsets,
+                            'trigPoint': trigPoint,
+                        })
 
             histogram.finalize()
 
@@ -202,11 +200,8 @@ class Result(object):
                     hspInfo.append({
                         'landmark': binItem['landmark'].name,
                         'landmarkLength': binItem['landmark'].length,
-                        'queryLandmarkOffset': binItem['queryLandmarkOffset'],
-                        'queryTrigPointOffset':
-                        binItem['queryTrigPointOffset'],
-                        'subjectLandmarkOffset':
-                        binItem['subjectLandmarkOffset'],
+                        'queryOffsets': binItem['queryOffsets'],
+                        'subjectOffsets': binItem['subjectOffsets'],
                         'trigPoint': binItem['trigPoint'].name,
                     })
 
@@ -320,9 +315,9 @@ class Result(object):
                 if printFeatures:
                     for binItem in bin_['bin']:
                         result.extend([
-                            '        Landmark %s subjectOffset=%d' % (
+                            '        Landmark %s subjectOffsets=%r' % (
                                 binItem['landmark'],
-                                binItem['subjectLandmarkOffset']),
+                                binItem['subjectOffsets']),
                             '        Trig point %s' % binItem['trigPoint'],
                         ])
 

@@ -8,7 +8,7 @@ from dark.alignments import (
     Alignment, ReadsAlignments, ReadsAlignmentsParams, ReadAlignments)
 from dark.utils import numericallySortFilenames
 
-from light.params import checkCompatibleParams
+from light.parameters import Parameters
 
 
 class LightAlignment(Alignment):
@@ -41,7 +41,7 @@ class LightReadsAlignments(ReadsAlignments):
     """
 
     def __init__(self, resultFilenames, database, sortFilenames=True):
-        if type(resultFilenames) == str:
+        if isinstance(resultFilenames, str):
             resultFilenames = [resultFilenames]
         if sortFilenames:
             self.resultFilenames = numericallySortFilenames(resultFilenames)
@@ -106,8 +106,8 @@ class LightReadsAlignments(ReadsAlignments):
                 first = False
             else:
                 reader = self._getReader(resultFilename)
-                differences = checkCompatibleParams(
-                    self.params.applicationParams, reader.params)
+                differences = self.params.applicationParams.compare(
+                    reader.params)
                 if differences:
                     raise ValueError(
                         'Incompatible light matter parameters found. The '
@@ -159,8 +159,6 @@ class JSONRecordsReader(object):
     Provide a method that yields JSON records from a file. Store and
     make accessible the run-time parameters.
 
-    NOTE: this class currently has no tests!
-
     @param filename: A C{str} filename containing JSON light matter records.
     @param database: A C{light.database.Database} instance.
     """
@@ -185,20 +183,12 @@ class JSONRecordsReader(object):
         else:
             self._fp = open(filename)
 
-        line = self._fp.readline()
-        if not line:
-            raise ValueError('JSON file %r was empty.' % self._filename)
-
         try:
-            self.params = loads(line[:-1])
+            self.params = Parameters.restore(self._fp)
         except ValueError as e:
             raise ValueError(
-                'Could not convert first line of %r to JSON (%s). '
-                'Line is %r.' % (self._filename, e, line[:-1]))
-
-        if self.params['checksum'] != self._database.checksum:
-            raise ValueError(
-                'Database and output file have different checksums.')
+                'Could not convert first line of %r to JSON (%s).' % (
+                    self._filename, e))
 
     def readAlignments(self):
         """

@@ -1,0 +1,108 @@
+{
+    "controller": {
+    },
+    "workers": [
+        {
+            "type": "router",
+            "options": {
+                "pythonpath": [".."]
+            },
+            "realms": [
+                {
+                    "name": "light-matter",
+                    "roles": [
+                        {
+                            "name": "authenticator",
+                            "permissions": [
+                                {
+                                    "uri": "authenticate",
+                                    "register": true
+                                }
+                            ]
+                        },
+                        {
+                            "name": "coordinator",
+                            "permissions": [
+                                {
+                                    "uri": "*",
+                                    "publish": true,
+                                    "subscribe": true,
+                                    "call": true,
+                                    "register": true
+                                }
+                            ]
+                        },
+                        {
+                            "name": "database",
+                            "permissions": [
+                                {
+                                    "uri": "*",
+                                    "publish": true,
+                                    "subscribe": true,
+                                    "call": true,
+                                    "register": true
+                                }
+                            ]
+                        },
+                        {
+                            "name": "shutdown",
+                            "permissions": [
+                                {
+                                    "uri": "*",
+                                    "publish": true,
+                                    "subscribe": true,
+                                    "call": true,
+                                    "register": true
+                                }
+                            ]
+                        },
+                        {
+                            "name": "find",
+                            "permissions": [
+                                {
+                                    "uri": "*",
+                                    "publish": true,
+                                    "subscribe": true,
+                                    "call": true,
+                                    "register": true
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "transports": [
+                {
+                    "type": "web",
+                    "endpoint": {
+                        "type": "tcp",
+                        "port": 8080
+                    },
+                    "paths": {
+                        "/": {
+                            "type": "static",
+                            "directory": "../web"
+                        },
+                        "ws": {
+                            "type": "websocket",
+                            "auth": {
+                                "wampcra": {
+                                    "type": "dynamic",
+                                    "authenticator": "authenticate"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "components": [
+                {
+                    "type": "class",
+                    "classname": "auth.AppSession",
+                    "realm": "light-matter",
+                    "role": "authenticator"
+                }
+            ]
+        }
+    ]
+}

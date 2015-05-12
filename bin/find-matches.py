@@ -7,7 +7,7 @@ import argparse
 from dark.fasta import combineReads
 from dark.reads import AARead
 
-from light.database import Database, DatabaseSpecifier
+from light.database import Parameters, DatabaseSpecifier
 from light.score import ALL_SCORE_CLASSES
 from light.significance import ALL_SIGNIFICANCE_CLASSES
 
@@ -38,13 +38,13 @@ if __name__ == '__main__':
               'database title.'))
 
     parser.add_argument(
-        '--significanceMethod', default=Database.DEFAULT_SIGNIFICANCE_METHOD,
+        '--significanceMethod', default=Parameters.DEFAULT_SIGNIFICANCE_METHOD,
         choices=[cls.__name__ for cls in ALL_SIGNIFICANCE_CLASSES],
         help=('The name of the method used to calculate which histogram bins '
               'are considered significant.'))
 
     parser.add_argument(
-        '--scoreMethod', type=str, default=Database.DEFAULT_SCORE_METHOD,
+        '--scoreMethod', type=str, default=Parameters.DEFAULT_SCORE_METHOD,
         choices=[cls.__name__ for cls in ALL_SCORE_CLASSES],
         help=('The name of the method used to calculate the score of a '
               'histogram bin which is considered significant.'))
@@ -112,7 +112,7 @@ if __name__ == '__main__':
             if count > 1:
                 print('---')
     else:
-        database.saveParamsAsJSON()
+        database.params.save()
         for read in reads:
             result = database.find(
                 read, significanceFraction=significanceFraction)

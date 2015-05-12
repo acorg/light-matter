@@ -4,6 +4,7 @@ from dark.reads import AARead
 
 from light.distance import scale
 from light.features import Landmark
+from light.parameters import Parameters
 from light.database import Database
 from light.landmarks.gor4_alpha_helix import GOR4AlphaHelix
 from light.landmarks.gor4_beta_strand import GOR4BetaStrand
@@ -40,8 +41,8 @@ class TestGOR4AlphaHelix(TestCase):
         read = AARead('id', seq)
         landmark = GOR4AlphaHelix()
         result = list(landmark.find(read))
-        len7 = scale(7, Database.DEFAULT_DISTANCE_BASE)
-        len11 = scale(11, Database.DEFAULT_DISTANCE_BASE)
+        len7 = scale(7, Parameters.DEFAULT_DISTANCE_BASE)
+        len11 = scale(11, Parameters.DEFAULT_DISTANCE_BASE)
         # The GOR IV secondary structure prediction is
         # 'CCCCCCCCCCHHHHHHHCCHHHHHHHHHHHCCCCEEEEECCEEEEEEEEC'
         self.assertEqual([Landmark('GOR4AlphaHelix', 'GA', 10, len7, len7),
@@ -91,8 +92,8 @@ class TestGOR4BetaStrandOverlap(TestCase):
         GOR4 alpha helix and beta strand finders using the default distance
         base (currently 1.1).
         """
-        alphaHelixDb = Database([GOR4AlphaHelix], [])
-        betaStrandDb = Database([GOR4BetaStrand], [])
+        alphaHelixDb = Database(Parameters([GOR4AlphaHelix], []))
+        betaStrandDb = Database(Parameters([GOR4BetaStrand], []))
         alphaHelixScanned = alphaHelixDb.scan(self.READ)
         betaStrandScanned = betaStrandDb.scan(self.READ)
         alphaHelixIndices = alphaHelixScanned.coveredIndices()
@@ -105,8 +106,10 @@ class TestGOR4BetaStrandOverlap(TestCase):
         GOR4 alpha helix and beta strand finders using a distance base of 1.0
         (which should do no scaling).
         """
-        alphaHelixDb = Database([GOR4AlphaHelix], [], distanceBase=1.0)
-        betaStrandDb = Database([GOR4BetaStrand], [], distanceBase=1.0)
+        alphaHelixDb = Database(
+            Parameters([GOR4AlphaHelix], [], distanceBase=1.0))
+        betaStrandDb = Database(
+            Parameters([GOR4BetaStrand], [], distanceBase=1.0))
         alphaHelixScanned = alphaHelixDb.scan(self.READ)
         betaStrandScanned = betaStrandDb.scan(self.READ)
         alphaHelixIndices = alphaHelixScanned.coveredIndices()
@@ -118,8 +121,10 @@ class TestGOR4BetaStrandOverlap(TestCase):
         There cannot be any index overlap between landmarks found by the
         GOR4 alpha helix and beta strand finders using a distance base of 1.5.
         """
-        alphaHelixDb = Database([GOR4AlphaHelix], [], distanceBase=1.5)
-        betaStrandDb = Database([GOR4BetaStrand], [], distanceBase=1.5)
+        alphaHelixDb = Database(
+            Parameters([GOR4AlphaHelix], [], distanceBase=1.5))
+        betaStrandDb = Database(
+            Parameters([GOR4BetaStrand], [], distanceBase=1.5))
         alphaHelixScanned = alphaHelixDb.scan(self.READ)
         betaStrandScanned = betaStrandDb.scan(self.READ)
         alphaHelixIndices = alphaHelixScanned.coveredIndices()

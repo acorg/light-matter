@@ -9,10 +9,16 @@ from light.database import DatabaseSpecifier
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description='Scan a sequence for landmarks and trig points')
+        description=('Examine an amino acid sequence for its landmarks and '
+                     'trig points, and print them all, as well as the hashes '
+                     'that would be used by the database. Note that ALL '
+                     'landmarks and trig points are printed, but the '
+                     'particular database parameters might mean that not all '
+                     'of them are used in practice, depending on parameters '
+                     'like maxDistance, limitPerLandmark, etc.'))
 
     parser.add_argument(
-        'sequence', help='Amino acid sequence to scan')
+        'sequence', help='The amino acid sequence to examine')
 
     databaseSpecifier = DatabaseSpecifier(allowFromFile=False,
                                           allowInMemory=False)

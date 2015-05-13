@@ -125,13 +125,11 @@ class _DatabaseMixin(object):
             except KeyError:
                 hashes[hash_] = {
                     'landmark': landmark,
-                    'landmarkOffsets': [landmark.offset],
-                    'trigPointOffsets': [trigPoint.offset],
+                    'offsets': [[landmark.offset, trigPoint.offset]],
                     'trigPoint': trigPoint,
                 }
             else:
-                hashInfo['trigPointOffsets'].append(trigPoint.offset)
-                hashInfo['landmarkOffsets'].append(landmark.offset)
+                hashInfo['offsets'].append([landmark.offset, trigPoint.offset])
 
         return hashes
 
@@ -383,8 +381,11 @@ class Backend(_DatabaseMixin):
         # will not work because a database JSON save followed by a load
         # will restore the defaultdict as a vanilla dict.
         self.d = {}
-        # Keep track of which subject indices we've seen so we can raise
-        # an exception if a repeat subject index is passed to addSubject.
+        # Keep track of which subject indices we've seen so we can raise an
+        # exception if a repeat subject index is passed to addSubject.
+        # This is not strictly necessary, it just guards against the
+        # possibility, which is a good thing to do at this point of the
+        # project.
         self._subjectIndices = set()
 
     def addSubject(self, subject, subjectIndex):
@@ -421,10 +422,14 @@ class Backend(_DatabaseMixin):
             except KeyError:
                 self.d[hash_] = subjectDict = {}
 
+            # Don't use a tuple for the offsets because JSON save/load will
+            # convert it to a list and we'll need to convert all those lists
+            # to tuples on database load.
+            offsets = [landmark.offset, trigPoint.offset]
             try:
-                subjectDict[subjectIndex].append(landmark.offset)
+                subjectDict[subjectIndex].append(offsets)
             except KeyError:
-                subjectDict[subjectIndex] = [landmark.offset]
+                subjectDict[subjectIndex] = [offsets]
 
         self._checksum.update((subject.id, subject.sequence, str(hashCount)))
 
@@ -468,7 +473,7 @@ class Backend(_DatabaseMixin):
             # missed. We may want to do that at a finer level of
             # granularity, though.  E.g., by considering where in the read
             # the misses were.
-            hashCount += len(hashInfo['landmarkOffsets'])
+            hashCount += len(hashInfo['offsets'])
             try:
                 subjectDict = self.d[hash_]
             except KeyError:
@@ -476,13 +481,11 @@ class Backend(_DatabaseMixin):
                 if storeFullAnalysis:
                     nonMatchingHashes[hash_] = hashInfo
             else:
-                for (subjectIndex,
-                     subjectLandmarkOffsets) in subjectDict.items():
+                for (subjectIndex, subjectOffsets) in subjectDict.items():
                     matches[subjectIndex].append({
                         'landmark': hashInfo['landmark'],
-                        'queryLandmarkOffsets': hashInfo['landmarkOffsets'],
-                        'queryTrigPointOffsets': hashInfo['trigPointOffsets'],
-                        'subjectLandmarkOffsets': subjectLandmarkOffsets,
+                        'queryOffsets': hashInfo['offsets'],
+                        'subjectOffsets': subjectOffsets,
                         'trigPoint': hashInfo['trigPoint'],
                     })
 

@@ -3,7 +3,7 @@ import numpy as np
 
 class Always(object):
     """
-    Allows every bin passed in to be significant.
+    Every bin is significant.
     """
     def isSignificant(self, binIndex):
         """
@@ -80,7 +80,7 @@ class MaxBinHeight(object):
         result = db.find(query, significanceMethod='Always',
                          storeFullAnalysis=True)
         bins = result.analysis[subjectIndex]['histogram'].bins
-        # The highest scoring bin is ignored.
+        # The highest-scoring bin is ignored.
         binHeights = sorted([len(h) for h in bins], reverse=True)[1:]
         self.significanceCutoff = binHeights[0]
 
@@ -122,7 +122,7 @@ class MeanBinHeight(object):
         result = db.find(query, significanceMethod='Always',
                          storeFullAnalysis=True)
         bins = result.analysis[subjectIndex]['histogram'].bins
-        # The highest scoring bin is ignored.
+        # The highest-scoring bin is ignored.
         binHeights = sorted([len(h) for h in bins], reverse=True)[1:]
         self.meanBinHeight = np.mean(binHeights)
         self.std = np.std(binHeights)

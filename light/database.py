@@ -499,6 +499,7 @@ class Backend(_DatabaseMixin):
             'checksum': self.checksum,
             'd': self.d,
             'subjectCount': self.subjectCount,
+            '_subjectIndices': self._subjectIndices,
         }
         dump(state, fp)
 
@@ -519,6 +520,9 @@ class Backend(_DatabaseMixin):
 
         for attr in ('checksum', 'd', 'subjectCount'):
             setattr(backend, attr, state[attr])
+        # _subjectIndices was converted to a list when saving. Restore
+        # seperately to convert to set.
+        backend._subjectIndices = set(state['_subjectIndices'])
 
         return backend
 

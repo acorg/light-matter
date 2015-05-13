@@ -1371,20 +1371,6 @@ class TestBackend(TestCase):
         ]).checksum
         self.assertEqual(checksum, be.checksum)
 
-    def testSaveLoadWithNonDefaultParameters(self):
-        """
-        When asked to save and then load a backend with non-default
-        parameters, a backend with the correct parameters must result.
-        """
-        params = Parameters([], [], limitPerLandmark=16, maxDistance=17,
-                            minDistance=18, distanceBase=19.0)
-        be = Backend(params)
-        fp = StringIO()
-        be.save(fp)
-        fp.seek(0)
-        result = be.restore(fp)
-        self.assertIs(None, params.compare(result.params))
-
     def testScan(self):
         """
         The scan method must return a scanned subject.
@@ -1516,6 +1502,21 @@ class TestBackend(TestCase):
         self.assertRaisesRegex(ValueError, error, Backend.restore,
                                StringIO('xxx'))
 
+    def testSaveLoadWithNonDefaultParameters(self):
+        """
+        When asked to save and then load a backend with non-default
+        parameters, a backend with the correct parameters must result.
+        """
+        params = Parameters([], [], limitPerLandmark=16, maxDistance=17,
+                            minDistance=18, distanceBase=19.0)
+        be = Backend(params)
+        fp = StringIO()
+        be.save(fp)
+        fp.seek(0)
+        result = be.restore(fp)
+        self.assertIs(None, params.compare(result.params))
+        self.assertEqual(be._subjectIndices, result._subjectIndices)
+
     def testSaveLoadNonEmpty(self):
         """
         When asked to save and then load a non-empty backend, the correct
@@ -1539,6 +1540,7 @@ class TestBackend(TestCase):
         self.assertEqual(be.params.trigPointClasses,
                          result.params.trigPointClasses)
         self.assertEqual(be.checksum, result.checksum)
+        self.assertEqual(be._subjectIndices, result._subjectIndices)
 
     def testChecksumAfterSaveLoad(self):
         """

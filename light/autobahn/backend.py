@@ -5,11 +5,12 @@ from autobahn.asyncio.wamp import ApplicationRunner
 
 from light.autobahn.component import Component
 from light.wamp import addArgsToParser
+# from light.database import Backend
 
 
-class DatabaseComponent(Component):
+class BackendComponent(Component):
 
-    NAME = 'database'
+    NAME = 'backend'
 
     @asyncio.coroutine
     def onJoin(self, details):
@@ -41,4 +42,4 @@ if __name__ == '__main__':
     addArgsToParser(parser)
     args = parser.parse_args()
     runner = ApplicationRunner(args.url, args.realm)
-    runner.run(DatabaseComponent)
+    runner.run(BackendComponent)

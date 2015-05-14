@@ -21,7 +21,7 @@
                             ]
                         },
                         {
-                            "name": "coordinator",
+                            "name": "frontend",
                             "permissions": [
                                 {
                                     "uri": "*",
@@ -33,7 +33,7 @@
                             ]
                         },
                         {
-                            "name": "database",
+                            "name": "backend",
                             "permissions": [
                                 {
                                     "uri": "*",

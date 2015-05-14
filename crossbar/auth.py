@@ -33,12 +33,12 @@ class AppSession(ApplicationSession):
 
     # TODO: Get the secrets from the environment.
     USER_DB = {
-        'coordinator': {
-            'role': 'coordinator',
+        'frontend': {
+            'role': 'frontend',
             'secret': 'secret2',
         },
-        'database': {
-            'role': 'database',
+        'backend': {
+            'role': 'backend',
             'secret': 'secret2',
         },
         'shutdown': {

@@ -7,9 +7,9 @@ from light.autobahn.component import Component
 from light.wamp import addArgsToParser
 
 
-class CoordinatorComponent(Component):
+class FrontendComponent(Component):
 
-    NAME = 'coordinator'
+    NAME = 'frontend'
 
     @asyncio.coroutine
     def onJoin(self, details):
@@ -90,4 +90,4 @@ if __name__ == '__main__':
     addArgsToParser(parser)
     args = parser.parse_args()
     runner = ApplicationRunner(args.url, args.realm)
-    runner.run(CoordinatorComponent)
+    runner.run(FrontendComponent)

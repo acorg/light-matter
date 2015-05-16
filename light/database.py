@@ -428,12 +428,12 @@ class Database(_DatabaseMixin):
         """
         self.params.save(fp)
 
-        # The the int checksums from the Checksum instances.
+        # Save the int checksums from all known backends (whether or not
+        # they have connected to us yet).
         backendChecksums = {}
-        for backend, checksum in self.backends.items():
-            backendChecksums[backend] = checksum.checksum
-        for backend, checksum in self.disconnectedBackends.items():
-            backendChecksums[backend] = checksum.checksum
+        for backends in self.backends, self.disconnectedBackends:
+            for backend, checksum in backends.items():
+                backendChecksums[backend] = checksum.checksum
 
         state = {
             'checksum': self.checksum,

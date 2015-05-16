@@ -3,13 +3,14 @@ import sys
 from warnings import warn
 from collections import defaultdict, OrderedDict
 try:
-    from ujson import dump, load
+    from ujson import dump, loads
 except ImportError:
-    from json import dump, load
+    from json import dump, loads
 
 from dark.fasta import combineReads, FastaReads
 from dark.reads import AARead
 
+from light.exceptions import BackendException
 from light.distance import scale
 from light.checksum import Checksum
 from light.subject import Subject
@@ -24,6 +25,90 @@ from light.trig import (
     DEFAULT_TRIG_CLASSES)
 
 
+class SimpleConnector(object):
+    """
+    Connect a Database instance to a single Backend instance.
+
+    @param database: A C{Database} frontend instance.
+    """
+    def __init__(self, database):
+        self._database = database
+        name, checksum, params = database.addBackend()
+        self._backend = Backend(name, checksum, params)
+
+    def addSubject(self, subject, subjectIndex):
+        """
+        Examine a sequence for features and add its (landmark, trig point)
+        pairs to the search dictionary.
+
+        @param subject: a C{dark.read.AARead} instance. The subject sequence
+            is passed as a read instance even though in many cases it will not
+            be an actual read from a sequencing run.
+        @param subjectIndex: A C{str} representing the index of the subject in
+            the database front end.
+        @return: The result of calling addSubject in the backend.
+        """
+        return self._backend.addSubject(subject, subjectIndex)
+
+    def find(self, read, significanceMethod, scoreMethod, significanceFraction,
+             storeFullAnalysis):
+        """
+        A function which takes a read, computes all hashes for it, looks up
+        matching hashes and checks which database sequence it matches.
+
+        @param read: A C{dark.read.AARead} instance.
+        @param significanceMethod: The name of the method used to calculate
+            which histogram bins are considered significant.
+        @param scoreMethod: The C{str} name of the method used to calculate the
+            score of a bin which is considered significant.
+        @param significanceFraction: The C{float} fraction of all (landmark,
+            trig point) pairs for a scannedRead that need to fall into the
+            same histogram bucket for that bucket to be considered a
+            significant match with a database title.
+        @param storeFullAnalysis: A C{bool}. If C{True} the intermediate
+            significance analysis computed in the Result will be stored.
+        @return: A tuple with one value, the result of calling the backend
+            find function.
+        """
+        return (self._backend.find(
+            read, significanceMethod, scoreMethod, significanceFraction,
+            storeFullAnalysis),)
+
+    def print_(self, fp=sys.stdout):
+        """
+        Print information about the database backend.
+
+        @param fp: A file pointer to write to.
+        """
+        return self._backend.print_(fp)
+
+    def save(self, fp=sys.stdout):
+        """
+        Save the backend state to a file.
+
+        @param fp: A file pointer to write to.
+        """
+        return self._backend.save(fp)
+
+    def restore(self, fp=sys.stdout):
+        """
+        Restore the backend state from a file.
+
+        @param fp: A file pointer to read from.
+        """
+        self._backend = self._backend.restore(fp)
+        self._database.addBackend(self._backend.name, self._backend.checksum)
+
+    def emptyCopy(self):
+        """
+        Copy the current connector, with an empty backend.
+
+        @return: A new L{light.database.SimpleConnector} instance with a
+            backend with an empty index.
+        """
+        return self.__class__(self._backend.emptyCopy())
+
+
 class _DatabaseMixin(object):
     """
     Methods and data that can be used by databases and their back-ends.
@@ -33,8 +118,7 @@ class _DatabaseMixin(object):
     def __init__(self, params):
         self.params = params
         self.subjectCount = 0
-        # Base the database checksum on the parameters checksum.
-        self._checksum = Checksum(params.checksum)
+        self._checksum = Checksum()
 
     def _getChecksum(self):
         """
@@ -140,23 +224,67 @@ class Database(_DatabaseMixin):
     insertion and look-up operations on them.
 
     @param params: A C{Parameters} instance.
-    @param backendConnector: A C{Database} to C{Backend} connector, for now
-        always an instance of C{SimpleConnector}.
+    @param connectorClass: A class for connecting to the database backend(s).
     """
-    def __init__(self, params, backendConnector=None):
+    def __init__(self, params, connectorClass=SimpleConnector):
         super().__init__(params)
+        self._connectorClass = connectorClass
+        self.checksum = params.checksum
         self.totalResidues = 0
         self.totalCoveredResidues = 0
         self.hashCount = 0
         self._subjectInfo = []
         self._idSequenceCache = {}
-        self._backendConnector = backendConnector or SimpleConnector(
-            Backend(params))
+        self.disconnectedBackends = {}
+        self.backends = {}
+        self.backendConnector = connectorClass(self)
 
     def __str__(self):
         return '%s: %d sequences, %d residues, %.2f%% coverage' % (
             self.__class__.__name__, self.subjectCount, self.totalResidues,
             float(self.totalCoveredResidues) / self.totalResidues * 100.0)
+
+    def addBackend(self, name=None, checksum=None):
+        """
+        Register the addition of a new backend, or the reconnection of a
+        previously connected backend.
+
+        @param name: Either C{None} to indicate that this backend is brand
+            new (and does not yet have a name), or the C{str} name of a
+            previously connected backend.
+        @param checksum: The C{int} checksum of a previously connected backend
+            (implies C{name} is C{None}).
+        @raise ValueError: If 1) an unknown backend name is given, or 2) a
+            known backend is given but has a non-matching checksum, or 3) a
+            known backend is given but is marked as already connected.
+        @return: A (C{str} name, C{int} checksum, C{Parameters}) tuple.
+        """
+        if name is None:
+            # A new backend. Assign it a name and a checksum.
+            count = len(self.backends) + len(self.disconnectedBackends)
+            name = 'backend-%d' % count
+            # The initial checksum for a backend is based on its name.
+            self.backends[name] = Checksum().update(name)
+            checksum = self.backends[name].checksum
+        else:
+            # This backend claims to have been previously connected to us.
+            # Verify that it's not already connected, that we have a prior
+            # record of it, and that its checksum is as expected.
+            if name in self.backends:
+                raise BackendException(
+                    'Backend %r is already connected.' % name)
+            try:
+                savedChecksum = self.disconnectedBackends[name].checksum
+            except KeyError:
+                raise BackendException('Unknown backend %r.' % name)
+            else:
+                if savedChecksum != checksum:
+                    raise BackendException(
+                        'Backend %r sent checksum %s which differs from the '
+                        'stored value %s.' % (name, checksum, savedChecksum))
+                self.backends[name] = self.disconnectedBackends[name]
+                del self.disconnectedBackends[name]
+        return name, checksum, self.params
 
     def addSubject(self, subject):
         """
@@ -173,16 +301,25 @@ class Database(_DatabaseMixin):
         except KeyError:
             pass
 
+        if not self.backends:
+            raise BackendException('Database has no backends.')
+
         subjectIndex = self.subjectCount
         self.subjectCount += 1
         self._idSequenceCache[subject] = subjectIndex
-        coveredResidues, hashCount = self._backendConnector.addSubject(
+        backend, coveredResidues, hashCount = self.backendConnector.addSubject(
             subject, str(subjectIndex))
         self.totalCoveredResidues += coveredResidues
         self.totalResidues += len(subject)
         self.hashCount += hashCount
-        self._checksum.update((subject.id, subject.sequence, str(hashCount)))
-        self._subjectInfo.append((subject.id, subject.sequence, hashCount))
+
+        # Update our checksum and that of the backend involved.
+        update = (subject.id, subject.sequence)
+        self._checksum.update(update)
+        self.backends[backend].update(update)
+
+        self._subjectInfo.append([subject.id, subject.sequence, hashCount])
+
         return subjectIndex
 
     def getSubject(self, subject):
@@ -236,6 +373,19 @@ class Database(_DatabaseMixin):
             significance analysis computed in the Result will be stored.
         @return: A C{light.result.Result} instance.
         """
+        if self.disconnectedBackends:
+            disconnected = sorted(self.disconnectedBackends.keys())
+            if len(disconnected) == 1:
+                raise BackendException('Backend %r has not reconnected.' %
+                                       disconnected[0])
+            else:
+                raise BackendException(
+                    '%d backends (%s) have not reconnected.' %
+                    (len(disconnected), ', '.join(disconnected)))
+
+        if not self.backends:
+            raise BackendException('No backends available.')
+
         if significanceMethod is None:
             significanceMethod = self.params.DEFAULT_SIGNIFICANCE_METHOD
         if scoreMethod is None:
@@ -247,7 +397,7 @@ class Database(_DatabaseMixin):
         allNonMatchingHashes = {}
         hashCount = 0
 
-        for result in self._backendConnector.find(
+        for result in self.backendConnector.find(
                 read, significanceMethod, scoreMethod,
                 significanceFraction, storeFullAnalysis):
             matches, hashCount, nonMatchingHashes = result
@@ -277,6 +427,14 @@ class Database(_DatabaseMixin):
         @param fp: A file pointer.
         """
         self.params.save(fp)
+
+        # Save the int checksums from all known backends (whether or not
+        # they have connected to us yet).
+        backendChecksums = {}
+        for backends in self.backends, self.disconnectedBackends:
+            for backend, checksum in backends.items():
+                backendChecksums[backend] = checksum.checksum
+
         state = {
             'checksum': self.checksum,
             'subjectCount': self.subjectCount,
@@ -284,10 +442,12 @@ class Database(_DatabaseMixin):
             'totalCoveredResidues': self.totalCoveredResidues,
             '_subjectInfo': self._subjectInfo,
             '_backendConnectorClass':
-                self._backendConnector.__class__.__name__,
+                self.backendConnector.__class__.__name__,
+            '_backendChecksums': backendChecksums,
         }
         dump(state, fp)
         fp.write('\n')
+        self.backendConnector.save(fp)
 
     @staticmethod
     def restore(fp=sys.stdin):
@@ -301,35 +461,41 @@ class Database(_DatabaseMixin):
             loaded from C{fp}.
         """
         params = Parameters.restore(fp)
-        backend = Backend(params)
-        state = load(fp)
+        state = loads(fp.readline()[:-1])
 
         if state['_backendConnectorClass'] == 'SimpleConnector':
-            backendConnector = SimpleConnector(backend)
+            connectorClass = SimpleConnector
         else:
             raise ValueError('Unknown backend connector class %r.' %
                              state['_backendConnectorClass'])
-        database = Database(params, backendConnector)
+
+        database = Database(params, connectorClass)
 
         # Monkey-patch the new database instance to restore the rest of its
         # state.
-        for attr in ('subjectCount', 'totalResidues', 'totalCoveredResidues'):
+        for attr in ('subjectCount', 'totalResidues', 'totalCoveredResidues',
+                     '_subjectInfo'):
             setattr(database, attr, state[attr])
 
         # Re-initialize the database checksum.
         database.checksum = state['checksum']
 
-        # The _subjectInfo entries were originally tuples, but JSON I/O turns
-        # these into lists. For safety, convert them back to tuples.
-        _subjectInfo = state['_subjectInfo']
-        for index, subjectInfo in enumerate(_subjectInfo):
-            _subjectInfo[index] = tuple(subjectInfo)
-        database._subjectInfo = _subjectInfo
+        # Restore the details about the backends. All backends are restored
+        # in the disconnected state. NB: database.disconnectedBackends has
+        # Checksum instances as values, not the int checksums.
+        disconnectedBackends = {}
+        for backend, checksum in state['_backendChecksums'].items():
+            disconnectedBackends[backend] = Checksum(checksum)
+        database.disconnectedBackends = disconnectedBackends
+        database.backends = {}
 
         # Restore the id/sequence cache.
         getSubject = database.getSubject
         for subjectIndex in range(database.subjectCount):
             database._idSequenceCache[getSubject(subjectIndex)] = subjectIndex
+
+        # Tell the connector to restore the backend(s).
+        database.backendConnector.restore(fp)
 
         return database
 
@@ -355,7 +521,8 @@ class Database(_DatabaseMixin):
         print('Checksum: %s' % self.checksum, file=fp)
 
         if printHashes and self.subjectCount:
-            self._backendConnector.print_(fp)
+            print('Backends:', file=fp)
+            self.backendConnector.print_(fp)
 
     def emptyCopy(self):
         """
@@ -364,7 +531,7 @@ class Database(_DatabaseMixin):
         @return: A new L{light.database.Database} instance that no subjects
             have been added to.
         """
-        return self.__class__(self.params, self._backendConnector.emptyCopy())
+        return self.__class__(self.params, self._connectorClass)
 
 
 class Backend(_DatabaseMixin):
@@ -372,15 +539,22 @@ class Backend(_DatabaseMixin):
     Maintain a collection of hashes for sequences ("subjects") and provide for
     database index creation and search operations on them.
 
+    @param name: The C{str} name of this backend (assigned by the frontend).
+    @param checksum: The C{int} initial checksum for the backend.
     @param params: A C{Parameters} instance.
     """
-    def __init__(self, params):
+    def __init__(self, name, checksum, params):
         super().__init__(params)
+        self._originalChecksum = checksum
+        self.checksum = checksum
+        self.name = name
 
-        # It may look like self.d should be a defaultdict(list). But that
-        # will not work because a database JSON save followed by a load
-        # will restore the defaultdict as a vanilla dict.
+        # When you read the code in addSubject (below), it may seem that
+        # self.d should be a defaultdict(list). That does not work, though,
+        # because a database JSON save followed by a load restores the
+        # defaultdict as a normal dict.
         self.d = {}
+
         # Keep track of which subject indices we've seen so we can raise an
         # exception if a repeat subject index is passed to addSubject.
         # This is not strictly necessary, it just guards against the
@@ -398,10 +572,11 @@ class Backend(_DatabaseMixin):
             be an actual read from a sequencing run.
         @param subjectIndex: A C{str} representing the index of the subject in
             the database front end.
-        @return: A list of length two containing
-            1. The number of residues covered in the subject by its landmarks
+        @return: A list containing
+            1. The name of this backend.
+            2. The number of residues covered in the subject by its landmarks
                and trig points.
-            2. The number of hashes in the subject (a hash is a landmark /
+            3. The number of hashes in the subject (a hash is a landmark /
                trigpoint / distance combination).
         """
         if subjectIndex in self._subjectIndices:
@@ -431,9 +606,9 @@ class Backend(_DatabaseMixin):
             except KeyError:
                 subjectDict[subjectIndex] = [offsets]
 
-        self._checksum.update((subject.id, subject.sequence, str(hashCount)))
+        self._checksum.update((subject.id, subject.sequence))
 
-        return coveredResidues, hashCount
+        return self.name, coveredResidues, hashCount
 
     def find(self, read, significanceMethod, scoreMethod, significanceFraction,
              storeFullAnalysis):
@@ -459,7 +634,6 @@ class Backend(_DatabaseMixin):
             3. A C{dict} of non-matching hashes, keyed by hash with values as
                returned by self.getHashes.
         """
-
         matches = defaultdict(list)
         nonMatchingHashes = {}
         hashCount = 0
@@ -499,12 +673,15 @@ class Backend(_DatabaseMixin):
         """
         self.params.save(fp)
         state = {
+            'name': self.name,
             'checksum': self.checksum,
             'd': self.d,
             'subjectCount': self.subjectCount,
             '_subjectIndices': self._subjectIndices,
+            '_originalChecksum': self._originalChecksum,
         }
         dump(state, fp)
+        fp.write('\n')
 
     @staticmethod
     def restore(fp=sys.stdin):
@@ -518,13 +695,14 @@ class Backend(_DatabaseMixin):
             cannot be loaded from C{fp}.
         """
         params = Parameters.restore(fp)
-        backend = Backend(params)
-        state = load(fp)
+        state = loads(fp.readline()[:-1])
+        backend = Backend(state['name'], state['checksum'], params)
 
-        for attr in ('checksum', 'd', 'subjectCount'):
+        for attr in ('d', 'subjectCount', '_originalChecksum'):
             setattr(backend, attr, state[attr])
-        # _subjectIndices was converted to a list when saving. Restore
-        # seperately to convert to set.
+
+        # self._subjectIndices was originally a set, but is converted to a
+        # list when saving to JSON.  Restore it as a set.
         backend._subjectIndices = set(state['_subjectIndices'])
 
         return backend
@@ -535,6 +713,7 @@ class Backend(_DatabaseMixin):
 
         @param fp: A file pointer to write to.
         """
+        print('Name: %s' % self.name, file=fp)
         print('Hash count: %d' % len(self.d), file=fp)
         print('Checksum: %s' % self.checksum, file=fp)
 
@@ -568,75 +747,7 @@ class Backend(_DatabaseMixin):
         @return: A new L{light.database.Backend} instance with an empty
             index.
         """
-        return self.__class__(self.params)
-
-
-class SimpleConnector(object):
-    """
-    Connect a Database instance to a single Backend instances.
-
-    @param backend: A C{Backend} instance.
-    """
-    NAME = 'localhost'
-
-    def __init__(self, backend):
-        self._backend = backend
-
-    def addSubject(self, subject, subjectIndex):
-        """
-        Examine a sequence for features and add its (landmark, trig point)
-        pairs to the search dictionary.
-
-        @param subject: a C{dark.read.AARead} instance. The subject sequence
-            is passed as a read instance even though in many cases it will not
-            be an actual read from a sequencing run.
-        @param subjectIndex: A C{str} representing the index of the subject in
-            the database front end.
-        @return: The result of calling addSubject in the backend.
-        """
-        return self._backend.addSubject(subject, subjectIndex)
-
-    def find(self, read, significanceMethod, scoreMethod, significanceFraction,
-             storeFullAnalysis):
-        """
-        A function which takes a read, computes all hashes for it, looks up
-        matching hashes and checks which database sequence it matches.
-
-        @param read: A C{dark.read.AARead} instance.
-        @param significanceMethod: The name of the method used to calculate
-            which histogram bins are considered significant.
-        @param scoreMethod: The C{str} name of the method used to calculate the
-            score of a bin which is considered significant.
-        @param significanceFraction: The C{float} fraction of all (landmark,
-            trig point) pairs for a scannedRead that need to fall into the
-            same histogram bucket for that bucket to be considered a
-            significant match with a database title.
-        @param storeFullAnalysis: A C{bool}. If C{True} the intermediate
-            significance analysis computed in the Result will be stored.
-        @return: A tuple with one value, the result of calling the backend
-            find function.
-        """
-        return (self._backend.find(
-            read, significanceMethod, scoreMethod, significanceFraction,
-            storeFullAnalysis),)
-
-    def print_(self, fp=sys.stdout):
-        """
-        Print information about the database backend.
-
-        @param fp: A file pointer to write to.
-        """
-        print('Backend %r:' % self.NAME, file=fp)
-        return self._backend.print_(fp)
-
-    def emptyCopy(self):
-        """
-        Copy the current connector, with an empty backend.
-
-        @return: A new L{light.database.SimpleConnector} instance with a
-            backend with an empty index.
-        """
-        return self.__class__(self._backend.emptyCopy())
+        return self.__class__(self.name, self._originalChecksum, self.params)
 
 
 class DatabaseSpecifier(object):
@@ -778,9 +889,8 @@ class DatabaseSpecifier(object):
                                 maxDistance=args.maxDistance,
                                 minDistance=args.minDistance,
                                 distanceBase=args.distanceBase)
-            backend = Backend(params)
-            backendConnector = SimpleConnector(backend)
-            database = Database(params, backendConnector)
+            database = Database(params)
+            SimpleConnector(database)
 
         if self._allowPopulation:
             for read in combineReads(args.databaseFasta,

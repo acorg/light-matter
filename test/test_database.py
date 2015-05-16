@@ -1,14 +1,19 @@
 from unittest import TestCase
 from io import StringIO
+try:
+    from ujson import loads
+except ImportError:
+    from json import loads
 
 from dark.reads import AARead
 
+from light.exceptions import BackendException
 from light.distance import scale
 from light.features import Landmark, TrigPoint
 from light.landmarks import AlphaHelix, BetaStrand
 from light.trig import Peaks, Troughs
 from light.checksum import Checksum
-from light.database import Parameters, Database, Backend, SimpleConnector
+from light.database import Parameters, Database, Backend
 from light.reads import ScannedRead
 
 
@@ -260,12 +265,65 @@ class TestDatabase(TestCase):
         self.assertEqual(72, db.totalResidues)
         self.assertEqual(44, db.totalCoveredResidues)
 
+    def testSaveContentHasFourParts(self):
+        """
+        When a simple database saves, its content must include parts for the
+        database parameters, the database state, the backend parameters and
+        the backend state.
+        """
+        params = Parameters([AlphaHelix], [Peaks])
+        db = Database(params)
+        fp = StringIO()
+        db.save(fp)
+        fp.seek(0)
+        dbParams = Parameters.restore(fp)
+        loads(fp.readline()[:-1])
+        backendParams = Parameters.restore(fp)
+        loads(fp.readline()[:-1])
+        self.assertIs(None, dbParams.compare(backendParams))
+
+    def testSaveContentIncludesExpectedKeysAndValues(self):
+        """
+        When the database saves, its JSON content must include the expected
+        keys and values.
+        """
+        params = Parameters([AlphaHelix], [Peaks])
+        db = Database(params)
+        fp = StringIO()
+        db.save(fp)
+        fp.seek(0)
+        Parameters.restore(fp)
+        state = loads(fp.readline()[:-1])
+
+        # Keys
+        self.assertEqual(
+            set(['_backendChecksums', '_backendConnectorClass', '_subjectInfo',
+                 'checksum', 'subjectCount', 'totalCoveredResidues',
+                 'totalResidues']),
+            set(state.keys()))
+
+        # Values
+        self.assertEqual('SimpleConnector', state['_backendConnectorClass'])
+        self.assertEqual([], state['_subjectInfo'])
+        self.assertEqual(db.checksum, state['checksum'])
+        self.assertEqual(0, state['subjectCount'])
+        self.assertEqual(0, state['totalCoveredResidues'])
+        self.assertEqual(0, state['totalResidues'])
+
+        # Note that the following assertion knows that the database names
+        # its backends 'backend-0', 'backend-1', etc.
+        self.assertEqual(
+            {
+                'backend-0': db.backends['backend-0'].checksum
+            },
+            state['_backendChecksums'])
+
     def testSaveRestoreEmpty(self):
         """
         When asked to save and then restore an empty database, the correct
         database must result.
         """
-        params = Parameters([], [])
+        params = Parameters([AlphaHelix], [Peaks])
         db = Database(params)
         fp = StringIO()
         db.save(fp)
@@ -274,14 +332,7 @@ class TestDatabase(TestCase):
         self.assertEqual(0, result.subjectCount)
         self.assertEqual(0, result.totalCoveredResidues)
         self.assertEqual(0, result.totalResidues)
-        self.assertEqual([], result.params.landmarkClasses)
-        self.assertEqual(Parameters.DEFAULT_LIMIT_PER_LANDMARK,
-                         result.params.limitPerLandmark)
-        self.assertEqual(Parameters.DEFAULT_MAX_DISTANCE,
-                         result.params.maxDistance)
-        self.assertEqual(Parameters.DEFAULT_MIN_DISTANCE,
-                         result.params.minDistance)
-        self.assertEqual([], result.params.trigPointClasses)
+        self.assertIs(None, params.compare(result.params))
 
     def testRestoreInvalidJSON(self):
         """
@@ -293,9 +344,9 @@ class TestDatabase(TestCase):
         error = '^Expected object or value$'
         self.assertRaisesRegex(ValueError, error, db.restore, StringIO('xxx'))
 
-    def testSaveLoadNonEmpty(self):
+    def testSaveRestoreNonEmpty(self):
         """
-        When asked to save and then load a non-empty database, the correct
+        When asked to save and then restore a non-empty database, the correct
         database must result.
         """
         params = Parameters([AlphaHelix, BetaStrand], [Peaks, Troughs])
@@ -305,27 +356,20 @@ class TestDatabase(TestCase):
         db.save(fp)
         fp.seek(0)
         result = db.restore(fp)
+        self.assertIs(None, params.compare(result.params))
         self.assertEqual(db.subjectCount, result.subjectCount)
         self.assertEqual(db.totalCoveredResidues, result.totalCoveredResidues)
+        self.assertEqual(db.totalResidues, result.totalResidues)
         self.assertEqual(db._subjectInfo, result._subjectInfo)
         self.assertEqual(db._idSequenceCache, result._idSequenceCache)
-        self.assertEqual(db.params.landmarkClasses,
-                         result.params.landmarkClasses)
-        self.assertEqual(db.params.limitPerLandmark,
-                         result.params.limitPerLandmark)
-        self.assertEqual(db.params.maxDistance, result.params.maxDistance)
-        self.assertEqual(db.params.minDistance, result.params.minDistance)
-        self.assertEqual(db.params.trigPointClasses,
-                         result.params.trigPointClasses)
-        self.assertEqual(db.totalResidues, result.totalResidues)
         self.assertEqual(db.checksum, result.checksum)
 
-    def testChecksumAfterSaveLoad(self):
+    def testChecksumAfterSaveRestore(self):
         """
         A database that has a sequence added to it, which is then saved and
-        then re-loaded, and then has a second sequence is added to it must have
-        the same checksum as a database that simply has the two sequences added
-        to it without interruption.
+        restored, and then has a second sequence is added to it must have the
+        same checksum as a database that simply has the two sequences added to
+        it without the intervening save/restore.
         """
         seq1 = 'FRRRFRRRFASAASA'
         seq2 = 'MMMMMMMMMFRRRFR'
@@ -356,6 +400,41 @@ class TestDatabase(TestCase):
         db.addSubject(subject)
         result = db.find(query)
         self.assertEqual({}, result.matches)
+
+    def testFindMatchAfterSaveRestore(self):
+        """
+        A matching subject found before a save/restore must also be found
+        following a database save/restore.
+        """
+        subject = AARead('subject', 'AFRRRFRRRFASAASAVVVVVVASAVVVASA')
+        query = AARead('query', 'FRRRFRRRFASAASAFRRRFRRRFFRRRFRRRFFRRRFRRRF')
+        params = Parameters([AlphaHelix, BetaStrand], [Peaks])
+        db1 = Database(params)
+        db1.addSubject(subject)
+        result = db1.find(query)
+        expected = {
+            0: [
+                {
+                    'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
+                    'queryOffsets': [[0, 10]],
+                    'subjectOffsets': [[1, 11]],
+                    'trigPoint': TrigPoint('Peaks', 'P', 10),
+                },
+                {
+                    'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
+                    'queryOffsets': [[0, 13]],
+                    'subjectOffsets': [[1, 14]],
+                    'trigPoint': TrigPoint('Peaks', 'P', 13),
+                }
+            ]
+        }
+        self.assertEqual(expected, result.matches)
+        fp = StringIO()
+        db1.save(fp)
+        fp.seek(0)
+        db2 = Database.restore(fp)
+        result = db2.find(query)
+        self.assertEqual(expected, result.matches)
 
     def testFindOneMatchingInsignificant(self):
         """
@@ -542,13 +621,12 @@ class TestDatabase(TestCase):
         checksum = Checksum(params.checksum).update([
             'id',
             sequence,
-            '0',  # Hash count.
         ]).checksum
         self.assertEqual(checksum, db.checksum)
 
-    def testSaveLoadWithNonDefaultParameters(self):
+    def testSaveRestoreWithNonDefaultParameters(self):
         """
-        When asked to save and then load a database with non-default
+        When asked to save and then restore a database with non-default
         parameters, a database with the correct parameters must result.
         """
         params = Parameters([], [], limitPerLandmark=16, maxDistance=17,
@@ -703,7 +781,7 @@ class TestDatabase(TestCase):
             'Hash count: 3\n'
             'Total residues: 15\n'
             'Coverage: 73.33%\n'
-            'Checksum: 682086972\n')
+            'Checksum: 99889531\n')
         self.assertEqual(expected, fp.getvalue())
 
     def testPrintWithHashes(self):
@@ -735,10 +813,11 @@ class TestDatabase(TestCase):
             'Hash count: 3\n'
             'Total residues: 15\n'
             'Coverage: 73.33%\n'
-            'Checksum: 1144016651\n'
-            'Backend \'localhost\':\n'
+            'Checksum: 1765995061\n'
+            'Backends:\n'
+            'Name: backend-0\n'
             'Hash count: 3\n'
-            'Checksum: 1144016651\n'
+            'Checksum: 647675821\n'
             'Subjects (with offsets) by hash:\n'
             '   A2:P:10\n'
             '    0 [[0, 10]]\n'
@@ -782,7 +861,7 @@ class TestDatabase(TestCase):
             'Hash count: 0\n'
             'Total residues: 0\n'
             'Coverage: 0.00%\n'
-            'Checksum: 4224788348\n')
+            'Checksum: 246230680\n')
         self.assertEqual(expected, fp.getvalue())
 
     def testEmptyCopy(self):
@@ -799,6 +878,124 @@ class TestDatabase(TestCase):
         self.assertEqual(0, newDb.subjectCount)
         self.assertEqual(0, newDb.addSubject(AARead('id1', 'AAA')))
 
+    def testAddUnknownBackend(self):
+        """
+        If an unknown backend is added, a BackendException must be raised.
+        """
+        params = Parameters([AlphaHelix], [])
+        db = Database(params)
+        error = "^Unknown backend 'name'\.$"
+        self.assertRaisesRegex(BackendException, error, db.addBackend, 'name')
+
+    def testReconnectSameNameBackend(self):
+        """
+        If a backend tries to connect but re-uses an existing backend name,
+        a BackendException must be raised.
+        """
+        params = Parameters([AlphaHelix], [])
+        db = Database(params)
+        name, checksum, params = db.addBackend()
+        error = "^Backend %r is already connected\.$" % name
+        self.assertRaisesRegex(BackendException, error, db.addBackend, name)
+
+    def testAddNewBackend(self):
+        """
+        When a new backend is added, the returned parameters must be those of
+        the database.
+        """
+        params1 = Parameters([AlphaHelix], [Peaks])
+        db = Database(params1)
+        name, checksum, params2 = db.addBackend()
+        self.assertIs(params1, params2)
+
+    def testFindWithNoBackends(self):
+        """
+        If no backend has been added to a database, calling find() must raise
+        BackendException.
+        """
+        class NoBackendConnector(object):
+            """
+            A connector that does not add a backend to its database.
+
+            @param database: A C{Database} instance.
+            """
+            def __init__(self, database):
+                pass
+
+        params = Parameters([AlphaHelix], [])
+        db = Database(params, NoBackendConnector)
+        query = AARead('id', 'AAA')
+        error = "^No backends available\.$"
+        self.assertRaisesRegex(BackendException, error, db.find, query)
+
+    def testFindWithOneUnreconnectedBackend(self):
+        """
+        If a database has one unreconnected backend, calling find() must raise
+        BackendException with the expected error message.
+        """
+        params = Parameters([AlphaHelix], [])
+        db = Database(params)
+        db.disconnectedBackends['dummy'] = None
+        query = AARead('id', 'AAA')
+        error = "^Backend 'dummy' has not reconnected\.$"
+        self.assertRaisesRegex(BackendException, error, db.find, query)
+
+    def testFindWithTwoUnreconnectedBackends(self):
+        """
+        If a database has two unreconnected backends, calling find() must raise
+        BackendException with the expected error message.
+        """
+        params = Parameters([AlphaHelix], [])
+        db = Database(params)
+        db.disconnectedBackends['dummy1'] = None
+        db.disconnectedBackends['dummy2'] = None
+        query = AARead('id', 'AAA')
+        error = "^2 backends \(dummy1, dummy2\) have not reconnected\.$"
+        self.assertRaisesRegex(BackendException, error, db.find, query)
+
+    def testAddSubjectWithNoBackends(self):
+        """
+        If no backend has been added to a database, calling addSubject() must
+        raise BackendException.
+        """
+        class NoBackendConnector(object):
+            """
+            A connector that does not add a backend to its database.
+
+            @param database: A C{Database} instance.
+            """
+            def __init__(self, database):
+                pass
+
+        params = Parameters([AlphaHelix], [])
+        db = Database(params, NoBackendConnector)
+        error = "^Database has no backends\.$"
+        self.assertRaisesRegex(BackendException, error, db.addSubject, None)
+
+    def testTwoBackends(self):
+        """
+        If two backends are added to a database, they must have the expected
+        names and checksums.
+        """
+        class TwoBackendConnector(object):
+            """
+            A connector that adds two backends to its database.
+
+            @param database: A C{Database} instance.
+            """
+            def __init__(self, database):
+                database.addBackend()
+                database.addBackend()
+
+        params = Parameters([AlphaHelix], [])
+        db = Database(params, TwoBackendConnector)
+        self.assertEqual(['backend-0', 'backend-1'],
+                         sorted(db.backends.keys()))
+        self.assertEqual(Checksum().update('backend-0').checksum,
+                         db.backends['backend-0'].checksum)
+        self.assertEqual(Checksum().update('backend-1').checksum,
+                         db.backends['backend-1'].checksum)
+
 
 class TestBackend(TestCase):
     """
@@ -809,7 +1006,7 @@ class TestBackend(TestCase):
         The backend must call its super class so its parameters are stored.
         """
         params = Parameters([AlphaHelix], [Peaks])
-        be = Backend(params)
+        be = Backend('name', 0, params)
         self.assertIs(params, be.params)
 
     def testInitialBackendIsEmpty(self):
@@ -817,7 +1014,7 @@ class TestBackend(TestCase):
         The index must be empty if no reads have been added.
         """
         params = Parameters([AlphaHelix], [Peaks])
-        be = Backend(params)
+        be = Backend('name', 0, params)
         self.assertEqual({}, be.d)
 
     def testAddSubjectReturnsCorrectResult(self):
@@ -827,9 +1024,10 @@ class TestBackend(TestCase):
         hash count.
         """
         params = Parameters([AlphaHelix], [])
-        be = Backend(params)
+        be = Backend('name', 0, params)
         subject = AARead('id', 'FRRRFRRRF')
-        coveredResidues, hashCount = be.addSubject(subject, '0')
+        name, coveredResidues, hashCount = be.addSubject(subject, '0')
+        self.assertEqual('name', name)
         self.assertEqual(9, coveredResidues)
         self.assertEqual(0, hashCount)
 
@@ -839,7 +1037,7 @@ class TestBackend(TestCase):
         must raise ValueError.
         """
         params = Parameters([], [])
-        be = Backend(params)
+        be = Backend('name', 0, params)
         subject = AARead('id', 'FRRRFRRRF')
         be.addSubject(subject, '0')
         error = "^Subject index '0' has already been used\.$"
@@ -852,7 +1050,7 @@ class TestBackend(TestCase):
         Database frontend does.
         """
         params = Parameters([AlphaHelix], [])
-        be = Backend(params)
+        be = Backend('name', 0, params)
         be.addSubject(AARead('id', 'FRRRFRRRF'), '0')
         self.assertEqual(1, be.subjectCount)
         be.addSubject(AARead('id', 'FRRRFRRRF'), '1')
@@ -864,7 +1062,7 @@ class TestBackend(TestCase):
         to the backend.
         """
         params = Parameters([AlphaHelix], [])
-        be = Backend(params)
+        be = Backend('name', 0, params)
         be.addSubject(AARead('id', 'FRRRFRRRF'), '0')
         self.assertEqual({}, be.d)
 
@@ -874,7 +1072,7 @@ class TestBackend(TestCase):
         to the backend.
         """
         params = Parameters([AlphaHelix], [])
-        be = Backend(params)
+        be = Backend('name', 0, params)
         be.addSubject(
             AARead('id', 'FRRRFRRRFAAAAAAAAAAAAAAFRRRFRRRFRRRF'), '0')
         distance23 = str(scale(23, Parameters.DEFAULT_DISTANCE_BASE))
@@ -890,7 +1088,7 @@ class TestBackend(TestCase):
         will be added to the dictionary if limitPerLandmark is zero.
         """
         params = Parameters([AlphaHelix], [], limitPerLandmark=0)
-        be = Backend(params)
+        be = Backend('name', 0, params)
         be.addSubject(
             AARead('id1', 'FRRRFRRRFAAAAAAAAAAAAAAFRRRFRRRFRRRF'), '0')
         be.addSubject(
@@ -908,7 +1106,7 @@ class TestBackend(TestCase):
         just with the sign changed).
         """
         params = Parameters([AlphaHelix], [])
-        be = Backend(params)
+        be = Backend('name', 0, params)
         be.addSubject(
             AARead('id1', 'AFRRRFRRRFAAAAAAAAAAAAAAFRRRFRRRFRRRF'), '0')
         be.addSubject(
@@ -926,7 +1124,7 @@ class TestBackend(TestCase):
         is added to the backend.
         """
         params = Parameters([AlphaHelix], [Peaks])
-        be = Backend(params)
+        be = Backend('name', 0, params)
         be.addSubject(AARead('id', 'FRRRFRRRFASA'), '0')
         distance10 = str(scale(10, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
@@ -946,7 +1144,7 @@ class TestBackend(TestCase):
         """
         distanceBase = 2.0
         params = Parameters([AlphaHelix], [Peaks], distanceBase=distanceBase)
-        be = Backend(params)
+        be = Backend('name', 0, params)
         be.addSubject(AARead('id', 'FRRRFRRRFASA'), '0')
         distance10 = str(scale(10, distanceBase))
         self.assertEqual(
@@ -961,7 +1159,7 @@ class TestBackend(TestCase):
         trig finders are in use, nothing is added to the backend.
         """
         params = Parameters([AlphaHelix], [])
-        be = Backend(params)
+        be = Backend('name', 0, params)
         be.addSubject(AARead('id', 'FRRRFRRRFASA'), '0')
         self.assertEqual({}, be.d)
 
@@ -971,7 +1169,7 @@ class TestBackend(TestCase):
         pairs are added to the backend.
         """
         params = Parameters([AlphaHelix], [Peaks])
-        be = Backend(params)
+        be = Backend('name', 0, params)
         be.addSubject(AARead('id', 'FRRRFRRRFASAASA'), '0')
         distance13 = str(scale(13, Parameters.DEFAULT_DISTANCE_BASE))
         distance10 = str(scale(10, Parameters.DEFAULT_DISTANCE_BASE))
@@ -989,7 +1187,7 @@ class TestBackend(TestCase):
         the backend.
         """
         params = Parameters([AlphaHelix], [Peaks], limitPerLandmark=1)
-        be = Backend(params)
+        be = Backend('name', 0, params)
         be.addSubject(AARead('id', 'FRRRFRRRFASAASA'), '0')
         distance10 = str(scale(10, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
@@ -1005,7 +1203,7 @@ class TestBackend(TestCase):
         the backend.
         """
         params = Parameters([AlphaHelix], [Peaks], maxDistance=1)
-        be = Backend(params)
+        be = Backend('name', 0, params)
         be.addSubject(AARead('id', 'FRRRFRRRFASAASA'), '0')
         self.assertEqual({}, be.d)
 
@@ -1016,7 +1214,7 @@ class TestBackend(TestCase):
         away, only one key is added to the backend.
         """
         params = Parameters([AlphaHelix], [Peaks], maxDistance=11)
-        be = Backend(params)
+        be = Backend('name', 0, params)
         be.addSubject(AARead('id', 'FRRRFRRRFASAASA'), '0')
         distance10 = str(scale(10, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
@@ -1032,7 +1230,7 @@ class TestBackend(TestCase):
         peaks, two keys are added to the backend.
         """
         params = Parameters([AlphaHelix], [Peaks], maxDistance=15)
-        be = Backend(params)
+        be = Backend('name', 0, params)
         be.addSubject(AARead('id', 'FRRRFRRRFASAASA'), '0')
         distance13 = str(scale(13, Parameters.DEFAULT_DISTANCE_BASE))
         distance10 = str(scale(10, Parameters.DEFAULT_DISTANCE_BASE))
@@ -1050,7 +1248,7 @@ class TestBackend(TestCase):
         the backend.
         """
         params = Parameters([AlphaHelix], [Peaks], minDistance=1)
-        be = Backend(params)
+        be = Backend('name', 0, params)
         be.addSubject(AARead('id', 'FRRRFRRRFASAASA'), '0')
         distance13 = str(scale(13, Parameters.DEFAULT_DISTANCE_BASE))
         distance10 = str(scale(10, Parameters.DEFAULT_DISTANCE_BASE))
@@ -1068,7 +1266,7 @@ class TestBackend(TestCase):
         that exceeds the minimum distance is added to the backend.
         """
         params = Parameters([AlphaHelix], [Peaks], minDistance=11)
-        be = Backend(params)
+        be = Backend('name', 0, params)
         be.addSubject(AARead('id', 'FRRRFRRRFASAASA'), '0')
         distance13 = str(scale(13, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
@@ -1084,7 +1282,7 @@ class TestBackend(TestCase):
         the backend.
         """
         params = Parameters([AlphaHelix], [Peaks], minDistance=100)
-        be = Backend(params)
+        be = Backend('name', 0, params)
         be.addSubject(AARead('id', 'FRRRFRRRFASAASA'), '0')
         self.assertEqual({}, be.d)
 
@@ -1101,7 +1299,7 @@ class TestBackend(TestCase):
         seq = 'FRRRFRRRFASA'
         params = Parameters([AlphaHelix], [Peaks], minDistance=5,
                             maxDistance=10)
-        be = Backend(params)
+        be = Backend('name', 0, params)
         be.addSubject(AARead('id', seq + seq), '0')
         distance10 = str(scale(10, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
@@ -1121,7 +1319,7 @@ class TestBackend(TestCase):
         just with the sign changed).
         """
         params = Parameters([AlphaHelix], [])
-        be = Backend(params)
+        be = Backend('name', 0, params)
         be.addSubject(
             AARead('id1', 'FRRRFRRRFAAAAAAAAAAAAAAFRRRFRRRFRRRF'), '0')
         be.addSubject(
@@ -1140,7 +1338,7 @@ class TestBackend(TestCase):
         subject = AARead('subject', 'FRRRFRRRFASAASA')
         query = AARead('query', 'FRRR')
         params = Parameters([AlphaHelix], [Peaks])
-        be = Backend(params)
+        be = Backend('name', 0, params)
         be.addSubject(subject, '0')
         matches, hashCount, nonMatchingHashes = be.find(
             query, Parameters.DEFAULT_SIGNIFICANCE_METHOD,
@@ -1160,7 +1358,7 @@ class TestBackend(TestCase):
         subject = AARead('subject', sequence)
         query = AARead('query', sequence)
         params = Parameters([AlphaHelix], [Peaks], maxDistance=11)
-        be = Backend(params)
+        be = Backend('name', 0, params)
         be.addSubject(subject, '0')
         matches, hashCount, nonMatchingHashes = be.find(
             query, 0.0, Parameters.DEFAULT_SCORE_METHOD,
@@ -1189,7 +1387,7 @@ class TestBackend(TestCase):
         subject = AARead('subject', 'AFRRRFRRRFASAASAVVVVVVASAVVVASA')
         query = AARead('query', 'FRRRFRRRFASAASAFRRRFRRRFFRRRFRRRFFRRRFRRRF')
         params = Parameters([AlphaHelix, BetaStrand], [Peaks])
-        be = Backend(params)
+        be = Backend('name', 0, params)
         be.addSubject(subject, '0')
         matches, hashCount, nonMatchingHashes = be.find(
             query, Parameters.DEFAULT_SIGNIFICANCE_METHOD,
@@ -1224,7 +1422,7 @@ class TestBackend(TestCase):
         subject = AARead('subject', 'F')
         query = AARead('query', 'AFRRRFRRRFASAASAVV')
         params = Parameters([AlphaHelix, BetaStrand], [Peaks])
-        be = Backend(params)
+        be = Backend('name', 0, params)
         be.addSubject(subject, '0')
         matches, hashCount, nonMatchingHashes = be.find(
             query, Parameters.DEFAULT_SIGNIFICANCE_METHOD,
@@ -1258,7 +1456,7 @@ class TestBackend(TestCase):
         subject = AARead('subject', sequence)
         query = AARead('query', sequence)
         params = Parameters([AlphaHelix], [Peaks], maxDistance=1)
-        be = Backend(params)
+        be = Backend('name', 0, params)
         be.addSubject(subject, '0')
         matches, hashCount, nonMatchingHashes = be.find(
             query, Parameters.DEFAULT_SIGNIFICANCE_METHOD,
@@ -1278,7 +1476,7 @@ class TestBackend(TestCase):
         subject = AARead('subject', sequence)
         query = AARead('query', sequence)
         params = Parameters([AlphaHelix], [])
-        be = Backend(params)
+        be = Backend('name', 0, params)
         be.addSubject(subject, '0')
         matches, hashCount, nonMatchingHashes = be.find(
             query, Parameters.DEFAULT_SIGNIFICANCE_METHOD,
@@ -1297,7 +1495,7 @@ class TestBackend(TestCase):
         subject = AARead('subject', sequence)
         query = AARead('query', sequence)
         params = Parameters([AlphaHelix], [Peaks])
-        be = Backend(params)
+        be = Backend('name', 0, params)
         be.addSubject(subject, '0')
         matches, hashCount, nonMatchingHashes = be.find(
             query, Parameters.DEFAULT_SIGNIFICANCE_METHOD,
@@ -1325,30 +1523,29 @@ class TestBackend(TestCase):
         self.assertEqual(2, hashCount)
         self.assertEqual({}, nonMatchingHashes)
 
-    def testChecksumEmptyBackend(self):
+    def testInitialChecksum(self):
         """
-        The backend checksum must be the same as the checksum for its
-        parameters when no subjects have been added to the backend.
+        The backend checksum must be set to the value passed to its
+        __init__ method.
         """
         params = Parameters([], [])
-        be = Backend(params)
-        self.assertEqual(params.checksum, be.checksum)
+        be = Backend('name', 10, params)
+        self.assertEqual(10, be.checksum)
 
     def testChecksumAfterSubjectAdded(self):
         """
         The backend checksum must be as expected when a subject has been
         added to the backend.
         """
-        params = Parameters([AlphaHelix], [])
-        be = Backend(params)
+        params = Parameters([], [])
+        be = Backend('name', 10, params)
         sequence = 'AFRRRFRRRFASAASA'
         subject = AARead('id', sequence)
         be.addSubject(subject, '0')
 
-        checksum = Checksum(params.checksum).update([
+        checksum = Checksum(10).update([
             'id',
             sequence,
-            '0',  # Hash count.
         ]).checksum
         self.assertEqual(checksum, be.checksum)
 
@@ -1358,7 +1555,7 @@ class TestBackend(TestCase):
         """
         subject = AARead('subject', 'FRRRFRRRFASAASA')
         params = Parameters([AlphaHelix], [Peaks])
-        be = Backend(params)
+        be = Backend('name', 0, params)
         be.addSubject(subject, '0')
         scannedSubject = be.scan(subject)
         self.assertIsInstance(scannedSubject, ScannedRead)
@@ -1370,7 +1567,7 @@ class TestBackend(TestCase):
         """
         subject = AARead('subject', 'FRRRFRRRFASAASA')
         params = Parameters([AlphaHelix], [Peaks], distanceBase=1.0)
-        be = Backend(params)
+        be = Backend('name', 0, params)
         be.addSubject(subject, '0')
         scannedSubject = be.scan(subject)
         pairs = list(be.getScannedPairs(scannedSubject))
@@ -1393,7 +1590,7 @@ class TestBackend(TestCase):
         empty if there are no landmarks in the read.
         """
         params = Parameters([AlphaHelix], [])
-        be = Backend(params)
+        be = Backend('name', 0, params)
         query = AARead('query', 'AAA')
         scannedQuery = be.scan(query)
         hashCount = be.getHashes(scannedQuery)
@@ -1406,7 +1603,7 @@ class TestBackend(TestCase):
         empty if there is only one landmark in the read.
         """
         params = Parameters([AlphaHelix], [])
-        be = Backend(params)
+        be = Backend('name', 0, params)
         query = AARead('query', 'FRRRFRRRF')
         scannedQuery = be.scan(query)
         hashCount = be.getHashes(scannedQuery)
@@ -1418,7 +1615,7 @@ class TestBackend(TestCase):
         hash with values containing the read offsets.
         """
         params = Parameters([AlphaHelix], [Peaks], distanceBase=1.0)
-        be = Backend(params)
+        be = Backend('name', 0, params)
         query = AARead('query', 'FRRRFRRRFASAASAFRRRFRRRFASAASA')
         scannedQuery = be.scan(query)
         hashCount = be.getHashes(scannedQuery)
@@ -1476,14 +1673,43 @@ class TestBackend(TestCase):
         self.assertRaisesRegex(ValueError, error, Backend.restore,
                                StringIO('xxx'))
 
-    def testSaveLoadWithNonDefaultParameters(self):
+    def testSaveContentIncludesExpectedKeysAndValues(self):
         """
-        When asked to save and then load a backend with non-default
+        When a backend saves, its JSON content must include the expected
+        keys and values.
+        """
+        params = Parameters([], [], limitPerLandmark=16, maxDistance=17,
+                            minDistance=18, distanceBase=19.0)
+        be = Backend('name', 0, params)
+        fp = StringIO()
+        be.save(fp)
+        fp.seek(0)
+
+        Parameters.restore(fp)
+        state = loads(fp.readline()[:-1])
+
+        # Keys
+        self.assertEqual(
+            set(['_originalChecksum', '_subjectIndices', 'checksum', 'd',
+                 'name', 'subjectCount']),
+            set(state.keys()))
+
+        # Values
+        self.assertEqual(be.checksum, state['_originalChecksum'])
+        self.assertEqual([], state['_subjectIndices'])
+        self.assertEqual(be.checksum, state['checksum'])
+        self.assertEqual({}, state['d'])
+        self.assertEqual('name', state['name'])
+        self.assertEqual(0, state['subjectCount'])
+
+    def testSaveRestoreWithNonDefaultParameters(self):
+        """
+        When asked to save and then restore a backend with non-default
         parameters, a backend with the correct parameters must result.
         """
         params = Parameters([], [], limitPerLandmark=16, maxDistance=17,
                             minDistance=18, distanceBase=19.0)
-        be = Backend(params)
+        be = Backend('name', 0, params)
         fp = StringIO()
         be.save(fp)
         fp.seek(0)
@@ -1491,13 +1717,13 @@ class TestBackend(TestCase):
         self.assertIs(None, params.compare(result.params))
         self.assertEqual(be._subjectIndices, result._subjectIndices)
 
-    def testSaveLoadNonEmpty(self):
+    def testSaveRestoreNonEmpty(self):
         """
-        When asked to save and then load a non-empty backend, the correct
+        When asked to save and then restore a non-empty backend, the correct
         backend must result.
         """
         params = Parameters([AlphaHelix, BetaStrand], [Peaks, Troughs])
-        be = Backend(params)
+        be = Backend('name', 0, params)
         be.addSubject(AARead('id', 'FRRRFRRRFASAASA'), '0')
         fp = StringIO()
         be.save(fp)
@@ -1516,17 +1742,17 @@ class TestBackend(TestCase):
         self.assertEqual(be.checksum, result.checksum)
         self.assertEqual(be._subjectIndices, result._subjectIndices)
 
-    def testChecksumAfterSaveLoad(self):
+    def testChecksumAfterSaveRestore(self):
         """
         A backend that has a sequence added to it, which is then saved and
-        then re-loaded, and then has a second sequence is added to it must have
-        the same checksum as a backend that simply has the two sequences added
-        to it without interruption.
+        restored, and then has a second sequence is added to it must have the
+        same checksum as a backend that simply has the two sequences added to
+        it without interruption.
         """
         seq1 = 'FRRRFRRRFASAASA'
         seq2 = 'MMMMMMMMMFRRRFR'
         params1 = Parameters([AlphaHelix, BetaStrand], [Peaks, Troughs])
-        be1 = Backend(params1)
+        be1 = Backend('name1', 0, params1)
         be1.addSubject(AARead('id1', seq1), '0')
         fp = StringIO()
         be1.save(fp)
@@ -1535,7 +1761,7 @@ class TestBackend(TestCase):
         be1.addSubject(AARead('id2', seq2), '1')
 
         params2 = Parameters([AlphaHelix, BetaStrand], [Peaks, Troughs])
-        be2 = Backend(params2)
+        be2 = Backend('name2', 0, params2)
         be2.addSubject(AARead('id1', seq1), '0')
         be2.addSubject(AARead('id2', seq2), '1')
 
@@ -1543,17 +1769,22 @@ class TestBackend(TestCase):
 
     def testEmptyCopy(self):
         """
-        The emptyCopy method must return a new, empty backend.
+        The emptyCopy method must return a new, empty backend with the same
+        name, correct parameters, (original) checksum, no subjects, and an
+        empty index.
         """
         params = Parameters([AlphaHelix], [])
-        be = Backend(params)
+        initialChecksum = 10
+        be = Backend('name', initialChecksum, params)
         sequence = 'AFRRRFRRRFASAASA'
         subject = AARead('id', sequence)
         be.addSubject(subject, '0')
         newBe = be.emptyCopy()
+        self.assertEqual('name', newBe.name)
         self.assertIs(None, be.params.compare(newBe.params))
         self.assertEqual({}, newBe.d)
         self.assertEqual(0, newBe.subjectCount)
+        self.assertEqual(initialChecksum, newBe.checksum)
 
     def testPrint(self):
         """
@@ -1564,12 +1795,13 @@ class TestBackend(TestCase):
         params = Parameters([AlphaHelix, BetaStrand], [Peaks, Troughs],
                             limitPerLandmark=16, maxDistance=10, minDistance=0,
                             distanceBase=1)
-        be = Backend(params)
+        be = Backend('name', 0, params)
         be.addSubject(subject, '0')
         be.print_(fp)
         expected = (
+            'Name: name\n'
             'Hash count: 3\n'
-            'Checksum: 1144016651\n'
+            'Checksum: 159154638\n'
             'Subjects (with offsets) by hash:\n'
             '   A2:P:10\n'
             '    0 [[0, 10]]\n'
@@ -1592,15 +1824,15 @@ class TestSimpleConnector(TestCase):
 
     def testAddSubjectReturnsCorrectResult(self):
         """
-        If one subject is added, addSubject must return the name of the
-        backend, the index ('0') of the added subject, the correct number
-        of covered residues, and the correct hash count.
+        If one subject is added, addSubject must return the correct backend
+        name, number of covered residues and hash count.
         """
         params = Parameters([AlphaHelix], [])
-        be = Backend(params)
-        sc = SimpleConnector(be)
+        db = Database(params)
+        sc = db.backendConnector
         subject = AARead('id', 'FRRRFRRRF')
-        coveredResidues, hashCount = sc.addSubject(subject, '0')
+        name, coveredResidues, hashCount = sc.addSubject(subject, '0')
+        self.assertEqual('backend-0', name)
         self.assertEqual(9, coveredResidues)
         self.assertEqual(0, hashCount)
 
@@ -1612,8 +1844,8 @@ class TestSimpleConnector(TestCase):
         subject = AARead('subject', 'FRRRFRRRFASAASA')
         query = AARead('query', 'FRRR')
         params = Parameters([AlphaHelix], [Peaks])
-        be = Backend(params)
-        sc = SimpleConnector(be)
+        db = Database(params)
+        sc = db.backendConnector
         sc.addSubject(subject, '0')
         result = sc.find(
             query, Parameters.DEFAULT_SIGNIFICANCE_METHOD,
@@ -1635,8 +1867,8 @@ class TestSimpleConnector(TestCase):
         subject = AARead('subject', sequence)
         query = AARead('query', sequence)
         params = Parameters([AlphaHelix], [Peaks], maxDistance=11)
-        be = Backend(params)
-        sc = SimpleConnector(be)
+        db = Database(params)
+        sc = db.backendConnector
         sc.addSubject(subject, '0')
         result = sc.find(
             query, 0.0, Parameters.DEFAULT_SCORE_METHOD,
@@ -1663,19 +1895,19 @@ class TestSimpleConnector(TestCase):
         """
         The print_ function should produce the expected output.
         """
-        fp = StringIO()
-        subject = AARead('subject-id', 'FRRRFRRRFASAASA')
         params = Parameters([AlphaHelix, BetaStrand], [Peaks, Troughs],
                             limitPerLandmark=16, maxDistance=10, minDistance=0,
                             distanceBase=1)
-        be = Backend(params)
-        sc = SimpleConnector(be)
+        db = Database(params)
+        sc = db.backendConnector
+        subject = AARead('subject-id', 'FRRRFRRRFASAASA')
         sc.addSubject(subject, '0')
+        fp = StringIO()
         sc.print_(fp)
         expected = (
-            'Backend \'localhost\':\n'
+            'Name: backend-0\n'
             'Hash count: 3\n'
-            'Checksum: 1144016651\n'
+            'Checksum: 647675821\n'
             'Subjects (with offsets) by hash:\n'
             '   A2:P:10\n'
             '    0 [[0, 10]]\n'

@@ -46,7 +46,7 @@ if __name__ == '__main__':
     print()
     hashes = database.getHashes(scannedRead)
     if hashes:
-        print('%s hash%s (according to database parameters):' % (
+        print('%d hash%s (according to database parameters):' % (
             len(hashes), '' if len(hashes) == 1 else 'es'), end='')
         for hash_, hashInfo in hashes.items():
             print()

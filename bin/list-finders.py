@@ -16,7 +16,8 @@ parser.add_argument(
 args = parser.parse_args()
 key = attrgetter('NAME')
 
-maxLen = max(len(cls.NAME) for cls in ALL_LANDMARK_CLASSES | ALL_TRIG_CLASSES)
+maxLen = max(len(cls.NAME) for cls in
+             set(ALL_LANDMARK_CLASSES) | set(ALL_TRIG_CLASSES))
 
 print('%d landmark finders:' % len(ALL_LANDMARK_CLASSES))
 for finder in sorted(ALL_LANDMARK_CLASSES, key=key):

@@ -9,6 +9,7 @@ from collections import defaultdict
 from dark.dimension import dimensionalIterator
 
 from light.database import DatabaseSpecifier
+from light.backend import Backend
 from light.trig import ALL_TRIG_CLASSES
 from light.landmarks import ALL_LANDMARK_CLASSES
 from light.features import Landmark
@@ -218,7 +219,7 @@ def plotHistogram(query, subject, significanceMethod=None,
 
     @param query: an AARead instance of the sequence of the query.
     @param subject: either an AARead instance of the sequence of the subject
-        or an C{int} subject index in the database.
+        or a C{str} subject index in the database.
     @param significanceMethod: The name of the method used to calculate
         which histogram bins are considered significant.
     @param significanceFraction: The C{float} fraction of all (landmark,
@@ -240,11 +241,11 @@ def plotHistogram(query, subject, significanceMethod=None,
     """
     database = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
 
-    if isinstance(subject, int):
+    if isinstance(subject, str):
         subjectIndex = subject
-        subject = database.getSubject(subjectIndex)
+        subject = database.getSubjectByIndex(subjectIndex)
     else:
-        subjectIndex = database.addSubject(subject)
+        _, subjectIndex = database.addSubject(subject)
 
     result = database.find(query, significanceMethod, significanceFraction,
                            storeFullAnalysis=True)
@@ -399,7 +400,7 @@ def plotHistogramLine(query, subject, significanceMethod=False,
     """
     database = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
 
-    subjectIndex = database.addSubject(subject)
+    _, subjectIndex = database.addSubject(subject)
 
     result = database.find(query, significanceMethod, significanceFraction,
                            storeFullAnalysis=True)
@@ -481,11 +482,11 @@ def plotHistogramLines(sequences, significanceFraction=None, **kwargs):
     for read in reads:
         result = database.find(read, significanceFraction,
                                storeFullAnalysis=True)
-        for subjectIndex in range(len(reads)):
+        for subjectIndex in map(str, range(len(reads))):
             try:
                 analysis = result.analysis[subjectIndex]
             except KeyError:
-                subject = database.getSubject(subjectIndex)
+                subject = database.getSubjectByIndex(subjectIndex)
                 print('Query %r and subject %r had no hashes in common.' % (
                     read.id, subject.id))
             else:
@@ -516,6 +517,7 @@ def plotFeatureSquare(read, significanceFraction=None, readsAx=None, **kwargs):
     readsAx = readsAx or fig.add_subplot(111)
 
     database = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
+    backend = Backend(database.params)
     result = database.find(read, significanceFraction, storeFullAnalysis=True)
     scannedQuery = result.scannedQuery
 
@@ -529,7 +531,7 @@ def plotFeatureSquare(read, significanceFraction=None, readsAx=None, **kwargs):
     namesSeen = set()
     landmarks = set()
 
-    for landmark, trigPoint in database.getScannedPairs(scannedQuery):
+    for landmark, trigPoint in backend.getScannedPairs(scannedQuery):
         # Add jitter to the Y offset so we can see more trig points that
         # occur at the same offset.
         scatterX.append(landmark.offset)
@@ -657,8 +659,9 @@ class PlotHashesInSubjectAndRead(object):
         self.subject = subject
 
         database = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
-        subjectIndex = database.addSubject(subject)
-        self.result = database.find(self.query, significanceFraction,
+        _, subjectIndex = database.addSubject(subject)
+        self.result = database.find(self.query,
+                                    significanceFraction=significanceFraction,
                                     storeFullAnalysis=True)
         if subjectIndex in self.result.analysis:
             analysis = self.result.analysis[subjectIndex]
@@ -680,12 +683,13 @@ class PlotHashesInSubjectAndRead(object):
             self.bins = {}
 
         self.queryHashes = self.result.nonMatchingHashes
-        self.subjectHashes = database.getHashes(database.scan(subject))
+        backend = Backend(database.params)
+        self.subjectHashes = backend.getHashes(backend.scan(subject))
         self.matchingHashes = defaultdict(list)
 
         for bin_ in self.bins:
             for match in bin_:
-                hash_ = database.hash(match['landmark'], match['trigPoint'])
+                hash_ = backend.hash(match['landmark'], match['trigPoint'])
                 self.matchingHashes[hash_].append(match)
                 try:
                     del self.subjectHashes[hash_]

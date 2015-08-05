@@ -13,6 +13,7 @@ from dark.fasta import FastaReads
 
 from light.distance import scale
 from light.database import DatabaseSpecifier
+from light.backend import Backend
 
 
 class ClusterAnalysis(object):
@@ -41,6 +42,7 @@ class ClusterAnalysis(object):
         else:
             reads = sequences
         database = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
+        backend = Backend(database.params)
         allOffsetDeltas = []
         trueLabels = []
 
@@ -51,8 +53,8 @@ class ClusterAnalysis(object):
                                  read.id)
             trueLabels.append(trueLabel)
             offsetDeltas = Counter()
-            scannedRead = database.scan(read)
-            for landmark, trigPoint in database.getScannedPairs(scannedRead):
+            scannedRead = backend.scan(read)
+            for landmark, trigPoint in backend.getScannedPairs(scannedRead):
                 delta = scale(trigPoint.offset - landmark.offset,
                               database.params.distanceBase)
                 offsetDeltas[delta] += 1

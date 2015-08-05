@@ -1,7 +1,6 @@
 import argparse
 import sys
 from warnings import warn
-from collections import defaultdict, OrderedDict
 try:
     from ujson import dump, loads
 except ImportError:
@@ -10,415 +9,34 @@ except ImportError:
 from dark.fasta import combineReads, FastaReads
 from dark.reads import AARead
 
-from light.exceptions import BackendException
-from light.distance import scale
-from light.checksum import Checksum
-from light.subject import Subject
+from light.connector import SimpleConnector
 from light.parameters import Parameters
-from light.reads import ScannedRead
-from light.result import Result
 from light.landmarks import (
-    findLandmarks, landmarkNameFromHashkey, ALL_LANDMARK_CLASSES,
-    DEFAULT_LANDMARK_CLASSES)
+    findLandmarks, ALL_LANDMARK_CLASSES, DEFAULT_LANDMARK_CLASSES)
 from light.trig import (
-    findTrigPoints, trigNameFromHashkey, ALL_TRIG_CLASSES,
-    DEFAULT_TRIG_CLASSES)
+    findTrigPoints, ALL_TRIG_CLASSES, DEFAULT_TRIG_CLASSES)
+from light.wamp import DEFAULT_URL
 
 
-class SimpleConnector(object):
+class Database:
     """
-    Connect a Database instance to a single Backend instance.
-
-    @param database: A C{Database} frontend instance.
-    """
-    def __init__(self, database):
-        self._database = database
-        name, checksum, params = database.addBackend()
-        self._backend = Backend(name, checksum, params)
-
-    def addSubject(self, subject, subjectIndex):
-        """
-        Examine a sequence for features and add its (landmark, trig point)
-        pairs to the search dictionary.
-
-        @param subject: a C{dark.read.AARead} instance. The subject sequence
-            is passed as a read instance even though in many cases it will not
-            be an actual read from a sequencing run.
-        @param subjectIndex: A C{str} representing the index of the subject in
-            the database front end.
-        @return: The result of calling addSubject in the backend.
-        """
-        return self._backend.addSubject(subject, subjectIndex)
-
-    def find(self, read, significanceMethod, scoreMethod, significanceFraction,
-             storeFullAnalysis):
-        """
-        A function which takes a read, computes all hashes for it, looks up
-        matching hashes and checks which database sequence it matches.
-
-        @param read: A C{dark.read.AARead} instance.
-        @param significanceMethod: The name of the method used to calculate
-            which histogram bins are considered significant.
-        @param scoreMethod: The C{str} name of the method used to calculate the
-            score of a bin which is considered significant.
-        @param significanceFraction: The C{float} fraction of all (landmark,
-            trig point) pairs for a scannedRead that need to fall into the
-            same histogram bucket for that bucket to be considered a
-            significant match with a database title.
-        @param storeFullAnalysis: A C{bool}. If C{True} the intermediate
-            significance analysis computed in the Result will be stored.
-        @return: A tuple with one value, the result of calling the backend
-            find function.
-        """
-        return (self._backend.find(
-            read, significanceMethod, scoreMethod, significanceFraction,
-            storeFullAnalysis),)
-
-    def print_(self, fp=sys.stdout):
-        """
-        Print information about the database backend.
-
-        @param fp: A file pointer to write to.
-        """
-        return self._backend.print_(fp)
-
-    def save(self, fp=sys.stdout):
-        """
-        Save the backend state to a file.
-
-        @param fp: A file pointer to write to.
-        """
-        return self._backend.save(fp)
-
-    def restore(self, fp=sys.stdout):
-        """
-        Restore the backend state from a file.
-
-        @param fp: A file pointer to read from.
-        """
-        self._backend = self._backend.restore(fp)
-        self._database.addBackend(self._backend.name, self._backend.checksum)
-
-    def emptyCopy(self):
-        """
-        Copy the current connector, with an empty backend.
-
-        @return: A new L{light.database.SimpleConnector} instance with a
-            backend with an empty index.
-        """
-        return self.__class__(self._backend.emptyCopy())
-
-
-class _DatabaseMixin(object):
-    """
-    Methods and data that can be used by databases and their back-ends.
+    An interface to a database connector that maintains a collection of
+    sequences (aka subjects) and provide for database insertion and look-up
+    operations on them.
 
     @param params: A C{Parameters} instance.
+    @param connector: A C{ligh.SimpleConnector} instance (or other connector)
+        for connecting to the database backend(s).
     """
-    def __init__(self, params):
+    def __init__(self, params, connector=None):
         self.params = params
-        self.subjectCount = 0
-        self._checksum = Checksum()
-
-    def _getChecksum(self):
-        """
-        Get the current checksum.
-
-        @return: An C{int} checksum.
-        """
-        return self._checksum.checksum
-
-    def _setChecksum(self, value):
-        """
-        Set the current checksum.
-
-        @param value: An C{int} value to set the checksum to.
-        """
-        self._checksum.checksum = value
-
-    checksum = property(_getChecksum, _setChecksum)
-
-    def scan(self, sequence):
-        """
-        Make an instance of C{light.reads.ScannedRead} from a sequence.
-
-        @param sequence: a C{dark.read.AARead} instance.
-        @return: a C{light.reads.ScannedRead} instance.
-        """
-        scannedSequence = ScannedRead(sequence)
-        for landmarkFinder in self.params.landmarkFinders:
-            for landmark in landmarkFinder.find(sequence):
-                scannedSequence.landmarks.append(landmark)
-
-        for trigFinder in self.params.trigPointFinders:
-            for trigPoint in trigFinder.find(sequence):
-                scannedSequence.trigPoints.append(trigPoint)
-        return scannedSequence
-
-    def hash(self, landmark, trigPoint):
-        """
-        Compute a hash key to store information about a landmark / trig point
-        association for a read.
-
-        @param landmark: A C{light.features.Landmark} instance.
-        @param trigPoint: A C{light.features.TrigPoint} instance.
-        @return: A C{str} hash key based on the landmark, the trig point,
-            and the distance between them.
-        """
-        distance = scale(trigPoint.offset - landmark.offset,
-                         self.params.distanceBase)
-        return '%s:%s:%s' % (landmark.hashkey(), trigPoint.hashkey(),
-                             distance)
-
-    def getScannedPairs(self, scannedSequence):
-        """
-        Get the (landmark, trigPoint) pairs from a ScannedRead instance.
-
-        @param scannedSequence: A C{light.reads.ScannedRead} instance.
-        @return: A generator yielding (landmark, trigPoint) pairs, as returned
-            by C{light.reads.ScannedRead.getPairs}.
-        """
-        return scannedSequence.getPairs(
-            limitPerLandmark=self.params.limitPerLandmark,
-            maxDistance=self.params.maxDistance,
-            minDistance=self.params.minDistance)
-
-    def getHashes(self, scannedSequence):
-        """
-        Get all (landmark, trigPoint) hashes from a scanned sequence and
-        collect the offsets at which the (landmark, trigPoint) pair occurs.
-
-        @param scannedSequence: A C{light.reads.ScannedRead} instance.
-        @return: A C{dict} keyed by (landmark, trigPoint) hash, whose values
-            are C{dict}s containing the first (landmark, trigPoint) pair that
-            generated that hash, and a list of all offsets into the read
-            where the (landmark, trigPoint) pair was found.
-        """
-        # For testing reasons, use an ordered dict to hold hash information.
-        # Our database and result code do not need the dict to be ordered.
-        # But a deterministic order of hashes makes it simple to write reliable
-        # tests. If we ever get really serious about speed we may want to use
-        # a regular dict instead and make the tests do more digging / sorting
-        # in results.
-        hashes = OrderedDict()
-
-        for (landmark, trigPoint) in self.getScannedPairs(scannedSequence):
-            hash_ = self.hash(landmark, trigPoint)
-            try:
-                hashInfo = hashes[hash_]
-            except KeyError:
-                hashes[hash_] = {
-                    'landmark': landmark,
-                    'offsets': [[landmark.offset, trigPoint.offset]],
-                    'trigPoint': trigPoint,
-                }
-            else:
-                hashInfo['offsets'].append([landmark.offset, trigPoint.offset])
-
-        return hashes
-
-
-class Database(_DatabaseMixin):
-    """
-    Maintain a collection of sequences ("subjects") and provide for database
-    insertion and look-up operations on them.
-
-    @param params: A C{Parameters} instance.
-    @param connectorClass: A class for connecting to the database backend(s).
-    """
-    def __init__(self, params, connectorClass=SimpleConnector):
-        super().__init__(params)
-        self._connectorClass = connectorClass
-        self.checksum = params.checksum
-        self.totalResidues = 0
-        self.totalCoveredResidues = 0
-        self.hashCount = 0
-        self._subjectInfo = []
-        self._idSequenceCache = {}
-        self.disconnectedBackends = {}
-        self.backends = {}
-        self.backendConnector = connectorClass(self)
-
-    def __str__(self):
-        return '%s: %d sequences, %d residues, %.2f%% coverage' % (
-            self.__class__.__name__, self.subjectCount, self.totalResidues,
-            float(self.totalCoveredResidues) / self.totalResidues * 100.0)
-
-    def addBackend(self, name=None, checksum=None):
-        """
-        Register the addition of a new backend, or the reconnection of a
-        previously connected backend.
-
-        @param name: Either C{None} to indicate that this backend is brand
-            new (and does not yet have a name), or the C{str} name of a
-            previously connected backend.
-        @param checksum: The C{int} checksum of a previously connected backend
-            (implies C{name} is C{None}).
-        @raise ValueError: If 1) an unknown backend name is given, or 2) a
-            known backend is given but has a non-matching checksum, or 3) a
-            known backend is given but is marked as already connected.
-        @return: A (C{str} name, C{int} checksum, C{Parameters}) tuple.
-        """
-        if name is None:
-            # A new backend. Assign it a name and a checksum.
-            count = len(self.backends) + len(self.disconnectedBackends)
-            name = 'backend-%d' % count
-            # The initial checksum for a backend is based on its name.
-            self.backends[name] = Checksum().update(name)
-            checksum = self.backends[name].checksum
-        else:
-            # This backend claims to have been previously connected to us.
-            # Verify that it's not already connected, that we have a prior
-            # record of it, and that its checksum is as expected.
-            if name in self.backends:
-                raise BackendException(
-                    'Backend %r is already connected.' % name)
-            try:
-                savedChecksum = self.disconnectedBackends[name].checksum
-            except KeyError:
-                raise BackendException('Unknown backend %r.' % name)
-            else:
-                if savedChecksum != checksum:
-                    raise BackendException(
-                        'Backend %r sent checksum %s which differs from the '
-                        'stored value %s.' % (name, checksum, savedChecksum))
-                self.backends[name] = self.disconnectedBackends[name]
-                del self.disconnectedBackends[name]
-        return name, checksum, self.params
-
-    def addSubject(self, subject):
-        """
-        Examine a sequence for features and add its (landmark, trig point)
-        pairs to the search dictionary.
-
-        @param subject: a C{dark.read.AARead} instance. The subject sequence
-            is passed as a read instance even though in many cases it will not
-            be an actual read from a sequencing run.
-        @return: The C{int} subject index of the added subject.
-        """
-        try:
-            return self._idSequenceCache[subject]
-        except KeyError:
-            pass
-
-        if not self.backends:
-            raise BackendException('Database has no backends.')
-
-        subjectIndex = self.subjectCount
-        self.subjectCount += 1
-        self._idSequenceCache[subject] = subjectIndex
-        backend, coveredResidues, hashCount = self.backendConnector.addSubject(
-            subject, str(subjectIndex))
-        self.totalCoveredResidues += coveredResidues
-        self.totalResidues += len(subject)
-        self.hashCount += hashCount
-
-        # Update our checksum and that of the backend involved.
-        update = (subject.id, subject.sequence)
-        self._checksum.update(update)
-        self.backends[backend].update(update)
-
-        self._subjectInfo.append([subject.id, subject.sequence, hashCount])
-
-        return subjectIndex
-
-    def getSubject(self, subject):
-        """
-        Return information about a subject, given its index in the database.
-        Or, do the reverse, given a subject return its index.
-
-        @param subject: Either an C{int} subject index or a C{Subject} instance
-            whose index is to be looked up.
-        @return: If an index is passed, return a C{Subject} instance. If a
-            C{Subject} subject is passed, return its C{int} index.
-        @raises IndexError: if an C{int} index is passed and it is invalid.
-        @raises KeyError: if a C{Subject} instance is passed and the subject is
-            not in the database.
-        """
-        if isinstance(subject, int):
-            return Subject(*self._subjectInfo[subject])
-        else:
-            try:
-                return self._idSequenceCache[subject]
-            except KeyError:
-                # Be user friendly and raise a key error containing the
-                # subject id, instead of the md5 sum of the id and
-                # sequence.
-                raise KeyError(subject.id)
-
-    def getSubjects(self):
-        """
-        Return information about all database subjects.
-
-        @return: a generator that yields C{Subject} instances.
-        """
-        return (self.getSubject(i) for i in range(self.subjectCount))
-
-    def find(self, read, significanceMethod=None, scoreMethod=None,
-             significanceFraction=None, storeFullAnalysis=False):
-        """
-        A function which takes a read, computes all hashes for it, looks up
-        matching hashes and checks which database sequence it matches.
-
-        @param read: A C{dark.read.AARead} instance.
-        @param significanceMethod: The name of the method used to calculate
-            which histogram bins are considered significant.
-        @param scoreMethod: The C{str} name of the method used to calculate the
-            score of a bin which is considered significant.
-        @param significanceFraction: The C{float} fraction of all (landmark,
-            trig point) pairs for a scannedRead that need to fall into the
-            same histogram bucket for that bucket to be considered a
-            significant match with a database title.
-        @param storeFullAnalysis: A C{bool}. If C{True} the intermediate
-            significance analysis computed in the Result will be stored.
-        @return: A C{light.result.Result} instance.
-        """
-        if self.disconnectedBackends:
-            disconnected = sorted(self.disconnectedBackends.keys())
-            if len(disconnected) == 1:
-                raise BackendException('Backend %r has not reconnected.' %
-                                       disconnected[0])
-            else:
-                raise BackendException(
-                    '%d backends (%s) have not reconnected.' %
-                    (len(disconnected), ', '.join(disconnected)))
-
-        if not self.backends:
-            raise BackendException('No backends available.')
-
-        if significanceMethod is None:
-            significanceMethod = self.params.DEFAULT_SIGNIFICANCE_METHOD
-        if scoreMethod is None:
-            scoreMethod = self.params.DEFAULT_SCORE_METHOD
-        if significanceFraction is None:
-            significanceFraction = self.params.DEFAULT_SIGNIFICANCE_FRACTION
-
-        allMatches = defaultdict(list)
-        allNonMatchingHashes = {}
-        hashCount = 0
-
-        for result in self.backendConnector.find(
-                read, significanceMethod, scoreMethod,
-                significanceFraction, storeFullAnalysis):
-            matches, hashCount, nonMatchingHashes = result
-            # TODO: This is probably wrong...
-            for nonMatchingHash in nonMatchingHashes:
-                if nonMatchingHash not in allNonMatchingHashes:
-                    allNonMatchingHashes[nonMatchingHash] = nonMatchingHashes[
-                        nonMatchingHash]
-            for subjectIndex in matches:
-                # Make sure we have not have seen this subject before. If
-                # we have, it would mean that two backends are reporting
-                # results for the same subject. We may allow that later,
-                # but for now it should be an error.
-                intSubjectIndex = int(subjectIndex)
-                assert(intSubjectIndex not in allMatches)
-                allMatches[intSubjectIndex] = matches[subjectIndex]
-
-        return Result(self.scan(read), allMatches, hashCount,
-                      significanceMethod, scoreMethod, significanceFraction,
-                      self, allNonMatchingHashes,
-                      storeFullAnalysis=storeFullAnalysis)
+        self._connector = connector or SimpleConnector(params)
+        # Most of our implementation comes directly from our connector.
+        for method in ('addSubject', 'find', 'getIndexBySubject',
+                       'getSubjectByIndex', 'getSubjects', 'hashCount',
+                       'subjectCount', 'totalResidues', 'totalCoveredResidues',
+                       'checksum'):
+            setattr(self, method, getattr(self._connector, method))
 
     def save(self, fp=sys.stdout):
         """
@@ -428,76 +46,35 @@ class Database(_DatabaseMixin):
         """
         self.params.save(fp)
 
-        # Save the int checksums from all known backends (whether or not
-        # they have connected to us yet).
-        backendChecksums = {}
-        for backends in self.backends, self.disconnectedBackends:
-            for backend, checksum in backends.items():
-                backendChecksums[backend] = checksum.checksum
-
         state = {
-            'checksum': self.checksum,
-            'subjectCount': self.subjectCount,
-            'totalResidues': self.totalResidues,
-            'totalCoveredResidues': self.totalCoveredResidues,
-            '_subjectInfo': self._subjectInfo,
-            '_backendConnectorClass':
-                self.backendConnector.__class__.__name__,
-            '_backendChecksums': backendChecksums,
+            '_connectorClassName': self._connector.__class__.__name__,
         }
         dump(state, fp)
         fp.write('\n')
-        self.backendConnector.save(fp)
+        self._connector.save(fp)
 
-    @staticmethod
-    def restore(fp=sys.stdin):
+    @classmethod
+    def restore(cls, fp=sys.stdin):
         """
         Load a database from a file.
 
         @param fp: A file pointer.
         @return: An instance of L{Database}.
-        @raises ValueError: If a now non-existent landmark or trig point name
-            is found in the saved database file. Or if valid JSON cannot be
-            loaded from C{fp}.
+        @raises ValueError: If a now non-existent connector class name is
+            found in the saved database file.
         """
         params = Parameters.restore(fp)
         state = loads(fp.readline()[:-1])
 
-        if state['_backendConnectorClass'] == 'SimpleConnector':
-            connectorClass = SimpleConnector
+        if state['_connectorClassName'] == SimpleConnector.__name__:
+            connector = SimpleConnector.restore(fp)
         else:
             raise ValueError('Unknown backend connector class %r.' %
-                             state['_backendConnectorClass'])
+                             state['_connectorClassName'])
 
-        database = Database(params, connectorClass)
+        new = cls(params, connector)
 
-        # Monkey-patch the new database instance to restore the rest of its
-        # state.
-        for attr in ('subjectCount', 'totalResidues', 'totalCoveredResidues',
-                     '_subjectInfo'):
-            setattr(database, attr, state[attr])
-
-        # Re-initialize the database checksum.
-        database.checksum = state['checksum']
-
-        # Restore the details about the backends. All backends are restored
-        # in the disconnected state. NB: database.disconnectedBackends has
-        # Checksum instances as values, not the int checksums.
-        disconnectedBackends = {}
-        for backend, checksum in state['_backendChecksums'].items():
-            disconnectedBackends[backend] = Checksum(checksum)
-        database.disconnectedBackends = disconnectedBackends
-        database.backends = {}
-
-        # Restore the id/sequence cache.
-        getSubject = database.getSubject
-        for subjectIndex in range(database.subjectCount):
-            database._idSequenceCache[getSubject(subjectIndex)] = subjectIndex
-
-        # Tell the connector to restore the backend(s).
-        database.backendConnector.restore(fp)
-
-        return database
+        return new
 
     def print_(self, fp=sys.stdout, printHashes=False):
         """
@@ -506,251 +83,26 @@ class Database(_DatabaseMixin):
         @param fp: A file pointer to write to.
         @param printHashes: If C{True}, print all hashes and associated
             subjects.
+        @return: The value returned by the connector's print_ method.
         """
         self.params.print_(fp)
-        try:
-            coverage = (float(self.totalCoveredResidues) /
-                        self.totalResidues * 100.0)
-        except ZeroDivisionError:
-            coverage = 0.0
+        print('Connector class: %s' % self._connector.__class__.__name__,
+              file=fp)
+        print('Subject count: %d' % self.subjectCount(), file=fp)
+        print('Hash count: %d' % self.hashCount(), file=fp)
+        totalResidues = self.totalResidues()
+        print('Total residues: %d' % totalResidues, file=fp)
+        if totalResidues:
+            print('Coverage: %.2f%%' % (
+                100.0 * self.totalCoveredResidues() / totalResidues), file=fp)
+        else:
+            print('Coverage: 0.00%', file=fp)
+        print('Checksum: %d' % self.checksum(), file=fp)
 
-        print('Subject count: %s' % self.subjectCount, file=fp)
-        print('Hash count: %s' % self.hashCount, file=fp)
-        print('Total residues: %d' % self.totalResidues, file=fp)
-        print('Coverage: %.2f%%' % coverage, file=fp)
-        print('Checksum: %s' % self.checksum, file=fp)
-
-        if printHashes and self.subjectCount:
-            print('Backends:', file=fp)
-            self.backendConnector.print_(fp)
-
-    def emptyCopy(self):
-        """
-        Copy the current database, with no subjects.
-
-        @return: A new L{light.database.Database} instance that no subjects
-            have been added to.
-        """
-        return self.__class__(self.params, self._connectorClass)
+        return self._connector.print_(fp, printHashes)
 
 
-class Backend(_DatabaseMixin):
-    """
-    Maintain a collection of hashes for sequences ("subjects") and provide for
-    database index creation and search operations on them.
-
-    @param name: The C{str} name of this backend (assigned by the frontend).
-    @param checksum: The C{int} initial checksum for the backend.
-    @param params: A C{Parameters} instance.
-    """
-    def __init__(self, name, checksum, params):
-        super().__init__(params)
-        self._originalChecksum = checksum
-        self.checksum = checksum
-        self.name = name
-
-        # When you read the code in addSubject (below), it may seem that
-        # self.d should be a defaultdict(list). That does not work, though,
-        # because a database JSON save followed by a load restores the
-        # defaultdict as a normal dict.
-        self.d = {}
-
-        # Keep track of which subject indices we've seen so we can raise an
-        # exception if a repeat subject index is passed to addSubject.
-        # This is not strictly necessary, it just guards against the
-        # possibility, which is a good thing to do at this point of the
-        # project.
-        self._subjectIndices = set()
-
-    def addSubject(self, subject, subjectIndex):
-        """
-        Examine a sequence for features and add its (landmark, trig point)
-        pairs to the search dictionary.
-
-        @param subject: A C{dark.read.AARead} instance. The subject sequence
-            is passed as a read instance even though in many cases it will not
-            be an actual read from a sequencing run.
-        @param subjectIndex: A C{str} representing the index of the subject in
-            the database front end.
-        @return: A list containing
-            1. The name of this backend.
-            2. The number of residues covered in the subject by its landmarks
-               and trig points.
-            3. The number of hashes in the subject (a hash is a landmark /
-               trigpoint / distance combination).
-        """
-        if subjectIndex in self._subjectIndices:
-            raise ValueError('Subject index %r has already been used.' %
-                             subjectIndex)
-
-        self._subjectIndices.add(subjectIndex)
-        self.subjectCount += 1
-        scannedSubject = self.scan(subject)
-        coveredResidues = len(scannedSubject.coveredIndices())
-        hashCount = 0
-
-        for landmark, trigPoint in self.getScannedPairs(scannedSubject):
-            hash_ = self.hash(landmark, trigPoint)
-            hashCount += 1
-            try:
-                subjectDict = self.d[hash_]
-            except KeyError:
-                self.d[hash_] = subjectDict = {}
-
-            # Don't use a tuple for the offsets because JSON save/load will
-            # convert it to a list and we'll need to convert all those lists
-            # to tuples on database load.
-            offsets = [landmark.offset, trigPoint.offset]
-            try:
-                subjectDict[subjectIndex].append(offsets)
-            except KeyError:
-                subjectDict[subjectIndex] = [offsets]
-
-        self._checksum.update((subject.id, subject.sequence))
-
-        return self.name, coveredResidues, hashCount
-
-    def find(self, read, significanceMethod, scoreMethod, significanceFraction,
-             storeFullAnalysis):
-        """
-        A function which takes a read, computes all hashes for it, looks up
-        matching hashes and checks which database sequence it matches.
-
-        @param read: A C{dark.read.AARead} instance.
-        @param significanceMethod: The name of the method used to calculate
-            which histogram bins are considered significant.
-        @param scoreMethod: The C{str} name of the method used to calculate the
-            score of a bin which is considered significant.
-        @param significanceFraction: The C{float} fraction of all (landmark,
-            trig point) pairs for a scannedRead that need to fall into the
-            same histogram bucket for that bucket to be considered a
-            significant match with a database title.
-        @param storeFullAnalysis: A C{bool}. If C{True} the intermediate
-            significance analysis computed in the Result will be stored.
-        @return: A list of length three, containing
-            1. Matches, a C{dict} keyed by subject index and whose values are
-               as shown below.
-            2. The number of hashes found in the read.
-            3. A C{dict} of non-matching hashes, keyed by hash with values as
-               returned by self.getHashes.
-        """
-        matches = defaultdict(list)
-        nonMatchingHashes = {}
-        hashCount = 0
-        scannedRead = self.scan(read)
-
-        for hash_, hashInfo in self.getHashes(scannedRead).items():
-            # Note that hashCount is incremented for every hash, even those
-            # that are not in the database. Basing significance (in
-            # result.py) on a fraction of that overall count therefore
-            # takes into account the fact that some hashes may have been
-            # missed. We may want to do that at a finer level of
-            # granularity, though.  E.g., by considering where in the read
-            # the misses were.
-            hashCount += len(hashInfo['offsets'])
-            try:
-                subjectDict = self.d[hash_]
-            except KeyError:
-                # A hash that's in the read but not in our database.
-                if storeFullAnalysis:
-                    nonMatchingHashes[hash_] = hashInfo
-            else:
-                for (subjectIndex, subjectOffsets) in subjectDict.items():
-                    matches[subjectIndex].append({
-                        'landmark': hashInfo['landmark'],
-                        'queryOffsets': hashInfo['offsets'],
-                        'subjectOffsets': subjectOffsets,
-                        'trigPoint': hashInfo['trigPoint'],
-                    })
-
-        return matches, hashCount, nonMatchingHashes
-
-    def save(self, fp=sys.stdout):
-        """
-        Save the database to a file.
-
-        @param fp: A file pointer.
-        """
-        self.params.save(fp)
-        state = {
-            'name': self.name,
-            'checksum': self.checksum,
-            'd': self.d,
-            'subjectCount': self.subjectCount,
-            '_subjectIndices': self._subjectIndices,
-            '_originalChecksum': self._originalChecksum,
-        }
-        dump(state, fp)
-        fp.write('\n')
-
-    @staticmethod
-    def restore(fp=sys.stdin):
-        """
-        Load a database backend from a file.
-
-        @param fp: A file pointer.
-        @return: An instance of L{Database}.
-        @raises ValueError: If a now non-existent landmark or trig point name
-            is found in the saved database backend file. Or if valid JSON
-            cannot be loaded from C{fp}.
-        """
-        params = Parameters.restore(fp)
-        state = loads(fp.readline()[:-1])
-        backend = Backend(state['name'], state['checksum'], params)
-
-        for attr in ('d', 'subjectCount', '_originalChecksum'):
-            setattr(backend, attr, state[attr])
-
-        # self._subjectIndices was originally a set, but is converted to a
-        # list when saving to JSON.  Restore it as a set.
-        backend._subjectIndices = set(state['_subjectIndices'])
-
-        return backend
-
-    def print_(self, fp=sys.stdout):
-        """
-        Print information about the database index.
-
-        @param fp: A file pointer to write to.
-        """
-        print('Name: %s' % self.name, file=fp)
-        print('Hash count: %d' % len(self.d), file=fp)
-        print('Checksum: %s' % self.checksum, file=fp)
-
-        print('Subjects (with offsets) by hash:', file=fp)
-        landmarkCount = defaultdict(int)
-        trigCount = defaultdict(int)
-        for hash_, subjects in sorted(self.d.items()):
-            print('  ', hash_, file=fp)
-            # The split on ':' corresponds to the use of ':' above in
-            # self.hash() to make a hash key.
-            landmarkHashkey, trigHashkey, distance = hash_.split(':')
-            landmarkCount[landmarkHashkey] += 1
-            trigCount[trigHashkey] += 1
-            for subjectIndex, offsets in sorted(subjects.items()):
-                print('    %s %r' % (subjectIndex, offsets), file=fp)
-
-        print('Landmark symbol counts:', file=fp)
-        for hash_, count in sorted(landmarkCount.items()):
-            print('  %s (%s): %d' % (
-                landmarkNameFromHashkey(hash_), hash_, count), file=fp)
-
-        print('Trig point symbol counts:', file=fp)
-        for hash_, count in sorted(trigCount.items()):
-            print('  %s (%s): %d' % (
-                trigNameFromHashkey(hash_), hash_, count), file=fp)
-
-    def emptyCopy(self):
-        """
-        Copy the current backend, with an empty index.
-
-        @return: A new L{light.database.Backend} instance with an empty
-            index.
-        """
-        return self.__class__(self.name, self._originalChecksum, self.params)
-
-
-class DatabaseSpecifier(object):
+class DatabaseSpecifier:
     """
     Helper class for creating or loading a database and populating it.
 
@@ -763,10 +115,12 @@ class DatabaseSpecifier(object):
         iPythonNotebook or programmatically).
     @param allowFromFile: If True, add the option that allows the user to
         specify a pre-existing database.
+    @param allowWamp: If True, add options that allow the user to specify a
+        WAMP-based distributed database.
     @raise ValueError: If the allow options do not permit creation or loading.
     """
     def __init__(self, allowCreation=True, allowPopulation=True,
-                 allowInMemory=True, allowFromFile=True):
+                 allowInMemory=True, allowFromFile=True, allowWamp=True):
         if not (allowCreation or allowFromFile or allowInMemory):
             raise ValueError('You must either allow database creation, '
                              'loading a database from a file, or passing an '
@@ -775,6 +129,7 @@ class DatabaseSpecifier(object):
         self._allowPopulation = allowPopulation
         self._allowInMemory = allowInMemory
         self._allowFromFile = allowFromFile
+        self._allowWamp = allowWamp
 
     def addArgsToParser(self, parser):
         """
@@ -787,6 +142,16 @@ class DatabaseSpecifier(object):
             parser.add_argument(
                 '--databaseFile',
                 help='The name of a file containing a saved database')
+
+        if self._allowWamp:
+            parser.add_argument(
+                '--debugWamp', action='store_true',
+                help='Enable WAMP debug output.')
+
+            parser.add_argument(
+                '--wampUrl', default=None,
+                help=('The WAMP router URL to connect to. E.g., %s' %
+                      DEFAULT_URL))
 
         if self._allowCreation:
             parser.add_argument(
@@ -867,9 +232,14 @@ class DatabaseSpecifier(object):
         @raise ValueError: If a database cannot be found or created.
         @return: A C{light.database.Database} instance.
         """
+        database = None
+
         if self._allowFromFile and args.databaseFile:
             with open(args.databaseFile) as fp:
                 database = Database.restore(fp)
+
+        elif self._allowWamp and args.wampUrl:
+            database = 3  # TODO FIXME
 
         elif self._allowCreation:
             landmarkClasses = (
@@ -890,7 +260,6 @@ class DatabaseSpecifier(object):
                                 minDistance=args.minDistance,
                                 distanceBase=args.distanceBase)
             database = Database(params)
-            SimpleConnector(database)
 
         if self._allowPopulation:
             for read in combineReads(args.databaseFasta,

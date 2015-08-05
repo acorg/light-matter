@@ -715,7 +715,7 @@ class TestJSONDictToAlignments(TestCase):
         lightDict = {
             'alignments': [
                 {
-                    'subjectIndex': 0,
+                    'subjectIndex': '0',
                     'matchScore': 1.0,
                     'hsps': [
                         {
@@ -732,7 +732,7 @@ class TestJSONDictToAlignments(TestCase):
                     ],
                 },
                 {
-                    'subjectIndex': 1,
+                    'subjectIndex': '1',
                     'matchScore': 1.0,
                     'hsps': [
                         {

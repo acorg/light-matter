@@ -20,8 +20,7 @@ if __name__ == '__main__':
     parser.add_argument(
         'sequence', help='The amino acid sequence to examine')
 
-    databaseSpecifier = DatabaseSpecifier(allowFromFile=False,
-                                          allowInMemory=False)
+    databaseSpecifier = DatabaseSpecifier(allowInMemory=False)
     databaseSpecifier.addArgsToParser(parser)
     args = parser.parse_args()
     database = databaseSpecifier.getDatabaseFromArgs(args)

@@ -8,7 +8,6 @@ from dark.reads import AARead
 from light.result import Result
 from light.parameters import Parameters
 from light.features import Landmark, TrigPoint
-from light.reads import ScannedRead
 from light.database import Database
 from light.landmarks import AlphaHelix, BetaStrand, AminoAcids as AminoAcidsLm
 from light.trig import Troughs, AminoAcids
@@ -22,29 +21,29 @@ class TestResult(TestCase):
         """
         A result with no matches added to it must have the expected attributes.
         """
-        read = ScannedRead(AARead('read', 'AGTARFSDDD'))
+        read = AARead('read', 'AGTARFSDDD')
         params = Parameters([], [])
         database = Database(params)
         hashCount = 0
-        result = Result(read, {}, hashCount,
+        result = Result(read, database, {}, hashCount,
                         significanceMethod='HashFraction',
                         scoreMethod='MinHashesScore',
-                        significanceFraction=0.1, database=database)
+                        significanceFraction=0.1)
         self.assertEqual({}, result.matches)
         self.assertEqual([], list(result.significantSubjects()))
-        self.assertIs(read, result.scannedQuery)
+        self.assertIs(read, result.query)
 
     def testUnknownSignificanceMethod(self):
         """
         The Result class must raise ValueError if passed an unknown
         significance method.
         """
-        read = ScannedRead(AARead('read', 'AGTARFSDDD'))
+        read = AARead('read', 'AGTARFSDDD')
         params = Parameters([], [])
         database = Database(params)
         database.addSubject(AARead('subject', 'AAA'))
         matches = {
-            0: [
+            '0': [
                 {
                     'landmark': Landmark('AlphaHelix', 'A', 0, 9),
                     'queryOffsets': [(0, 1)],
@@ -55,23 +54,23 @@ class TestResult(TestCase):
         }
         hashCount = 1
         error = "^Unknown significance method 'xxx'$"
-        self.assertRaisesRegex(ValueError, error, Result, read, matches,
-                               hashCount, significanceMethod='xxx',
+        self.assertRaisesRegex(ValueError, error, Result, read, database,
+                               matches, hashCount, significanceMethod='xxx',
                                scoreMethod='MinHashesScore',
-                               significanceFraction=0.1, database=database)
+                               significanceFraction=0.1)
 
     def testAddOneMatch(self):
         """
         Passing information in which one match is present should result in
         that information being stored in the result instance.
         """
-        read = ScannedRead(AARead('read', 'AGTARFSDDD'))
+        read = AARead('read', 'AGTARFSDDD')
         params = Parameters([], [])
         database = Database(params)
         database.addSubject(AARead('subject', 'AAA'))
         hashCount = 1
         matches = {
-            0: [
+            '0': [
                 {
                     'landmark': Landmark('AlphaHelix', 'A', 0, 9),
                     'queryOffsets': [(0, 1)],
@@ -80,10 +79,10 @@ class TestResult(TestCase):
                 },
             ],
         }
-        result = Result(read, matches, hashCount,
+        result = Result(read, database, matches, hashCount,
                         significanceMethod='HashFraction',
                         scoreMethod='MinHashesScore',
-                        significanceFraction=0.1, database=database)
+                        significanceFraction=0.1)
         self.assertEqual(matches, result.matches)
 
     def testNoSignificantMatches(self):
@@ -91,13 +90,13 @@ class TestResult(TestCase):
         No matches are significant if there are not enough distance deltas
         above the mean number of deltas.
         """
-        read = ScannedRead(AARead('read', 'AGTARFSDDD'))
+        read = AARead('read', 'AGTARFSDDD')
         params = Parameters([AlphaHelix], [AminoAcids])
         database = Database(params)
         database.addSubject(AARead('subject', 'ADDDADDDAWW'))
         hashCount = 1
         matches = {
-            0: [
+            '0': [
                 {
                     'landmark': Landmark('AlphaHelix', 'A', 1, 9),
                     'queryOffsets': [(0, 1)],  # These are fictitious.
@@ -106,10 +105,10 @@ class TestResult(TestCase):
                 },
             ],
         }
-        result = Result(read, matches, hashCount,
+        result = Result(read, database, matches, hashCount,
                         significanceMethod='HashFraction',
                         scoreMethod='MinHashesScore',
-                        significanceFraction=5, database=database)
+                        significanceFraction=5)
         self.assertEqual([], list(result.significantSubjects()))
 
     def testOneSignificantMatch(self):
@@ -117,13 +116,13 @@ class TestResult(TestCase):
         The index of a significant result must be set correctly, and its score
         (the maximum number of identical distances) must be too.
         """
-        read = ScannedRead(AARead('read', 'AGTARFSDDD'))
+        read = AARead('read', 'AGTARFSDDD')
         params = Parameters([AlphaHelix], [AminoAcids])
         database = Database(params)
         database.addSubject(AARead('subject', 'ADDDADDDAWWWW'))
         hashCount = 4
         matches = {
-            0: [
+            '0': [
                 {
                     'landmark': Landmark('AlphaHelix', 'A', 0, 9),
                     'queryOffsets': [(0, 1)],
@@ -145,19 +144,19 @@ class TestResult(TestCase):
             ],
         }
 
-        result = Result(read, matches, hashCount,
+        result = Result(read, database, matches, hashCount,
                         significanceMethod='HashFraction',
                         scoreMethod='MinHashesScore',
-                        significanceFraction=0.25, database=database)
-        self.assertEqual([0], list(result.significantSubjects()))
-        self.assertEqual(0.5, result.analysis[0]['bestScore'])
+                        significanceFraction=0.25)
+        self.assertEqual(['0'], list(result.significantSubjects()))
+        self.assertEqual(0.5, result.analysis['0']['bestScore'])
 
     def testTwoSignificantMatches(self):
         """
         Two significant results must be returned, when a read matches two
         different subjects, and their scores must be correct.
         """
-        read = ScannedRead(AARead('read', 'AGTARFSDDD'))
+        read = AARead('read', 'AGTARFSDDD')
         params = Parameters([AlphaHelix], [AminoAcids])
         database = Database(params)
         # Note that both subject added here have a hash count of 5 (the
@@ -168,7 +167,7 @@ class TestResult(TestCase):
         database.addSubject(AARead('subject1', 'ADDDADDDAWWWWW'))
         hashCount = 5
         matches = {
-            0: [
+            '0': [
                 {
                     'landmark': Landmark('AlphaHelix', 'A', 0, 9),
                     'queryOffsets': [(0, 1)],
@@ -189,7 +188,7 @@ class TestResult(TestCase):
                 },
             ],
 
-            1: [
+            '1': [
                 {
                     'landmark': Landmark('AlphaHelix', 'A', 0, 9),
                     'queryOffsets': [(0, 1)],
@@ -205,24 +204,24 @@ class TestResult(TestCase):
             ],
         }
 
-        result = Result(read, matches, hashCount,
+        result = Result(read, database, matches, hashCount,
                         significanceMethod='HashFraction',
                         scoreMethod='MinHashesScore',
-                        significanceFraction=0.3,
-                        database=database)
-        self.assertEqual([0, 1], sorted(list(result.significantSubjects())))
-        self.assertEqual(0.4, result.analysis[0]['bestScore'])
-        self.assertEqual(0.4, result.analysis[1]['bestScore'])
+                        significanceFraction=0.3)
+        self.assertEqual(['0', '1'],
+                         sorted(list(result.significantSubjects())))
+        self.assertEqual(0.4, result.analysis['0']['bestScore'])
+        self.assertEqual(0.4, result.analysis['1']['bestScore'])
 
     def testSaveEmpty(self):
         """
         If self.matches is empty, return an empty output.
         """
-        read = ScannedRead(AARead('read', 'AGTARFSDDD'))
+        read = AARead('read', 'AGTARFSDDD')
         params = Parameters([], [])
         database = Database(params)
-        result = Result(read, [], 0, 0, 'HashFraction', 'MinHashesScore',
-                        database=database)
+        result = Result(read, database, [], 0, 0, 'HashFraction',
+                        'MinHashesScore')
         fp = StringIO()
         result.save(fp=fp)
         result = loads(fp.getvalue())
@@ -238,12 +237,12 @@ class TestResult(TestCase):
         """
         The save function must return its (fp) argument.
         """
-        read = ScannedRead(AARead('id', 'A'))
+        read = AARead('id', 'A')
         params = Parameters([], [])
         database = Database(params)
-        result = Result(read, {}, 0, significanceMethod='HashFraction',
-                        scoreMethod='MinHashesScore',
-                        significanceFraction=0.1, database=database)
+        result = Result(read, database, {}, 0,
+                        significanceMethod='HashFraction',
+                        scoreMethod='MinHashesScore', significanceFraction=0.1)
         fp = StringIO()
         self.assertIs(fp, result.save(fp))
 
@@ -251,15 +250,14 @@ class TestResult(TestCase):
         """
         Save must write results out in the expected JSON format.
         """
-        read = ScannedRead(
-            AARead('id', 'FRRRFRRRFRFRFRFRRRFRRRF'))
+        read = AARead('id', 'FRRRFRRRFRFRFRFRRRFRRRF')
         params = Parameters([AlphaHelix], [])
         database = Database(params)
         database.addSubject(AARead('subject0', 'FRRRFRRRFRFRFRFRRRFRRRF'))
         database.addSubject(AARead('subject1', 'FRRRFRRRFRFRFRFRRRFRRRF'))
         hashCount = 1
         matches = {
-            0: [
+            '0': [
                 {
                     'landmark': Landmark('AlphaHelix', 'A', 0, 9),
                     'queryOffsets': [(0, 1)],
@@ -268,7 +266,7 @@ class TestResult(TestCase):
                 },
             ],
 
-            1: [
+            '1': [
                 {
                     'landmark': Landmark('AlphaHelix', 'A', 27, 13),
                     'queryOffsets': [(27, 1)],
@@ -277,10 +275,10 @@ class TestResult(TestCase):
                 },
             ],
         }
-        result = Result(read, matches, hashCount,
+        result = Result(read, database, matches, hashCount,
                         significanceMethod='HashFraction',
                         scoreMethod='MinHashesScore',
-                        significanceFraction=0.1, database=database)
+                        significanceFraction=0.1)
         fp = StringIO()
         result.save(fp=fp)
         result = loads(fp.getvalue())
@@ -288,7 +286,7 @@ class TestResult(TestCase):
             {
                 'alignments': [
                     {
-                        'subjectIndex': 0,
+                        'subjectIndex': '0',
                         'matchScore': 1.0,
                         'hsps': [
                             {
@@ -306,7 +304,7 @@ class TestResult(TestCase):
                         ],
                     },
                     {
-                        'subjectIndex': 1,
+                        'subjectIndex': '1',
                         'matchScore': 1.0,
                         'hsps': [
                             {
@@ -337,13 +335,13 @@ class TestResult(TestCase):
         greater than 21, so the value of 21 should be used. Note that 1.1
         is the default distanceBase.
         """
-        read = ScannedRead(AARead('read', 'AGTARFSDDD'))
+        read = AARead('read', 'AGTARFSDDD')
         params = Parameters([], [])
         database = Database(params)
         database.addSubject(AARead('subject', 'A' * 21))
         hashCount = 1
         matches = {
-            0: [
+            '0': [
                 {
                     'landmark': Landmark('AlphaHelix', 'A', 1, 9),
                     'queryOffsets': [(1, 1)],
@@ -352,12 +350,11 @@ class TestResult(TestCase):
                 },
             ],
         }
-        result = Result(read, matches, hashCount,
+        result = Result(read, database, matches, hashCount,
                         significanceMethod='HashFraction',
                         scoreMethod='MinHashesScore',
-                        significanceFraction=0.1, database=database,
-                        storeFullAnalysis=True)
-        self.assertEqual(21, result.analysis[0]['histogram'].nBins)
+                        significanceFraction=0.1, storeFullAnalysis=True)
+        self.assertEqual(21, result.analysis['0']['histogram'].nBins)
 
     def testRightNumberOfBucketsDefaultNonEven(self):
         """
@@ -367,13 +364,13 @@ class TestResult(TestCase):
         than 20, so the value of 20 should be used but result.py will adjust
         this to 21 to ensure that the number of bins is odd.
         """
-        read = ScannedRead(AARead('read', 'AGTARFSDDD'))
+        read = AARead('read', 'AGTARFSDDD')
         params = Parameters([], [])
         database = Database(params)
         database.addSubject(AARead('subject', 'A' * 20))
         hashCount = 1
         matches = {
-            0: [
+            '0': [
                 {
                     'landmark': Landmark('AlphaHelix', 'A', 1, 9),
                     'queryOffsets': [(1, 1)],
@@ -382,12 +379,11 @@ class TestResult(TestCase):
                 },
             ],
         }
-        result = Result(read, matches, hashCount,
+        result = Result(read, database, matches, hashCount,
                         significanceMethod='HashFraction',
                         scoreMethod='MinHashesScore',
-                        significanceFraction=0.1, database=database,
-                        storeFullAnalysis=True)
-        self.assertEqual(21, result.analysis[0]['histogram'].nBins)
+                        significanceFraction=0.1, storeFullAnalysis=True)
+        self.assertEqual(21, result.analysis['0']['histogram'].nBins)
 
     def testRightNumberOfBucketsWithNonDefaultDistanceBase(self):
         """
@@ -395,13 +391,13 @@ class TestResult(TestCase):
         sequence (out of subject and query) is 20, there should be 11 buckets
         (because int(log base 1.3 of 20) = 11).
         """
-        read = ScannedRead(AARead('read', 'AGTARFSDDD'))
+        read = AARead('read', 'AGTARFSDDD')
         params = Parameters([], [], distanceBase=1.3)
         database = Database(params)
         database.addSubject(AARead('subject', 'AAAAAAAAAAAAAAAAAAAA'))
         hashCount = 1
         matches = {
-            0: [
+            '0': [
                 {
                     'landmark': Landmark('AlphaHelix', 'A', 1, 9),
                     'queryOffsets': [(1, 1)],
@@ -410,12 +406,11 @@ class TestResult(TestCase):
                 },
             ],
         }
-        result = Result(read, matches, hashCount,
+        result = Result(read, database, matches, hashCount,
                         significanceMethod='HashFraction',
                         scoreMethod='MinHashesScore',
-                        significanceFraction=0.1, database=database,
-                        storeFullAnalysis=True)
-        self.assertEqual(11, result.analysis[0]['histogram'].nBins)
+                        significanceFraction=0.1, storeFullAnalysis=True)
+        self.assertEqual(11, result.analysis['0']['histogram'].nBins)
 
     def testPrintWithQueryWithNoMatchesDueToNoFinders(self):
         """
@@ -808,20 +803,20 @@ class TestResult(TestCase):
             error = ('Bin contains 14 deltas for a query/subject pair with a '
                      'minimum hash count of only 10.')
             self.assertIn(error, str(w[0].message))
-            self.assertEqual(1.0, result.analysis[0]['bestScore'])
+            self.assertEqual(1.0, result.analysis['0']['bestScore'])
 
     def testRightSignificanceAnalysisAlways(self):
         """
         StoreFullAnalysis must keep the right significanceAnalysis if the
         Always significanceMethod is used.
         """
-        read = ScannedRead(AARead('read', 'AGTARFSDDD'))
+        read = AARead('read', 'AGTARFSDDD')
         params = Parameters([], [])
         database = Database(params)
         database.addSubject(AARead('subject', 'A' * 21))
         hashCount = 1
         matches = {
-            0: [
+            '0': [
                 {
                     'landmark': Landmark('AlphaHelix', 'A', 1, 9),
                     'queryOffsets': [(1, 1)],
@@ -830,9 +825,9 @@ class TestResult(TestCase):
                 },
             ],
         }
-        result = Result(read, matches, hashCount,
+        result = Result(read, database, matches, hashCount,
                         significanceMethod='Always',
                         scoreMethod='MinHashesScore', significanceFraction=0.1,
-                        database=database, storeFullAnalysis=True)
-        significanceAnalysis = result.analysis[0]['significanceAnalysis']
+                        storeFullAnalysis=True)
+        significanceAnalysis = result.analysis['0']['significanceAnalysis']
         self.assertEqual('Always', significanceAnalysis['significanceMethod'])

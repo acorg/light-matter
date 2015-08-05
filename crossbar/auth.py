@@ -49,6 +49,10 @@ class AppSession(ApplicationSession):
             'role': 'find',
             'secret': 'secret2',
         },
+        'connector': {
+            'role': 'connector',
+            'secret': 'secret2',
+        },
     }
 
     @inlineCallbacks

@@ -9,27 +9,27 @@ class Checksum(object):
     """
 
     def __init__(self, initialValue=None):
-        self._checksum = 0x0 if initialValue is None else initialValue
+        self._value = 0x0 if initialValue is None else initialValue
 
     def __eq__(self, other):
-        return self._checksum == other._checksum
+        return self._value == other._value
 
     def update(self, strings):
         """
-        Update the checksum.
+        Update the checksum value.
 
         @param strings: An iterable of strings to update the current checksum
             with.
         @return: self, to allow for chained calls.
         """
         text = b'\0'.join(map(lambda s: s.encode('UTF-8'), strings)) + b'\0'
-        self._checksum = crc32(text, self._checksum) & 0xFFFFFFFF
+        self._value = crc32(text, self._value) & 0xFFFFFFFF
         return self
 
     def _get(self):
-        return self._checksum
+        return self._value
 
     def _set(self, value):
-        self._checksum = value
+        self._value = value
 
-    checksum = property(_get, _set)
+    value = property(_get, _set)

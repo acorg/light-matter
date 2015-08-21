@@ -1,14 +1,15 @@
+import logging
 import asyncio
-from autobahn.asyncio import wamp
+from autobahn.asyncio.wamp import ApplicationSession
 from autobahn.wamp.auth import compute_wcs
 
 from light.wamp import DEFAULT_REALM, DEFAULT_AUTH_METHOD
 
 
-class Component(wamp.ApplicationSession):
+class Component(ApplicationSession):
 
     def onConnect(self):
-        print('%r client connected to router' % self.NAME)
+        logging.info('%r client connected to router', self.NAME)
         self.join(DEFAULT_REALM, [DEFAULT_AUTH_METHOD], self.NAME)
 
     def onChallenge(self, challenge):
@@ -16,12 +17,14 @@ class Component(wamp.ApplicationSession):
             signature = compute_wcs(u'secret2'.encode('utf8'),
                                     challenge.extra['challenge'])
             return signature.decode('ascii')
-        raise ValueError('Cannot handle authmethod %r' % challenge.method)
+        raise ValueError('Unknown authentication method %r' % challenge.method)
 
     def onLeave(self, details):
-        print('Leaving.')
-        self.disconnect()
+        super().onLeave(details)
+        logging.info('%r client leaving: %s', self.NAME, details)
+        # self.disconnect()
 
     def onDisconnect(self):
-        print('Disconnecting.')
+        # super().onDisconnect()
+        logging.info('%r client disconnected', self.NAME)
         asyncio.get_event_loop().stop()

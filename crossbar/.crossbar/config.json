@@ -21,7 +21,7 @@
                             ]
                         },
                         {
-                            "name": "frontend",
+                            "name": "database",
                             "permissions": [
                                 {
                                     "uri": "*",

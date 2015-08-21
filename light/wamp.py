@@ -13,7 +13,7 @@ def addArgsToParser(parser):
 
     @param parser: An C{argparse.ArgumentParser} instance.
     """
-    parser.add_argument('--debugWamp', action='store_true',
+    parser.add_argument('--debugWamp', action='store_true', default=False,
                         help='Enable debug output.')
 
     parser.add_argument('--realm', default=DEFAULT_REALM,

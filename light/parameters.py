@@ -107,7 +107,7 @@ class Parameters(object):
             [f.SYMBOL for f in trigPointFinders] +
             list(map(str, (self.limitPerLandmark, self.maxDistance,
                            self.minDistance, self.distanceBase))))
-        return checksum.checksum
+        return checksum.value
 
     def save(self, fp=sys.stdout):
         """

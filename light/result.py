@@ -99,12 +99,13 @@ class Result(object):
                         delta = subjectOffsets[0] - queryOffsets[0]
                         if negateDeltas:
                             delta = -delta
-                        add(scale(delta, distanceBase), {
-                            'landmark': landmark,
-                            'queryOffsets': queryOffsets,
-                            'subjectOffsets': subjectOffsets,
-                            'trigPoint': trigPoint,
-                        })
+                        add(scale(delta, distanceBase),
+                            {
+                                'landmark': landmark,
+                                'queryOffsets': queryOffsets,
+                                'subjectOffsets': subjectOffsets,
+                                'trigPoint': trigPoint,
+                            })
 
             histogram.finalize()
 

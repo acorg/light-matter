@@ -1,9 +1,13 @@
 import sys
+import logging
+from io import StringIO
 from collections import defaultdict, OrderedDict
 try:
     from ujson import dump, loads
 except ImportError:
     from json import dump, loads
+
+from Bio.File import as_handle
 
 from light.subject import Subject, SubjectStore
 from light.distance import scale
@@ -19,31 +23,33 @@ class Backend:
     Maintain a collection of hashes for sequences (aka subjects) and provide
     for database index creation and search operations on them.
 
-    @param params: A C{Parameters} instance.
-    @param name: The C{str} name of this backend.
-    @param checksum: The C{int} initial checksum for the backend, or C{None}
-        if there is no initial value.
     @param subjectStore: A C{SubjectStore} instance, or C{None} if a
         C{SubjectStore} should be created.
+    @param filePrefix: Either a C{str} file name prefix to use as a default
+        when saving or C{None} if no default save file is needed.
     """
-    DEFAULT_NAME = 'backend'
 
-    def __init__(self, params, name=DEFAULT_NAME, checksum=None,
-                 subjectStore=None):
-        self.params = params
-        self.name = name
+    # Implementation note: There are various methods in this class that
+    # access self.params. But self.params is not put in place until the
+    # 'configure' method has been called. We could add a 'checkConfigured'
+    # method and call it on each function call if we wanted to be very
+    # conservative and to supply good error messages if that happens.
+    # Instead, we rely on the code that creates a Backend instance to
+    # initialize it before trying to use it. If they do not, an
+    # AttributeError will be raised on an attempted use of self.params
+    # below. Hopefully this comment will indicate what's going wrong.
+
+    DEFAULT_NAME = 'backend'
+    SAVE_SUFFIX = '.lmbe'
+
+    def __init__(self, subjectStore=None, filePrefix=None):
+        self._configured = False
         self._subjectStore = subjectStore or SubjectStore()
         for method in ('getIndexBySubject', 'getSubjectByIndex',
                        'getSubjects'):
             setattr(self, method, getattr(self._subjectStore, method))
 
-        # If no initial checksum value was given, initialize the checksum
-        # with the checksum from our parameters and our name.
-        if checksum is None:
-            self._checksum = Checksum(params.checksum).update([name])
-        else:
-            self._checksum = Checksum(checksum)
-
+        self._filePrefix = filePrefix
         self._totalCoveredResidues = 0
 
         # When you read the code in addSubject (below), it may look like
@@ -52,13 +58,81 @@ class Backend:
         # defaultdict as a normal dict.
         self.d = {}
 
+    def configure(self, params, suggestedName=None, suggestedChecksum=None):
+        """
+        Configure this backend.
+
+        @param params: A C{Parameters} instance.
+        @param suggestedName: The C{str} suggested name for this backend. If
+            the backend has already been configured (from a file restore) with
+            a different name, the suggested name is ignored.
+        @param suggestedChecksum: The C{int} suggested checksum for the
+            backend, or C{None} if there is no initial value.
+        @return: A 2-tuple consisting of the C{str} name of the backend and
+            its checksum. These will either be the suggested values or those
+            that were already in use (if the backend was already configured).
+        """
+        if self._configured:
+            # We're already configured, because we were created via
+            # 'restore' (or possibly this 'configure' method has been
+            # called again, but that shouldn't happen). Check that the
+            # passed parameters match what we already have in place.
+            if params.compare(self.params) is not None:
+                fp = StringIO()
+                self.params._print(fp)
+                original = fp.getvalue()
+                fp = StringIO()
+                params._print(fp)
+                new = fp.getvalue()
+                error = ('Already configured backend passed different '
+                         'parameters.\nOriginal parameters\n%s\nLater '
+                         'parameters\n%s' % (original, new))
+                logging.warning(error)
+
+            # There is no point checking the suggested name, as it's not an
+            # error to be passed a suggested name that's different from the
+            # one we're already using. This happens when a backend restores
+            # itself from a file. The name in use is returned to our caller.
+
+            if suggestedChecksum != self.checksum():
+                # Looks like we were called by a connector who doesn't have
+                # our checksum. Warn and ignore.
+                error = ('Already configured backend has checksum %s but '
+                         'later received checksum %s in a configure call.' %
+                         (self.checksum(), suggestedChecksum))
+                logging.warning(error)
+        else:
+            self.params = params
+            self.name = suggestedName or self.DEFAULT_NAME
+
+            if suggestedChecksum is None:
+                self._checksum = self.initialChecksum(params, self.name)
+            else:
+                self._checksum = Checksum(suggestedChecksum)
+
+            self._configured = True
+
+        return self.name, self.checksum()
+
+    @staticmethod
+    def initialChecksum(params, name):
+        """
+        Calculate an inital checksum for a backend.
+
+        @param params: A C{Parameters} instance.
+        @param name: The C{str} name of thd backend.
+        @return: An initialized C{Checksum} instance for the given parameters
+            and name.
+        """
+        return Checksum(params.checksum).update([name])
+
     def checksum(self):
         """
         Get the current checksum.
 
         @return: An C{int} checksum.
         """
-        return self._checksum.checksum
+        return self._checksum.value
 
     def subjectCount(self):
         """
@@ -189,14 +263,16 @@ class Backend:
             call addSubject on will assign an index.
         @return: A tuple of 1) a C{bool} to indicate whether the subject was
             already in the database, 2) the C{str} subject index, and 3) the
-            C{str} name of this backend.
+            hash count for the subject.
         """
         subject = Subject(subject.id, subject.sequence, 0, subject.quality)
         preExisting, subjectIndex = self._subjectStore.add(subject,
                                                            subjectIndex)
 
         if preExisting:
-            return True, subjectIndex, self.name
+            return (
+                True, subjectIndex,
+                self._subjectStore.getSubjectByIndex(subjectIndex).hashCount)
 
         scannedSubject = self.scan(subject)
         self._totalCoveredResidues += len(scannedSubject.coveredIndices())
@@ -220,7 +296,7 @@ class Backend:
 
         self._checksum.update((subject.id, subject.sequence))
 
-        return False, subjectIndex, self.name
+        return False, subjectIndex, subject.hashCount
 
     def find(self, read, significanceMethod, scoreMethod,
              significanceFraction, storeFullAnalysis):
@@ -239,7 +315,7 @@ class Backend:
             significant match with a database title.
         @param storeFullAnalysis: A C{bool}. If C{True} the intermediate
             significance analysis computed in the Result will be stored.
-        @return: A list of length three, containing
+        @return: A tuple of length three, containing
             1. Matches, a C{dict} keyed by subject index and whose values are
                as shown below.
             2. The number of hashes found in the read.
@@ -276,40 +352,80 @@ class Backend:
 
         return matches, hashCount, nonMatchingHashes
 
-    def save(self, fp=sys.stdout):
+    def shutdown(self, noSave, filePrefix):
+        """
+        Shut down the backend.
+
+        @param noSave: If C{True}, do not save the backend state.
+        @param filePrefix: When saving, use this C{str} as a file name prefix.
+        """
+        if not noSave:
+            self.save(filePrefix)
+
+    def save(self, fpOrFilePrefix=None):
         """
         Save the backend database to a file.
 
-        @param fp: A file pointer.
+        @param fpOrFilePrefix: A file pointer, or the C{str} prefix of a file
+            name, or C{None}. If a C{str}, self.SAVE_SUFFIX is appended to get
+            the full file name. If C{None}, self._filePrefix will be used as a
+            file prefix unless it is also C{None}.
+        @raises ValueError: If C{fpOrFilePrefix} and C{self._filePrefix} are
+            both C{None}
         """
-        self.params.save(fp)
-        self._subjectStore.save(fp)
+        if isinstance(fpOrFilePrefix, str):
+            saveFile = fpOrFilePrefix + self.SAVE_SUFFIX
+        elif fpOrFilePrefix is None:
+            if self._filePrefix is None:
+                raise ValueError('save must be given an argument (or the '
+                                 'database must have been restored from a '
+                                 'file).')
+            else:
+                saveFile = self._filePrefix + self.SAVE_SUFFIX
+        else:
+            saveFile = fpOrFilePrefix
+
         state = {
             'name': self.name,
             'checksum': self.checksum(),
             'd': self.d,
             '_totalCoveredResidues': self._totalCoveredResidues,
         }
-        dump(state, fp)
-        fp.write('\n')
+
+        with as_handle(saveFile, 'w') as fp:
+            self.params.save(fp)
+            self._subjectStore.save(fp)
+            dump(state, fp)
+            fp.write('\n')
 
     @classmethod
-    def restore(cls, fp=sys.stdin):
+    def restore(cls, fpOrFilePrefix):
         """
         Load a database backend from a file.
 
-        @param fp: A file pointer.
+        @param fpOrFilePrefix: A file pointer or the C{str} prefix of a file
+            name. If a C{str}, self.SAVE_SUFFIX is appended to get the full
+            file name.
         @return: An instance of L{Database}.
         @raises ValueError: If a now non-existent landmark or trig point name
             is found in the saved database backend file. Or if valid JSON
             cannot be loaded from C{fp}.
         """
-        params = Parameters.restore(fp)
-        subjectStore = SubjectStore.restore(fp)
+        if isinstance(fpOrFilePrefix, str):
+            saveFile = fpOrFilePrefix + cls.SAVE_SUFFIX
+            filePrefix = fpOrFilePrefix
+        else:
+            saveFile = fpOrFilePrefix
+            filePrefix = None
 
-        state = loads(fp.readline()[:-1])
-        new = cls(params, name=state['name'], checksum=state['checksum'],
-                  subjectStore=subjectStore)
+        with as_handle(saveFile) as fp:
+            params = Parameters.restore(fp)
+            subjectStore = SubjectStore.restore(fp)
+            state = loads(fp.readline()[:-1])
+
+        new = cls(subjectStore, filePrefix=filePrefix)
+        new.configure(params, suggestedName=state['name'],
+                      suggestedChecksum=state['checksum'])
 
         for attr in ('d', '_totalCoveredResidues'):
             setattr(new, attr, state[attr])

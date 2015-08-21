@@ -1,21 +1,24 @@
 import argparse
+import os
 import sys
-from warnings import warn
 try:
     from ujson import dump, loads
 except ImportError:
     from json import dump, loads
 
+from Bio.File import as_handle
+
 from dark.fasta import combineReads, FastaReads
 from dark.reads import AARead
 
-from light.connector import SimpleConnector
+from light.connector import SimpleConnector, WampServerConnector
+from light.backend import Backend
 from light.parameters import Parameters
 from light.landmarks import (
     findLandmarks, ALL_LANDMARK_CLASSES, DEFAULT_LANDMARK_CLASSES)
 from light.trig import (
     findTrigPoints, ALL_TRIG_CLASSES, DEFAULT_TRIG_CLASSES)
-from light.wamp import DEFAULT_URL
+from light.wamp import addArgsToParser as addWampArgsToParser
 
 
 class Database:
@@ -27,10 +30,17 @@ class Database:
     @param params: A C{Parameters} instance.
     @param connector: A C{ligh.SimpleConnector} instance (or other connector)
         for connecting to the database backend(s).
+    @param filePrefix: Either a C{str} file name prefix to use as a default
+        when saving or C{None} if no default save file is needed.
     """
-    def __init__(self, params, connector=None):
+
+    SAVE_SUFFIX = '.lmdb'
+
+    def __init__(self, params, connector=None, filePrefix=None):
         self.params = params
         self._connector = connector or SimpleConnector(params)
+        self._filePrefix = filePrefix
+
         # Most of our implementation comes directly from our connector.
         for method in ('addSubject', 'find', 'getIndexBySubject',
                        'getSubjectByIndex', 'getSubjects', 'hashCount',
@@ -38,41 +48,82 @@ class Database:
                        'checksum'):
             setattr(self, method, getattr(self._connector, method))
 
-    def save(self, fp=sys.stdout):
+    def shutdown(self, noSave, filePrefix):
+        """
+        Shut down the database.
+
+        @param noSave: If C{True}, do not save the database state.
+        @param filePrefix: When saving, use this C{str} as a file name prefix.
+        """
+        self._connector.shutdown(noSave, filePrefix)
+
+        if not noSave:
+            self.save(filePrefix)
+
+    def save(self, fpOrFilePrefix=None):
         """
         Save the database state to a file.
 
-        @param fp: A file pointer.
+        @param fpOrFilePrefix: A file pointer, or the C{str} prefix of a file
+            name, or C{None}. If a C{str}, self.SAVE_SUFFIX is appended to get
+            the full file name. If C{None}, self._filePrefix will be used as a
+            file prefix unless it is also C{None}.
+        @raises ValueError: If C{fpOrFilePrefix} and C{self._filePrefix} are
+            both C{None}
         """
-        self.params.save(fp)
+        if isinstance(fpOrFilePrefix, str):
+            saveFile = fpOrFilePrefix + self.SAVE_SUFFIX
+        elif fpOrFilePrefix is None:
+            if self._filePrefix is None:
+                raise ValueError('save must be given an argument (or the '
+                                 'database must have been restored from a '
+                                 'file).')
+            else:
+                saveFile = self._filePrefix + self.SAVE_SUFFIX
+        else:
+            saveFile = fpOrFilePrefix
 
         state = {
             '_connectorClassName': self._connector.__class__.__name__,
         }
-        dump(state, fp)
-        fp.write('\n')
-        self._connector.save(fp)
+
+        with as_handle(saveFile, 'w') as fp:
+            self.params.save(fp)
+            dump(state, fp)
+            fp.write('\n')
+
+        self._connector.save(fpOrFilePrefix)
 
     @classmethod
-    def restore(cls, fp=sys.stdin):
+    def restore(cls, fpOrFilePrefix):
         """
         Load a database from a file.
 
-        @param fp: A file pointer.
+        @param fpOrFilePrefix: A file pointer, or the C{str} prefix of a file
+            name, or C{None}. If a C{str}, self.SAVE_SUFFIX is appended to get
+            the full file name.
         @return: An instance of L{Database}.
         @raises ValueError: If a now non-existent connector class name is
             found in the saved database file.
         """
-        params = Parameters.restore(fp)
-        state = loads(fp.readline()[:-1])
+        if isinstance(fpOrFilePrefix, str):
+            saveFile = fpOrFilePrefix + cls.SAVE_SUFFIX
+            filePrefix = fpOrFilePrefix
+        else:
+            saveFile = fpOrFilePrefix
+            filePrefix = None
+
+        with as_handle(saveFile) as fp:
+            params = Parameters.restore(fp)
+            state = loads(fp.readline()[:-1])
 
         if state['_connectorClassName'] == SimpleConnector.__name__:
-            connector = SimpleConnector.restore(fp)
+            connector = SimpleConnector.restore(fpOrFilePrefix)
         else:
             raise ValueError('Unknown backend connector class %r.' %
                              state['_connectorClassName'])
 
-        new = cls(params, connector)
+        new = cls(params, connector, filePrefix=filePrefix)
 
         return new
 
@@ -99,7 +150,7 @@ class Database:
             print('Coverage: 0.00%', file=fp)
         print('Checksum: %d' % self.checksum(), file=fp)
 
-        return self._connector.print_(fp, printHashes)
+        self._connector.print_(fp, printHashes)
 
 
 class DatabaseSpecifier:
@@ -121,7 +172,7 @@ class DatabaseSpecifier:
     """
     def __init__(self, allowCreation=True, allowPopulation=True,
                  allowInMemory=True, allowFromFile=True, allowWamp=True):
-        if not (allowCreation or allowFromFile or allowInMemory):
+        if not (allowCreation or allowFromFile or allowInMemory or allowWamp):
             raise ValueError('You must either allow database creation, '
                              'loading a database from a file, or passing an '
                              'in-memory database.')
@@ -138,20 +189,23 @@ class DatabaseSpecifier:
 
         @param parser: An C{argparse.ArgumentParser} instance.
         """
-        if self._allowFromFile:
-            parser.add_argument(
-                '--databaseFile',
-                help='The name of a file containing a saved database')
+
+        parser.add_argument(
+            '--filePrefix',
+            help=('The prefix of the name of a file containing saved '
+                  'data. The suffix "%s" will be added to database '
+                  'save files, "%s" to connector save files, and '
+                  '"%s-N" to backend save files (where N is a numeric '
+                  'backend index).' % (Database.SAVE_SUFFIX,
+                                       SimpleConnector.SAVE_SUFFIX,
+                                       Backend.SAVE_SUFFIX)))
 
         if self._allowWamp:
             parser.add_argument(
-                '--debugWamp', action='store_true',
-                help='Enable WAMP debug output.')
+                '--wamp', action='store_true', default=False,
+                help='If True, use a WAMP connected distributed database.')
 
-            parser.add_argument(
-                '--wampUrl', default=None,
-                help=('The WAMP router URL to connect to. E.g., %s' %
-                      DEFAULT_URL))
+            addWampArgsToParser(parser)
 
         if self._allowCreation:
             parser.add_argument(
@@ -220,10 +274,10 @@ class DatabaseSpecifier:
         one from args.
 
         There is an order of preference in examining the arguments used to
-        specify a database: pre-existing in a file (via --databaseFile),
+        specify a database: pre-existing in a file (via --filePrefix),
         and then via the creation of a new database (many args). There are
         currently no checks to make sure the user isn't trying to do more
-        than one of these at the same time (e.g., using both --databaseFile
+        than one of these at the same time (e.g., using both --filePrefix
         and --defaultLandmarks), the one with the highest priority is silently
         acted on first.
 
@@ -232,16 +286,7 @@ class DatabaseSpecifier:
         @raise ValueError: If a database cannot be found or created.
         @return: A C{light.database.Database} instance.
         """
-        database = None
-
-        if self._allowFromFile and args.databaseFile:
-            with open(args.databaseFile) as fp:
-                database = Database.restore(fp)
-
-        elif self._allowWamp and args.wampUrl:
-            database = 3  # TODO FIXME
-
-        elif self._allowCreation:
+        def getParametersFromArgs(args):
             landmarkClasses = (
                 DEFAULT_LANDMARK_CLASSES if args.defaultLandmarks
                 else findLandmarks(args.landmarkFinderNames))
@@ -251,14 +296,31 @@ class DatabaseSpecifier:
                 else findTrigPoints(args.trigFinderNames))
 
             if len(landmarkClasses) + len(trigClasses) == 0:
-                warn("Creating a database with no landmark or trig point "
-                     "finders. Hope you know what you're doing!")
+                raise RuntimeError(
+                    'Not creating database as no landmark or trig point '
+                    'finders were specified. Use --landmark and/or --trig.')
 
-            params = Parameters(landmarkClasses, trigClasses,
-                                limitPerLandmark=args.limitPerLandmark,
-                                maxDistance=args.maxDistance,
-                                minDistance=args.minDistance,
-                                distanceBase=args.distanceBase)
+            return Parameters(landmarkClasses, trigClasses,
+                              limitPerLandmark=args.limitPerLandmark,
+                              maxDistance=args.maxDistance,
+                              minDistance=args.minDistance,
+                              distanceBase=args.distanceBase)
+
+        database = None
+
+        if self._allowFromFile and args.filePrefix:
+            saveFile = args.filePrefix + Database.SAVE_SUFFIX
+            if os.path.exists(saveFile):
+                database = Database.restore(saveFile)
+
+        elif self._allowWamp and args.wamp:
+            params = getParametersFromArgs(args)
+            # TODO: what args do we have to pass to the WampServerConnector?
+            connector = WampServerConnector(params)
+            database = Database(params, connector=connector)
+
+        elif self._allowCreation:
+            params = getParametersFromArgs()
             database = Database(params)
 
         if self._allowPopulation:
@@ -275,8 +337,7 @@ class DatabaseSpecifier:
             maxDistance=Parameters.DEFAULT_MAX_DISTANCE,
             minDistance=Parameters.DEFAULT_MIN_DISTANCE,
             distanceBase=Parameters.DEFAULT_DISTANCE_BASE,
-            database=None, databaseFile=None,
-            databaseFasta=None, subjects=None):
+            database=None, databaseFasta=None, subjects=None, filePrefix=None):
         """
         Use Python function keywords to build an argument parser that can
         used to find or create a database using getDatabaseFromArgs
@@ -296,11 +357,13 @@ class DatabaseSpecifier:
             is scaled to be its logarithm using this C{float} base. This
             reduces sensitivity to relatively small differences in distance.
         @param database: An instance of C{light.database.Database}.
-        @param databaseFile: The C{str} file name containing a database.
         @param databaseFasta: The name of a FASTA file containing subject
             sequences that should be added to the database.
         @param subjects: A C{dark.reads.Reads} instance containing amino
             acid subject sequences to add to the database.
+        @param filePrefix: The C{str} prefix of the name of a file containing
+            saved data. A suffix will be added to get the various file names
+            of the database hash index, the connector, the parameters, etc.
         @raise ValueError: If a database cannot be found or created.
         @return: A C{light.database.Database} instance.
         """
@@ -322,8 +385,8 @@ class DatabaseSpecifier:
                         database.addSubject(subject)
             return database
 
-        if databaseFile is not None:
-            commandLine.extend(['--databaseFile', databaseFile])
+        if filePrefix is not None:
+            commandLine.extend(['--filePrefix', filePrefix])
 
         if landmarkNames is not None:
             for landmarkName in landmarkNames:

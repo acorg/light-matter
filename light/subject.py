@@ -41,12 +41,12 @@ class SubjectStore:
         """
         Add a subject to our collection.
 
-        @param subject: a C{Subject} instance.
-        @param subjectIndex: an C{int} index to use for this subject. If
+        @param subject: A C{Subject} instance.
+        @param subjectIndex: A C{str} index to use for this subject. If
             C{None} an index should be chosen.
         @return: A 2-tuple (pre-existing, index) where 'pre-existing' is a
             C{bool} to indicate whether the subject was already present in the
-            store, and 'index' is the C{int} subject index of the added
+            store, and 'index' is the C{str} subject index of the added
             subject.
         """
         try:

@@ -621,14 +621,14 @@ class TestBackend(TestCase):
         self.assertEqual(
             {
                 'A2:P:10': {
-                    'landmark':
-                        Landmark(AlphaHelix.NAME, AlphaHelix.SYMBOL, 1, 9, 2),
+                    'landmark': Landmark(
+                        AlphaHelix.NAME, AlphaHelix.SYMBOL, 1, 9, 2),
                     'offsets': [[1, 11]],
                     'trigPoint': TrigPoint(Peaks.NAME, Peaks.SYMBOL, 11),
                 },
                 'A2:P:13': {
-                    'landmark':
-                        Landmark(AlphaHelix.NAME, AlphaHelix.SYMBOL, 1, 9, 2),
+                    'landmark': Landmark(
+                        AlphaHelix.NAME, AlphaHelix.SYMBOL, 1, 9, 2),
                     'offsets': [[1, 14]],
                     'trigPoint': TrigPoint(Peaks.NAME, Peaks.SYMBOL, 14),
                 }
@@ -734,7 +734,7 @@ class TestBackend(TestCase):
             'id',
             sequence,
         ])
-        self.assertEqual(expected.checksum, be.checksum())
+        self.assertEqual(expected.value, be.checksum())
 
     def testRestoreInvalidJSON(self):
         """

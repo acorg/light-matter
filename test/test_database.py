@@ -542,7 +542,7 @@ class TestDatabase(TestCase):
             Backend.DEFAULT_NAME,
         ])
         db = Database(params)
-        self.assertEqual(expected.checksum, db.checksum())
+        self.assertEqual(expected.value, db.checksum())
 
     def testChecksumAfterSubjectAdded(self):
         """
@@ -560,7 +560,7 @@ class TestDatabase(TestCase):
             'id',
             sequence,
         ])
-        self.assertEqual(expected.checksum, db.checksum())
+        self.assertEqual(expected.value, db.checksum())
 
     def testSaveRestoreWithNonDefaultParameters(self):
         """

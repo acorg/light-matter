@@ -39,10 +39,9 @@ class HashesString(object):
             hashes[read.id] = readHashes
 
         # Make a list of all unique hashes that occur.
-        totalHashesList = []
+        totalHashes = set()
         for read in hashes:
-            totalHashesList += list(hashes[read].keys())
-        totalHashes = set(totalHashesList)
+            totalHashes.update(hashes[read].keys())
 
         # Make a dictionary where the key is a hash and the value is a list of
         # the reads in which the hash occurs.

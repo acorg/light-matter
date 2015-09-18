@@ -12,8 +12,8 @@ if __name__ == '__main__':
         description=('For a set of given sequences, find all hashes and for '
                      'each sequence write out a string of 1 or 0 denoting '
                      'whether a hash is present in that sequence or not. '
-                     'Only include hashes if they occur in more at least a '
-                     'specified percentage of all given sequences.'))
+                     'Only include hashes if they occur in more than at least '
+                     'a specified percentage of all given sequences.'))
 
     parser.add_argument(
         '--fastaFile',

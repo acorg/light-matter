@@ -10,9 +10,9 @@ class HashesString(object):
         """
         A class to work with hashes.
         For a set of given sequences, find all hashes and for each sequence
-        write out a string of 1 or 0 denoting whether a hash is present in that
-        sequence or not. Only include hashes if they occur in more at least a
-        specified percentage of all given sequences.
+        make a string of 1 or 0 denoting whether a hash is present in that
+        sequence or not. Only include hashes if they occur in more than at '
+        least a specified percentage of all given sequences.
 
         @param sequences: A C{str} filename with a fasta file of sequences to
             be used or a C{dark.reads.Reads} object.
@@ -30,9 +30,8 @@ class HashesString(object):
 
         database = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
 
-        # Make a dictionary where the keys are the sequence ids
-        # and the value is an orderedDict of hashes as returned
-        # from getHashes().
+        # Make a dictionary where the keys are the sequence ids and the value
+        # is an orderedDict of hashes as returned from getHashes().
         hashes = {}
         for read in reads:
             scannedRead = database.scan(read)
@@ -46,7 +45,7 @@ class HashesString(object):
         totalHashes = set(totalHashesList)
 
         # Make a dictionary where the key is a hash and the value is a list of
-        # the viruses in which the hash occurs.
+        # the reads in which the hash occurs.
         byHashes = {}
         for hash_ in totalHashes:
             viruses = []
@@ -58,8 +57,8 @@ class HashesString(object):
                 viruses.append(readId)
             byHashes[hash_] = viruses
 
-        # Make a dictionary where the key is a virus and the value is a string
-        # of 1 and 0 denoting which hashes occur in which viruses.
+        # Make a dictionary where the key is a readId and the value is a string
+        # of 1 and 0 denoting which hashes occur in which read.
         co = cutoff * len(reads)
         self.hashString = {read.id: '' for read in reads}
 

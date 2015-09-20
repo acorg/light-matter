@@ -32,4 +32,4 @@ if __name__ == '__main__':
 
     hashesString = HashesString(args.fastaFile, args.cutoff, database=database)
 
-    hashesString.print_()
+    print(hashesString)

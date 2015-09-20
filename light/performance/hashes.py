@@ -69,9 +69,9 @@ class HashesString(object):
                     else:
                         self.hashString[virus] += '0'
 
-    def print_(self):
+    def __str__(self):
         """
         Print the string in self.hashString.
         """
-        for virus in self.hashString:
-            print('%s\t%s' % (virus, self.hashString[virus]))
+        return ('\n'.join('%s\t%s' % (virus, self.hashString[virus])
+                for virus in self.hashString))

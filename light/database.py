@@ -1,10 +1,15 @@
 import argparse
 import os
-import sys
+import asyncio
 try:
     from ujson import dump, loads
 except ImportError:
     from json import dump, loads
+
+import logging
+
+logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
+                    level=logging.INFO)
 
 from Bio.File import as_handle
 
@@ -19,6 +24,10 @@ from light.landmarks import (
 from light.trig import (
     findTrigPoints, ALL_TRIG_CLASSES, DEFAULT_TRIG_CLASSES)
 from light.wamp import addArgsToParser as addWampArgsToParser
+from light.string import MultilineString
+from light.autobahn.client import ClientComponent
+from light.autobahn.runner import ApplicationRunner
+from light.exceptions import WampDbOffline
 
 
 class Database:
@@ -38,26 +47,37 @@ class Database:
 
     def __init__(self, params, connector=None, filePrefix=None):
         self.params = params
-        self._connector = connector or SimpleConnector(params)
+        self._connector = connector or SimpleConnector(params,
+                                                       filePrefix=filePrefix)
         self._filePrefix = filePrefix
 
         # Most of our implementation comes directly from our connector.
         for method in ('addSubject', 'find', 'getIndexBySubject',
-                       'getSubjectByIndex', 'getSubjects', 'hashCount',
+                       'getSubjectByIndex', 'getSubjects', # 'hashCount',
                        'subjectCount', 'totalResidues', 'totalCoveredResidues',
                        'checksum'):
             setattr(self, method, getattr(self._connector, method))
 
-    def shutdown(self, noSave, filePrefix):
+    def hashCount(self):
+        """
+        """
+        result = self._connector.hashCount()
+        if asyncio.iscoroutine(result):
+            asyncio.ensure_future(result)
+            return 4
+        else:
+            return result
+
+    def shutdown(self, save, filePrefix):
         """
         Shut down the database.
 
-        @param noSave: If C{True}, do not save the database state.
+        @param save: If C{True}, save the database state.
         @param filePrefix: When saving, use this C{str} as a file name prefix.
         """
-        self._connector.shutdown(noSave, filePrefix)
+        self._connector.shutdown(save, filePrefix)
 
-        if not noSave:
+        if save:
             self.save(filePrefix)
 
     def save(self, fpOrFilePrefix=None):
@@ -117,40 +137,158 @@ class Database:
             params = Parameters.restore(fp)
             state = loads(fp.readline()[:-1])
 
-        if state['_connectorClassName'] == SimpleConnector.__name__:
+        connectorClassName = state['_connectorClassName']
+        if connectorClassName == SimpleConnector.__name__:
             connector = SimpleConnector.restore(fpOrFilePrefix)
+        elif connectorClassName == WampServerConnector.__name__:
+            connector = WampServerConnector.restore(fpOrFilePrefix)
         else:
             raise ValueError('Unknown backend connector class %r.' %
-                             state['_connectorClassName'])
+                             connectorClassName)
 
         new = cls(params, connector, filePrefix=filePrefix)
 
         return new
 
-    def print_(self, fp=sys.stdout, printHashes=False):
+    def print_(self, printHashes=False, margin=''):
         """
         Print information about the database.
 
-        @param fp: A file pointer to write to.
         @param printHashes: If C{True}, print all hashes and associated
             subjects.
-        @return: The value returned by the connector's print_ method.
+        @param margin: A C{str} that should be inserted at the start of each
+            line of output.
+        @return: A C{str} representation of the database.
         """
-        self.params.print_(fp)
-        print('Connector class: %s' % self._connector.__class__.__name__,
-              file=fp)
-        print('Subject count: %d' % self.subjectCount(), file=fp)
-        print('Hash count: %d' % self.hashCount(), file=fp)
-        totalResidues = self.totalResidues()
-        print('Total residues: %d' % totalResidues, file=fp)
-        if totalResidues:
-            print('Coverage: %.2f%%' % (
-                100.0 * self.totalCoveredResidues() / totalResidues), file=fp)
-        else:
-            print('Coverage: 0.00%', file=fp)
-        print('Checksum: %d' % self.checksum(), file=fp)
+        result = MultilineString(margin=margin)
+        append = result.append
 
-        self._connector.print_(fp, printHashes)
+        append('Parameters:')
+        append(self.params.print_(margin=margin + '  '), verbatim=True)
+
+        totalResidues = self.totalResidues()
+        result.extend([
+            'Connector class: %s' % self._connector.__class__.__name__,
+            'Subject count: %d' % self.subjectCount(),
+            'Hash count: %d' % self.hashCount(),
+            'Total residues: %d' % totalResidues,
+        ])
+
+        if totalResidues:
+            append('Coverage: %.2f%%' % (
+                100.0 * self.totalCoveredResidues() / totalResidues))
+        else:
+            append('Coverage: 0.00%')
+        append('Checksum: %d' % self.checksum())
+
+        append('Connector:')
+        append(self._connector.print_(printHashes=printHashes,
+                                      margin=margin + '  '),
+               verbatim=True)
+
+        return str(result)
+
+
+class WampDatabaseClient:
+    """
+    Provide an interface to a remote WAMP database.
+
+    The API we expose must be the same as that provided by a Database
+    instance. I.e., anyone using this class should be able to treat it
+    just like a regular Database.
+
+    @param params: A C{Parameters} instance.
+    @param component: A C{ligh.autobahn.ClientComponent} instance for
+        communicating with a remote WAMP-based database.
+    """
+    def __init__(self, params, component):
+        self._component = component
+        self.params = params
+
+    def close(self):
+        self._component.leave()
+
+    async def checksum(self):
+        """
+        Get the current checksum.
+
+        @return: An C{int} checksum.
+        """
+        return (await self._component.call('checksum'))
+
+    def print_(self, printHashes=False, margin=''):
+        """
+        Print information about the database.
+
+        @param printHashes: If C{True}, print all hashes and associated
+            subjects.
+        @param margin: A C{str} that should be inserted at the start of each
+            line of output.
+        @return: A C{str} representation of the database.
+        """
+        coro = self._component.call('print_', printHashes=printHashes,
+                                    margin=margin)
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(coro)
+
+    def subjectCount(self):
+        """
+        How many subjects are stored in this backend?
+
+        @return: An C{int} number of subjects.
+        """
+        coro = self._component.call('subjectCount')
+        loop = asyncio.get_event_loop()
+        subjectCount = loop.run_until_complete(coro)
+        return subjectCount
+
+    # @asyncio.coroutine
+    def hashCount(self):
+        """
+        How many hashes are in the backend database?
+
+        @return: An C{int} number of hashes.
+        """
+        print('IN hashcount.....................')
+        coro = self._component.call('hashCount')
+        loop = asyncio.get_event_loop()
+        hashCount = loop.run_until_complete(coro)
+        return hashCount
+
+    async def totalResidues(self):
+        """
+        How many AA residues are there in the subjects stored in this backend?
+
+        @return: An C{int} number of residues.
+        """
+        return (await self._component.call('totalResidues'))
+
+    async def totalCoveredResidues(self):
+        """
+        How many AA residues are covered by landmarks and trig points in the
+        subjects stored in this backend?
+
+        @return: The C{int} number of residues that are covered.
+        """
+        return (await self._component.call('totalCoveredResidues'))
+
+    @asyncio.coroutine
+    def addSubject(self, subject, subjectIndex=None):
+        """
+        Examine a sequence for features and add its (landmark, trig point)
+        pairs to the search dictionary.
+
+        @param subject: A C{dark.read.AARead} instance. The subject sequence
+            is passed as a read instance even though in many cases it will not
+            be an actual read from a sequencing run.
+        @param subjectIndex: A C{str} representing the index of the subject as
+            known by the database front end. If C{None} the SubjectStore we
+            call addSubject on will assign an index.
+        @return: A tuple of 1) a C{bool} to indicate whether the subject was
+            already in the database, 2) the C{str} subject index, and 3) the
+            hash count for the subject.
+        """
+        pass
 
 
 class DatabaseSpecifier:
@@ -164,22 +302,19 @@ class DatabaseSpecifier:
     @param allowInMemory: If True, add the option that allows the user to
         pass an in-memory database (e.g., as constructed in ipython or
         iPythonNotebook or programmatically).
-    @param allowFromFile: If True, add the option that allows the user to
-        specify a pre-existing database.
     @param allowWamp: If True, add options that allow the user to specify a
         WAMP-based distributed database.
     @raise ValueError: If the allow options do not permit creation or loading.
     """
     def __init__(self, allowCreation=True, allowPopulation=True,
-                 allowInMemory=True, allowFromFile=True, allowWamp=True):
-        if not (allowCreation or allowFromFile or allowInMemory or allowWamp):
+                 allowInMemory=True, allowWamp=True):
+        if not (allowCreation or allowInMemory or allowWamp):
             raise ValueError('You must either allow database creation, '
                              'loading a database from a file, or passing an '
                              'in-memory database.')
         self._allowCreation = allowCreation
         self._allowPopulation = allowPopulation
         self._allowInMemory = allowInMemory
-        self._allowFromFile = allowFromFile
         self._allowWamp = allowWamp
 
     def addArgsToParser(self, parser):
@@ -202,8 +337,13 @@ class DatabaseSpecifier:
 
         if self._allowWamp:
             parser.add_argument(
-                '--wamp', action='store_true', default=False,
-                help='If True, use a WAMP connected distributed database.')
+                '--wampClient', action='store_true', default=False,
+                help=('If True, use a database that is actually just a client '
+                      'of a remote WAMP distributed database.'))
+
+            parser.add_argument(
+                '--wampServer', action='store_true', default=False,
+                help='If True, serve a WAMP-connected distributed database.')
 
             addWampArgsToParser(parser)
 
@@ -276,9 +416,9 @@ class DatabaseSpecifier:
         There is an order of preference in examining the arguments used to
         specify a database: pre-existing in a file (via --filePrefix),
         and then via the creation of a new database (many args). There are
-        currently no checks to make sure the user isn't trying to do more
-        than one of these at the same time (e.g., using both --filePrefix
-        and --defaultLandmarks), the one with the highest priority is silently
+        currently no checks to make sure the user isn't trying to do
+        conflicting things, such as restoring from a file and also specifying
+        landmark finders, the one with the highest priority is silently
         acted on first.
 
         @param args: Command line arguments as returned by the C{argparse}
@@ -306,22 +446,94 @@ class DatabaseSpecifier:
                               minDistance=args.minDistance,
                               distanceBase=args.distanceBase)
 
+        def getWampClientDatabase():
+            """
+            Get a client to talk to a remote WAMP database.
+
+            @return: An instance of C{light.database.WampDatabaseClient}, or
+                C{None} if no WAMP database can be found.
+            """
+            loop = asyncio.get_event_loop()
+            future = asyncio.Future()
+            runner = ApplicationRunner(args.wampUrl, args.realm,
+                                       extra=dict(future=future))
+            try:
+                # This will raise if we fail to connect to the WAMP router.
+                runner.run(ClientComponent)
+            except ConnectionRefusedError:
+                pass
+            else:
+                try:
+                    # This will raise if there is no 'parameters' method
+                    # registered with the router. That indicates that no
+                    # WAMP database is connected to the router. (The
+                    # 'parameters' method is the first thing called by a
+                    # light.autobahn.client.ClientComponent instance.)
+                    database = loop.run_until_complete(future)
+                except WampDbOffline:
+                    pass
+                else:
+                    return database
+
         database = None
+        filePrefix = args.filePrefix
 
-        if self._allowFromFile and args.filePrefix:
-            saveFile = args.filePrefix + Database.SAVE_SUFFIX
-            if os.path.exists(saveFile):
-                database = Database.restore(saveFile)
+        if filePrefix:
+            # Check to see which save files exist so we know if a restore
+            # is possible, and what kind of database & connector were
+            # involved.
+            exists = os.path.exists
+            dbSaveFile = filePrefix + Database.SAVE_SUFFIX
+            scSaveFile = filePrefix + SimpleConnector.SAVE_SUFFIX
+            wcSaveFile = filePrefix + WampServerConnector.SAVE_SUFFIX
+            beSaveFile = filePrefix + Backend.SAVE_SUFFIX
+            if exists(dbSaveFile):
+                if exists(scSaveFile):
+                    if exists(beSaveFile):
+                        database = Database.restore(filePrefix)
+                    else:
+                        raise RuntimeError(
+                            'A database save file (%s) and simple connector '
+                            'save file (%s) are both present, but no backend '
+                            'save file (%s) exists!' %
+                            (dbSaveFile, scSaveFile, beSaveFile))
+                elif exists(wcSaveFile):
+                    # We do not have to check for backend save files in the
+                    # case of a WAMP database, as these may be on another
+                    # machine.
+                    database = Database.restore(filePrefix)
+                else:
+                    raise RuntimeError(
+                        'A database save file (%s) is present, but no simple '
+                        'connector save file (%s) or WAMP connector save file '
+                        '(%s) exists!' % (dbSaveFile, scSaveFile, wcSaveFile))
 
-        elif self._allowWamp and args.wamp:
-            params = getParametersFromArgs(args)
-            # TODO: what args do we have to pass to the WampServerConnector?
-            connector = WampServerConnector(params)
-            database = Database(params, connector=connector)
+        if database is None:
+            if self._allowWamp:
+                if args.wampServer:
+                    params = getParametersFromArgs(args)
+                    connector = WampServerConnector(params,
+                                                    filePrefix=filePrefix)
+                    database = Database(params, connector=connector,
+                                        filePrefix=filePrefix)
+                elif args.wampClient:
+                    database = getWampClientDatabase()
 
-        elif self._allowCreation:
-            params = getParametersFromArgs()
-            database = Database(params)
+            elif self._allowCreation:
+                # A new in-memory database, with a simple connector and a
+                # local backend.
+                params = getParametersFromArgs()
+                database = Database(params, filePrefix=filePrefix)
+
+        if database is None and self._allowWamp:
+            # Last try: guess that they might be wanting to talk to a WAMP
+            # database, even though --wampClient isn't specified.
+            database = getWampClientDatabase()
+
+        if database is None:
+            raise RuntimeError(
+                'Not enough information given to specify a database, and no '
+                'remote WAMP database could be found.')
 
         if self._allowPopulation:
             for read in combineReads(args.databaseFasta,

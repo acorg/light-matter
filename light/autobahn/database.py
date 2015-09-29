@@ -1,3 +1,4 @@
+from io import StringIO
 import logging
 
 logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
@@ -14,6 +15,7 @@ class DatabaseComponent(Component):
 
     @asyncio.coroutine
     def onJoin(self, details):
+        print('joined.')
         self._database = self.config.extra['database']
         # We will talk to our database's connector directly to add/remove
         # backends. That way the database doesn't need to know anything
@@ -36,7 +38,8 @@ class DatabaseComponent(Component):
                 yield from self._connector.addBackend(sessionId)
 
         # Subscribe to events for clients joining the router.
-        yield from self.subscribe(clientJoin, 'wamp.session.on_join')
+        self._joinSubscription = yield from self.subscribe(
+            clientJoin, 'wamp.session.on_join')
         logging.info('Subscribed to wamp.session.on_join')
 
         def clientLeave(sessionId):
@@ -48,7 +51,8 @@ class DatabaseComponent(Component):
             self._connector.removeBackend(sessionId)
 
         # Subscribe to events for clients leaving the router.
-        yield from self.subscribe(clientLeave, 'wamp.session.on_leave')
+        self._leaveSubscription = yield from self.subscribe(
+            clientLeave, 'wamp.session.on_leave')
         logging.info('Subscribed to wamp.session.on_leave')
 
         # Look for existing backend sessions and tell the connector about
@@ -61,21 +65,51 @@ class DatabaseComponent(Component):
                 logging.info('Found existing backend session %s', sessionId)
                 yield from self._connector.addBackend(sessionId)
 
-        # @asyncio.coroutine
-        def shutdown(noSave, filePrefix):
+        @asyncio.coroutine
+        def shutdown(save, filePrefix):
+            """
+            Shut down the database, possibly saving state to a file.
+
+            @param save: A C{bool}, if C{True} the database state will be
+                saved to a file whose name starts with C{filePrefix}.
+            @param filePrefix: A C{str} file name prefix to use if C{save} is
+                C{True}.
+            """
             logging.info('Shutdown received')
-            self._database.shutdown(noSave, filePrefix)
-            # self.leave()
-            asyncio.get_event_loop().call_soon(lambda: self.leave('goodbye!'))
+            # Unsubscribe from events for clients joining/leaving the
+            # router. This shouldn't be needed, but due to a small bug in
+            # the WAMP protocol implementation an exception is raised when
+            # a Leave event (for ourselves) arrives after we call leave().
+            # See https://github.com/tavendo/AutobahnPython/issues/459
+            yield from self._leaveSubscription.unsubscribe()
+            yield from self._joinSubscription.unsubscribe()
+
+            self._database.shutdown(save, filePrefix)
+            # Arrange to call self.leave in 0.1s time. Using self.leave
+            # directly here or using call_soon causes the response not to
+            # make it back to the WAMP client that called our shutdown
+            # method. So we allow a little time for things to settle down.
+            asyncio.get_event_loop().call_later(0.1, self.leave)
 
         yield from self.register(shutdown, 'shutdown')
         logging.info('Registered shutdown method.')
+
+        def parameters():
+            """
+            Provide our database's parameters.
+
+            @return: A C{str} representation of our parameters.
+            """
+            return self._database.params.save(StringIO()).getvalue()
+
+        yield from self.register(parameters, 'parameters')
+        logging.info('Registered parameters method.')
 
         # Most of our implementation comes directly from our database (which
         # has a WAMP connector that talks to WAMP backends).
         for method in ('addSubject', 'find', 'getIndexBySubject',
                        'getSubjectByIndex', 'getSubjects', 'subjectCount',
                        'hashCount', 'totalResidues', 'totalCoveredResidues',
-                       'checksum'):
+                       'checksum', 'print_'):
             yield from self.register(getattr(self._database, method), method)
             logging.info('Registered %s method.', method)

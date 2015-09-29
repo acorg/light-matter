@@ -1,4 +1,3 @@
-import sys
 from collections import Counter
 import numpy as np
 
@@ -14,6 +13,7 @@ from dark.fasta import FastaReads
 from light.distance import scale
 from light.database import DatabaseSpecifier
 from light.backend import Backend
+from light.string import MultilineString
 
 
 class ClusterAnalysis(object):
@@ -127,11 +127,14 @@ class AffinityPropagationAnalysis(ClusterAnalysis):
                                                 self.clusterLabels)
         return affinityPropagation
 
-    def print_(self, fp=sys.stdout):
+    def print_(self, margin=''):
         """
         Print details of the clustering.
 
-        @param fp: A file pointer to write to.
+        @param margin: A C{str} that should be inserted at the start of each
+            line of output.
+        @return: A C{str} representation of the statistical measures from
+            running the affinity propagation clustering.
         """
         try:
             self.clusterLabels
@@ -139,27 +142,30 @@ class AffinityPropagationAnalysis(ClusterAnalysis):
             # Looks like clustering has not been run. Run it.
             self.cluster()
 
+        result = MultilineString(margin=margin)
+        append = result.append
+
         trueLabels, clusterLabels = self.trueLabels, self.clusterLabels
 
-        print('Estimated number of clusters: %d' % self.nClusters, file=fp)
+        append('Estimated number of clusters: %d' % self.nClusters)
 
-        print('Homogeneity: %0.3f' % (
-            homogeneity_score(trueLabels, clusterLabels)), file=fp)
+        append('Homogeneity: %0.3f' % (
+            homogeneity_score(trueLabels, clusterLabels)))
 
-        print('Completeness: %0.3f' % (
-            completeness_score(trueLabels, clusterLabels)), file=fp)
+        append('Completeness: %0.3f' % (
+            completeness_score(trueLabels, clusterLabels)))
 
-        print('V-measure: %0.3f' % (
-            v_measure_score(trueLabels, clusterLabels)), file=fp)
+        append('V-measure: %0.3f' % (
+            v_measure_score(trueLabels, clusterLabels)))
 
-        print('Adjusted Rand Index: %0.3f' % (
-            adjusted_rand_score(trueLabels, clusterLabels)), file=fp)
+        append('Adjusted Rand Index: %0.3f' % (
+            adjusted_rand_score(trueLabels, clusterLabels)))
 
-        print('Adjusted Mutual Information: %0.3f' % (
-            adjusted_mutual_info_score(trueLabels, clusterLabels)), file=fp)
+        append('Adjusted Mutual Information: %0.3f' % (
+            adjusted_mutual_info_score(trueLabels, clusterLabels)))
 
-        print('Silhouette Coefficient: %0.3f' % silhouette_score(
-            self.affinity, clusterLabels, metric='sqeuclidean'), file=fp)
+        append('Silhouette Coefficient: %0.3f' % silhouette_score(
+            self.affinity, clusterLabels, metric='sqeuclidean'))
 
 
 class KMeansAnalysis(ClusterAnalysis):
@@ -180,11 +186,14 @@ class KMeansAnalysis(ClusterAnalysis):
                                                 self.clusterLabels)
         return self.kMeans
 
-    def print_(self, fp=sys.stdout):
+    def print_(self, margin=''):
         """
         Print details of the clustering.
 
-        @param fp: A file pointer to write to.
+        @param margin: A C{str} that should be inserted at the start of each
+            line of output.
+        @return: A C{str} representation of the statistical measures from
+            running the k-means clustering.
         """
         try:
             trueLabels, clusterLabels = self.trueLabels, self.clusterLabels
@@ -193,21 +202,24 @@ class KMeansAnalysis(ClusterAnalysis):
             # seeing as we don't want to silently use a default value of k.
             raise RuntimeError('Did you forget to run cluster()?')
 
-        print('Homogeneity: %0.3f' % (
-            homogeneity_score(trueLabels, clusterLabels)), file=fp)
+        result = MultilineString()
+        append = result.append
 
-        print('Completeness: %0.3f' % (
-            completeness_score(trueLabels, clusterLabels)), file=fp)
+        append('Homogeneity: %0.3f' % (
+            homogeneity_score(trueLabels, clusterLabels)))
 
-        print('V-measure: %0.3f' % (
-            v_measure_score(trueLabels, clusterLabels)), file=fp)
+        append('Completeness: %0.3f' % (
+            completeness_score(trueLabels, clusterLabels)))
 
-        print('Adjusted Rand Index: %0.3f' % (
-            adjusted_rand_score(trueLabels, clusterLabels)), file=fp)
+        append('V-measure: %0.3f' % (
+            v_measure_score(trueLabels, clusterLabels)))
 
-        print('Adjusted Mutual Information: %0.3f' % (
-            adjusted_mutual_info_score(trueLabels, clusterLabels)), file=fp)
+        append('Adjusted Rand Index: %0.3f' % (
+            adjusted_rand_score(trueLabels, clusterLabels)))
 
-        print('Silhouette Coefficient: %0.3f' % silhouette_score(
+        append('Adjusted Mutual Information: %0.3f' % (
+            adjusted_mutual_info_score(trueLabels, clusterLabels)))
+
+        append('Silhouette Coefficient: %0.3f' % silhouette_score(
             self.affinity, clusterLabels, metric='sqeuclidean',
-            sample_size=300), file=fp)
+            sample_size=300))

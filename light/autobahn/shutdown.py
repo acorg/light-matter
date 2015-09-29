@@ -23,7 +23,7 @@ class ShutdownComponent(Component):
         try:
             logging.info('Calling shutdown')
             yield from self.call('shutdown',
-                                 self.config.extra['noSave'],
+                                 self.config.extra['save'],
                                  self.config.extra['filePrefix'])
             logging.info('Called shutdown')
         except ApplicationError as e:

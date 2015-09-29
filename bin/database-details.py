@@ -24,7 +24,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     database = databaseSpecifier.getDatabaseFromArgs(args)
 
-    database.print_(printHashes=args.printHashes)
+    print(database.print_(printHashes=args.printHashes))
 
     # Write subjects to file.
     if args.printSubjects:

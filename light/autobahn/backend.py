@@ -50,30 +50,30 @@ class BackendComponent(Component):
             """
             fp = StringIO(paramsStr)
             params = Parameters.restore(fp)
-            name, checksum = self._backend.configure(params, suggestedName,
-                                                     suggestedChecksum)
+            name, checksum, subjectCount = self._backend.configure(
+                params, suggestedName, suggestedChecksum)
 
             if not self._ApiConfigured:
                 self._ApiConfigured = True
                 yield from self.registerAPIMethods()
 
-            return name, checksum
+            return name, checksum, subjectCount
 
         # Register our configure command.
         yield from self.register(configure, 'configure-%s' % self._sessionId)
         logging.info('Registered configure method.')
 
         # Register our shutdown command.
-        def shutdown(noSave, filePrefix):
+        def shutdown(save, filePrefix):
             """
             Shut down the backend.
 
-            @param noSave: If C{True}, do not save the backend state.
+            @param save: If C{True}, save the backend state.
             @param filePrefix: When saving, use this C{str} as a file name
                 prefix.
             """
             logging.info('Shutdown called.')
-            self._backend.shutdown(noSave, filePrefix)
+            self._backend.shutdown(save, filePrefix)
             self.leave('goodbye!')
 
         yield from self.register(shutdown, 'shutdown-%s' % self._sessionId)

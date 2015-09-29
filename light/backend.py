@@ -1,4 +1,3 @@
-import sys
 import logging
 from io import StringIO
 from collections import defaultdict, OrderedDict
@@ -16,6 +15,7 @@ from light.parameters import Parameters
 from light.reads import ScannedRead
 from light.landmarks import landmarkNameFromHashkey
 from light.trig import trigNameFromHashkey
+from light.string import MultilineString
 
 
 class Backend:
@@ -73,10 +73,10 @@ class Backend:
             that were already in use (if the backend was already configured).
         """
         if self._configured:
-            # We're already configured, because we were created via
-            # 'restore' (or possibly this 'configure' method has been
-            # called again, but that shouldn't happen). Check that the
-            # passed parameters match what we already have in place.
+            # We're already configured, possibly because we were created
+            # via 'restore' or possibly because the WAMP connector has been
+            # restarted. Check that the passed parameters match what we
+            # already have in place.
             if params.compare(self.params) is not None:
                 fp = StringIO()
                 self.params._print(fp)
@@ -92,15 +92,13 @@ class Backend:
             # There is no point checking the suggested name, as it's not an
             # error to be passed a suggested name that's different from the
             # one we're already using. This happens when a backend restores
-            # itself from a file. The name in use is returned to our caller.
+            # itself from a file (which results in a call to configure) and
+            # then reconnects to the WAMP server. The WAMP server will make
+            # up a new suggested name and checksum because it cannot
+            # recognize a previously connected backend just from the
+            # ephemeral session id it receives when a connection is made.
 
-            if suggestedChecksum != self.checksum():
-                # Looks like we were called by a connector who doesn't have
-                # our checksum. Warn and ignore.
-                error = ('Already configured backend has checksum %s but '
-                         'later received checksum %s in a configure call.' %
-                         (self.checksum(), suggestedChecksum))
-                logging.warning(error)
+            logging.debug('configure called again, with correct parameters')
         else:
             self.params = params
             self.name = suggestedName or self.DEFAULT_NAME
@@ -112,7 +110,7 @@ class Backend:
 
             self._configured = True
 
-        return self.name, self.checksum()
+        return self.name, self.checksum(), self.subjectCount()
 
     @staticmethod
     def initialChecksum(params, name):
@@ -352,14 +350,14 @@ class Backend:
 
         return matches, hashCount, nonMatchingHashes
 
-    def shutdown(self, noSave, filePrefix):
+    def shutdown(self, save, filePrefix):
         """
         Shut down the backend.
 
-        @param noSave: If C{True}, do not save the backend state.
+        @param save: If C{True}, save the backend state.
         @param filePrefix: When saving, use this C{str} as a file name prefix.
         """
-        if not noSave:
+        if save:
             self.save(filePrefix)
 
     def save(self, fpOrFilePrefix=None):
@@ -432,35 +430,55 @@ class Backend:
 
         return new
 
-    def print_(self, fp=sys.stdout):
+    def print_(self, margin=''):
         """
         Print information about the database index.
 
-        @param fp: A file pointer to write to.
+        @param margin: A C{str} that should be inserted at the start of each
+            line of output.
+        @return: A C{str} representation of the parameters.
         """
-        print('Name: %s' % self.name, file=fp)
-        print('Hash count: %d' % len(self.d), file=fp)
-        print('Checksum: %s' % self.checksum(), file=fp)
+        result = MultilineString(margin=margin)
+        append = result.append
+        indent = result.indent
+        outdent = result.outdent
 
-        print('Subjects (with offsets) by hash:', file=fp)
+        result.extend([
+            'Name: %s' % self.name,
+            'Hash count: %d' % len(self.d),
+            'Checksum: %s' % self.checksum(),
+        ])
+
+        append('Subjects (with offsets) by hash:')
+        indent()
         landmarkCount = defaultdict(int)
         trigCount = defaultdict(int)
         for hash_, subjects in sorted(self.d.items()):
-            print('  ', hash_, file=fp)
+            append(hash_)
             # The split on ':' corresponds to the use of ':' above in
             # self.hash() to make a hash key.
             landmarkHashkey, trigHashkey, distance = hash_.split(':')
             landmarkCount[landmarkHashkey] += 1
             trigCount[trigHashkey] += 1
+            indent()
             for subjectIndex, offsets in sorted(subjects.items()):
-                print('    %s %r' % (subjectIndex, offsets), file=fp)
+                append('%s %r' % (subjectIndex, offsets))
+            outdent()
 
-        print('Landmark symbol counts:', file=fp)
+        outdent()
+        append('Landmark symbol counts:')
+        indent()
+
         for hash_, count in sorted(landmarkCount.items()):
-            print('  %s (%s): %d' % (
-                landmarkNameFromHashkey(hash_), hash_, count), file=fp)
+            append('%s (%s): %d' % (
+                landmarkNameFromHashkey(hash_), hash_, count))
 
-        print('Trig point symbol counts:', file=fp)
+        outdent()
+        append('Trig point symbol counts:')
+        indent()
+
         for hash_, count in sorted(trigCount.items()):
-            print('  %s (%s): %d' % (
-                trigNameFromHashkey(hash_), hash_, count), file=fp)
+            append('%s (%s): %d' % (
+                trigNameFromHashkey(hash_), hash_, count))
+
+        return str(result)

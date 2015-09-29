@@ -13,3 +13,4 @@ ujson==1.33
 mysql-connector-python==2.0.3
 scikit-learn==0.16.1
 pyOpenSSL==0.15.1
+autobahn==0.10.9

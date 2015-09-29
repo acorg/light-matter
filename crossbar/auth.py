@@ -27,7 +27,7 @@ from autobahn.wamp.exception import ApplicationError
 
 class AppSession(ApplicationSession):
 
-    # Note that the realm CANNOT be changed unless you make corresponding
+    # Note that the realm name CANNOT be changed unless you make corresponding
     # changes elsewhere. See the explanation in README.md
     REALM = 'light-matter'
 
@@ -43,6 +43,10 @@ class AppSession(ApplicationSession):
         },
         'shutdown': {
             'role': 'shutdown',
+            'secret': 'secret2',
+        },
+        'client': {
+            'role': 'client',
             'secret': 'secret2',
         },
         'find': {

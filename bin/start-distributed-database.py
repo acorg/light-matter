@@ -12,11 +12,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Start a WAMP-based distributed light-matter database.')
 
-    databaseSpecifier = DatabaseSpecifier(allowFromFile=False,
-                                          allowInMemory=False)
+    databaseSpecifier = DatabaseSpecifier(allowInMemory=False)
     databaseSpecifier.addArgsToParser(parser)
     args = parser.parse_args()
-    args.wamp = True  # We're always using WAMP for distributed databases.
+    # We're always using WAMP for distributed databases.
+    args.wampServer = True
 
     database = databaseSpecifier.getDatabaseFromArgs(args)
     runner = ApplicationRunner(args.wampUrl, args.realm,

@@ -12,8 +12,7 @@ if __name__ == '__main__':
         description='Create a light-matter database from sequences in a '
         'FASTA file and/or given on the command line.')
 
-    databaseSpecifier = DatabaseSpecifier(allowFromFile=False,
-                                          allowInMemory=False)
+    databaseSpecifier = DatabaseSpecifier(allowInMemory=False)
     databaseSpecifier.addArgsToParser(parser)
     args = parser.parse_args()
     startTime = time()

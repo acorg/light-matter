@@ -11,6 +11,7 @@ from light.significance import (Always, HashFraction, MaxBinHeight,
                                 MeanBinHeight)
 from light.score import MinHashesScore
 from light.backend import Backend
+from light.string import MultilineString
 
 
 class Result(object):
@@ -229,16 +230,16 @@ class Result(object):
 
         return fp
 
-    def print_(self, fp=sys.stdout, printQuery=True, printSequences=False,
+    def print_(self, printQuery=True, printSequences=False,
                printFeatures=False, printHistograms=False,
-               queryDescription='Query title', sortHSPsByScore=True):
+               queryDescription='Query title', sortHSPsByScore=True,
+               margin=''):
         """
         Print a result in a human-readable format. If self._storeFullAnalysis
         is True, full information about all matched subjects (i.e., including
         matches that were not significant) will be printed. If not, only basic
         information about significant matches will appear.
 
-        @param fp: A file pointer to print to.
         @param printQuery: If C{True}, also print details of the query.
         @param printSequences: If C{True}, also print query and subject
             sequences.
@@ -250,12 +251,22 @@ class Result(object):
         @param sortHSPsByScore: If C{True}, HSPs for a subject should be
             printed in order of decreasing score. If C{False}, print sorted by
             histogram bin number.
+        @param margin: A C{str} that should be inserted at the start of each
+            line of output.
+        @return: A C{str} summary of the scanned read.
         """
+        result = MultilineString(margin=margin)
+        append = result.append
+        extend = result.extend
+        indent = result.indent
+        outdent = result.outdent
+
         if printQuery:
             scannedQuery = Backend(self.connector.params).scan(self.query)
-            scannedQuery.print_(fp=fp, printSequence=printSequences,
-                                printFeatures=printFeatures,
-                                description=queryDescription)
+            append(scannedQuery.print_(printSequence=printSequences,
+                                       printFeatures=printFeatures,
+                                       description=queryDescription),
+                   verbatim=True)
 
         # Sort matched subjects (if any) in order of decreasing score so we
         # can print them in a useful order.
@@ -270,15 +281,17 @@ class Result(object):
         if not sortHSPsByScore:
             indexGetter = itemgetter('index')
 
-        result = [
+        extend([
             'Overall matches: %d' % len(subjectIndices),
             'Significant matches: %d' % len(list(self.significantSubjects())),
             'Query hash count: %d' % self.queryHashCount,
             'Significance fraction: %f' % self.significanceFraction,
-        ]
+        ])
 
         if subjectIndices:
-            result.append('Matched subjects:')
+            append('Matched subjects:')
+
+        indent()
 
         for subjectCount, subjectIndex in enumerate(subjectIndices, start=1):
             analysis = self.analysis[subjectIndex]
@@ -286,43 +299,47 @@ class Result(object):
             minHashCount = min(self.queryHashCount, subject.hashCount)
             significantBins = analysis['significantBins']
 
-            result.extend([
-                '  Subject %d:' % subjectCount,
-                '    Title: %s' % subject.id,
-                '    Best HSP score: %s' % analysis['bestScore'],
+            append('Subject %d:' % subjectCount)
+            indent()
+
+            extend([
+                'Title: %s' % subject.id,
+                'Best HSP score: %s' % analysis['bestScore'],
             ])
 
             if printSequences:
-                result.append('    Sequence: %s' % subject.sequence)
+                append('Sequence: %s' % subject.sequence)
 
-            result.extend([
-                '    Index in database: %s' % subjectIndex,
-                '    Subject hash count: %s' % subject.hashCount,
-                '    Subject/query min hash count: %s' % minHashCount,
-                '    Significance cutoff: %f' % (self.significanceFraction *
-                                                 minHashCount),
-                '    Number of HSPs: %d' % len(significantBins),
+            extend([
+                'Index in database: %s' % subjectIndex,
+                'Subject hash count: %s' % subject.hashCount,
+                'Subject/query min hash count: %s' % minHashCount,
+                'Significance cutoff: %f' % (self.significanceFraction *
+                                             minHashCount),
+                'Number of HSPs: %d' % len(significantBins),
             ])
 
             if not sortHSPsByScore:
                 significantBins = deepcopy(significantBins)
                 significantBins.sort(key=indexGetter)
 
+            indent()
             for hspCount, bin_ in enumerate(significantBins, start=1):
                 binCount = len(bin_['bin'])
-                result.append(
-                    '      HSP %d (bin %d): %d matching hash%s, score %f' %
-                    (hspCount, bin_['index'], binCount,
-                     '' if binCount == 1 else 'es', bin_['score']))
+                append('HSP %d (bin %d): %d matching hash%s, score %f' %
+                       (hspCount, bin_['index'], binCount,
+                        '' if binCount == 1 else 'es', bin_['score']))
 
                 if printFeatures:
+                    indent()
                     for binItem in bin_['bin']:
-                        result.extend([
-                            '        Landmark %s subjectOffsets=%r' % (
+                        extend([
+                            'Landmark %s subjectOffsets=%r' % (
                                 binItem['landmark'],
                                 binItem['subjectOffsets']),
-                            '        Trig point %s' % binItem['trigPoint'],
+                            'Trig point %s' % binItem['trigPoint'],
                         ])
+                    outdent()
 
             if printHistograms and self._storeFullAnalysis:
                 histogram = analysis['histogram']
@@ -330,17 +347,16 @@ class Result(object):
                                              for bin_ in significantBins])
                 maxCount = max(len(bin_) for bin_ in histogram.bins)
 
-                result.extend([
-                    '    Histogram:',
-                    '      Number of bins: %d' % len(histogram.bins),
-                    '      Bin width: %.10f' % histogram.binWidth,
-                    '      Max bin count: %r' % maxCount,
-                    '      Max (scaled) offset delta: %d' % histogram.max,
-                    '      Min (scaled) offset delta: %d' % histogram.min,
+                append('Histogram:')
+                indent()
+                extend([
+                    'Number of bins: %d' % len(histogram.bins),
+                    'Bin width: %.10f' % histogram.binWidth,
+                    'Max bin count: %r' % maxCount,
+                    'Max (scaled) offset delta: %d' % histogram.max,
+                    'Min (scaled) offset delta: %d' % histogram.min,
                 ])
-
-                result.extend([
-                ])
+                outdent()
 
                 # Calculate column widths for displaying ranges neatly.
                 maxAbsoluteValue = max(
@@ -360,24 +376,26 @@ class Result(object):
                     binCount = len(bin_)
                     if binCount:
                         if first:
-                            result.extend([
-                                '      Non-empty bins:',
-                                '        %s %s %*s %s' % (
-                                    'Index', 'Count', rangeColumnWidth,
-                                    'Range', 'Significant'),
-                            ])
+                            append('Non-empty bins:')
+                            indent()
+                            append('%s %s %*s %s' % (
+                                'Index', 'Count', rangeColumnWidth, 'Range',
+                                'Significant'))
                             first = False
                         binLow = histogram.min + binIndex * histogram.binWidth
                         # 5, 5, 11 embedded in the format string below are
                         # the lengths of 'Index', 'Range', and 'Significant'.
-                        result.append('        %5d %5d %+*.1f%s%+*.1f %11s' % (
+                        append('%5d %5d %+*.1f%s%+*.1f %11s' % (
                             binIndex, binCount,
                             rangeWidth, binLow,
                             rangeSeparator,
                             rangeWidth, binLow + histogram.binWidth,
                             'Yes' if binIndex in significantBinIndices
                             else ''))
-                if first:
-                    result.append('All bins were empty.')
 
-        print('\n'.join(result), file=fp)
+                if first:
+                    append('All bins were empty.')
+                else:
+                    outdent()
+
+        return str(result)

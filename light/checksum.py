@@ -14,6 +14,10 @@ class Checksum(object):
     def __eq__(self, other):
         return self._value == other._value
 
+    def __repr__(self):
+        return '<%s instance, value %d>' % (self.__class__.__name__,
+                                            self._value)
+
     def update(self, strings):
         """
         Update the checksum value.

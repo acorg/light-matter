@@ -1,10 +1,9 @@
-import sys
 import logging
 
 logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
                     level=logging.INFO)
 
-import asyncio
+from asyncio import await, gather
 from collections import defaultdict
 from io import StringIO
 from random import uniform, choice
@@ -22,6 +21,7 @@ from light.parameters import Parameters
 from light.result import Result
 from light.exceptions import BackendException
 from light.subject import Subject, SubjectStore
+from light.string import MultilineString
 
 
 class SimpleConnector:
@@ -43,7 +43,7 @@ class SimpleConnector:
         if backend:
             self._backend = backend
         else:
-            self._backend = Backend()
+            self._backend = Backend(filePrefix=filePrefix)
             self._backend.configure(params)
         self._filePrefix = filePrefix
 
@@ -86,16 +86,16 @@ class SimpleConnector:
                       significanceMethod, scoreMethod, significanceFraction,
                       nonMatchingHashes, storeFullAnalysis=storeFullAnalysis)
 
-    def shutdown(self, noSave, filePrefix):
+    def shutdown(self, save, filePrefix):
         """
         Shut down the connector.
 
-        @param noSave: If C{True}, do not save the connector state.
+        @param save: If C{True}, save the connector state.
         @param filePrefix: When saving, use this C{str} as a file name prefix.
         """
-        self._backend.shutdown(noSave, filePrefix)
+        self._backend.shutdown(save, filePrefix)
 
-        if not noSave:
+        if save:
             self.save(filePrefix)
 
     def save(self, fpOrFilePrefix=None):
@@ -150,17 +150,24 @@ class SimpleConnector:
         return cls(params, backend=Backend.restore(fpOrFilePrefix),
                    filePrefix=filePrefix)
 
-    def print_(self, fp=sys.stdout, printHashes=False):
+    def print_(self, printHashes=False, margin=''):
         """
         Print information about this connector.
 
-        @param fp: A file pointer to write to.
         @param printHashes: If C{True}, print all hashes and associated
             subjects from the backend.
+        @param margin: A C{str} that should be inserted at the start of each
+            line of output.
+        @return: A C{str} representation of the parameters.
         """
+        result = MultilineString(margin=margin)
+
         if printHashes:
-            print('Backends:', file=fp)
-            self._backend.print_(fp)
+            result.append('Backends:')
+            result.append(self._backend.print_(margin=margin + '  '),
+                          verbatim=True)
+
+        return str(result)
 
 
 class WampServerConnector:
@@ -180,7 +187,7 @@ class WampServerConnector:
     @param filePrefix: Either a C{str} file name prefix to use as a default
         when saving or C{None} if no default save file is needed.
     """
-    SAVE_SUFFIX = '.lmwco'
+    SAVE_SUFFIX = '.lmwsco'
 
     def __init__(self, params, _id=None, subjectStore=None, checksum=None,
                  disconnectedBackends=None, filePrefix=None):
@@ -211,8 +218,11 @@ class WampServerConnector:
         # database component using our setComponent method.
         self._component = None
 
-    @asyncio.coroutine
-    def addBackend(self, sessionId):
+        # TODO: Remove.
+        logging.info('Connector started. Disconnected backends: %r' %
+                     self._disconnectedBackends)
+
+    async def addBackend(self, sessionId):
         """
         Process a new backend connection. The connection may be from a new
         backend name, or a previously connected one (e.g., a backend that was
@@ -225,43 +235,48 @@ class WampServerConnector:
             marked as already connected.
         """
         logging.info('Adding backend with WAMP session id %s', sessionId)
-        # Suggest a name and a checksum for the backend.
-        count = len(self._backends) + len(self._disconnectedBackends)
-        suggestedName = 'backend-%s-%d' % (self._id, count)
 
-        # The initial checksum for a backend is derived from the database
+        # Suggest a name and a checksum for the backend.
+        backendCount = len(self._backends) + len(self._disconnectedBackends)
+        suggestedName = 'backend-%s-%d' % (self._id, backendCount)
+
+        # Sanity check: Make sure we've not used this name before.
+        assert suggestedName not in self._backends
+        assert suggestedName not in self._disconnectedBackends
+
+        # Derive an initial checksum for the backend from the database
         # parameters and the backend name.
         suggestedChecksum = Backend.initialChecksum(self.params, suggestedName)
 
-        # Get a str representation of our params to send over the network.
-        fp = StringIO()
-        self.params.save(fp)
-        paramsStr = fp.getvalue()
+        # Get a string representation of the params to send over the network.
+        paramsStr = self.params.save(StringIO()).getvalue()
 
         # Attempt to configure the backend. It may already be configured,
         # which is fine. We must do this before adding the backend name to
         # self._backends so there is no possibility we will try to use the
         # backend (in another request) before it has been configured.
 
-        name, checksum = yield from self._component.call(
+        name, checksum, subjectCount = await self._component.call(
             'configure-%d' % sessionId, paramsStr, suggestedName,
             suggestedChecksum.value)
 
         if name == suggestedName:
             # The backend is new - it has accepted the name we suggested.
-            # Make sure we've not used that name before.
-            assert name not in self._backends
-            assert name not in self._disconnectedBackends
             # Store the checksum and associate the session id with the
             # backend.
+            assert(subjectCount == 0)
+            logging.info('Added new backend with name %s', name)
             self._checksum.update([name])
-            self._sessionIdToName[sessionId] = name
-            self._backends[name] = suggestedChecksum
+            self._backends[name] = {
+                'subjectCount': 0,
+                'checksum': suggestedChecksum,
+            }
         else:
-            # The backend is a restored instance that already had a name or
-            # an instance that was already online (and named). Check that
-            # we do not have it in our (connected) backends and that we do
-            # have it in our disconnected backends.
+            # The backend is a just-restored instance that already had a
+            # name, or is an instance that was already online (and
+            # therefore already named) when the connector came online.
+            # Check that we do not have its name in our (connected)
+            # backends and that we do have it in our disconnected backends.
             if name in self._backends:
                 # This backend is already connected! Or at least it was, or
                 # some backend with the same name is or was.
@@ -269,9 +284,25 @@ class WampServerConnector:
                     'Already connected backend %r has re-connected!' % name)
 
             if name in self._disconnectedBackends:
+                logging.info('Backend %s (checksum %s) reconnected.', name,
+                             checksum)
+                # Make sure the checksum and subject count sent by the
+                # backend match what we have on record.
+                assert(self._disconnectedBackends[name]['checksum'].value ==
+                       checksum)
+                assert(self._disconnectedBackends[name]['subjectCount'] ==
+                       subjectCount)
+
+                self._backends[name] = self._disconnectedBackends[name]
                 del self._disconnectedBackends[name]
 
-            self._backends[name] = Checksum(checksum)
+                logging.info('Added re-connected backend with name %s', name)
+            else:
+                logging.warning('Apparently pre-existing backend %s (checksum '
+                                '%d) has connected but is not present in our '
+                                'known disconnected backends.', name, checksum)
+
+        self._sessionIdToName[sessionId] = name
 
     def removeBackend(self, sessionId):
         """
@@ -285,20 +316,18 @@ class WampServerConnector:
             name = self._sessionIdToName.pop(sessionId)
         except KeyError:
             # Not a session we know anything about. Ignore.
-            logging.info('Ignoring disconnect from unknown session %s.',
-                         sessionId)
-            return
-
-        try:
-            checksum = self._backends.pop(name)
-        except KeyError:
-            raise BackendException(
-                'Session %s with name %r disconnected, but its name is not '
-                'present in our connected backends.' % (sessionId, name))
-
-        self._disconnectedBackends[name] = checksum
-
-        logging.info('Session %s with name %r disconnected.', sessionId, name)
+            logging.debug('Ignoring disconnect from unknown session %s.',
+                          sessionId)
+        else:
+            try:
+                self._disconnectedBackends[name] = self._backends.pop(name)
+            except KeyError:
+                logging.warning(
+                    'Session %s named %r disconnected, but its name is not '
+                    'present in our connected backends!' % (sessionId, name))
+            else:
+                logging.info('Session %s with name %r disconnected.',
+                             sessionId, name)
 
     def setComponent(self, component):
         """
@@ -314,20 +343,26 @@ class WampServerConnector:
 
         @return: An C{int} total number of subjects.
         """
+        print('in server connector subjectCount')
         return len(self._subjectStore)
 
-    def hashCount(self):
+    async def hashCount(self):
         """
         How many hashes are stored in all our backends?
 
         TODO: This total count will be too large due to identical hashes
-        being stored on separate backends. What to do?
+              being stored on separate backends. What to do? We could have
+              the backends return their hashes and de-dup them here.
 
         @return: An C{int} total number of hashes.
         """
-        calls = [self.component.call('hashCount-%d' % sessionId)
+        print('IN connector hashcount.....................')
+        calls = [self._component.call('hashCount-%d' % sessionId)
                  for sessionId in self._sessionIdToName]
-        results = yield from asyncio.gather(*calls)
+        results = await gather(*calls)
+        # coro = gather(*calls)
+        # loop = asyncio.get_event_loop()
+        # results = loop.run_until_complete(coro)
         return sum(results)
 
     def totalResidues(self):
@@ -338,15 +373,15 @@ class WampServerConnector:
         """
         return sum(len(s) for s in self._subjectStore.getSubjects())
 
-    def totalCoveredResidues(self):
+    async def totalCoveredResidues(self):
         """
         How many AA residues are covered by landmarks across all our backends?
 
         @return: An C{int} total number of covered residues.
         """
-        calls = [self.component.call('coveredResidues-%d' % sessionId)
+        calls = [self._component.call('coveredResidues-%d' % sessionId)
                  for sessionId in self._sessionIdToName]
-        results = yield from asyncio.gather(*calls)
+        results = await gather(*calls)
         return sum(results)
 
     def checksum(self):
@@ -357,7 +392,7 @@ class WampServerConnector:
         """
         return self._checksum.value
 
-    def addSubject(self, subject):
+    async def addSubject(self, subject):
         """
         Ask a backend to add a subject.
 
@@ -385,7 +420,7 @@ class WampServerConnector:
         # session id at random.
         sessionId = choice([self._sessionIdToName.keys()])
         preExisting, BackendSubjectIndex, hashCount = (
-            yield from self._component.call(
+            await self._component.call(
                 'addSubject-%s' % sessionId, subject.id, subject.sequence,
                 subject.quality))
 
@@ -403,12 +438,13 @@ class WampServerConnector:
         name = self._sessionIdToName[sessionId]
         update = (subject.id, subject.sequence)
         self._checksum.update(update)
-        self._backends[name].update(update)
+        self._backends[name]['checksum'].update(update)
+
+        self._backends[name]['subjectCount'] += 1
 
         return False, subjectIndex
 
-    @asyncio.coroutine
-    def find(self, read, significanceMethod=None, scoreMethod=None,
+    async def find(self, read, significanceMethod=None, scoreMethod=None,
              significanceFraction=None, storeFullAnalysis=False):
         """
         Check which database sequences a read matches.
@@ -438,11 +474,11 @@ class WampServerConnector:
         hashCount = 0
 
         calls = [
-            self.component.call(
+            self._component.call(
                 'find-%d' % sessionId, read, significanceMethod, scoreMethod,
                 significanceFraction, storeFullAnalysis)
             for sessionId in self._sessionIdToName]
-        results = yield from asyncio.gather(*calls)
+        results = await gather(*calls)
 
         for matches, hashCount, nonMatchingHashes in results:
             # TODO: This is probably wrong...
@@ -464,20 +500,19 @@ class WampServerConnector:
                       allNonMatchingHashes,
                       storeFullAnalysis=storeFullAnalysis)
 
-    @asyncio.coroutine
-    def shutdown(self, noSave, filePrefix):
+    async def shutdown(self, save, filePrefix):
         """
         Shut down the connector.
 
-        @param noSave: If C{True}, do not save the connector state.
+        @param save: If C{True}, save the connector state.
         @param filePrefix: When saving, use this C{str} as a file name prefix.
         """
         if self._backends:
-            calls = [self.call('shutdown-%d' % sessionId, noSave, filePrefix)
+            calls = [self.call('shutdown-%d' % sessionId, save, filePrefix)
                      for sessionId in self._sessionIdToName]
-            yield from asyncio.gather(*calls)
+            await gather(*calls)
 
-        if not noSave:
+        if not save:
             self.save(filePrefix)
 
     def save(self, fpOrFilePrefix=None):
@@ -504,12 +539,17 @@ class WampServerConnector:
         else:
             saveFile = fpOrFilePrefix
 
-        # Save the int checksums from all known backends (whether or not
-        # they have connected to us yet).
+        # Save the checksums and subject counts from all known backends
+        # (whether or not they have connected to us yet. I.e., we might be
+        # shutting down before some backends that were previously connected
+        # to us have re-connected).
         disconnectedBackends = {}
         for backends in self._backends, self._disconnectedBackends:
-            for name, checksum in backends.items():
-                disconnectedBackends[name] = checksum.value
+            for name, backendInfo in backends.items():
+                disconnectedBackends[name] = {
+                    'checksum': backendInfo['checksum'].value,
+                    'subjectCount': backendInfo['subjectCount'],
+                }
 
         state = {
             'checksum': self.checksum(),
@@ -544,22 +584,49 @@ class WampServerConnector:
             params = Parameters.restore(fp)
             state = loads(fp.readline()[:-1])
 
-        disconnectedBackends = dict(
-            zip((name, Checksum(checksum))
-                for name, checksum in state['disconnectedBackends']))
+        disconnectedBackends = {}
+        for name, backendInfo in state['disconnectedBackends'].items():
+            disconnectedBackends[name] = {
+                'checksum': Checksum(backendInfo['checksum']),
+                'subjectCount': backendInfo['subjectCount'],
+            }
 
-        return cls(params, _id=state['id'], checksum=state['checksum'],
+        return cls(params, _id=state['id'],
+                   checksum=Checksum(state['checksum']),
                    disconnectedBackends=disconnectedBackends,
                    filePrefix=filePrefix)
 
-    def print_(self, fp=sys.stdout, printHashes=False):
+    async def print_(self, printHashes=False, margin=''):
         """
-        Print information about this connector.
+        Print information about this connector and its backends.
 
-        @param fp: A file pointer to write to.
         @param printHashes: If C{True}, print all hashes and associated
-            subjects from the backend.
+            subjects from the backends.
+        @param margin: A C{str} that should be inserted at the start of each
+            line of output.
+        @return: A C{str} representation of the parameters.
         """
+        finalResult = MultilineString(margin=margin)
+
         if printHashes:
-            print('Backends:', file=fp)
-            self._backend.print_(fp)
+            extend = finalResult.extend
+            append = finalResult.append
+            finalResult.append('Backends:')
+
+            sessionIds = [self._sessionIdToName.keys()]
+            names = [self._sessionIdToName[sessionId]
+                     for sessionId in sessionIds]
+            calls = [self.call('print_-%d' % sessionId, margin=margin + '    ')
+                     for sessionId in sessionIds]
+            results = await gather(*calls)
+
+            for name, result in zip(names, results):
+                finalResult.indent()
+                extend([
+                    'Backend name: %s' % name,
+                    'Backend details:',
+                ])
+                append(result, verbatim=True)
+                finalResult.outdent()
+
+        return str(finalResult)

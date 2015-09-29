@@ -13,9 +13,7 @@ if __name__ == '__main__':
         description=('Start a WAMP-based distributed light-matter database '
                      'backend.'))
 
-    databaseSpecifier = DatabaseSpecifier(allowCreation=False,
-                                          allowFromFile=False,
-                                          allowInMemory=False)
+    databaseSpecifier = DatabaseSpecifier(allowInMemory=False)
     databaseSpecifier.addArgsToParser(parser)
     args = parser.parse_args()
 

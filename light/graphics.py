@@ -185,7 +185,7 @@ def plotHistogramPanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
     # Make a new database. For now we don't allow an existing database to
     # be passed as we're going to use subject indices from 0 to nReads-1.
     # This shortcoming can be removed later.
-    specifier = DatabaseSpecifier(allowInMemory=False, allowFromFile=False)
+    specifier = DatabaseSpecifier(allowInMemory=False)
     database = specifier.getDatabaseFromKeywords(subjects=reads, **kwargs)
 
     def makeSubPlot(row, col, ax):
@@ -344,7 +344,7 @@ def plotHistogramLinePanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
     # Make a new database. For now we don't allow an existing database to
     # be passed as we're going to use subject indices from 0 to nReads-1.
     # This shortcoming can be removed later.
-    specifier = DatabaseSpecifier(allowInMemory=False, allowFromFile=False)
+    specifier = DatabaseSpecifier(allowInMemory=False)
     database = specifier.getDatabaseFromKeywords(subjects=reads, **kwargs)
 
     def makeSubPlot(row, col, ax):
@@ -476,7 +476,7 @@ def plotHistogramLines(sequences, significanceFraction=None, **kwargs):
     # Make a new database. For now we don't allow an existing database to
     # be passed as we're going to use subject indices from 0 to nReads-1.
     # This shortcoming can be removed later.
-    specifier = DatabaseSpecifier(allowInMemory=False, allowFromFile=False)
+    specifier = DatabaseSpecifier(allowInMemory=False)
     database = specifier.getDatabaseFromKeywords(subjects=reads, **kwargs)
 
     for read in reads:
@@ -610,7 +610,7 @@ def plotHorizontalPairPanel(sequences, equalizeXAxes=True,
     # Make a new database. For now we don't allow an existing database to
     # be passed as we're going to use subject indices from 0 to nReads-1.
     # This shortcoming can be removed later.
-    specifier = DatabaseSpecifier(allowInMemory=False, allowFromFile=False)
+    specifier = DatabaseSpecifier(allowInMemory=False)
     database = specifier.getDatabaseFromKeywords(subjects=reads, **kwargs)
 
     def makeSubPlot(row, col, ax):

@@ -45,3 +45,10 @@ class TestChecksum(TestCase):
         c = Checksum()
         c.value = 10
         self.assertEqual(10, c.value)
+
+    def testRepr(self):
+        """
+        The __repr__ method must return the expected string.
+        """
+        c = Checksum(10)
+        self.assertEqual('%r' % c, '<Checksum instance, value 10>')

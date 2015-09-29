@@ -1,3 +1,5 @@
+ipython
+jupyter==1.0.0
 Jinja2==2.7.3
 jsonschema==2.4.0
 pyzmq==14.6.0

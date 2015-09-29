@@ -245,7 +245,7 @@ def plotHistogram(query, subject, significanceMethod=None,
         subjectIndex = subject
         subject = database.getSubjectByIndex(subjectIndex)
     else:
-        _, subjectIndex = database.addSubject(subject)
+        _, subjectIndex, _ = database.addSubject(subject)
 
     result = database.find(query, significanceMethod, significanceFraction,
                            storeFullAnalysis=True)
@@ -400,7 +400,7 @@ def plotHistogramLine(query, subject, significanceMethod=False,
     """
     database = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
 
-    _, subjectIndex = database.addSubject(subject)
+    _, subjectIndex, _ = database.addSubject(subject)
 
     result = database.find(query, significanceMethod, significanceFraction,
                            storeFullAnalysis=True)
@@ -517,7 +517,8 @@ def plotFeatureSquare(read, significanceFraction=None, readsAx=None, **kwargs):
     readsAx = readsAx or fig.add_subplot(111)
 
     database = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
-    backend = Backend(database.params)
+    backend = Backend()
+    backend.configure(database.params)
     result = database.find(read, significanceFraction, storeFullAnalysis=True)
     scannedQuery = result.scannedQuery
 
@@ -659,7 +660,7 @@ class PlotHashesInSubjectAndRead(object):
         self.subject = subject
 
         database = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
-        _, subjectIndex = database.addSubject(subject)
+        _, subjectIndex, _ = database.addSubject(subject)
         self.result = database.find(self.query,
                                     significanceFraction=significanceFraction,
                                     storeFullAnalysis=True)
@@ -683,7 +684,8 @@ class PlotHashesInSubjectAndRead(object):
             self.bins = {}
 
         self.queryHashes = self.result.nonMatchingHashes
-        backend = Backend(database.params)
+        backend = Backend()
+        backend.configure(database.params)
         self.subjectHashes = backend.getHashes(backend.scan(subject))
         self.matchingHashes = defaultdict(list)
 

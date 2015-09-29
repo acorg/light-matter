@@ -119,9 +119,9 @@ class ScannedRead(object):
         if printFeatures:
             result.indent()
             for landmark in self.landmarks:
-                append(landmark)
+                append(str(landmark))
             for trigPoint in self.trigPoints:
-                append(trigPoint)
+                append(str(trigPoint))
             result.outdent()
 
         return str(result)

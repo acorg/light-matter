@@ -262,7 +262,9 @@ class Result(object):
         outdent = result.outdent
 
         if printQuery:
-            scannedQuery = Backend(self.connector.params).scan(self.query)
+            backend = Backend()
+            backend.configure(self.connector.params)
+            scannedQuery = backend.scan(self.query)
             append(scannedQuery.print_(printSequence=printSequences,
                                        printFeatures=printFeatures,
                                        description=queryDescription),
@@ -340,6 +342,7 @@ class Result(object):
                             'Trig point %s' % binItem['trigPoint'],
                         ])
                     outdent()
+            outdent()
 
             if printHistograms and self._storeFullAnalysis:
                 histogram = analysis['histogram']
@@ -356,7 +359,6 @@ class Result(object):
                     'Max (scaled) offset delta: %d' % histogram.max,
                     'Min (scaled) offset delta: %d' % histogram.min,
                 ])
-                outdent()
 
                 # Calculate column widths for displaying ranges neatly.
                 maxAbsoluteValue = max(
@@ -397,5 +399,6 @@ class Result(object):
                     append('All bins were empty.')
                 else:
                     outdent()
+                outdent()
 
         return str(result)

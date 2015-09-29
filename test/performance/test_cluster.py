@@ -1,5 +1,4 @@
 from unittest import TestCase
-from io import StringIO
 import numpy as np
 from collections import Counter
 from sklearn.cluster import AffinityPropagation, KMeans
@@ -215,8 +214,6 @@ class TestAffinityPropagationAnalysis(TestCase):
         ap = AffinityPropagationAnalysis(reads, {}, defaultLabel=0,
                                          landmarkNames=['AlphaHelix'])
         # Print without calling ap.cluster()
-        fp = StringIO()
-        ap.print_(fp=fp)
         self.assertEqual(
             'Estimated number of clusters: 2\n'
             'Homogeneity: 1.000\n'
@@ -224,8 +221,8 @@ class TestAffinityPropagationAnalysis(TestCase):
             'V-measure: 0.000\n'
             'Adjusted Rand Index: 0.000\n'
             'Adjusted Mutual Information: 0.000\n'
-            'Silhouette Coefficient: 0.667\n',
-            fp.getvalue())
+            'Silhouette Coefficient: 0.667',
+            ap.print_())
 
     def testFourReadsTwoIdenticalPrint(self):
         """
@@ -241,8 +238,6 @@ class TestAffinityPropagationAnalysis(TestCase):
         ap = AffinityPropagationAnalysis(reads, {}, defaultLabel=0,
                                          landmarkNames=['AlphaHelix'])
         ap.cluster()
-        fp = StringIO()
-        ap.print_(fp=fp)
         self.assertEqual(
             'Estimated number of clusters: 2\n'
             'Homogeneity: 1.000\n'
@@ -250,8 +245,8 @@ class TestAffinityPropagationAnalysis(TestCase):
             'V-measure: 0.000\n'
             'Adjusted Rand Index: 0.000\n'
             'Adjusted Mutual Information: 0.000\n'
-            'Silhouette Coefficient: 0.667\n',
-            fp.getvalue())
+            'Silhouette Coefficient: 0.667',
+            ap.print_())
 
 
 class TestKMeansAnalysis(TestCase):
@@ -376,13 +371,11 @@ class TestKMeansAnalysis(TestCase):
         km = KMeansAnalysis(reads, {}, defaultLabel=0,
                             landmarkNames=['AlphaHelix'])
         km.cluster(2)
-        fp = StringIO()
-        km.print_(fp=fp)
         self.assertEqual(
             'Homogeneity: 1.000\n'
             'Completeness: 0.000\n'
             'V-measure: 0.000\n'
             'Adjusted Rand Index: 0.000\n'
             'Adjusted Mutual Information: 0.000\n'
-            'Silhouette Coefficient: 0.667\n',
-            fp.getvalue())
+            'Silhouette Coefficient: 0.667',
+            km.print_())

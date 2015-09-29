@@ -53,7 +53,7 @@ class Database:
 
         # Most of our implementation comes directly from our connector.
         for method in ('addSubject', 'find', 'getIndexBySubject',
-                       'getSubjectByIndex', 'getSubjects', # 'hashCount',
+                       'getSubjectByIndex', 'getSubjects',  # 'hashCount',
                        'subjectCount', 'totalResidues', 'totalCoveredResidues',
                        'checksum'):
             setattr(self, method, getattr(self._connector, method))
@@ -163,8 +163,7 @@ class Database:
         result = MultilineString(margin=margin)
         append = result.append
 
-        append('Parameters:')
-        append(self.params.print_(margin=margin + '  '), verbatim=True)
+        append(self.params.print_(margin=margin), verbatim=True)
 
         totalResidues = self.totalResidues()
         result.extend([
@@ -182,9 +181,10 @@ class Database:
         append('Checksum: %d' % self.checksum())
 
         append('Connector:')
-        append(self._connector.print_(printHashes=printHashes,
-                                      margin=margin + '  '),
-               verbatim=True)
+        connector = self._connector.print_(printHashes=printHashes,
+                                           margin=margin)
+        if connector:
+            append(connector, verbatim=True)
 
         return str(result)
 
@@ -508,22 +508,21 @@ class DatabaseSpecifier:
                         'connector save file (%s) or WAMP connector save file '
                         '(%s) exists!' % (dbSaveFile, scSaveFile, wcSaveFile))
 
-        if database is None:
-            if self._allowWamp:
-                if args.wampServer:
-                    params = getParametersFromArgs(args)
-                    connector = WampServerConnector(params,
-                                                    filePrefix=filePrefix)
-                    database = Database(params, connector=connector,
-                                        filePrefix=filePrefix)
-                elif args.wampClient:
-                    database = getWampClientDatabase()
+        if database is None and self._allowWamp:
+            if args.wampServer:
+                params = getParametersFromArgs(args)
+                connector = WampServerConnector(params,
+                                                filePrefix=filePrefix)
+                database = Database(params, connector=connector,
+                                    filePrefix=filePrefix)
+            elif args.wampClient:
+                database = getWampClientDatabase()
 
-            elif self._allowCreation:
-                # A new in-memory database, with a simple connector and a
-                # local backend.
-                params = getParametersFromArgs()
-                database = Database(params, filePrefix=filePrefix)
+        if database is None and self._allowCreation:
+            # A new in-memory database, with a simple connector and a local
+            # backend.
+            params = getParametersFromArgs(args)
+            database = Database(params, filePrefix=filePrefix)
 
         if database is None and self._allowWamp:
             # Last try: guess that they might be wanting to talk to a WAMP

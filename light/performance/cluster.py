@@ -42,7 +42,8 @@ class ClusterAnalysis(object):
         else:
             reads = sequences
         database = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
-        backend = Backend(database.params)
+        backend = Backend()
+        backend.configure(database.params)
         allOffsetDeltas = []
         trueLabels = []
 
@@ -167,6 +168,8 @@ class AffinityPropagationAnalysis(ClusterAnalysis):
         append('Silhouette Coefficient: %0.3f' % silhouette_score(
             self.affinity, clusterLabels, metric='sqeuclidean'))
 
+        return str(result)
+
 
 class KMeansAnalysis(ClusterAnalysis):
     """
@@ -223,3 +226,5 @@ class KMeansAnalysis(ClusterAnalysis):
         append('Silhouette Coefficient: %0.3f' % silhouette_score(
             self.affinity, clusterLabels, metric='sqeuclidean',
             sample_size=300))
+
+        return str(result)

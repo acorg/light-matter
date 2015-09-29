@@ -32,11 +32,11 @@ MUMMYPOX = AARead(
 SQUIRRELPOX = AARead(
     'Squirrelpox', _ALPHA + _BETA + _BETA + _ALPHA + _BETA)
 
-_, _CATPOX_INDEX = DB.addSubject(CATPOX)
-_, _COWPOX_INDEX = DB.addSubject(COWPOX)
-_, _MONKEYPOX_INDEX = DB.addSubject(MONKEYPOX)
-_, _MUMMYPOX_INDEX = DB.addSubject(MUMMYPOX)
-_, _SQUIRRELPOX_INDEX = DB.addSubject(SQUIRRELPOX)
+_, _CATPOX_INDEX, _ = DB.addSubject(CATPOX)
+_, _COWPOX_INDEX, _ = DB.addSubject(COWPOX)
+_, _MONKEYPOX_INDEX, _ = DB.addSubject(MONKEYPOX)
+_, _MUMMYPOX_INDEX, _ = DB.addSubject(MUMMYPOX)
+_, _SQUIRRELPOX_INDEX, _ = DB.addSubject(SQUIRRELPOX)
 
 # Run find on a read that matches squirrelpox and catpox.
 READ0 = AARead('read0', _ALPHA + _BETA + _BETA + _ALPHA + _BETA)

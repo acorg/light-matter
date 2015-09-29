@@ -63,9 +63,11 @@ class TestDatabase(TestCase):
         """
         params = Parameters([AlphaHelix], [])
         db = Database(params)
-        preExisting, subjectIndex = db.addSubject(AARead('id', 'FRRRFRRRF'))
+        preExisting, subjectIndex, hashCount = db.addSubject(
+            AARead('id', 'FRRRFRRRF'))
         self.assertFalse(preExisting)
         self.assertEqual('0', subjectIndex)
+        self.assertEqual(0, hashCount)
 
     def testAddSameSubjectReturnsSameIndex(self):
         """
@@ -129,7 +131,7 @@ class TestDatabase(TestCase):
         params = Parameters([AlphaHelix], [])
         db = Database(params)
         subject = AARead('id', 'FRRRFRRRF')
-        _, index = db.addSubject(subject)
+        _, index, _ = db.addSubject(subject)
         self.assertEqual(Subject('id', 'FRRRFRRRF', 0),
                          db.getSubjectByIndex(index))
 
@@ -140,7 +142,7 @@ class TestDatabase(TestCase):
         """
         params = Parameters([AlphaHelix], [])
         db = Database(params)
-        _, index = db.addSubject(AARead('id', 'FRRRFRRRF'))
+        _, index, _ = db.addSubject(AARead('id', 'FRRRFRRRF'))
         self.assertEqual(index,
                          db.getIndexBySubject(Subject('id', 'FRRRFRRRF', 0)))
 
@@ -152,7 +154,7 @@ class TestDatabase(TestCase):
         params = Parameters([AlphaHelix], [])
         db = Database(params)
         subject = AARead('id', 'FRRRFRRRFAFRRRFRRRF')
-        _, index = db.addSubject(subject)
+        _, index, _ = db.addSubject(subject)
         self.assertEqual(1, db.getSubjectByIndex(index).hashCount)
 
     def testOneReadOneLandmarkGetSubjects(self):
@@ -515,14 +517,14 @@ class TestDatabase(TestCase):
         query = AARead('query', 'FRRRFRRRFASAVVVVVV')
         params1 = Parameters([AlphaHelix, BetaStrand], [Peaks])
         db = Database(params1)
-        _, index = db.addSubject(subject)
+        _, index, _ = db.addSubject(subject)
         hashCount1 = db.getSubjectByIndex(index).hashCount
         result = db.find(query, significanceFraction=0.0)
         score1 = result.analysis['0']['bestScore']
 
         params2 = Parameters([AlphaHelix, BetaStrand], [Peaks])
         db = Database(params2)
-        _, index = db.addSubject(query)
+        _, index, _ = db.addSubject(query)
         hashCount2 = db.getSubjectByIndex(index).hashCount
         result = db.find(subject, significanceFraction=0.0)
         score2 = result.analysis['0']['bestScore']
@@ -580,14 +582,12 @@ class TestDatabase(TestCase):
         """
         The print_ function should produce the expected output.
         """
-        fp = StringIO()
         subject = AARead('subject', 'FRRRFRRRFASAASA')
         params = Parameters([AlphaHelix, BetaStrand], [Peaks, Troughs],
                             limitPerLandmark=16, maxDistance=10, minDistance=0,
                             distanceBase=1)
         db = Database(params)
         db.addSubject(subject)
-        db.print_(fp)
         expected = (
             'Parameters:\n'
             '  Landmark finders:\n'
@@ -599,28 +599,27 @@ class TestDatabase(TestCase):
             '  Limit per landmark: 16\n'
             '  Max distance: 10\n'
             '  Min distance: 0\n'
-            '  Distance base: 1\n'
+            '  Distance base: 1.000000\n'
             'Connector class: SimpleConnector\n'
             'Subject count: 1\n'
             'Hash count: 3\n'
             'Total residues: 15\n'
             'Coverage: 73.33%\n'
-            'Checksum: 539152060\n')
-        self.assertEqual(expected, fp.getvalue())
+            'Checksum: 539152060\n'
+            'Connector:')
+        self.assertEqual(expected, db.print_())
 
     def testPrintWithHashes(self):
         """
         The print_ function should produce the expected output when asked to
         print hash information.
         """
-        fp = StringIO()
         subject = AARead('subject-id', 'FRRRFRRRFASAASA')
         params = Parameters([AlphaHelix, BetaStrand], [Peaks, Troughs],
                             limitPerLandmark=16, maxDistance=10, minDistance=0,
                             distanceBase=1)
         db = Database(params)
         db.addSubject(subject)
-        db.print_(fp, printHashes=True)
         expected = (
             'Parameters:\n'
             '  Landmark finders:\n'
@@ -632,44 +631,43 @@ class TestDatabase(TestCase):
             '  Limit per landmark: 16\n'
             '  Max distance: 10\n'
             '  Min distance: 0\n'
-            '  Distance base: 1\n'
+            '  Distance base: 1.000000\n'
             'Connector class: SimpleConnector\n'
             'Subject count: 1\n'
             'Hash count: 3\n'
             'Total residues: 15\n'
             'Coverage: 73.33%\n'
             'Checksum: 20379718\n'
+            'Connector:\n'
             'Backends:\n'
-            'Name: backend\n'
-            'Hash count: 3\n'
-            'Checksum: 20379718\n'
-            'Subjects (with offsets) by hash:\n'
-            '   A2:P:10\n'
-            '    0 [[0, 10]]\n'
-            '   A2:T:4\n'
-            '    0 [[0, 4]]\n'
-            '   A2:T:8\n'
-            '    0 [[0, 8]]\n'
-            'Landmark symbol counts:\n'
-            '  AlphaHelix (A2): 3\n'
-            'Trig point symbol counts:\n'
-            '  Peaks (P): 1\n'
-            '  Troughs (T): 2\n')
-        self.assertEqual(expected, fp.getvalue())
+            '  Name: backend\n'
+            '  Hash count: 3\n'
+            '  Checksum: 20379718\n'
+            '  Subjects (with offsets) by hash:\n'
+            '    A2:P:10\n'
+            '      0 [[0, 10]]\n'
+            '    A2:T:4\n'
+            '      0 [[0, 4]]\n'
+            '    A2:T:8\n'
+            '      0 [[0, 8]]\n'
+            '  Landmark symbol counts:\n'
+            '    AlphaHelix (A2): 3\n'
+            '  Trig point symbol counts:\n'
+            '    Peaks (P): 1\n'
+            '    Troughs (T): 2')
+        self.assertEqual(expected, db.print_(printHashes=True))
 
     def testPrintNoHashes(self):
         """
         The print_ function should report the expected result if no hashes are
         found in the subject.
         """
-        fp = StringIO()
         subject = AARead('subject', '')
         params = Parameters([AlphaHelix, BetaStrand], [Peaks, Troughs],
                             limitPerLandmark=16, maxDistance=10, minDistance=0,
                             distanceBase=1)
         db = Database(params)
         db.addSubject(subject)
-        db.print_(fp)
         expected = (
             'Parameters:\n'
             '  Landmark finders:\n'
@@ -681,11 +679,12 @@ class TestDatabase(TestCase):
             '  Limit per landmark: 16\n'
             '  Max distance: 10\n'
             '  Min distance: 0\n'
-            '  Distance base: 1\n'
+            '  Distance base: 1.000000\n'
             'Connector class: SimpleConnector\n'
             'Subject count: 1\n'
             'Hash count: 0\n'
             'Total residues: 0\n'
             'Coverage: 0.00%\n'
-            'Checksum: 425336937\n')
-        self.assertEqual(expected, fp.getvalue())
+            'Checksum: 425336937\n'
+            'Connector:')
+        self.assertEqual(expected, db.print_())

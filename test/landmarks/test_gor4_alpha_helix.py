@@ -92,8 +92,10 @@ class TestGOR4BetaStrandOverlap(TestCase):
         GOR4 alpha helix and beta strand finders using the default distance
         base (currently 1.1).
         """
-        alphaHelixBe = Backend(Parameters([GOR4AlphaHelix], []))
-        betaStrandBe = Backend(Parameters([GOR4BetaStrand], []))
+        alphaHelixBe = Backend()
+        alphaHelixBe.configure(Parameters([GOR4AlphaHelix], []))
+        betaStrandBe = Backend()
+        betaStrandBe.configure(Parameters([GOR4BetaStrand], []))
         alphaHelixScanned = alphaHelixBe.scan(self.READ)
         betaStrandScanned = betaStrandBe.scan(self.READ)
         alphaHelixIndices = alphaHelixScanned.coveredIndices()
@@ -106,9 +108,11 @@ class TestGOR4BetaStrandOverlap(TestCase):
         GOR4 alpha helix and beta strand finders using a distance base of 1.0
         (which should do no scaling).
         """
-        alphaHelixBe = Backend(
+        alphaHelixBe = Backend()
+        alphaHelixBe.configure(
             Parameters([GOR4AlphaHelix], [], distanceBase=1.0))
-        betaStrandBe = Backend(
+        betaStrandBe = Backend()
+        betaStrandBe.configure(
             Parameters([GOR4BetaStrand], [], distanceBase=1.0))
         alphaHelixScanned = alphaHelixBe.scan(self.READ)
         betaStrandScanned = betaStrandBe.scan(self.READ)
@@ -121,9 +125,11 @@ class TestGOR4BetaStrandOverlap(TestCase):
         There cannot be any index overlap between landmarks found by the
         GOR4 alpha helix and beta strand finders using a distance base of 1.5.
         """
-        alphaHelixBe = Backend(
+        alphaHelixBe = Backend()
+        alphaHelixBe.configure(
             Parameters([GOR4AlphaHelix], [], distanceBase=1.5))
-        betaStrandBe = Backend(
+        betaStrandBe = Backend()
+        betaStrandBe.configure(
             Parameters([GOR4BetaStrand], [], distanceBase=1.5))
         alphaHelixScanned = alphaHelixBe.scan(self.READ)
         betaStrandScanned = betaStrandBe.scan(self.READ)

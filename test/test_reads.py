@@ -1,4 +1,3 @@
-from io import StringIO
 from unittest import TestCase
 
 from dark.reads import AARead
@@ -326,7 +325,6 @@ class TestScannedRead(TestCase):
         Check that the print_ method of a scanned read produces the
         expected default result.
         """
-        fp = StringIO()
         read = ScannedRead(AARead('id', 'AAAAA'))
         landmark1 = Landmark('name', 'L1', 0, 2)
         landmark2 = Landmark('name', 'L2', 1, 2)
@@ -334,19 +332,17 @@ class TestScannedRead(TestCase):
         trigPoint1 = TrigPoint('name', 'T1', 3)
         trigPoint2 = TrigPoint('name', 'T2', 5)
         read.trigPoints.extend([trigPoint1, trigPoint2])
-        read.print_(fp)
-        expected = ("Read: id\n"
-                    "  Length: 5\n"
-                    "  Covered indices: 5 (100.00%)\n"
-                    "  Landmark count 2, trig point count 2\n")
-        self.assertEqual(expected, fp.getvalue())
+        expected = ('Read: id\n'
+                    '  Length: 5\n'
+                    '  Covered indices: 5 (100.00%)\n'
+                    '  Landmark count 2, trig point count 2')
+        self.assertEqual(expected, read.print_())
 
     def testPrintDescription(self):
         """
         Check that the print_ method of a scanned read produces the
         expected result when given a description.
         """
-        fp = StringIO()
         read = ScannedRead(AARead('id', 'AAAAA'))
         landmark1 = Landmark('name', 'L1', 0, 2)
         landmark2 = Landmark('name', 'L2', 1, 2)
@@ -354,19 +350,17 @@ class TestScannedRead(TestCase):
         trigPoint1 = TrigPoint('name', 'T1', 3)
         trigPoint2 = TrigPoint('name', 'T2', 5)
         read.trigPoints.extend([trigPoint1, trigPoint2])
-        read.print_(fp, description='Query')
-        expected = ("Query: id\n"
-                    "  Length: 5\n"
-                    "  Covered indices: 5 (100.00%)\n"
-                    "  Landmark count 2, trig point count 2\n")
-        self.assertEqual(expected, fp.getvalue())
+        expected = ('Query: id\n'
+                    '  Length: 5\n'
+                    '  Covered indices: 5 (100.00%)\n'
+                    '  Landmark count 2, trig point count 2')
+        self.assertEqual(expected, read.print_(description='Query'))
 
     def testPrintSequence(self):
         """
         Check that the print_ method of a scanned read produces the
         expected result when requested to print the sequence.
         """
-        fp = StringIO()
         read = ScannedRead(AARead('id', 'AAAAA'))
         landmark1 = Landmark('name', 'L1', 0, 2)
         landmark2 = Landmark('name', 'L2', 1, 2)
@@ -374,20 +368,18 @@ class TestScannedRead(TestCase):
         trigPoint1 = TrigPoint('name', 'T1', 3)
         trigPoint2 = TrigPoint('name', 'T2', 5)
         read.trigPoints.extend([trigPoint1, trigPoint2])
-        read.print_(fp, printSequence=True)
-        expected = ("Read: id\n"
-                    "  Sequence: AAAAA\n"
-                    "  Length: 5\n"
-                    "  Covered indices: 5 (100.00%)\n"
-                    "  Landmark count 2, trig point count 2\n")
-        self.assertEqual(expected, fp.getvalue())
+        expected = ('Read: id\n'
+                    '  Sequence: AAAAA\n'
+                    '  Length: 5\n'
+                    '  Covered indices: 5 (100.00%)\n'
+                    '  Landmark count 2, trig point count 2')
+        self.assertEqual(expected, read.print_(printSequence=True))
 
     def testPrintFeatures(self):
         """
         Check that the print_ method of a scanned read produces the
         expected result when asked to print the read's features.
         """
-        fp = StringIO()
         read = ScannedRead(AARead('id', 'AAAAA'))
         landmark1 = Landmark('name', 'L1', 0, 2)
         landmark2 = Landmark('name', 'L2', 1, 2)
@@ -395,13 +387,12 @@ class TestScannedRead(TestCase):
         trigPoint1 = TrigPoint('name', 'T1', 3)
         trigPoint2 = TrigPoint('name', 'T2', 5)
         read.trigPoints.extend([trigPoint1, trigPoint2])
-        read.print_(fp, printFeatures=True)
-        expected = ("Read: id\n"
-                    "  Length: 5\n"
-                    "  Covered indices: 5 (100.00%)\n"
-                    "  Landmark count 2, trig point count 2\n"
-                    "     name symbol='L1' offset=0 len=2 detail=''\n"
-                    "     name symbol='L2' offset=1 len=2 detail=''\n"
-                    "     name symbol=T1 offset=3\n"
-                    "     name symbol=T2 offset=5\n")
-        self.assertEqual(expected, fp.getvalue())
+        expected = ('Read: id\n'
+                    '  Length: 5\n'
+                    '  Covered indices: 5 (100.00%)\n'
+                    '  Landmark count 2, trig point count 2\n'
+                    "    name symbol=L1 offset=0 len=2 detail=''\n"
+                    "    name symbol=L2 offset=1 len=2 detail=''\n"
+                    '    name symbol=T1 offset=3\n'
+                    '    name symbol=T2 offset=5')
+        self.assertEqual(expected, read.print_(printFeatures=True))

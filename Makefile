@@ -3,6 +3,9 @@
 check:
 	python -m discover -v
 
+tcheck:
+	trial --rterrors test
+
 pep8:
 	find . -name '*.py' -print0 | xargs -0 pep8
 

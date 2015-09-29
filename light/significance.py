@@ -78,7 +78,7 @@ class MaxBinHeight(object):
         # A top-level import of Database would be circular.
         from light.database import Database
         db = Database(database.params)
-        _, subjectIndex = db.addSubject(query)
+        _, subjectIndex, _ = db.addSubject(query)
         result = db.find(query, significanceMethod='Always',
                          storeFullAnalysis=True)
         bins = result.analysis[subjectIndex]['histogram'].bins
@@ -122,7 +122,7 @@ class MeanBinHeight(object):
         # A top-level import of Database would be circular.
         from light.database import Database
         db = Database(database.params)
-        _, subjectIndex = db.addSubject(query)
+        _, subjectIndex, _ = db.addSubject(query)
         result = db.find(query, significanceMethod='Always',
                          storeFullAnalysis=True)
         bins = result.analysis[subjectIndex]['histogram'].bins

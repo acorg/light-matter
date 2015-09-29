@@ -1,5 +1,4 @@
 from unittest import TestCase
-from io import StringIO
 
 from dark.reads import AARead
 
@@ -25,9 +24,10 @@ class TestSimpleConnector(TestCase):
         params = Parameters([AlphaHelix], [])
         sc = SimpleConnector(params)
         subject = AARead('id', 'FRRRFRRRF')
-        preExisting, subjectIndex = sc.addSubject(subject)
+        preExisting, subjectIndex, hashCount = sc.addSubject(subject)
         self.assertFalse(preExisting)
         self.assertEqual('0', subjectIndex)
+        self.assertEqual(0, hashCount)
 
     def testPrint(self):
         """
@@ -39,26 +39,24 @@ class TestSimpleConnector(TestCase):
         sc = SimpleConnector(params)
         subject = AARead('subject-id', 'FRRRFRRRFASAASA')
         sc.addSubject(subject)
-        fp = StringIO()
-        sc.print_(fp, printHashes=True)
         expected = (
             'Backends:\n'
-            'Name: backend\n'
-            'Hash count: 3\n'
-            'Checksum: 20379718\n'
-            'Subjects (with offsets) by hash:\n'
-            '   A2:P:10\n'
-            '    0 [[0, 10]]\n'
-            '   A2:T:4\n'
-            '    0 [[0, 4]]\n'
-            '   A2:T:8\n'
-            '    0 [[0, 8]]\n'
-            'Landmark symbol counts:\n'
-            '  AlphaHelix (A2): 3\n'
-            'Trig point symbol counts:\n'
-            '  Peaks (P): 1\n'
-            '  Troughs (T): 2\n')
-        self.assertEqual(expected, fp.getvalue())
+            '  Name: backend\n'
+            '  Hash count: 3\n'
+            '  Checksum: 20379718\n'
+            '  Subjects (with offsets) by hash:\n'
+            '    A2:P:10\n'
+            '      0 [[0, 10]]\n'
+            '    A2:T:4\n'
+            '      0 [[0, 4]]\n'
+            '    A2:T:8\n'
+            '      0 [[0, 8]]\n'
+            '  Landmark symbol counts:\n'
+            '    AlphaHelix (A2): 3\n'
+            '  Trig point symbol counts:\n'
+            '    Peaks (P): 1\n'
+            '    Troughs (T): 2')
+        self.assertEqual(expected, sc.print_(printHashes=True))
 
 
 class UnusedConnectorTests:

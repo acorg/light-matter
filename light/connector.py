@@ -3,7 +3,7 @@ import logging
 logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
                     level=logging.INFO)
 
-from asyncio import await, gather
+from asyncio import gather
 from collections import defaultdict
 from io import StringIO
 from random import uniform, choice
@@ -445,7 +445,7 @@ class WampServerConnector:
         return False, subjectIndex
 
     async def find(self, read, significanceMethod=None, scoreMethod=None,
-             significanceFraction=None, storeFullAnalysis=False):
+                   significanceFraction=None, storeFullAnalysis=False):
         """
         Check which database sequences a read matches.
 

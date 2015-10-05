@@ -10,6 +10,7 @@ from light.landmarks import findLandmark, DEFAULT_LANDMARK_CLASSES
 from light.trig import findTrigPoint, DEFAULT_TRIG_CLASSES
 from light.score import MinHashesScore
 from light.significance import HashFraction
+from light.string import MultilineString
 
 
 class Parameters(object):
@@ -107,7 +108,7 @@ class Parameters(object):
             [f.SYMBOL for f in trigPointFinders] +
             list(map(str, (self.limitPerLandmark, self.maxDistance,
                            self.minDistance, self.distanceBase))))
-        return checksum.checksum
+        return checksum.value
 
     def save(self, fp=sys.stdout):
         """
@@ -166,31 +167,45 @@ class Parameters(object):
                           minDistance=state['minDistance'],
                           distanceBase=state['distanceBase'])
 
-    def print_(self, fp=sys.stdout):
+    def print_(self, margin=''):
         """
         Print parameter values.
+
+        @param margin: A C{str} that should be inserted at the start of each
+            line of output.
+        @return: A C{str} representation of the parameters.
         """
-        print('Parameters:', file=fp)
+        result = MultilineString(margin=margin)
+        append = result.append
+        extend = result.extend
+
+        append('Parameters:')
+        result.indent()
+
         if self.landmarkFinders:
-            print('  Landmark finders:', file=fp)
-            print('    ' + '\n    '.join(sorted(
-                finder.NAME for finder in self.landmarkFinders)),
-                file=fp)
+            append('Landmark finders:')
+            result.indent()
+            extend(sorted(finder.NAME for finder in self.landmarkFinders))
+            result.outdent()
         else:
-            print('  Landmark finders: none', file=fp)
+            append('Landmark finders: none')
 
         if self.trigPointFinders:
-            print('  Trig point finders:', file=fp)
-            print('    ' + '\n    '.join(sorted(
-                finder.NAME for finder in self.trigPointFinders)),
-                file=fp)
+            append('Trig point finders:')
+            result.indent()
+            extend(sorted(finder.NAME for finder in self.trigPointFinders))
+            result.outdent()
         else:
-            print('  Trig point finders: none', file=fp)
+            append('Trig point finders: none')
 
-        print('  Limit per landmark:', self.limitPerLandmark, file=fp)
-        print('  Max distance:', self.maxDistance, file=fp)
-        print('  Min distance:', self.minDistance, file=fp)
-        print('  Distance base:', self.distanceBase, file=fp)
+        extend([
+            'Limit per landmark: %d' % self.limitPerLandmark,
+            'Max distance: %d' % self.maxDistance,
+            'Min distance: %d' % self.minDistance,
+            'Distance base: %f' % self.distanceBase,
+        ])
+
+        return str(result)
 
     def compare(self, other):
         """

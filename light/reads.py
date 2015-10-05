@@ -1,6 +1,5 @@
-import sys
-
 from light.features import CombinedFeatureList, TrigPoint
+from light.string import MultilineString
 
 
 class ScannedRead(object):
@@ -82,8 +81,8 @@ class ScannedRead(object):
                         yield landmark, feature
                         count += 1
 
-    def print_(self, fp=sys.stdout, printSequence=False, printFeatures=False,
-               description='Read'):
+    def print_(self, printSequence=False, printFeatures=False,
+               description='Read', margin=''):
         """
         Print the details of a scanned read.
 
@@ -96,23 +95,33 @@ class ScannedRead(object):
         @param description: A C{str} description to print before the scanned
             read id. This allows us to be specific about what a read is, e.g.,
             a query or a subject.
+        @param margin: A C{str} that should be inserted at the start of each
+            line of output.
+        @return: A C{str} summary of the scanned read.
         """
         read = self.read
+        result = MultilineString(margin=margin)
+        append = result.append
         coveredIndices = len(self.coveredIndices())
 
-        print('%s: %s' % (description, read.id), file=fp)
+        append('%s: %s' % (description, read.id))
+        result.indent()
         if printSequence:
-            print('  Sequence: %s' % read.sequence, file=fp)
-        print('  Length: %d' % len(read.sequence), file=fp)
-        print('  Covered indices: %d (%.2f%%)' % (
+            append('Sequence: %s' % read.sequence)
+        append('Length: %d' % len(read.sequence))
+        append('Covered indices: %d (%.2f%%)' % (
             coveredIndices,
-            coveredIndices / float(len(read.sequence)) * 100.0), file=fp)
+            coveredIndices / float(len(read.sequence)) * 100.0))
 
         # Print read landmarks and trig points.
-        print('  Landmark count %d, trig point count %d' % (
-            len(self.landmarks), len(self.trigPoints)), file=fp)
+        append('Landmark count %d, trig point count %d' % (
+            len(self.landmarks), len(self.trigPoints)))
         if printFeatures:
+            result.indent()
             for landmark in self.landmarks:
-                print('    ', landmark, file=fp)
+                append(str(landmark))
             for trigPoint in self.trigPoints:
-                print('    ', trigPoint, file=fp)
+                append(str(trigPoint))
+            result.outdent()
+
+        return str(result)

@@ -30,6 +30,6 @@ if __name__ == '__main__':
                         help='The thing to find matches against.')
     addArgsToParser(parser)
     args = parser.parse_args()
-    runner = ApplicationRunner(args.url, args.realm,
+    runner = ApplicationRunner(args.wampUrl, args.realm,
                                extra=dict(what=args.what))
     runner.run(FindComponent)

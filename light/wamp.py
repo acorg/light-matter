@@ -13,7 +13,7 @@ def addArgsToParser(parser):
 
     @param parser: An C{argparse.ArgumentParser} instance.
     """
-    parser.add_argument('--debugWamp', action='store_true',
+    parser.add_argument('--debugWamp', action='store_true', default=False,
                         help='Enable debug output.')
 
     parser.add_argument('--realm', default=DEFAULT_REALM,
@@ -25,8 +25,8 @@ def addArgsToParser(parser):
     parser.add_argument('--port', type=int, default=DEFAULT_PORT,
                         help='TCP port to connect to.')
 
-    parser.add_argument('--url', default=DEFAULT_URL,
-                        help='The WebSocket URL to connect to.')
+    parser.add_argument('--wampUrl', default=DEFAULT_URL,
+                        help='The WAMP router URL to connect to.')
 
     parser.add_argument('--transport', default=DEFAULT_TRANSPORT_TYPE,
                         choices=['websocket', 'rawsocket-json',

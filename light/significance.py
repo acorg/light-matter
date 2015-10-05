@@ -75,8 +75,10 @@ class MaxBinHeight(object):
     """
     def __init__(self, histogram, query, database):
         self._histogram = histogram
-        db = database.emptyCopy()
-        subjectIndex = db.addSubject(query)
+        # A top-level import of Database would be circular.
+        from light.database import Database
+        db = Database(database.params)
+        _, subjectIndex, _ = db.addSubject(query)
         result = db.find(query, significanceMethod='Always',
                          storeFullAnalysis=True)
         bins = result.analysis[subjectIndex]['histogram'].bins
@@ -117,8 +119,10 @@ class MeanBinHeight(object):
     """
     def __init__(self, histogram, query, database):
         self._histogram = histogram
-        db = database.emptyCopy()
-        subjectIndex = db.addSubject(query)
+        # A top-level import of Database would be circular.
+        from light.database import Database
+        db = Database(database.params)
+        _, subjectIndex, _ = db.addSubject(query)
         result = db.find(query, significanceMethod='Always',
                          storeFullAnalysis=True)
         bins = result.analysis[subjectIndex]['histogram'].bins

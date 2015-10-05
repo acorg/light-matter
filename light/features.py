@@ -42,12 +42,12 @@ class Landmark(_Feature):
         self.symbolDetail = symbolDetail
 
     def __str__(self):
-        return '%s symbol=%r offset=%d len=%d detail=%r' % (
+        return '%s symbol=%s offset=%d len=%d detail=%r' % (
             self.name, self.symbol, self.offset, self.length,
             self.symbolDetail)
 
     def __repr__(self):
-        return '%s symbol=%r offset=%d len=%d detail=%r' % (
+        return '%s symbol=%s offset=%d len=%d detail=%r' % (
             self.name, self.symbol, self.offset, self.length,
             self.symbolDetail)
 

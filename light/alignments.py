@@ -141,7 +141,7 @@ def jsonDictToAlignments(lightDict, database):
     lightAlignments = []
 
     for alignment in lightDict['alignments']:
-        subject = database.getSubject(alignment['subjectIndex'])
+        subject = database.getSubjectByIndex(alignment['subjectIndex'])
         lightAlignment = LightAlignment(len(subject), subject.id)
         for hspDict in alignment['hsps']:
             hsp = HSP(hspDict['score'])

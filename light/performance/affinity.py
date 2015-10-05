@@ -27,7 +27,7 @@ def affinityMatrix(sequences, significanceFraction=None, **kwargs):
         reads = sequences
 
     db = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
-    subjectCount = db.subjectCount
+    subjectCount = db.subjectCount()
     affinity = []
 
     for readIndex, read in enumerate(reads):
@@ -35,11 +35,11 @@ def affinityMatrix(sequences, significanceFraction=None, **kwargs):
         append = row.append
         analysis = db.find(
             read, significanceFraction=significanceFraction).analysis
-        for subjectIndex in range(subjectCount):
+        for subjectIndex in map(str, range(subjectCount)):
             # Be careful how we access the analysis. It is a defaultdict,
-            # so its keys are created upon access. I.e., don't use a
-            # try/except below because analysis[subjectIndex] will never
-            # raise a KeyError.
+            # so its keys are created upon access. I.e., use 'in' to test
+            # for membership not try/except, because analysis[subjectIndex]
+            # will never raise a KeyError.
             if subjectIndex in analysis:
                 score = analysis[subjectIndex]['bestScore']
             else:

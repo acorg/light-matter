@@ -21,7 +21,7 @@
                             ]
                         },
                         {
-                            "name": "coordinator",
+                            "name": "database",
                             "permissions": [
                                 {
                                     "uri": "*",
@@ -33,7 +33,7 @@
                             ]
                         },
                         {
-                            "name": "database",
+                            "name": "backend",
                             "permissions": [
                                 {
                                     "uri": "*",
@@ -53,6 +53,15 @@
                                     "subscribe": true,
                                     "call": true,
                                     "register": true
+                                }
+                            ]
+                        },
+                        {
+                            "name": "client",
+                            "permissions": [
+                                {
+                                    "uri": "*",
+                                    "call": true
                                 }
                             ]
                         },

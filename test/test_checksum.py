@@ -12,14 +12,14 @@ class TestChecksum(TestCase):
         A checksum that has not been given any text must have the default
         0x0 value.
         """
-        self.assertEqual(0x0, Checksum().checksum)
+        self.assertEqual(0x0, Checksum().value)
 
     def testSetInitialValue(self):
         """
         A checksum that is initialized with a specific value but which has not
         been given any text must be set to the passed initial value.
         """
-        self.assertEqual(1, Checksum(1).checksum)
+        self.assertEqual(1, Checksum(1).value)
 
     def testEquality(self):
         """
@@ -43,5 +43,12 @@ class TestChecksum(TestCase):
         It must be possible to set the checksum's value.
         """
         c = Checksum()
-        c.checksum = 10
-        self.assertEqual(10, c.checksum)
+        c.value = 10
+        self.assertEqual(10, c.value)
+
+    def testRepr(self):
+        """
+        The __repr__ method must return the expected string.
+        """
+        c = Checksum(10)
+        self.assertEqual('%r' % c, '<Checksum instance, value 10>')

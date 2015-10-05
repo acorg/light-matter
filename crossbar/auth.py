@@ -27,26 +27,34 @@ from autobahn.wamp.exception import ApplicationError
 
 class AppSession(ApplicationSession):
 
-    # Note that the realm CANNOT be changed unless you make corresponding
+    # Note that the realm name CANNOT be changed unless you make corresponding
     # changes elsewhere. See the explanation in README.md
     REALM = 'light-matter'
 
     # TODO: Get the secrets from the environment.
     USER_DB = {
-        'coordinator': {
-            'role': 'coordinator',
-            'secret': 'secret2',
-        },
         'database': {
             'role': 'database',
+            'secret': 'secret2',
+        },
+        'backend': {
+            'role': 'backend',
             'secret': 'secret2',
         },
         'shutdown': {
             'role': 'shutdown',
             'secret': 'secret2',
         },
+        'client': {
+            'role': 'client',
+            'secret': 'secret2',
+        },
         'find': {
             'role': 'find',
+            'secret': 'secret2',
+        },
+        'connector': {
+            'role': 'connector',
             'secret': 'secret2',
         },
     }

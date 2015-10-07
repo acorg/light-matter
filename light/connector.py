@@ -1,8 +1,5 @@
 import logging
 
-logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
-                    level=logging.INFO)
-
 from asyncio import gather
 from collections import defaultdict
 from io import StringIO
@@ -22,6 +19,9 @@ from light.result import Result
 from light.exceptions import BackendException
 from light.subject import Subject, SubjectStore
 from light.string import MultilineString
+
+logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
+                    level=logging.INFO)
 
 
 class SimpleConnector:

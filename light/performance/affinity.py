@@ -22,7 +22,7 @@ def affinityMatrix(sequences, significanceFraction=None, **kwargs):
         the read number, the second is the database subject index.
     """
     if isinstance(sequences, str):
-        reads = FastaReads(sequences, readClass=AARead)
+        reads = FastaReads(sequences, readClass=AARead, upperCase=True)
     else:
         reads = sequences
 

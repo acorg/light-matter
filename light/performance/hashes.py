@@ -1,6 +1,7 @@
 from dark.reads import AARead
 from dark.fasta import FastaReads
 
+from light.backend import Backend
 from light.database import DatabaseSpecifier
 
 
@@ -24,18 +25,20 @@ class HashesString(object):
             additional keywords, all of which are optional.
         """
         if isinstance(sequences, str):
-            reads = FastaReads(sequences, readClass=AARead)
+            reads = FastaReads(sequences, readClass=AARead, upperCase=True)
         else:
             reads = sequences
 
         database = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
+        backend = Backend()
+        backend.configure(database.params)
 
         # Make a dictionary where the keys are the sequence ids and the value
         # is an orderedDict of hashes as returned from getHashes().
         hashes = {}
         for read in reads:
-            scannedRead = database.scan(read)
-            readHashes = database.getHashes(scannedRead)
+            scannedRead = backend.scan(read)
+            readHashes = backend.getHashes(scannedRead)
             hashes[read.id] = readHashes
 
         # Make a list of all unique hashes that occur.

@@ -1,13 +1,12 @@
 import txaio
-txaio.use_asyncio()
-
-# import signal
 
 from autobahn.wamp.types import ComponentConfig
 from autobahn.websocket.protocol import parseWsUrl
 from autobahn.asyncio.websocket import WampWebSocketClientFactory
 
 import asyncio
+
+txaio.use_asyncio()
 
 
 class ApplicationRunner:

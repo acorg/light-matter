@@ -1,15 +1,15 @@
 import os
 import logging
 
-logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
-                    level=logging.INFO)
-
 import asyncio
 from io import StringIO
 
 from light.autobahn.component import Component
 from light.backend import Backend
 from light.parameters import Parameters
+
+logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
+                    level=logging.INFO)
 
 
 class BackendComponent(Component):

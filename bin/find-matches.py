@@ -80,8 +80,8 @@ if __name__ == '__main__':
     # automatically turn on --human if any of --printHistograms or
     # --printSequences or --printFeatures is used, but I think that could
     # be confusing, so for now let's be strict.
-    if ((args.printHistograms or args.printSequences or args.printFeatures)
-            and not args.human):
+    if ((args.printHistograms or args.printSequences or
+         args.printFeatures) and not args.human):
         print((
             '%s: If you specify --printHistograms or --printSequences or '
             '--printFeatures, you must also use --human.'

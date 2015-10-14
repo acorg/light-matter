@@ -28,10 +28,10 @@ def queryDatabase(subjects, queries, database,
         C{dict} showing what subjects it matched, and with what score.
     """
     if isinstance(queries, str):
-        queries = FastaReads(queries)
+        queries = FastaReads(queries, upperCase=True)
 
     if isinstance(subjects, str):
-        subjects = FastaReads(subjects)
+        subjects = FastaReads(subjects, upperCase=True)
 
     list(map(database.addSubject, subjects))
 

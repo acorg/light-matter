@@ -144,7 +144,8 @@ if __name__ == '__main__':
         raise KeyError('%s is not a valid dataset.' % args.dataset)
 
     database = databaseSpecifier.getDatabaseFromArgs(args)
-    list(map(database.addSubject, FastaReads(databaseFile, readClass=AARead)))
+    list(map(database.addSubject, FastaReads(databaseFile, readClass=AARead,
+                                             upperCase=True)))
 
     lookupTime = time()
     result = database.find(read)

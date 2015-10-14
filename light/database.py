@@ -589,7 +589,8 @@ class DatabaseSpecifier:
                 'In-memory database specification not enabled')
             if self._allowPopulation:
                 if databaseFasta is not None:
-                    for read in FastaReads(databaseFasta, readClass=AARead):
+                    for read in FastaReads(databaseFasta, readClass=AARead,
+                                           upperCase=True):
                         database.addSubject(read)
                 if subjects is not None:
                     for subject in subjects:

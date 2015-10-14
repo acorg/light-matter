@@ -1,6 +1,7 @@
 from dark.reads import AARead
 from dark.fasta import FastaReads
 
+from light.backend import Backend
 from light.database import DatabaseSpecifier
 
 
@@ -24,12 +25,13 @@ class HashesString(object):
             additional keywords, all of which are optional.
         """
         if isinstance(sequences, str):
-            reads = FastaReads(sequences, readClass=AARead)
+            reads = FastaReads(sequences, readClass=AARead, upperCase=True)
         else:
             reads = sequences
 
         database = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
-        backend = database._connector._backend
+        backend = Backend()
+        backend.configure(database.params)
 
         # Make a dictionary where the keys are the sequence ids and the value
         # is an orderedDict of hashes as returned from getHashes().

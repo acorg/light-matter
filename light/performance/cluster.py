@@ -38,7 +38,7 @@ class ClusterAnalysis(object):
             label has been set, or if there are no reads in C{sequences}.
         """
         if isinstance(sequences, str):
-            reads = FastaReads(sequences, readClass=AARead)
+            reads = FastaReads(sequences, readClass=AARead, upperCase=True)
         else:
             reads = sequences
         database = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)

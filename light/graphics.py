@@ -178,7 +178,7 @@ def plotHistogramPanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
     @return: The C{light.result.Result} from running the database find.
     """
     if isinstance(sequences, str):
-        reads = list(FastaReads(sequences, readClass=AARead))
+        reads = list(FastaReads(sequences, readClass=AARead, upperCase=True))
     else:
         reads = list(sequences)
     nReads = len(reads)
@@ -337,7 +337,7 @@ def plotHistogramLinePanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
     @return: The C{light.result.Result} from running the database find.
     """
     if isinstance(sequences, str):
-        reads = list(FastaReads(sequences, readClass=AARead))
+        reads = list(FastaReads(sequences, readClass=AARead, upperCase=True))
     else:
         reads = list(sequences)
     nReads = len(reads)
@@ -470,7 +470,7 @@ def plotHistogramLines(sequences, significanceFraction=None, **kwargs):
     fig = plt.figure(figsize=(15, 10))
     readsAx = fig.add_subplot(111)
     if isinstance(sequences, str):
-        reads = list(FastaReads(sequences, readClass=AARead))
+        reads = list(FastaReads(sequences, readClass=AARead, upperCase=True))
     else:
         reads = list(sequences)
     # Make a new database. For now we don't allow an existing database to
@@ -604,7 +604,7 @@ def plotHorizontalPairPanel(sequences, equalizeXAxes=True,
     @return: The C{light.result.Result} from running the database find.
     """
     if isinstance(sequences, str):
-        reads = list(FastaReads(sequences, readClass=AARead))
+        reads = list(FastaReads(sequences, readClass=AARead, upperCase=True))
     else:
         reads = list(sequences)
     nReads = len(reads)
@@ -973,7 +973,7 @@ def plotLandmarksInSequences(sequences, maxTickLabelLength=None, **kwargs):
         additional keywords, all of which are optional.
     """
     if isinstance(sequences, str):
-        reads = list(FastaReads(sequences, readClass=AARead))
+        reads = list(FastaReads(sequences, readClass=AARead, upperCase=True))
     else:
         reads = list(sequences)
 

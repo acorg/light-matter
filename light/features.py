@@ -96,8 +96,8 @@ class TrigPoint(_Feature):
         return '%s symbol=%s offset=%d' % (self.name, self.symbol, self.offset)
 
     def __eq__(self, other):
-        return (self.offset == other.offset and self.symbol == other.symbol
-                and self.name == other.name)
+        return (self.offset == other.offset and self.symbol == other.symbol and
+                self.name == other.name)
 
     def __lt__(self, other):
         return (self.name, self.offset) < (other.name, other.offset)

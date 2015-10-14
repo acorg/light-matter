@@ -8,9 +8,6 @@ except ImportError:
 
 import logging
 
-logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
-                    level=logging.INFO)
-
 from Bio.File import as_handle
 
 from dark.fasta import combineReads, FastaReads
@@ -28,6 +25,9 @@ from light.string import MultilineString
 from light.autobahn.client import ClientComponent
 from light.autobahn.runner import ApplicationRunner
 from light.exceptions import WampDbOffline
+
+logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
+                    level=logging.INFO)
 
 
 class Database:

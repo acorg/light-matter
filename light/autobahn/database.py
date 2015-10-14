@@ -1,12 +1,11 @@
 from io import StringIO
 import logging
-
-logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
-                    level=logging.INFO)
-
 import asyncio
 
 from light.autobahn.component import Component
+
+logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
+                    level=logging.INFO)
 
 
 class DatabaseComponent(Component):

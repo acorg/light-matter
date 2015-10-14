@@ -620,7 +620,8 @@ class TestLightReadsAlignmentsFiltering(TestCase):
         """
         It must be possible to clear any filtering that has been applied.
         """
-        result = lambda a: BZ2([PARAMS, RECORD0, RECORD1, RECORD2])
+        def result(_):
+            return BZ2([PARAMS, RECORD0, RECORD1, RECORD2])
 
         with patch.object(bz2, 'BZ2File') as mockMethod:
             mockMethod.side_effect = result

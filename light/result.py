@@ -9,7 +9,7 @@ from light.distance import scale
 from light.histogram import Histogram
 from light.significance import (Always, HashFraction, MaxBinHeight,
                                 MeanBinHeight)
-from light.score import MinHashesScore
+from light.score import MinHashesScore, FeatureMatchingScore
 from light.backend import Backend
 from light.string import MultilineString
 
@@ -127,6 +127,8 @@ class Result(object):
 
             if self.scoreMethod == 'MinHashesScore':
                 calculateScore = MinHashesScore(histogram, minHashCount)
+            elif self.scoreMethod == 'FeatureMatchingScore':
+                calculateScore = FeatureMatchingScore(histogram)
             else:
                 raise ValueError('Unknown score method %r' %
                                  self.scoreMethod)

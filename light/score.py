@@ -16,7 +16,7 @@ class MinHashesScore(object):
 
     def calculateScore(self, binIndex):
         """
-        Calculates the score.
+        Calculates the score for a given histogram bin.
 
         @param binIndex: The C{int} index of the bin to examine.
         @return: A C{float} of the score of that bin.
@@ -46,4 +46,25 @@ class MinHashesScore(object):
         return score
 
 
-ALL_SCORE_CLASSES = (MinHashesScore,)
+class FeatureMatchingScore:
+    """
+    Calculates the score for histogram bins based on the features present
+    within the regions of the query and subject that had a significant
+    alignment (i.e., caused a histogram bin to be considered significant).
+
+    @param histogram: A C{light.histogram} instance.
+    """
+    def __init__(self, histogram):
+        self._histogram = histogram
+
+    def calculateScore(self, binIndex):
+        """
+        Calculates the score for a given histogram bin.
+
+        @param binIndex: The C{int} index of the bin to examine.
+        @return: A C{float} of the score of that bin.
+        """
+        return 0.0
+
+
+ALL_SCORE_CLASSES = (MinHashesScore, FeatureMatchingScore)

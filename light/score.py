@@ -1,4 +1,6 @@
 from warnings import warn
+from operator import itemgetter
+from copy import copy
 
 
 class MinHashesScore(object):
@@ -46,6 +48,47 @@ class MinHashesScore(object):
         return score
 
 
+def histogramBinFeatures(bin_, queryOrSubject):
+    """
+    Extract all features (of type C{queryOrSubject} (a C{str}, either
+    'query' or 'subject') from a bin and return them as a set, along with
+    the min and max offsets of the features.
+
+    @param bin_: A C{light.histogram.Histogram} bin.
+    @param queryOrSubject: A C{str}, to indicate which features to extract,
+        either 'query' or 'subject'.
+    @raise KeyError: If C{queryOrSubject} is not 'query' or 'subject'.
+    @return: A 2-tuple, containing 1) a C{set} of all features (landmarks and
+        trig points), 2) a C{set} of the offsets of all features in the bin
+        (this includes the start and end of all landmarks, plus the offset
+        of all trig points).
+    """
+    allOffsets = set()
+    allFeatures = set()
+    # There is no error checking that queryOrSubject is 'query' or
+    # 'subject' as the following item getter will raise a KeyError if it
+    # cannot access the dict key in the bin element.
+    offsetsListGetter = itemgetter(queryOrSubject + 'Offsets')
+    for hash_ in bin_:
+        offsetsList = offsetsListGetter(hash_)
+        landmark = hash_.landmark
+        trigPoint = hash_.trigPoint
+        for offsets in offsetsList:
+            # Copy the landmark, set its offset, add it to our results.
+            thisLandmark = copy(landmark)
+            thisLandmark.offset = offsets[0]
+            allFeatures.add(thisLandmark)
+            allOffsets.add(thisLandmark.offset)
+            allOffsets.add(thisLandmark.offset + thisLandmark.length)
+            # Copy the trig point, set its offset, add it to our results.
+            thisTrigPoint = copy(trigPoint)
+            thisTrigPoint.offset = offsets[1]
+            allFeatures.add(thisTrigPoint)
+            allOffsets.add(thisTrigPoint.offset)
+
+    return allFeatures, allOffsets
+
+
 class FeatureMatchingScore:
     """
     Calculates the score for histogram bins based on the features present
@@ -53,9 +96,14 @@ class FeatureMatchingScore:
     alignment (i.e., caused a histogram bin to be considered significant).
 
     @param histogram: A C{light.histogram} instance.
+    @param query: A C{dark.reads.AARead} instance.
+    @param subject: A C{light.subject.Subject} instance (a subclass of
+        C{dark.reads.AARead}).
     """
-    def __init__(self, histogram):
+    def __init__(self, histogram, query, subject):
         self._histogram = histogram
+        self._query = query
+        self._subject = subject
 
     def calculateScore(self, binIndex):
         """

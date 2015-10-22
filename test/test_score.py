@@ -1,7 +1,11 @@
 import warnings
 from unittest import TestCase
 
-from light.score import MinHashesScore, FeatureMatchingScore
+from dark.reads import AARead
+
+from light.subject import Subject
+from light.score import (
+    MinHashesScore, FeatureMatchingScore, histogramBinFeatures)
 from light.histogram import Histogram
 
 
@@ -75,6 +79,41 @@ class TestMinHashesScore(TestCase):
             self.assertIn(error, str(w[0].message))
 
 
+class TestHistogramBinFeatures(TestCase):
+    """
+    Tests for the light.score.histogramBinFeatures function.
+    """
+    def testInvalidQueryOrSubjectSpecifier(self):
+        """
+        If an invalid value for queryOrSubject ('xxx') is passed to
+        histogramBinFeatures, it must raise a KeyError (when looking
+        in the bin item dictionary for 'xxxOffsets').
+        """
+        histogram = Histogram(1)
+        histogram.add(44, {
+            # It doesn't matter what values we pass here, as the KeyError
+            # will be triggered by the lack of a dictionary key.
+            'landmark': None,
+            'queryOffsets': None,
+            'subjectOffsets': None,
+            'trigPoint': None,
+            })
+        histogram.finalize()
+        self.assertRaisesRegexp(KeyError, 'xxxOffsets', histogramBinFeatures,
+                                histogram[0], 'xxx')
+
+    def testEmptyBin(self):
+        """
+        If a histogram bin is empty, then when asked to extract its features
+        and offsets, histogramBinFeatures must return two empty sets.
+        """
+        histogram = Histogram()
+        histogram.finalize()
+        features, offsets = histogramBinFeatures(histogram[0], 'query')
+        self.assertEqual(set(), features)
+        self.assertEqual(set(), offsets)
+
+
 class TestFeatureMatchingScore(TestCase):
     """
     Tests for the light.score.FeatureMatchingScore class.
@@ -85,5 +124,7 @@ class TestFeatureMatchingScore(TestCase):
         """
         histogram = Histogram()
         histogram.finalize()
-        mhs = FeatureMatchingScore(histogram)
+        query = AARead('id1', 'A')
+        subject = Subject('id2', 'A', 0)
+        mhs = FeatureMatchingScore(histogram, query, subject)
         self.assertEqual(0.0, mhs.calculateScore(0))

@@ -20,3 +20,4 @@ wc:
 clean:
 	find . \( -name '*.pyc' -o -name '*~' \) -print0 | xargs -0 rm
 	find . -name '__pycache__' -type d -print0 | xargs -0 rmdir
+	find . -name '_trial_temp' -type d -print0 | xargs -0 rm -r

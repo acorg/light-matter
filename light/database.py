@@ -395,6 +395,18 @@ class DatabaseSpecifier:
                       'reduces sensitivity to relatively small differences in '
                       'distance.'))
 
+            parser.add_argument(
+                '--featureMatchScore', type=float,
+                default=Parameters.DEFAULT_FEATURE_MATCH_SCORE,
+                help=('The contribution (usally positive) to a score when a '
+                      'feature in a query and subject are part of a match.'))
+
+            parser.add_argument(
+                '--featureMismatchScore', type=float,
+                default=Parameters.DEFAULT_FEATURE_MISMATCH_SCORE,
+                help=('The contribution (usally negative) to a score when a '
+                      'feature in a query and subject are part of a match.'))
+
         if self._allowPopulation:
             parser.add_argument(
                 '--databaseFasta',

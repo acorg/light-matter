@@ -139,7 +139,8 @@ class Result(object):
             if self.scoreMethod == 'MinHashesScore':
                 scorer = MinHashesScore(histogram, minHashCount)
             elif self.scoreMethod == 'FeatureMatchingScore':
-                scorer = FeatureMatchingScore(histogram, query, subject)
+                scorer = FeatureMatchingScore(histogram, query, subject,
+                                              self.connector.params)
             else:
                 raise ValueError('Unknown score method %r' %
                                  self.scoreMethod)

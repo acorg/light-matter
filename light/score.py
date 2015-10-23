@@ -1,5 +1,4 @@
 from warnings import warn
-from operator import itemgetter
 from copy import copy
 
 
@@ -50,7 +49,7 @@ class MinHashesScore(object):
 
 def histogramBinFeatures(bin_, queryOrSubject):
     """
-    Extract all features (of type C{queryOrSubject} (a C{str}, either
+    Extract all features of type C{queryOrSubject} (a C{str}, either
     'query' or 'subject') from a bin and return them as a set, along with
     the min and max offsets of the features.
 
@@ -63,16 +62,15 @@ def histogramBinFeatures(bin_, queryOrSubject):
         (this includes the start and end of all landmarks, plus the offset
         of all trig points).
     """
-    allOffsets = set()
     allFeatures = set()
+    allOffsets = set()
     # There is no error checking that queryOrSubject is 'query' or
     # 'subject' as the following item getter will raise a KeyError if it
     # cannot access the dict key in the bin element.
-    offsetsListGetter = itemgetter(queryOrSubject + 'Offsets')
-    for hash_ in bin_:
-        offsetsList = offsetsListGetter(hash_)
-        landmark = hash_.landmark
-        trigPoint = hash_.trigPoint
+    for hashInfo in bin_:
+        landmark = hashInfo['landmark']
+        trigPoint = hashInfo['trigPoint']
+        offsetsList = hashInfo[queryOrSubject + 'Offsets']
         for offsets in offsetsList:
             # Copy the landmark, set its offset, add it to our results.
             thisLandmark = copy(landmark)
@@ -99,11 +97,22 @@ class FeatureMatchingScore:
     @param query: A C{dark.reads.AARead} instance.
     @param subject: A C{light.subject.Subject} instance (a subclass of
         C{dark.reads.AARead}).
+    @param params: A C{Parameters} instance.
     """
-    def __init__(self, histogram, query, subject):
+    def __init__(self, histogram, query, subject, params):
         self._histogram = histogram
-        self._query = query
-        self._subject = subject
+        self._queryLen = len(query)
+        self._subjectLen = len(subject)
+        self._params = params
+        from light.backend import Backend
+        backend = Backend()
+        backend.configure(self._params)
+        scannedQuery = backend.scan(query)
+        self._allQueryFeatures = set(scannedQuery.landmarks +
+                                     scannedQuery.trigPoints)
+        scannedSubject = backend.scan(subject)
+        self._allSubjectFeatures = set(scannedSubject.landmarks +
+                                       scannedSubject.trigPoints)
 
     def calculateScore(self, binIndex):
         """
@@ -112,7 +121,45 @@ class FeatureMatchingScore:
         @param binIndex: The C{int} index of the bin to examine.
         @return: A C{float} of the score of that bin.
         """
-        return 0.0
+        queryFeatures, queryOffsets = histogramBinFeatures(
+            self._histogram[binIndex], 'query')
+        subjectFeatures, subjectOffsets = histogramBinFeatures(
+            self._histogram[binIndex], 'subject')
+
+        matchScore = self._params.featureMatchScore * (
+            len(queryFeatures) + len(subjectFeatures))
+
+        def inRange(feature, minOffset, maxOffset):
+            """
+            Does a feature fall within a min/max offset range?
+
+            @param feature: A C{light.features._Feature} subclass (i.e., a
+                landmark or a trig point).
+            @param minOffset: The minimum allowed offset for the feature start.
+            @param maxOffset: The maximum allowed offset for the feature end.
+            @return: A C{bool} to indicate whether the feature falls completely
+                within the allowed range.
+            """
+            return feature.offset >= minOffset and (
+                (feature.offset + feature.length) <= maxOffset)
+
+        minQueryOffset = min(queryOffsets, default=0)
+        maxQueryOffset = max(queryOffsets, default=self._queryLen)
+        minSubjectOffset = min(subjectOffsets, default=0)
+        maxSubjectOffset = max(subjectOffsets, default=self._subjectLen)
+
+        # The mismatch score is applied to all features that are not
+        # among those in the bin and which fall inside the max and min
+        # offsets of the features in the bin.
+        mismatchScore = self._params.featureMismatchScore * (
+            len(list(filter(
+                lambda f: inRange(f, minQueryOffset, maxQueryOffset),
+                self._allQueryFeatures - queryFeatures))) +
+            len(list(filter(
+                lambda f: inRange(f, minSubjectOffset, maxSubjectOffset),
+                self._allSubjectFeatures - subjectFeatures))))
+
+        return matchScore + mismatchScore
 
 
 ALL_SCORE_CLASSES = (MinHashesScore, FeatureMatchingScore)

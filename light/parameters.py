@@ -30,10 +30,15 @@ class Parameters(object):
     @param distanceBase: The distance between a landmark and a trig point is
         scaled to be its logarithm using this C{float} base. This reduces
         sensitivity to relatively small differences in distance.
+    @param featureMatchScore: The C{float} contribution (usally positive) to
+        a score when a feature in a query and subject are part of a match.
+    @param featureMismatchScore: The C{float} contribution (usally negative)
+        to a score when a feature in a query and subject are part of a match.
     """
 
     PARAMS = ('landmarkClasses', 'trigPointClasses', 'limitPerLandmark',
-              'maxDistance', 'minDistance', 'distanceBase')
+              'maxDistance', 'minDistance', 'distanceBase',
+              'featureMatchScore', 'featureMismatchScore')
 
     # Database construction and look-up defaults. See explanations in
     # docstring above.
@@ -53,9 +58,15 @@ class Parameters(object):
     DEFAULT_SCORE_METHOD = MinHashesScore.__name__
     DEFAULT_SIGNIFICANCE_METHOD = HashFraction.__name__
 
+    # Reward and penalty score for feature match / mismatch in
+    # FeatureMatchingScore scoring (see light/score.py).
+    DEFAULT_FEATURE_MATCH_SCORE = 1.0
+    DEFAULT_FEATURE_MISMATCH_SCORE = -1.0
+
     def __init__(self, landmarkClasses, trigPointClasses,
                  limitPerLandmark=None, maxDistance=None, minDistance=None,
-                 distanceBase=None):
+                 distanceBase=None, featureMatchScore=None,
+                 featureMismatchScore=None):
 
         self.distanceBase = (
             self.DEFAULT_DISTANCE_BASE if distanceBase is None
@@ -87,6 +98,14 @@ class Parameters(object):
 
         self.minDistance = (
             self.DEFAULT_MIN_DISTANCE if minDistance is None else minDistance)
+
+        self.featureMatchScore = (
+            self.DEFAULT_FEATURE_MATCH_SCORE if featureMatchScore is None
+            else featureMatchScore)
+
+        self.featureMismatchScore = (
+            self.DEFAULT_FEATURE_MISMATCH_SCORE if
+            featureMismatchScore is None else featureMismatchScore)
 
     @property
     def checksum(self):
@@ -124,6 +143,8 @@ class Parameters(object):
             'maxDistance': self.maxDistance,
             'minDistance': self.minDistance,
             'distanceBase': self.distanceBase,
+            'featureMatchScore': self.featureMatchScore,
+            'featureMismatchScore': self.featureMismatchScore,
         }), file=fp)
 
         return fp
@@ -161,11 +182,14 @@ class Parameters(object):
                     'Could not find trig point finder class %s. Has that '
                     'class been renamed or removed?' % trigPointClassName)
 
-        return Parameters(landmarkClasses, trigPointClasses,
-                          limitPerLandmark=state['limitPerLandmark'],
-                          maxDistance=state['maxDistance'],
-                          minDistance=state['minDistance'],
-                          distanceBase=state['distanceBase'])
+        return Parameters(
+            landmarkClasses, trigPointClasses,
+            limitPerLandmark=state['limitPerLandmark'],
+            maxDistance=state['maxDistance'],
+            minDistance=state['minDistance'],
+            distanceBase=state['distanceBase'],
+            featureMatchScore=state['featureMatchScore'],
+            featureMismatchScore=state['featureMismatchScore'])
 
     def print_(self, margin=''):
         """
@@ -203,6 +227,8 @@ class Parameters(object):
             'Max distance: %d' % self.maxDistance,
             'Min distance: %d' % self.minDistance,
             'Distance base: %f' % self.distanceBase,
+            'Feature match score: %f' % self.featureMatchScore,
+            'Feature mismatch score: %f' % self.featureMismatchScore,
         ])
 
         return str(result)

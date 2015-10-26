@@ -19,6 +19,14 @@ class _Feature(object):
         self.offset = offset
         self.length = length
 
+    def coveredOffsets(self):
+        """
+        Which sequence offsets occur in a feature?
+
+        @return: A C{set} of offsets at which the feature appears.
+        """
+        return set(list(range(self.offset, self.offset + self.length)))
+
 
 @total_ordering
 class Landmark(_Feature):

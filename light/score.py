@@ -58,9 +58,9 @@ def histogramBinFeatures(bin_, queryOrSubject):
         either 'query' or 'subject'.
     @raise KeyError: If C{queryOrSubject} is not 'query' or 'subject'.
     @return: A 2-tuple, containing 1) a C{set} of all features (landmarks and
-        trig points), 2) a C{set} of the offsets of all features in the bin
-        (this includes the start and end of all landmarks, plus the offset
-        of all trig points).
+        trig points) in the hashes in C{bin_}, 2) a C{set} of the offsets of
+        all features in the bin (this includes the start and end of all
+        landmarks, plus the offset of all trig points).
     """
     allFeatures = set()
     allOffsets = set()
@@ -77,7 +77,7 @@ def histogramBinFeatures(bin_, queryOrSubject):
             thisLandmark.offset = offsets[0]
             allFeatures.add(thisLandmark)
             allOffsets.add(thisLandmark.offset)
-            allOffsets.add(thisLandmark.offset + thisLandmark.length)
+            allOffsets.add(thisLandmark.offset + thisLandmark.length - 1)
             # Copy the trig point, set its offset, add it to our results.
             thisTrigPoint = copy(trigPoint)
             thisTrigPoint.offset = offsets[1]
@@ -85,6 +85,21 @@ def histogramBinFeatures(bin_, queryOrSubject):
             allOffsets.add(thisTrigPoint.offset)
 
     return allFeatures, allOffsets
+
+
+def featureInRange(feature, minOffset, maxOffset):
+    """
+    Does a feature fall within a min/max offset range?
+
+    @param feature: A C{light.features._Feature} subclass (i.e., a
+        landmark or a trig point).
+    @param minOffset: The minimum allowed offset for the feature start.
+    @param maxOffset: The maximum allowed offset for the feature end.
+    @return: A C{bool} to indicate whether the feature falls completely
+        within the allowed range.
+    """
+    return feature.offset >= minOffset and (
+        (feature.offset + feature.length - 1) <= maxOffset)
 
 
 class FeatureMatchingScore:
@@ -129,20 +144,6 @@ class FeatureMatchingScore:
         matchScore = self._params.featureMatchScore * (
             len(queryFeatures) + len(subjectFeatures))
 
-        def inRange(feature, minOffset, maxOffset):
-            """
-            Does a feature fall within a min/max offset range?
-
-            @param feature: A C{light.features._Feature} subclass (i.e., a
-                landmark or a trig point).
-            @param minOffset: The minimum allowed offset for the feature start.
-            @param maxOffset: The maximum allowed offset for the feature end.
-            @return: A C{bool} to indicate whether the feature falls completely
-                within the allowed range.
-            """
-            return feature.offset >= minOffset and (
-                (feature.offset + feature.length) <= maxOffset)
-
         minQueryOffset = min(queryOffsets, default=0)
         maxQueryOffset = max(queryOffsets, default=self._queryLen)
         minSubjectOffset = min(subjectOffsets, default=0)
@@ -153,13 +154,108 @@ class FeatureMatchingScore:
         # offsets of the features in the bin.
         mismatchScore = self._params.featureMismatchScore * (
             len(list(filter(
-                lambda f: inRange(f, minQueryOffset, maxQueryOffset),
+                lambda f: featureInRange(f, minQueryOffset, maxQueryOffset),
                 self._allQueryFeatures - queryFeatures))) +
             len(list(filter(
-                lambda f: inRange(f, minSubjectOffset, maxSubjectOffset),
+                lambda f: featureInRange(f, minSubjectOffset,
+                                         maxSubjectOffset),
                 self._allSubjectFeatures - subjectFeatures))))
 
         return matchScore + mismatchScore
 
 
-ALL_SCORE_CLASSES = (MinHashesScore, FeatureMatchingScore)
+class FeatureAAScore:
+    """
+    Calculates the score for histogram bins based on the count of amino acids
+    present in the regions of the query and subject that had a significant
+    alignment (i.e., caused a histogram bin to be considered significant).
+
+    @param histogram: A C{light.histogram} instance.
+    @param query: A C{dark.reads.AARead} instance.
+    @param subject: A C{light.subject.Subject} instance (a subclass of
+        C{dark.reads.AARead}).
+    @param params: A C{Parameters} instance.
+    """
+    def __init__(self, histogram, query, subject, params):
+        self._histogram = histogram
+        self._queryLen = len(query)
+        self._subjectLen = len(subject)
+        self._params = params
+        from light.backend import Backend
+        backend = Backend()
+        backend.configure(self._params)
+        scannedQuery = backend.scan(query)
+        self._allQueryFeatures = set(scannedQuery.landmarks +
+                                     scannedQuery.trigPoints)
+        scannedSubject = backend.scan(subject)
+        self._allSubjectFeatures = set(scannedSubject.landmarks +
+                                       scannedSubject.trigPoints)
+
+    def calculateScore(self, binIndex):
+        """
+        Calculates the score for a given histogram bin.
+
+        The score is a quotient. In the numerator, we have the number of AA
+        locations that are in features that occur in both the query and the
+        subject in the match. The denominator is the number of AA locations
+        that are in all features in the matching regions of the query and
+        subject.
+
+        @param binIndex: The C{int} index of the bin to examine.
+        @return: A C{float} of the score of that bin.
+        """
+        matchedQueryFeatures, matchedQueryOffsets = histogramBinFeatures(
+            self._histogram[binIndex], 'query')
+
+        matchedQueryOffsets = set()
+        for feature in matchedQueryFeatures:
+            matchedQueryOffsets.update(feature.coveredOffsets())
+
+        matchedSubjectFeatures, matchedSubjectOffsets = histogramBinFeatures(
+            self._histogram[binIndex], 'subject')
+
+        matchedSubjectOffsets = set()
+        for feature in matchedSubjectFeatures:
+            matchedSubjectOffsets.update(feature.coveredOffsets())
+
+        # Get the features and offsets in the matched region for the query
+        # and subject.
+        minQueryOffset = min(matchedQueryOffsets, default=0)
+        maxQueryOffset = max(matchedQueryOffsets, default=self._queryLen)
+        minSubjectOffset = min(matchedSubjectOffsets, default=0)
+        maxSubjectOffset = max(matchedSubjectOffsets, default=self._subjectLen)
+
+        unmatchedQueryOffsets = set()
+        for feature in filter(
+                lambda f: featureInRange(f, minQueryOffset, maxQueryOffset),
+                self._allQueryFeatures - matchedQueryFeatures):
+            unmatchedQueryOffsets.update(feature.coveredOffsets())
+        # The unmatched offsets shouldn't contain any offsets that were
+        # matched. This can occur if an unmatched feature overlaps with a
+        # matched feature.
+        unmatchedQueryOffsets -= matchedQueryOffsets
+
+        unmatchedSubjectOffsets = set()
+        for feature in filter(
+                lambda f: featureInRange(f, minSubjectOffset,
+                                         maxSubjectOffset),
+                self._allSubjectFeatures - matchedSubjectFeatures):
+            unmatchedSubjectOffsets.update(feature.coveredOffsets())
+        # The unmatched offsets shouldn't contain any offsets that were
+        # matched. This can occur if an unmatched feature overlaps with a
+        # matched feature.
+        unmatchedSubjectOffsets -= matchedSubjectOffsets
+
+        matchedOffsetCount = (
+            len(matchedQueryOffsets) + len(matchedSubjectOffsets))
+
+        totalOffsetCount = matchedOffsetCount + (
+            len(unmatchedQueryOffsets) + len(unmatchedSubjectOffsets))
+
+        try:
+            return matchedOffsetCount / totalOffsetCount
+        except ZeroDivisionError:
+            return 0.0
+
+
+ALL_SCORE_CLASSES = (MinHashesScore, FeatureMatchingScore, FeatureAAScore)

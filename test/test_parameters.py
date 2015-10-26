@@ -95,6 +95,8 @@ class TestParameters(TestCase):
             'maxDistance': 19,
             'minDistance': 5,
             'distanceBase': 1.2,
+            'featureMatchScore': 1.0,
+            'featureMismatchScore': -1.0,
         }
         self.assertEqual(expected, loads(fp.getvalue()))
 

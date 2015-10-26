@@ -165,89 +165,6 @@ class Backend:
         """
         return self._totalCoveredResidues
 
-    def scan(self, sequence):
-        """
-        Make an instance of C{light.reads.ScannedRead} from a sequence.
-
-        @param sequence: a C{dark.read.AARead} instance.
-        @return: a C{light.reads.ScannedRead} instance.
-        """
-        scannedSequence = ScannedRead(sequence)
-
-        append = scannedSequence.landmarks.append
-        for landmarkFinder in self.params.landmarkFinders:
-            for landmark in landmarkFinder.find(sequence):
-                append(landmark)
-
-        append = scannedSequence.trigPoints.append
-        for trigFinder in self.params.trigPointFinders:
-            for trigPoint in trigFinder.find(sequence):
-                append(trigPoint)
-
-        return scannedSequence
-
-    def hash(self, landmark, trigPoint):
-        """
-        Compute a hash key to store information about a landmark / trig point
-        association for a read.
-
-        @param landmark: A C{light.features.Landmark} instance.
-        @param trigPoint: A C{light.features.TrigPoint} instance.
-        @return: A C{str} hash key based on the landmark, the trig point,
-            and the distance between them.
-        """
-        distance = scale(trigPoint.offset - landmark.offset,
-                         self.params.distanceBase)
-        return '%s:%s:%s' % (landmark.hashkey(), trigPoint.hashkey(),
-                             distance)
-
-    def getScannedPairs(self, scannedSequence):
-        """
-        Get the (landmark, trigPoint) pairs from a ScannedRead instance.
-
-        @param scannedSequence: A C{light.reads.ScannedRead} instance.
-        @return: A generator yielding (landmark, trigPoint) pairs, as returned
-            by C{light.reads.ScannedRead.getPairs}.
-        """
-        return scannedSequence.getPairs(
-            limitPerLandmark=self.params.limitPerLandmark,
-            maxDistance=self.params.maxDistance,
-            minDistance=self.params.minDistance)
-
-    def getHashes(self, scannedSequence):
-        """
-        Get all (landmark, trigPoint) hashes from a scanned sequence and
-        collect the offsets at which the (landmark, trigPoint) pair occurs.
-
-        @param scannedSequence: A C{light.reads.ScannedRead} instance.
-        @return: A C{dict} keyed by (landmark, trigPoint) hash, whose values
-            are C{dict}s containing the first (landmark, trigPoint) pair that
-            generated that hash, and a list of all offsets into the read
-            where the (landmark, trigPoint) pair was found.
-        """
-        # For testing reasons, use an ordered dict to hold hash information.
-        # Our database and result code do not need the dict to be ordered.
-        # But a deterministic order of hashes makes it simple to write reliable
-        # tests. If we ever get really serious about speed we may want to use
-        # a regular dict instead and make the tests do more digging / sorting
-        # in results.
-        hashes = OrderedDict()
-
-        for (landmark, trigPoint) in self.getScannedPairs(scannedSequence):
-            hash_ = self.hash(landmark, trigPoint)
-            try:
-                hashInfo = hashes[hash_]
-            except KeyError:
-                hashes[hash_] = {
-                    'landmark': landmark,
-                    'offsets': [[landmark.offset, trigPoint.offset]],
-                    'trigPoint': trigPoint,
-                }
-            else:
-                hashInfo['offsets'].append([landmark.offset, trigPoint.offset])
-
-        return hashes
-
     def addSubject(self, subject, subjectIndex=None):
         """
         Examine a sequence for features and add its (landmark, trig point)
@@ -296,13 +213,96 @@ class Backend:
 
         return False, subjectIndex, subject.hashCount
 
+    def hash(self, landmark, trigPoint):
+        """
+        Compute a hash key to store information about a landmark / trig point
+        association for a read.
+
+        @param landmark: A C{light.features.Landmark} instance.
+        @param trigPoint: A C{light.features.TrigPoint} instance.
+        @return: A C{str} hash key based on the landmark, the trig point,
+            and the distance between them.
+        """
+        distance = scale(trigPoint.offset - landmark.offset,
+                         self.params.distanceBase)
+        return '%s:%s:%s' % (landmark.hashkey(), trigPoint.hashkey(),
+                             distance)
+
+    def scan(self, sequence):
+        """
+        Make an instance of C{light.reads.ScannedRead} from a sequence.
+
+        @param sequence: a C{dark.read.AARead} instance.
+        @return: a C{light.reads.ScannedRead} instance.
+        """
+        scannedSequence = ScannedRead(sequence)
+
+        append = scannedSequence.landmarks.append
+        for landmarkFinder in self.params.landmarkFinders:
+            for landmark in landmarkFinder.find(sequence):
+                append(landmark)
+
+        append = scannedSequence.trigPoints.append
+        for trigFinder in self.params.trigPointFinders:
+            for trigPoint in trigFinder.find(sequence):
+                append(trigPoint)
+
+        return scannedSequence
+
+    def getScannedPairs(self, scannedSequence):
+        """
+        Get the (landmark, trigPoint) pairs from a ScannedRead instance.
+
+        @param scannedSequence: A C{light.reads.ScannedRead} instance.
+        @return: A generator yielding (landmark, trigPoint) pairs, as returned
+            by C{light.reads.ScannedRead.getPairs}.
+        """
+        return scannedSequence.getPairs(
+            limitPerLandmark=self.params.limitPerLandmark,
+            maxDistance=self.params.maxDistance,
+            minDistance=self.params.minDistance)
+
+    def getHashes(self, scannedSequence):
+        """
+        Get all (landmark, trigPoint) hashes from a scanned sequence and
+        collect the offsets at which the (landmark, trigPoint) pair occurs.
+
+        @param scannedSequence: A C{light.reads.ScannedRead} instance.
+        @return: A C{dict} keyed by (landmark, trigPoint) hash, whose values
+            are C{dict}s containing the first (landmark, trigPoint) pair that
+            generated that hash, and a list of all offsets into the read
+            where the (landmark, trigPoint) pair was found.
+        """
+        # For testing reasons, use an ordered dict to hold hash information.
+        # Our database and result code do not need the dict to be ordered.
+        # But a deterministic order of hashes makes it simple to write reliable
+        # tests. If we ever get really serious about speed we may want to use
+        # a regular dict instead and make the tests do more digging / sorting
+        # in results.
+        hashes = OrderedDict()
+
+        for (landmark, trigPoint) in self.getScannedPairs(scannedSequence):
+            hash_ = self.hash(landmark, trigPoint)
+            try:
+                hashInfo = hashes[hash_]
+            except KeyError:
+                hashes[hash_] = {
+                    'landmark': landmark,
+                    'offsets': [[landmark.offset, trigPoint.offset]],
+                    'trigPoint': trigPoint,
+                }
+            else:
+                hashInfo['offsets'].append([landmark.offset, trigPoint.offset])
+
+        return hashes
+
     def find(self, read, significanceMethod, scoreMethod,
              significanceFraction, storeFullAnalysis):
         """
         Given a read, compute all hashes for it, look up matching hashes and
         check which database sequences it matches.
 
-        @param read: A C{dark.read.AARead} instance.
+        @param read: A C{dark.reads.AARead} instance.
         @param significanceMethod: The C{str} name of the method used to
             calculate which histogram bins are considered significant.
         @param scoreMethod: The C{str} name of the method used to calculate the
@@ -322,24 +322,29 @@ class Backend:
         """
         matches = defaultdict(list)
         nonMatchingHashes = {}
-        hashCount = 0
+        readHashCount = 0
         scannedRead = self.scan(read)
 
-        for hash_, hashInfo in self.getHashes(scannedRead).items():
-            # Note that hashCount is incremented for every hash, even those
-            # that are not in the database. Basing significance (in
-            # result.py) on a fraction of that overall count therefore
-            # takes into account the fact that some hashes may have been
-            # missed. We may want to do that at a finer level of
-            # granularity, though.  E.g., by considering where in the read
-            # the misses were.
-            hashCount += len(hashInfo['offsets'])
+        for readHash, hashInfo in self.getHashes(scannedRead).items():
+            # Note that readHashCount is incremented for every hash in the
+            # read, even those that are not found in the database. Basing
+            # significance (in result.py) on a fraction of that overall
+            # read hash count therefore takes into account the fact that
+            # some hashes may have been missed. We may later want to do
+            # that at a finer level of granularity, though.  E.g., by
+            # considering where in the read the misses were.
+            readHashCount += len(hashInfo['offsets'])
             try:
-                subjectDict = self.d[hash_]
+                subjectDict = self.d[readHash]
             except KeyError:
                 # A hash that's in the read but not in our database.
+                #
+                # Note: this overwrites any existing value already stored
+                #       in nonMatchingHashes[readHash]. Should the value be a
+                #       list, or do we really not care? See
+                #       https://github.com/acorg/light-matter/issues/301
                 if storeFullAnalysis:
-                    nonMatchingHashes[hash_] = hashInfo
+                    nonMatchingHashes[readHash] = hashInfo
             else:
                 for (subjectIndex, subjectOffsets) in subjectDict.items():
                     matches[subjectIndex].append({
@@ -348,7 +353,7 @@ class Backend:
                         'subjectOffsets': subjectOffsets,
                         'trigPoint': hashInfo['trigPoint']})
 
-        return matches, hashCount, nonMatchingHashes
+        return matches, readHashCount, nonMatchingHashes
 
     def shutdown(self, save, filePrefix):
         """

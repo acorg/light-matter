@@ -9,7 +9,7 @@ from light.distance import scale
 from light.histogram import Histogram
 from light.significance import (Always, HashFraction, MaxBinHeight,
                                 MeanBinHeight)
-from light.score import MinHashesScore
+from light.score import MinHashesScore, FeatureMatchingScore
 from light.backend import Backend
 from light.string import MultilineString
 
@@ -18,7 +18,7 @@ class Result(object):
     """
     Hold the result of a database find() for a read.
 
-    @param query: A C{dark.read.Read} instance.
+    @param query: A C{dark.reads.AARead} instance.
     @param connector: A C{light.connector.SimpleConnector} (or other
         connector) instance.
     @param matches: A C{dict} of match information. Keys are the C{str}
@@ -69,7 +69,7 @@ class Result(object):
             # Use a histogram to bin scaled (landmark, trigPoint) offset
             # deltas.
             subjectLen = len(subject)
-            maxLen = max([queryLen, subjectLen])
+            maxLen = max(queryLen, subjectLen)
             nBins = scale(maxLen, distanceBase)
             # Make sure the number of bins is odd, else Histogram() will raise.
             nBins |= 0x1
@@ -95,11 +95,22 @@ class Result(object):
 
                 for queryOffsets in match['queryOffsets']:
                     for subjectOffsets in match['subjectOffsets']:
+                        # queryOffsets and subjectOffsets are both lists of
+                        # length 2, being the landmark offset and the trig
+                        # point offset for the landmark / trig point pair
+                        # involved in the hash that was present in the
+                        # query and subject.
+                        #
                         # The delta is the difference between the
-                        # corresponding landmark offsets.
+                        # corresponding landmark offsets (hence the [0] in
+                        # the following).
                         delta = subjectOffsets[0] - queryOffsets[0]
                         if negateDeltas:
                             delta = -delta
+
+                        # Add the information about this common landmark /
+                        # trig point hash to the histogram bucket for the
+                        # query landmark to subject landmark offset delta.
                         add(scale(delta, distanceBase),
                             {
                                 'landmark': landmark,
@@ -126,7 +137,10 @@ class Result(object):
                                  self.significanceMethod)
 
             if self.scoreMethod == 'MinHashesScore':
-                calculateScore = MinHashesScore(histogram, minHashCount)
+                scorer = MinHashesScore(histogram, minHashCount)
+            elif self.scoreMethod == 'FeatureMatchingScore':
+                scorer = FeatureMatchingScore(histogram, query, subject,
+                                              self.connector.params)
             else:
                 raise ValueError('Unknown score method %r' %
                                  self.scoreMethod)
@@ -136,7 +150,7 @@ class Result(object):
             significantBins = []
             for binIndex, bin_ in enumerate(histogram.bins):
                 if significance.isSignificant(binIndex):
-                    score = calculateScore.calculateScore(binIndex)
+                    score = scorer.calculateScore(binIndex)
 
                     significantBins.append({
                         'bin': bin_,

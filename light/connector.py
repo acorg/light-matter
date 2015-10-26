@@ -462,12 +462,12 @@ class WampServerConnector:
             significance analysis computed in the Result will be stored.
         @return: A C{light.result.Result} instance.
         """
+        if significanceFraction is None:
+            significanceFraction = self.params.DEFAULT_SIGNIFICANCE_FRACTION
         if significanceMethod is None:
             significanceMethod = self.params.DEFAULT_SIGNIFICANCE_METHOD
         if scoreMethod is None:
             scoreMethod = self.params.DEFAULT_SCORE_METHOD
-        if significanceFraction is None:
-            significanceFraction = self.params.DEFAULT_SIGNIFICANCE_FRACTION
 
         allMatches = defaultdict(list)
         allNonMatchingHashes = {}

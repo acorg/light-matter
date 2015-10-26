@@ -353,9 +353,6 @@ class Backend:
                         'subjectOffsets': subjectOffsets,
                         'trigPoint': hashInfo['trigPoint']})
 
-        # TODO: remove me..........................................
-        # from pprint import pprint
-        # pprint(matches)
         return matches, readHashCount, nonMatchingHashes
 
     def shutdown(self, save, filePrefix):

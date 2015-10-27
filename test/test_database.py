@@ -11,7 +11,7 @@ from light.features import Landmark, TrigPoint
 from light.landmarks import AlphaHelix, BetaStrand
 from light.trig import Peaks, Troughs
 from light.checksum import Checksum
-from light.parameters import Parameters
+from light.parameters import Parameters, FindParameters
 from light.database import Database
 from light.subject import Subject
 from light.backend import Backend
@@ -25,7 +25,7 @@ class TestDatabase(TestCase):
         """
         The significanceFraction default value must be as expected.
         """
-        self.assertEqual(0.25, Parameters.DEFAULT_SIGNIFICANCE_FRACTION)
+        self.assertEqual(0.25, FindParameters.DEFAULT_SIGNIFICANCE_FRACTION)
 
     def testFindersAreStored(self):
         """
@@ -412,7 +412,8 @@ class TestDatabase(TestCase):
         params = Parameters([AlphaHelix], [Peaks], maxDistance=11)
         db = Database(params)
         db.addSubject(subject)
-        result = db.find(query, significanceFraction=0.0)
+        findParams = FindParameters(significanceFraction=0.0)
+        result = db.find(query, findParams)
         self.assertEqual(
             {
                 '0': [
@@ -495,13 +496,14 @@ class TestDatabase(TestCase):
         params = Parameters([AlphaHelix, BetaStrand], [Peaks])
         db = Database(params)
         db.addSubject(subject)
-        result = db.find(query, significanceFraction=0.0)
+        findParams = FindParameters(significanceFraction=0.0)
+        result = db.find(query, findParams)
         score1 = result.analysis['0']['bestScore']
 
         params = Parameters([AlphaHelix, BetaStrand], [Peaks])
         db = Database(params)
         db.addSubject(query)
-        result = db.find(subject, significanceFraction=0.0)
+        result = db.find(subject, findParams)
         score2 = result.analysis['0']['bestScore']
 
         self.assertEqual(score1, score2)
@@ -519,14 +521,15 @@ class TestDatabase(TestCase):
         db = Database(params1)
         _, index, _ = db.addSubject(subject)
         hashCount1 = db.getSubjectByIndex(index).hashCount
-        result = db.find(query, significanceFraction=0.0)
+        findParams = FindParameters(significanceFraction=0.0)
+        result = db.find(query, findParams)
         score1 = result.analysis['0']['bestScore']
 
         params2 = Parameters([AlphaHelix, BetaStrand], [Peaks])
         db = Database(params2)
         _, index, _ = db.addSubject(query)
         hashCount2 = db.getSubjectByIndex(index).hashCount
-        result = db.find(subject, significanceFraction=0.0)
+        result = db.find(subject, findParams)
         score2 = result.analysis['0']['bestScore']
 
         self.assertNotEqual(hashCount1, hashCount2)
@@ -600,8 +603,6 @@ class TestDatabase(TestCase):
             '  Max distance: 10\n'
             '  Min distance: 0\n'
             '  Distance base: 1.000000\n'
-            '  Feature match score: 1.000000\n'
-            '  Feature mismatch score: -1.000000\n'
             'Connector class: SimpleConnector\n'
             'Subject count: 1\n'
             'Hash count: 3\n'
@@ -634,8 +635,6 @@ class TestDatabase(TestCase):
             '  Max distance: 10\n'
             '  Min distance: 0\n'
             '  Distance base: 1.000000\n'
-            '  Feature match score: 1.000000\n'
-            '  Feature mismatch score: -1.000000\n'
             'Connector class: SimpleConnector\n'
             'Subject count: 1\n'
             'Hash count: 3\n'
@@ -684,8 +683,6 @@ class TestDatabase(TestCase):
             '  Max distance: 10\n'
             '  Min distance: 0\n'
             '  Distance base: 1.000000\n'
-            '  Feature match score: 1.000000\n'
-            '  Feature mismatch score: -1.000000\n'
             'Connector class: SimpleConnector\n'
             'Subject count: 1\n'
             'Hash count: 0\n'

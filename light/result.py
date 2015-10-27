@@ -7,9 +7,9 @@ from operator import itemgetter
 
 from light.distance import scale
 from light.histogram import Histogram
-from light.significance import (Always, HashFraction, MaxBinHeight,
-                                MeanBinHeight)
-from light.score import MinHashesScore, FeatureMatchingScore
+from light.significance import (
+    Always, HashFraction, MaxBinHeight, MeanBinHeight)
+from light.score import MinHashesScore, FeatureMatchingScore, FeatureAAScore
 from light.backend import Backend
 from light.string import MultilineString
 
@@ -29,31 +29,21 @@ class Result(object):
         'subjectOffsets', and 'trigPoint'.
     @param queryHashCount: The C{int} number of hashes that the query has
         (including those that were not found in the database).
-    @param significanceMethod: The C{str} name of the method used to calculate
-        which histogram bins are considered significant.
-    @param scoreMethod: The C{str} name of the method used to calculate the
-        score of a bin which is considered significant.
-    @param significanceFraction: The C{float} fraction of all (landmark,
-        trig point) pairs for the query that need to fall into the same
-        histogram bucket for that bucket to be considered a significant match
-        with a database title.
+    @param findParams: An instance of C{light.parameters.FindParameters}.
     @param nonMatchingHashes: A C{dict} whose keys are hashes that were found
         in the scanned C{query} but that did not match any subject. Each value
         is a C{dict} with keys: 'landmark', 'readOffsets', and 'trigPoint'.
     @param storeFullAnalysis: A C{bool}. If C{True} the full significance
         analysis of each matched subject will be stored.
-    @raises ValueError: If a non-existing significanceMethod is specified.
+    @raises ValueError: If a non-existent significanceMethod is specified.
     """
-    def __init__(self, query, connector, matches, queryHashCount,
-                 significanceMethod, scoreMethod, significanceFraction,
+    def __init__(self, query, connector, matches, queryHashCount, findParams,
                  nonMatchingHashes=None, storeFullAnalysis=False):
         self.query = query
+        self.connector = connector
         self.matches = matches  # Only saved on self for testing.
         self.queryHashCount = queryHashCount
-        self.significanceMethod = significanceMethod
-        self.scoreMethod = scoreMethod
-        self.significanceFraction = significanceFraction
-        self.connector = connector
+        self._findParams = findParams
         self.nonMatchingHashes = nonMatchingHashes
         self._storeFullAnalysis = storeFullAnalysis
         self.analysis = defaultdict(dict)
@@ -123,27 +113,31 @@ class Result(object):
 
             minHashCount = min(queryHashCount, subject.hashCount)
 
+            significanceMethod = findParams.significanceMethod
             if significanceMethod == 'Always':
                 significance = Always()
             elif significanceMethod == 'HashFraction':
                 significance = HashFraction(
-                    histogram, minHashCount, significanceFraction)
+                    histogram, minHashCount, findParams.significanceFraction)
             elif significanceMethod == 'MaxBinHeight':
                 significance = MaxBinHeight(histogram, query, connector)
             elif significanceMethod == 'MeanBinHeight':
                 significance = MeanBinHeight(histogram, query, connector)
             else:
                 raise ValueError('Unknown significance method %r' %
-                                 self.significanceMethod)
+                                 significanceMethod)
 
-            if self.scoreMethod == 'MinHashesScore':
+            scoreMethod = findParams.scoreMethod
+            if scoreMethod == 'MinHashesScore':
                 scorer = MinHashesScore(histogram, minHashCount)
-            elif self.scoreMethod == 'FeatureMatchingScore':
-                scorer = FeatureMatchingScore(histogram, query, subject,
-                                              self.connector.params)
+            elif scoreMethod == 'FeatureMatchingScore':
+                scorer = FeatureMatchingScore(
+                    histogram, query, subject, connector.params, findParams)
+            elif scoreMethod == 'FeatureAAScore':
+                scorer = FeatureAAScore(
+                    histogram, query, subject, connector.params)
             else:
-                raise ValueError('Unknown score method %r' %
-                                 self.scoreMethod)
+                raise ValueError('Unknown score method %r' % scoreMethod)
 
             # Look for bins with a significant number of elements (each
             # element is a scaled hash offset delta).
@@ -284,6 +278,8 @@ class Result(object):
                                        description=queryDescription),
                    verbatim=True)
 
+        append(self._findParams.print_(), verbatim=True)
+
         # Sort matched subjects (if any) in order of decreasing score so we
         # can print them in a useful order.
         #
@@ -301,7 +297,6 @@ class Result(object):
             'Overall matches: %d' % len(subjectIndices),
             'Significant matches: %d' % len(list(self.significantSubjects())),
             'Query hash count: %d' % self.queryHashCount,
-            'Significance fraction: %f' % self.significanceFraction,
         ])
 
         if subjectIndices:
@@ -330,8 +325,8 @@ class Result(object):
                 'Index in database: %s' % subjectIndex,
                 'Subject hash count: %s' % subject.hashCount,
                 'Subject/query min hash count: %s' % minHashCount,
-                'Significance cutoff: %f' % (self.significanceFraction *
-                                             minHashCount),
+                'Significance cutoff: %f' % (
+                    self._findParams.significanceFraction * minHashCount),
                 'Number of HSPs: %d' % len(significantBins),
             ])
 

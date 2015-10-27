@@ -2,6 +2,7 @@ from dark.reads import AARead
 from dark.fasta import FastaReads
 
 from light.database import DatabaseSpecifier
+from light.parameters import FindParameters
 
 
 def affinityMatrix(sequences, significanceFraction=None, **kwargs):
@@ -33,8 +34,8 @@ def affinityMatrix(sequences, significanceFraction=None, **kwargs):
     for readIndex, read in enumerate(reads):
         row = []
         append = row.append
-        analysis = db.find(
-            read, significanceFraction=significanceFraction).analysis
+        findParams = FindParameters(significanceFraction=significanceFraction)
+        analysis = db.find(read, findParams).analysis
         for subjectIndex in map(str, range(subjectCount)):
             # Be careful how we access the analysis. It is a defaultdict,
             # so its keys are created upon access. I.e., use 'in' to test

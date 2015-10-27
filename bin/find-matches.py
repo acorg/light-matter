@@ -7,9 +7,7 @@ import argparse
 from dark.fasta import combineReads
 from dark.reads import AARead
 
-from light.database import Parameters, DatabaseSpecifier
-from light.score import ALL_SCORE_CLASSES
-from light.significance import ALL_SIGNIFICANCE_CLASSES
+from light.database import FindParameters, DatabaseSpecifier
 
 
 if __name__ == '__main__':
@@ -30,24 +28,7 @@ if __name__ == '__main__':
               'first space, if any, otherwise will be automatically '
               'assigned.'))
 
-    parser.add_argument(
-        '--significanceFraction', type=float, default=None,
-        help=('The (float) fraction of all (landmark, trig point) pairs for a '
-              'scannedRead that need to fall into the same histogram bucket '
-              'for that bucket to be considered a significant match with a '
-              'database title.'))
-
-    parser.add_argument(
-        '--significanceMethod', default=Parameters.DEFAULT_SIGNIFICANCE_METHOD,
-        choices=[cls.__name__ for cls in ALL_SIGNIFICANCE_CLASSES],
-        help=('The name of the method used to calculate which histogram bins '
-              'are considered significant.'))
-
-    parser.add_argument(
-        '--scoreMethod', type=str, default=Parameters.DEFAULT_SCORE_METHOD,
-        choices=[cls.__name__ for cls in ALL_SCORE_CLASSES],
-        help=('The name of the method used to calculate the score of a '
-              'histogram bin which is considered significant.'))
+    FindParameters.addArgsToParser(parser)
 
     parser.add_argument(
         '--human', default=False, action='store_true',
@@ -90,30 +71,23 @@ if __name__ == '__main__':
 
     database = databaseSpecifier.getDatabaseFromArgs(args)
     reads = combineReads(args.fastaFile, args.sequences, readClass=AARead)
-    significanceFraction = args.significanceFraction
-    significanceMethod = args.significanceMethod
-    scoreMethod = args.scoreMethod
+    findParams = FindParameters.fromArgs(args)
 
     # Look up each read in the database and print its matches, either in
     # human-readable form or as JSON.
     if args.human:
         for count, read in enumerate(reads, start=1):
-            result = database.find(
-                read, significanceMethod=significanceMethod,
-                scoreMethod=scoreMethod,
-                significanceFraction=significanceFraction,
-                storeFullAnalysis=True)
+            result = database.find(read, findParams, storeFullAnalysis=True)
 
-            result.print_(fp=sys.stdout,
-                          printSequences=args.printSequences,
-                          printFeatures=args.printFeatures,
-                          printHistograms=args.printHistograms,
-                          queryDescription='Query %d title' % count)
+            print(result.print_(
+                printSequences=args.printSequences,
+                printFeatures=args.printFeatures,
+                printHistograms=args.printHistograms,
+                queryDescription='Query %d title' % count))
             if count > 1:
                 print('---')
     else:
         database.params.save()
         for read in reads:
-            result = database.find(
-                read, significanceFraction=significanceFraction)
+            result = database.find(read, findParams)
             result.save()

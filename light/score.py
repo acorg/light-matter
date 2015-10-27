@@ -113,15 +113,18 @@ class FeatureMatchingScore:
     @param subject: A C{light.subject.Subject} instance (a subclass of
         C{dark.reads.AARead}).
     @param params: A C{Parameters} instance.
+    @param findParams: An instance of C{light.parameters.FindParameters} or
+        C{None} to use default find parameters.
     """
-    def __init__(self, histogram, query, subject, params):
+    def __init__(self, histogram, query, subject, params, findParams=None):
         self._histogram = histogram
         self._queryLen = len(query)
         self._subjectLen = len(subject)
-        self._params = params
+        from light.parameters import FindParameters
+        self._findParams = findParams or FindParameters()
         from light.backend import Backend
         backend = Backend()
-        backend.configure(self._params)
+        backend.configure(params)
         scannedQuery = backend.scan(query)
         self._allQueryFeatures = set(scannedQuery.landmarks +
                                      scannedQuery.trigPoints)
@@ -141,7 +144,7 @@ class FeatureMatchingScore:
         subjectFeatures, subjectOffsets = histogramBinFeatures(
             self._histogram[binIndex], 'subject')
 
-        matchScore = self._params.featureMatchScore * (
+        matchScore = self._findParams.featureMatchScore * (
             len(queryFeatures) + len(subjectFeatures))
 
         minQueryOffset = min(queryOffsets, default=0)
@@ -152,7 +155,7 @@ class FeatureMatchingScore:
         # The mismatch score is applied to all features that are not
         # among those in the bin and which fall inside the max and min
         # offsets of the features in the bin.
-        mismatchScore = self._params.featureMismatchScore * (
+        mismatchScore = self._findParams.featureMismatchScore * (
             len(list(filter(
                 lambda f: featureInRange(f, minQueryOffset, maxQueryOffset),
                 self._allQueryFeatures - queryFeatures))) +
@@ -180,10 +183,9 @@ class FeatureAAScore:
         self._histogram = histogram
         self._queryLen = len(query)
         self._subjectLen = len(subject)
-        self._params = params
         from light.backend import Backend
         backend = Backend()
-        backend.configure(self._params)
+        backend.configure(params)
         scannedQuery = backend.scan(query)
         self._allQueryFeatures = set(scannedQuery.landmarks +
                                      scannedQuery.trigPoints)

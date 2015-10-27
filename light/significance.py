@@ -79,8 +79,9 @@ class MaxBinHeight(object):
         from light.database import Database
         db = Database(database.params)
         _, subjectIndex, _ = db.addSubject(query)
-        result = db.find(query, significanceMethod='Always',
-                         storeFullAnalysis=True)
+        from light.parameters import FindParameters
+        findParams = FindParameters(significanceMethod='Always')
+        result = db.find(query, findParams, storeFullAnalysis=True)
         bins = result.analysis[subjectIndex]['histogram'].bins
         # The highest-scoring bin is ignored.
         binHeights = sorted([len(h) for h in bins], reverse=True)[1:]
@@ -123,8 +124,9 @@ class MeanBinHeight(object):
         from light.database import Database
         db = Database(database.params)
         _, subjectIndex, _ = db.addSubject(query)
-        result = db.find(query, significanceMethod='Always',
-                         storeFullAnalysis=True)
+        from light.parameters import FindParameters
+        findParams = FindParameters(significanceMethod='Always')
+        result = db.find(query, findParams, storeFullAnalysis=True)
         bins = result.analysis[subjectIndex]['histogram'].bins
         # The highest-scoring bin is ignored.
         binHeights = sorted([len(h) for h in bins], reverse=True)[1:]

@@ -6,11 +6,142 @@ except ImportError:
     from json import dumps, loads
 
 from light.checksum import Checksum
-from light.landmarks import findLandmark, DEFAULT_LANDMARK_CLASSES
-from light.trig import findTrigPoint, DEFAULT_TRIG_CLASSES
-from light.score import MinHashesScore
-from light.significance import HashFraction
+from light.landmarks import (
+    findLandmark, DEFAULT_LANDMARK_CLASSES, ALL_LANDMARK_CLASSES)
+from light.trig import findTrigPoint, DEFAULT_TRIG_CLASSES, ALL_TRIG_CLASSES
+from light.score import MinHashesScore, ALL_SCORE_CLASSES
+from light.significance import HashFraction, ALL_SIGNIFICANCE_CLASSES
 from light.string import MultilineString
+
+
+class FindParameters(object):
+    """
+    Hold a collection of parameter settings used by the database find command.
+
+    @param significanceMethod: The C{str} name of the method used to calculate
+        which histogram bins are considered significant.
+    @param significanceFraction: The C{float} fraction of all (landmark, trig
+        point) pairs for a scannedRead that need to fall into the same
+        histogram bucket for that bucket to be considered a significant match
+        with a database title.
+    @param scoreMethod: The C{str} name of the method used to calculate the
+        score of a histogram bin which is considered significant.
+    @param featureMatchScore: The C{float} contribution (usually positive) to
+        a score when a feature in a query and subject are part of a match.
+    @param featureMismatchScore: The C{float} contribution (usually negative)
+        to a score when a feature in a query and subject are part of a match.
+    """
+    # The methods to be used to calculate match scores and whether matches
+    # are significant (i.e., worth reporting).
+    DEFAULT_SCORE_METHOD = MinHashesScore.__name__
+    DEFAULT_SIGNIFICANCE_METHOD = HashFraction.__name__
+
+    # The default fraction of all (landmark, trig point) pairs for a
+    # scannedRead that need to fall into the same offset delta histogram
+    # bucket for that bucket to be considered a significant match with a
+    # database title.
+    DEFAULT_SIGNIFICANCE_FRACTION = 0.25
+
+    # Reward and penalty score for feature match / mismatch in
+    # FeatureMatchingScore scoring (see light/score.py).
+    DEFAULT_FEATURE_MATCH_SCORE = 1.0
+    DEFAULT_FEATURE_MISMATCH_SCORE = -1.0
+
+    def __init__(self, significanceMethod=None, significanceFraction=None,
+                 scoreMethod=None, featureMatchScore=None,
+                 featureMismatchScore=None):
+        self.significanceMethod = (
+            self.DEFAULT_SIGNIFICANCE_METHOD if significanceMethod is None
+            else significanceMethod)
+
+        self.significanceFraction = (
+            self.DEFAULT_SIGNIFICANCE_FRACTION if significanceFraction is None
+            else significanceFraction)
+
+        self.scoreMethod = (
+            self.DEFAULT_SCORE_METHOD if scoreMethod is None else scoreMethod)
+
+        self.featureMatchScore = (
+            self.DEFAULT_FEATURE_MATCH_SCORE if featureMatchScore is None
+            else featureMatchScore)
+
+        self.featureMismatchScore = (
+            self.DEFAULT_FEATURE_MISMATCH_SCORE if featureMismatchScore is None
+            else featureMismatchScore)
+
+    @staticmethod
+    def addArgsToParser(parser):
+        """
+        Add arguments for doing a database find to an argparse parser.
+
+        @param parser: An C{argparse.ArgumentParser} instance.
+        """
+        parser.add_argument(
+            '--significanceMethod',
+            default=FindParameters.DEFAULT_SIGNIFICANCE_METHOD,
+            choices=[cls.__name__ for cls in ALL_SIGNIFICANCE_CLASSES],
+            help=('The name of the method used to calculate which histogram '
+                  'bins are considered significant.'))
+
+        parser.add_argument(
+            '--significanceFraction', type=float,
+            default=FindParameters.DEFAULT_SIGNIFICANCE_FRACTION,
+            help=('The (float) fraction of all (landmark, trig point) pairs '
+                  'for a scannedRead that need to fall into the same '
+                  'histogram bucket for that bucket to be considered a '
+                  'significant match with a database title.'))
+
+        parser.add_argument(
+            '--scoreMethod', default=FindParameters.DEFAULT_SCORE_METHOD,
+            choices=[cls.__name__ for cls in ALL_SCORE_CLASSES],
+            help=('The name of the method used to calculate the score of a '
+                  'histogram bin which is considered significant.'))
+
+        parser.add_argument(
+            '--featureMatchScore', type=float,
+            default=FindParameters.DEFAULT_FEATURE_MATCH_SCORE,
+            help=('The contribution (usually positive) to a score when a '
+                  'feature in a query and subject are part of a match.'))
+
+        parser.add_argument(
+            '--featureMismatchScore', type=float,
+            default=FindParameters.DEFAULT_FEATURE_MISMATCH_SCORE,
+            help=('The contribution (usually negative) to a score when a '
+                  'feature in a query and subject are part of a match.'))
+
+    @classmethod
+    def fromArgs(cls, args):
+        """
+        Return an instance of FindParameters built from argument values.
+
+        @param args: The result of calling C{parse_args()} on an
+            C{argparse.ArgumentParser} instance.
+        """
+        return cls(significanceMethod=args.significanceMethod,
+                   significanceFraction=args.significanceFraction,
+                   scoreMethod=args.scoreMethod,
+                   featureMatchScore=args.featureMatchScore,
+                   featureMismatchScore=args.featureMismatchScore)
+
+    def print_(self, margin=''):
+        """
+        Print find parameter values.
+
+        @param margin: A C{str} that should be inserted at the start of each
+            line of output.
+        @return: A C{str} representation of the parameters.
+        """
+        result = MultilineString(margin=margin)
+        result.append('Find parameters:')
+        result.indent()
+        result.extend([
+            'Significance method: %s' % self.significanceMethod,
+            'Significance fraction: %f' % self.significanceFraction,
+            'Score method: %s' % self.scoreMethod,
+            'Feature match score: %f' % self.featureMatchScore,
+            'Feature mismatch score: %f' % self.featureMismatchScore,
+        ])
+        return str(result)
 
 
 class Parameters(object):
@@ -30,43 +161,20 @@ class Parameters(object):
     @param distanceBase: The distance between a landmark and a trig point is
         scaled to be its logarithm using this C{float} base. This reduces
         sensitivity to relatively small differences in distance.
-    @param featureMatchScore: The C{float} contribution (usally positive) to
-        a score when a feature in a query and subject are part of a match.
-    @param featureMismatchScore: The C{float} contribution (usally negative)
-        to a score when a feature in a query and subject are part of a match.
     """
 
     PARAMS = ('landmarkClasses', 'trigPointClasses', 'limitPerLandmark',
-              'maxDistance', 'minDistance', 'distanceBase',
-              'featureMatchScore', 'featureMismatchScore')
+              'maxDistance', 'minDistance', 'distanceBase')
 
-    # Database construction and look-up defaults. See explanations in
-    # docstring above.
+    # Database defaults (see explanations in the above docstring).
     DEFAULT_LIMIT_PER_LANDMARK = 10
     DEFAULT_MAX_DISTANCE = 200
     DEFAULT_MIN_DISTANCE = 1
     DEFAULT_DISTANCE_BASE = 1.1
 
-    # The default fraction of all (landmark, trig point) pairs for a
-    # scannedRead that need to fall into the same offset delta histogram
-    # bucket for that bucket to be considered a significant match with a
-    # database title.
-    DEFAULT_SIGNIFICANCE_FRACTION = 0.25
-
-    # The methods to be used to calculate match scores and whether matches
-    # are significant (i.e., worth reporting).
-    DEFAULT_SCORE_METHOD = MinHashesScore.__name__
-    DEFAULT_SIGNIFICANCE_METHOD = HashFraction.__name__
-
-    # Reward and penalty score for feature match / mismatch in
-    # FeatureMatchingScore scoring (see light/score.py).
-    DEFAULT_FEATURE_MATCH_SCORE = 1.0
-    DEFAULT_FEATURE_MISMATCH_SCORE = -1.0
-
     def __init__(self, landmarkClasses, trigPointClasses,
                  limitPerLandmark=None, maxDistance=None, minDistance=None,
-                 distanceBase=None, featureMatchScore=None,
-                 featureMismatchScore=None):
+                 distanceBase=None):
 
         self.distanceBase = (
             self.DEFAULT_DISTANCE_BASE if distanceBase is None
@@ -99,14 +207,6 @@ class Parameters(object):
         self.minDistance = (
             self.DEFAULT_MIN_DISTANCE if minDistance is None else minDistance)
 
-        self.featureMatchScore = (
-            self.DEFAULT_FEATURE_MATCH_SCORE if featureMatchScore is None
-            else featureMatchScore)
-
-        self.featureMismatchScore = (
-            self.DEFAULT_FEATURE_MISMATCH_SCORE if
-            featureMismatchScore is None else featureMismatchScore)
-
     @property
     def checksum(self):
         """
@@ -129,6 +229,60 @@ class Parameters(object):
                            self.minDistance, self.distanceBase))))
         return checksum.value
 
+    @staticmethod
+    def addArgsToParser(parser):
+        """
+        Add database creation arguments to an argparse parser.
+
+        @param parser: An C{argparse.ArgumentParser} instance.
+        """
+        parser.add_argument(
+            '--landmark', action='append', dest='landmarkFinderNames',
+            choices=sorted(cl.NAME for cl in ALL_LANDMARK_CLASSES),
+            help=('The name of a landmark finder to use. May be specified '
+                  'multiple times.'))
+
+        parser.add_argument(
+            '--trig', action='append', dest='trigFinderNames',
+            choices=sorted(cl.NAME for cl in ALL_TRIG_CLASSES),
+            help=('The name of a trig point finder to use. May be '
+                  'specified multiple times.'))
+
+        parser.add_argument(
+            '--defaultLandmarks', action='store_true', default=False,
+            help=('If specified, use the default landmark finders: %s' %
+                  sorted(cl.NAME for cl in
+                         DEFAULT_LANDMARK_CLASSES)))
+
+        parser.add_argument(
+            '--defaultTrigPoints', action='store_true', default=False,
+            help=('If specified, use the default trig point finders: %s' %
+                  sorted(cl.NAME for cl in DEFAULT_TRIG_CLASSES)))
+
+        parser.add_argument(
+            '--limitPerLandmark', type=int,
+            default=Parameters.DEFAULT_LIMIT_PER_LANDMARK,
+            help=('A limit on the number of pairs to yield per landmark '
+                  'per read.'))
+
+        parser.add_argument(
+            '--maxDistance', type=int,
+            default=Parameters.DEFAULT_MAX_DISTANCE,
+            help='The maximum distance permitted between yielded pairs.')
+
+        parser.add_argument(
+            '--minDistance', type=int,
+            default=Parameters.DEFAULT_MIN_DISTANCE,
+            help='The minimum distance permitted between yielded pairs.')
+
+        parser.add_argument(
+            '--distanceBase', type=float,
+            default=Parameters.DEFAULT_DISTANCE_BASE,
+            help=('The distance between a landmark and a trig point is '
+                  'scaled to be its logarithm using this base. This '
+                  'reduces sensitivity to relatively small differences in '
+                  'distance.'))
+
     def save(self, fp=sys.stdout):
         """
         Save the parameters in JSON format.
@@ -143,8 +297,6 @@ class Parameters(object):
             'maxDistance': self.maxDistance,
             'minDistance': self.minDistance,
             'distanceBase': self.distanceBase,
-            'featureMatchScore': self.featureMatchScore,
-            'featureMismatchScore': self.featureMismatchScore,
         }), file=fp)
 
         return fp
@@ -187,9 +339,7 @@ class Parameters(object):
             limitPerLandmark=state['limitPerLandmark'],
             maxDistance=state['maxDistance'],
             minDistance=state['minDistance'],
-            distanceBase=state['distanceBase'],
-            featureMatchScore=state['featureMatchScore'],
-            featureMismatchScore=state['featureMismatchScore'])
+            distanceBase=state['distanceBase'])
 
     def print_(self, margin=''):
         """
@@ -227,8 +377,6 @@ class Parameters(object):
             'Max distance: %d' % self.maxDistance,
             'Min distance: %d' % self.minDistance,
             'Distance base: %f' % self.distanceBase,
-            'Feature match score: %f' % self.featureMatchScore,
-            'Feature mismatch score: %f' % self.featureMismatchScore,
         ])
 
         return str(result)

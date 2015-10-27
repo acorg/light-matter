@@ -296,21 +296,12 @@ class Backend:
 
         return hashes
 
-    def find(self, read, significanceMethod, scoreMethod,
-             significanceFraction, storeFullAnalysis):
+    def find(self, read, storeFullAnalysis=False):
         """
         Given a read, compute all hashes for it, look up matching hashes and
         check which database sequences it matches.
 
         @param read: A C{dark.reads.AARead} instance.
-        @param significanceMethod: The C{str} name of the method used to
-            calculate which histogram bins are considered significant.
-        @param scoreMethod: The C{str} name of the method used to calculate the
-            score of a bin which is considered significant.
-        @param significanceFraction: The C{float} fraction of all (landmark,
-            trig point) pairs for a scannedRead that need to fall into the
-            same histogram bucket for that bucket to be considered a
-            significant match with a database title.
         @param storeFullAnalysis: A C{bool}. If C{True} the intermediate
             significance analysis computed in the Result will be stored.
         @return: A tuple of length three, containing

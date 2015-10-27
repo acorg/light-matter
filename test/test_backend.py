@@ -559,10 +559,7 @@ class TestBackend(TestCase):
         be = Backend()
         be.configure(params)
         be.addSubject(subject, '0')
-        matches, hashCount, nonMatchingHashes = be.find(
-            query, Parameters.DEFAULT_SIGNIFICANCE_METHOD,
-            Parameters.DEFAULT_SCORE_METHOD,
-            Parameters.DEFAULT_SIGNIFICANCE_FRACTION, False)
+        matches, hashCount, nonMatchingHashes = be.find(query)
 
         self.assertEqual({}, matches)
         self.assertEqual(0, hashCount)
@@ -580,9 +577,7 @@ class TestBackend(TestCase):
         be = Backend()
         be.configure(params)
         be.addSubject(subject, '0')
-        matches, hashCount, nonMatchingHashes = be.find(
-            query, 0.0, Parameters.DEFAULT_SCORE_METHOD,
-            Parameters.DEFAULT_SIGNIFICANCE_FRACTION, False)
+        matches, hashCount, nonMatchingHashes = be.find(query)
 
         self.assertEqual(
             {
@@ -610,10 +605,7 @@ class TestBackend(TestCase):
         be = Backend()
         be.configure(params)
         be.addSubject(subject, '0')
-        matches, hashCount, nonMatchingHashes = be.find(
-            query, Parameters.DEFAULT_SIGNIFICANCE_METHOD,
-            Parameters.DEFAULT_SCORE_METHOD,
-            Parameters.DEFAULT_SIGNIFICANCE_FRACTION, False)
+        matches, hashCount, nonMatchingHashes = be.find(query)
 
         self.assertEqual(
             {
@@ -646,10 +638,7 @@ class TestBackend(TestCase):
         be = Backend()
         be.configure(params)
         be.addSubject(subject, '0')
-        matches, hashCount, nonMatchingHashes = be.find(
-            query, Parameters.DEFAULT_SIGNIFICANCE_METHOD,
-            Parameters.DEFAULT_SCORE_METHOD,
-            Parameters.DEFAULT_SIGNIFICANCE_FRACTION, True)
+        matches, hashCount, nonMatchingHashes = be.find(query, True)
 
         self.assertEqual({}, matches)
         self.assertEqual(2, hashCount)
@@ -681,10 +670,7 @@ class TestBackend(TestCase):
         be = Backend()
         be.configure(params)
         be.addSubject(subject, '0')
-        matches, hashCount, nonMatchingHashes = be.find(
-            query, Parameters.DEFAULT_SIGNIFICANCE_METHOD,
-            Parameters.DEFAULT_SCORE_METHOD,
-            Parameters.DEFAULT_SIGNIFICANCE_FRACTION, False)
+        matches, hashCount, nonMatchingHashes = be.find(query)
 
         self.assertEqual({}, matches)
         self.assertEqual(0, hashCount)
@@ -702,10 +688,7 @@ class TestBackend(TestCase):
         be = Backend()
         be.configure(params)
         be.addSubject(subject, '0')
-        matches, hashCount, nonMatchingHashes = be.find(
-            query, Parameters.DEFAULT_SIGNIFICANCE_METHOD,
-            Parameters.DEFAULT_SCORE_METHOD,
-            Parameters.DEFAULT_SIGNIFICANCE_FRACTION, False)
+        matches, hashCount, nonMatchingHashes = be.find(query)
 
         self.assertEqual({}, matches)
         self.assertEqual(0, hashCount)
@@ -722,10 +705,7 @@ class TestBackend(TestCase):
         be = Backend()
         be.configure(params)
         be.addSubject(subject, '0')
-        matches, hashCount, nonMatchingHashes = be.find(
-            query, Parameters.DEFAULT_SIGNIFICANCE_METHOD,
-            Parameters.DEFAULT_SCORE_METHOD,
-            Parameters.DEFAULT_SIGNIFICANCE_FRACTION, False)
+        matches, hashCount, nonMatchingHashes = be.find(query)
 
         self.assertEqual(
             {

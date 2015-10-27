@@ -2,13 +2,14 @@ from collections import defaultdict
 
 from dark.fasta import FastaReads
 
-from light.parameters import Parameters
+from light.parameters import FindParameters
 
 
-def queryDatabase(subjects, queries, database,
-                  scoreMethod=Parameters.DEFAULT_SCORE_METHOD,
-                  significanceMethod=Parameters.DEFAULT_SIGNIFICANCE_METHOD,
-                  significanceFraction=None):
+def queryDatabase(
+        subjects, queries, database,
+        scoreMethod=FindParameters.DEFAULT_SCORE_METHOD,
+        significanceMethod=FindParameters.DEFAULT_SIGNIFICANCE_METHOD,
+        significanceFraction=FindParameters.DEFAULT_SIGNIFICANCE_FRACTION):
     """
     Add subjects to a database, query it, return results.
 
@@ -37,9 +38,9 @@ def queryDatabase(subjects, queries, database,
 
     resultDict = defaultdict(dict)
 
+    findParams = FindParameters(significanceFraction=significanceFraction)
     for query in queries:
-        result = database.find(query,
-                               significanceFraction=significanceFraction)
+        result = database.find(query, findParams)
         for subjectIndex in result.significantSubjects():
             subject = database.getSubjectByIndex(subjectIndex)
             score = result.analysis[subjectIndex]['bestScore']

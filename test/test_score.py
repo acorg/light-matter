@@ -127,7 +127,7 @@ class TestHistogramBinFeatures(TestCase):
         histogram = Histogram(1)
         histogram.add(44, {
             'landmark': landmark,
-            'queryOffsets': [[100, 110]],
+            'queryOffsets': [100, 110],
             'subjectOffsets': None,
             'trigPoint': trigPoint,
         })
@@ -147,7 +147,7 @@ class TestHistogramBinFeatures(TestCase):
         histogram.add(44, {
             'landmark': landmark,
             'queryOffsets': None,
-            'subjectOffsets': [[100, 110]],
+            'subjectOffsets': [100, 110],
             'trigPoint': trigPoint,
         })
         histogram.finalize()
@@ -165,7 +165,13 @@ class TestHistogramBinFeatures(TestCase):
         histogram = Histogram(1)
         histogram.add(44, {
             'landmark': landmark1,
-            'queryOffsets': [[100, 110], [200, 210]],
+            'queryOffsets': [100, 110],
+            'subjectOffsets': None,
+            'trigPoint': trigPoint1,
+        })
+        histogram.add(44, {
+            'landmark': landmark1,
+            'queryOffsets': [200, 210],
             'subjectOffsets': None,
             'trigPoint': trigPoint1,
         })
@@ -279,8 +285,8 @@ class TestFeatureMatchingScore(TestCase):
         histogram = Histogram(1)
         histogram.add(44, {
             'landmark': landmark,
-            'queryOffsets': [[100, 110]],
-            'subjectOffsets': [[100, 110]],
+            'queryOffsets': [100, 110],
+            'subjectOffsets': [100, 110],
             'trigPoint': trigPoint,
         })
         histogram.finalize()
@@ -305,8 +311,14 @@ class TestFeatureMatchingScore(TestCase):
         histogram = Histogram(1)
         histogram.add(44, {
             'landmark': landmark,
-            'queryOffsets': [[100, 110], [200, 210]],
-            'subjectOffsets': [[100, 110], [200, 210]],
+            'queryOffsets': [100, 110],
+            'subjectOffsets': [100, 110],
+            'trigPoint': trigPoint,
+        })
+        histogram.add(44, {
+            'landmark': landmark,
+            'queryOffsets': [200, 210],
+            'subjectOffsets': [200, 210],
             'trigPoint': trigPoint,
         })
         histogram.finalize()
@@ -328,8 +340,8 @@ class TestFeatureMatchingScore(TestCase):
         histogram = Histogram(1)
         histogram.add(44, {
             'landmark': landmark,
-            'queryOffsets': [[100, 110]],
-            'subjectOffsets': [[100, 110]],
+            'queryOffsets': [100, 110],
+            'subjectOffsets': [100, 110],
             'trigPoint': trigPoint,
         })
         histogram.finalize()
@@ -351,8 +363,8 @@ class TestFeatureMatchingScore(TestCase):
         histogram = Histogram(1)
         histogram.add(44, {
             'landmark': landmark,
-            'queryOffsets': [[100, 110]],
-            'subjectOffsets': [[100, 110]],
+            'queryOffsets': [100, 110],
+            'subjectOffsets': [100, 110],
             'trigPoint': trigPoint,
         })
         histogram.finalize()
@@ -374,8 +386,8 @@ class TestFeatureMatchingScore(TestCase):
         histogram = Histogram(1)
         histogram.add(44, {
             'landmark': landmark,
-            'queryOffsets': [[100, 110]],
-            'subjectOffsets': [[100, 110]],
+            'queryOffsets': [100, 110],
+            'subjectOffsets': [100, 110],
             'trigPoint': trigPoint,
         })
         histogram.finalize()
@@ -397,8 +409,8 @@ class TestFeatureMatchingScore(TestCase):
         histogram = Histogram(1)
         histogram.add(44, {
             'landmark': landmark,
-            'queryOffsets': [[0, 10]],
-            'subjectOffsets': [[0, 10]],
+            'queryOffsets': [0, 10],
+            'subjectOffsets': [0, 10],
             'trigPoint': trigPoint,
         })
         histogram.finalize()
@@ -422,8 +434,8 @@ class TestFeatureMatchingScore(TestCase):
         histogram = Histogram(1)
         histogram.add(44, {
             'landmark': landmark,
-            'queryOffsets': [[0, 5]],
-            'subjectOffsets': [[0, 5]],
+            'queryOffsets': [0, 5],
+            'subjectOffsets': [0, 5],
             'trigPoint': trigPoint,
         })
         histogram.finalize()
@@ -447,8 +459,8 @@ class TestFeatureMatchingScore(TestCase):
         histogram = Histogram(1)
         histogram.add(44, {
             'landmark': landmark,
-            'queryOffsets': [[2, 5]],
-            'subjectOffsets': [[2, 5]],
+            'queryOffsets': [2, 5],
+            'subjectOffsets': [2, 5],
             'trigPoint': trigPoint,
         })
         histogram.finalize()
@@ -471,8 +483,8 @@ class TestFeatureMatchingScore(TestCase):
         histogram = Histogram(1)
         histogram.add(44, {
             'landmark': landmark,
-            'queryOffsets': [[0, 10]],
-            'subjectOffsets': [[0, 10]],
+            'queryOffsets': [0, 10],
+            'subjectOffsets': [0, 10],
             'trigPoint': trigPoint,
         })
         histogram.finalize()
@@ -497,8 +509,8 @@ class TestFeatureMatchingScore(TestCase):
         histogram = Histogram(1)
         histogram.add(44, {
             'landmark': landmark,
-            'queryOffsets': [[5, 10]],
-            'subjectOffsets': [[5, 10]],
+            'queryOffsets': [5, 10],
+            'subjectOffsets': [5, 10],
             'trigPoint': trigPoint,
         })
         histogram.finalize()
@@ -522,8 +534,8 @@ class TestFeatureMatchingScore(TestCase):
         histogram = Histogram(1)
         histogram.add(44, {
             'landmark': landmark,
-            'queryOffsets': [[2, 5]],
-            'subjectOffsets': [[2, 5]],
+            'queryOffsets': [2, 5],
+            'subjectOffsets': [2, 5],
             'trigPoint': trigPoint,
         })
         histogram.finalize()
@@ -548,8 +560,8 @@ class TestFeatureMatchingScore(TestCase):
         histogram = Histogram(1)
         histogram.add(44, {
             'landmark': landmark,
-            'queryOffsets': [[0, 10]],
-            'subjectOffsets': [[0, 10]],
+            'queryOffsets': [0, 10],
+            'subjectOffsets': [0, 10],
             'trigPoint': trigPoint,
         })
         histogram.finalize()
@@ -590,8 +602,8 @@ class TestFeatureAAScore(TestCase):
         histogram = Histogram(1)
         histogram.add(44, {
             'landmark': landmark,
-            'queryOffsets': [[100, 110]],
-            'subjectOffsets': [[100, 110]],
+            'queryOffsets': [100, 110],
+            'subjectOffsets': [100, 110],
             'trigPoint': trigPoint,
         })
         histogram.finalize()
@@ -612,8 +624,14 @@ class TestFeatureAAScore(TestCase):
         histogram = Histogram(1)
         histogram.add(44, {
             'landmark': landmark,
-            'queryOffsets': [[100, 110], [200, 210]],
-            'subjectOffsets': [[100, 110], [200, 210]],
+            'queryOffsets': [100, 110],
+            'subjectOffsets': [100, 110],
+            'trigPoint': trigPoint,
+        })
+        histogram.add(44, {
+            'landmark': landmark,
+            'queryOffsets': [200, 210],
+            'subjectOffsets': [200, 210],
             'trigPoint': trigPoint,
         })
         histogram.finalize()
@@ -633,8 +651,8 @@ class TestFeatureAAScore(TestCase):
         histogram = Histogram(1)
         histogram.add(44, {
             'landmark': landmark,
-            'queryOffsets': [[100, 110]],
-            'subjectOffsets': [[100, 110]],
+            'queryOffsets': [100, 110],
+            'subjectOffsets': [100, 110],
             'trigPoint': trigPoint,
         })
         histogram.finalize()
@@ -654,8 +672,8 @@ class TestFeatureAAScore(TestCase):
         histogram = Histogram(1)
         histogram.add(44, {
             'landmark': landmark,
-            'queryOffsets': [[100, 110]],
-            'subjectOffsets': [[100, 110]],
+            'queryOffsets': [100, 110],
+            'subjectOffsets': [100, 110],
             'trigPoint': trigPoint,
         })
         histogram.finalize()
@@ -676,8 +694,8 @@ class TestFeatureAAScore(TestCase):
         histogram = Histogram(1)
         histogram.add(44, {
             'landmark': landmark,
-            'queryOffsets': [[100, 110]],
-            'subjectOffsets': [[100, 110]],
+            'queryOffsets': [100, 110],
+            'subjectOffsets': [100, 110],
             'trigPoint': trigPoint,
         })
         histogram.finalize()
@@ -698,8 +716,8 @@ class TestFeatureAAScore(TestCase):
         histogram = Histogram(1)
         histogram.add(44, {
             'landmark': landmark,
-            'queryOffsets': [[0, 50]],
-            'subjectOffsets': [[0, 50]],
+            'queryOffsets': [0, 50],
+            'subjectOffsets': [0, 50],
             'trigPoint': trigPoint,
         })
         histogram.finalize()
@@ -722,8 +740,8 @@ class TestFeatureAAScore(TestCase):
         histogram = Histogram(1)
         histogram.add(44, {
             'landmark': landmark,
-            'queryOffsets': [[0, 5]],
-            'subjectOffsets': [[0, 5]],
+            'queryOffsets': [0, 5],
+            'subjectOffsets': [0, 5],
             'trigPoint': trigPoint,
         })
         histogram.finalize()
@@ -745,8 +763,8 @@ class TestFeatureAAScore(TestCase):
         histogram = Histogram(1)
         histogram.add(44, {
             'landmark': landmark,
-            'queryOffsets': [[2, 5]],
-            'subjectOffsets': [[2, 5]],
+            'queryOffsets': [2, 5],
+            'subjectOffsets': [2, 5],
             'trigPoint': trigPoint,
         })
         histogram.finalize()
@@ -767,8 +785,8 @@ class TestFeatureAAScore(TestCase):
         histogram = Histogram(1)
         histogram.add(44, {
             'landmark': landmark,
-            'queryOffsets': [[0, 50]],
-            'subjectOffsets': [[0, 50]],
+            'queryOffsets': [0, 50],
+            'subjectOffsets': [0, 50],
             'trigPoint': trigPoint,
         })
         histogram.finalize()
@@ -791,8 +809,8 @@ class TestFeatureAAScore(TestCase):
         histogram = Histogram(1)
         histogram.add(44, {
             'landmark': landmark,
-            'queryOffsets': [[5, 10]],
-            'subjectOffsets': [[5, 10]],
+            'queryOffsets': [5, 10],
+            'subjectOffsets': [5, 10],
             'trigPoint': trigPoint,
         })
         histogram.finalize()
@@ -813,8 +831,8 @@ class TestFeatureAAScore(TestCase):
         histogram = Histogram(1)
         histogram.add(44, {
             'landmark': landmark,
-            'queryOffsets': [[2, 5]],
-            'subjectOffsets': [[2, 5]],
+            'queryOffsets': [2, 5],
+            'subjectOffsets': [2, 5],
             'trigPoint': trigPoint,
         })
         histogram.finalize()
@@ -834,16 +852,16 @@ class TestFeatureAAScore(TestCase):
         histogram = Histogram(1)
         histogram.add(44, {
             'landmark': landmark1,
-            'queryOffsets': [[2, 10]],
-            'subjectOffsets': [[2, 10]],
+            'queryOffsets': [2, 10],
+            'subjectOffsets': [2, 10],
             'trigPoint': trigPoint1,
         })
         landmark2 = Landmark('AlphaHelix_pi', 'C', 50, 5)
         trigPoint2 = TrigPoint('Peak', 'P', 60)
         histogram.add(44, {
             'landmark': landmark2,
-            'queryOffsets': [[50, 60]],
-            'subjectOffsets': [[50, 60]],
+            'queryOffsets': [50, 60],
+            'subjectOffsets': [50, 60],
             'trigPoint': trigPoint2,
         })
         histogram.finalize()

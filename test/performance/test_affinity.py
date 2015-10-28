@@ -2,6 +2,7 @@ from unittest import TestCase
 
 from dark.reads import Reads, AARead
 
+from light.parameters import FindParameters
 from light.performance.affinity import affinityMatrix
 from light.landmarks import ALL_LANDMARK_CLASSES
 from light.trig import ALL_TRIG_CLASSES
@@ -93,17 +94,19 @@ class TestAffinityMatrix(TestCase):
             [1.0, 1.0, 1.0]
         ], matrix)
 
-    def _checkSymmetry(self, sequences, **kwargs):
+    def _checkSymmetry(self, sequences, findParams, **kwargs):
         """
         Create an affinity matrix for a set of sequences and check its
         symmetry.
 
         @param sequences: A C{list} of C{AARead} instances.
+        @param findParams: A {light.parameters.FindParameters} instance.
         @param kwargs: See
             C{database.DatabaseSpecifier.getDatabaseFromKeywords} for
             additional keywords, all of which are optional.
         """
-        matrix = affinityMatrix(sequences, subjects=sequences, **kwargs)
+        matrix = affinityMatrix(sequences, findParams, subjects=sequences,
+                                **kwargs)
 
         for i in range(len(sequences)):
 
@@ -160,8 +163,9 @@ class TestAffinityMatrix(TestCase):
                             'FVSLFNIHGEPMSVYGRFLLPSVG')),
         ]
 
+        findParams = FindParameters(significanceFraction=0.05)
         self._checkSymmetry(
-            sequences, significanceFraction=0.05, distanceBase=1.0,
+            sequences, findParams, distanceBase=1.0,
             landmarkNames=[cls.NAME for cls in ALL_LANDMARK_CLASSES],
             trigPointNames=[cls.NAME for cls in ALL_TRIG_CLASSES],
             limitPerLandmark=50, minDistance=1, maxDistance=100)
@@ -194,8 +198,9 @@ class TestAffinityMatrix(TestCase):
                     'LFEFTSMFFDGEFVSNLAMELPAFT')),
         ]
 
+        findParams = FindParameters(significanceFraction=0.01)
         self._checkSymmetry(
-            sequences, significanceFraction=0.01, distanceBase=1.025,
+            sequences, findParams, distanceBase=1.025,
             landmarkNames=['GOR4AlphaHelix', 'GOR4Coil'],
             trigPointNames=['Peaks', 'Troughs'],
             limitPerLandmark=50, minDistance=1, maxDistance=100)

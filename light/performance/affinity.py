@@ -5,17 +5,14 @@ from light.database import DatabaseSpecifier
 from light.parameters import FindParameters
 
 
-def affinityMatrix(sequences, significanceFraction=None, **kwargs):
+def affinityMatrix(sequences, findParams=None, **kwargs):
     """
     Produce an affinity matrix containing scores for a set of reads matched
     against the subjects in a database.
 
     @param sequences: Either A C{str} filename of sequences to consider or
         a C{light.reads.Reads} instance.
-    @param significanceFraction: The C{float} fraction of all (landmark,
-        trig point) pairs for a scannedRead that need to fall into the
-        same histogram bucket for that bucket to be considered a
-        significant match with a database title.
+    @param findParams: A C{light.parameters.FindParameters} instance.
     @param kwargs: See
         C{database.DatabaseSpecifier.getDatabaseFromKeywords} for
         additional keywords, all of which are optional.
@@ -27,6 +24,8 @@ def affinityMatrix(sequences, significanceFraction=None, **kwargs):
     else:
         reads = sequences
 
+    findParams = findParams or FindParameters()
+
     db = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
     subjectCount = db.subjectCount()
     affinity = []
@@ -34,7 +33,6 @@ def affinityMatrix(sequences, significanceFraction=None, **kwargs):
     for readIndex, read in enumerate(reads):
         row = []
         append = row.append
-        findParams = FindParameters(significanceFraction=significanceFraction)
         analysis = db.find(read, findParams).analysis
         for subjectIndex in map(str, range(subjectCount)):
             # Be careful how we access the analysis. It is a defaultdict,

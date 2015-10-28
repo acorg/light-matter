@@ -524,7 +524,7 @@ def plotFeatureSquare(read, significanceFraction=None, readsAx=None, **kwargs):
     backend.configure(database.params)
     findParams = FindParameters(significanceFraction=significanceFraction)
     result = database.find(read, findParams, storeFullAnalysis=True)
-    scannedQuery = result.scannedQuery
+    scannedQuery = backend.scan(result.query)
 
     # Plot a light grey diagonal line, bottom left to top right.
     readsAx.plot([0, len(read.sequence)], [0, len(read.sequence)], '-',
@@ -717,13 +717,13 @@ class PlotHashesInSubjectAndRead(object):
         readsAx = readsAx or fig.add_subplot(111)
 
         for hashInfo in self.queryHashes.values():
-            for offset in hashInfo['landmarkOffsets']:
-                readsAx.plot(offset + uniform(-0.4, 0.4), 0, 'o',
+            for landmarkOffset, trigPointOffset in hashInfo['offsets']:
+                readsAx.plot(landmarkOffset + uniform(-0.4, 0.4), 0, 'o',
                              markerfacecolor='black', markeredgecolor='white')
 
         for hashInfo in self.subjectHashes.values():
-            for offset in hashInfo['landmarkOffsets']:
-                readsAx.plot(0, offset + uniform(-0.4, 0.4), 'o',
+            for landmarkOffset, trigPointOffset in hashInfo['offsets']:
+                readsAx.plot(0, landmarkOffset + uniform(-0.4, 0.4), 'o',
                              markerfacecolor='black', markeredgecolor='white')
 
         nonEmptyBins = [b for b in self.bins if len(b)]
@@ -731,8 +731,8 @@ class PlotHashesInSubjectAndRead(object):
         for bin_, binColor in zip(nonEmptyBins, binColors):
             for match in bin_:
                 readsAx.plot(
-                    match['subjectLandmarkOffset'] + uniform(-0.4, 0.4),
-                    match['queryLandmarkOffset'] + uniform(-0.4, 0.4),
+                    match['subjectOffsets'][0] + uniform(-0.4, 0.4),
+                    match['queryOffsets'][0] + uniform(-0.4, 0.4),
                     'o', markerfacecolor=binColor, markeredgecolor='white')
 
         firstTitleLine = fill('Hashes from matching %s against %s' % (
@@ -821,9 +821,9 @@ class PlotHashesInSubjectAndRead(object):
                 tpName = tp.name
                 lmColor = COLORS[lm.symbol]
                 tpColor = COLORS[tp.symbol]
-                qyLmOffset = match['queryLandmarkOffset']
-                qyTpOffset = match['queryTrigPointOffset']
-                sjLmOffset = match['subjectLandmarkOffset']
+                qyLmOffset = match['queryOffsets'][0]
+                qyTpOffset = match['queryOffsets'][1]
+                sjLmOffset = match['subjectOffsets'][0]
                 namesSeen.update([lmName, tpName])
 
                 # Landmark in the query.
@@ -894,8 +894,7 @@ class PlotHashesInSubjectAndRead(object):
             lmColor = COLORS[lm.symbol]
             tpColor = COLORS[tp.symbol]
             namesSeen.update([lmName, tpName])
-            for lmOffset, tpOffset in zip(
-                    hashInfo['landmarkOffsets'], hashInfo['trigPointOffsets']):
+            for lmOffset, tpOffset in hashInfo['offsets']:
                 # Landmark.
                 key = (lmName, lmOffset, lm.length)
                 if key not in qyPlotted:
@@ -920,8 +919,7 @@ class PlotHashesInSubjectAndRead(object):
             lmColor = COLORS[lm.symbol]
             tpColor = COLORS[tp.symbol]
             namesSeen.update([lmName, tpName])
-            for lmOffset, tpOffset in zip(
-                    hashInfo['landmarkOffsets'], hashInfo['trigPointOffsets']):
+            for lmOffset, tpOffset in hashInfo['offsets']:
                 # Landmark.
                 key = (lmName, lmOffset, lm.length)
                 if key not in sjPlotted:

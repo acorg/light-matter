@@ -68,21 +68,18 @@ def histogramBinFeatures(bin_, queryOrSubject):
     # 'subject' as the following item getter will raise a KeyError if it
     # cannot access the dict key in the bin element.
     for hashInfo in bin_:
-        landmark = hashInfo['landmark']
-        trigPoint = hashInfo['trigPoint']
-        offsetsList = hashInfo[queryOrSubject + 'Offsets']
-        for offsets in offsetsList:
-            # Copy the landmark, set its offset, add it to our results.
-            thisLandmark = copy(landmark)
-            thisLandmark.offset = offsets[0]
-            allFeatures.add(thisLandmark)
-            allOffsets.add(thisLandmark.offset)
-            allOffsets.add(thisLandmark.offset + thisLandmark.length - 1)
-            # Copy the trig point, set its offset, add it to our results.
-            thisTrigPoint = copy(trigPoint)
-            thisTrigPoint.offset = offsets[1]
-            allFeatures.add(thisTrigPoint)
-            allOffsets.add(thisTrigPoint.offset)
+        offsets = hashInfo[queryOrSubject + 'Offsets']
+        # Copy the landmark, set its offset, add it to our results.
+        thisLandmark = copy(hashInfo['landmark'])
+        thisLandmark.offset = offsets[0]
+        allFeatures.add(thisLandmark)
+        allOffsets.add(thisLandmark.offset)
+        allOffsets.add(thisLandmark.offset + thisLandmark.length - 1)
+        # Copy the trig point, set its offset, add it to our results.
+        thisTrigPoint = copy(hashInfo['trigPoint'])
+        thisTrigPoint.offset = offsets[1]
+        allFeatures.add(thisTrigPoint)
+        allOffsets.add(thisTrigPoint.offset)
 
     return allFeatures, allOffsets
 

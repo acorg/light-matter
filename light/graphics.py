@@ -981,6 +981,8 @@ def plotLandmarksInSequences(sequences, maxTickLabelLength=None, **kwargs):
 
     nReads = len(reads)
     db = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
+    backend = Backend()
+    backend.configure(db.params)
     fig = plt.figure(figsize=(15, nReads / 3.0))
     ax = fig.add_subplot(111)
     namesSeen = set()
@@ -996,7 +998,7 @@ def plotLandmarksInSequences(sequences, maxTickLabelLength=None, **kwargs):
             maxLen = readLen
         plt.plot([0, len(read.sequence)], [y, y], '-', linewidth=0.5,
                  color='grey')
-        scannedRead = db.scan(read)
+        scannedRead = backend.scan(read)
         # Landmarks are drawn as colored horizontal lines.
         for landmark in scannedRead.landmarks:
             namesSeen.add(landmark.name)

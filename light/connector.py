@@ -14,7 +14,7 @@ from Bio.File import as_handle
 
 from light.backend import Backend
 from light.checksum import Checksum
-from light.parameters import Parameters
+from light.parameters import Parameters, FindParameters
 from light.result import Result
 from light.exceptions import BackendException
 from light.subject import Subject, SubjectStore
@@ -53,38 +53,23 @@ class SimpleConnector:
                        'totalResidues', 'totalCoveredResidues', 'checksum'):
             setattr(self, method, getattr(self._backend, method))
 
-    def find(self, read, significanceMethod=None, scoreMethod=None,
-             significanceFraction=None, storeFullAnalysis=False):
+    def find(self, read, findParams=None, storeFullAnalysis=False):
         """
         Check which database sequences a read matches.
 
         @param read: A C{dark.read.AARead} instance.
-        @param significanceMethod: The name of the method used to calculate
-            which histogram bins are considered significant.
-        @param scoreMethod: The C{str} name of the method used to calculate the
-            score of a bin which is considered significant.
-        @param significanceFraction: The C{float} fraction of all (landmark,
-            trig point) pairs for a scannedRead that need to fall into the
-            same histogram bucket for that bucket to be considered a
-            significant match with a database title.
+        @param findParams: An instance of C{light.parameters.FindParameters}.
         @param storeFullAnalysis: A C{bool}. If C{True} the intermediate
             significance analysis computed in the Result will be stored.
         @return: A C{light.result.Result} instance.
         """
-        if significanceMethod is None:
-            significanceMethod = self.params.DEFAULT_SIGNIFICANCE_METHOD
-        if scoreMethod is None:
-            scoreMethod = self.params.DEFAULT_SCORE_METHOD
-        if significanceFraction is None:
-            significanceFraction = self.params.DEFAULT_SIGNIFICANCE_FRACTION
-
         matches, hashCount, nonMatchingHashes = self._backend.find(
-            read, significanceMethod, scoreMethod, significanceFraction,
-            storeFullAnalysis)
+            read, storeFullAnalysis)
 
         return Result(read, self, matches, hashCount,
-                      significanceMethod, scoreMethod, significanceFraction,
-                      nonMatchingHashes, storeFullAnalysis=storeFullAnalysis)
+                      findParams or FindParameters(),
+                      nonMatchingHashes=nonMatchingHashes,
+                      storeFullAnalysis=storeFullAnalysis)
 
     def shutdown(self, save, filePrefix):
         """

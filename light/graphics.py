@@ -8,6 +8,7 @@ from collections import defaultdict
 
 from dark.dimension import dimensionalIterator
 
+from light.parameters import FindParameters
 from light.database import DatabaseSpecifier
 from light.backend import Backend
 from light.trig import ALL_TRIG_CLASSES
@@ -247,8 +248,9 @@ def plotHistogram(query, subject, significanceMethod=None,
     else:
         _, subjectIndex, _ = database.addSubject(subject)
 
-    result = database.find(query, significanceMethod, significanceFraction,
-                           storeFullAnalysis=True)
+    findParams = FindParameters(significanceMethod=significanceMethod,
+                                significanceFraction=significanceFraction)
+    result = database.find(query, findParams, storeFullAnalysis=True)
 
     try:
         histogram = result.analysis[subjectIndex]['histogram']
@@ -402,8 +404,9 @@ def plotHistogramLine(query, subject, significanceMethod=False,
 
     _, subjectIndex, _ = database.addSubject(subject)
 
-    result = database.find(query, significanceMethod, significanceFraction,
-                           storeFullAnalysis=True)
+    findParams = FindParameters(significanceMethod=significanceMethod,
+                                significanceFraction=significanceFraction)
+    result = database.find(query, findParams, storeFullAnalysis=True)
 
     try:
         analysis = result.analysis[subjectIndex]
@@ -478,10 +481,10 @@ def plotHistogramLines(sequences, significanceFraction=None, **kwargs):
     # This shortcoming can be removed later.
     specifier = DatabaseSpecifier(allowInMemory=False)
     database = specifier.getDatabaseFromKeywords(subjects=reads, **kwargs)
+    findParams = FindParameters(significanceFraction=significanceFraction)
 
     for read in reads:
-        result = database.find(read, significanceFraction,
-                               storeFullAnalysis=True)
+        result = database.find(read, findParams, storeFullAnalysis=True)
         for subjectIndex in map(str, range(len(reads))):
             try:
                 analysis = result.analysis[subjectIndex]
@@ -519,7 +522,8 @@ def plotFeatureSquare(read, significanceFraction=None, readsAx=None, **kwargs):
     database = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
     backend = Backend()
     backend.configure(database.params)
-    result = database.find(read, significanceFraction, storeFullAnalysis=True)
+    findParams = FindParameters(significanceFraction=significanceFraction)
+    result = database.find(read, findParams, storeFullAnalysis=True)
     scannedQuery = result.scannedQuery
 
     # Plot a light grey diagonal line, bottom left to top right.
@@ -661,8 +665,8 @@ class PlotHashesInSubjectAndRead(object):
 
         database = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
         _, subjectIndex, _ = database.addSubject(subject)
-        self.result = database.find(self.query,
-                                    significanceFraction=significanceFraction,
+        findParams = FindParameters(significanceFraction=significanceFraction)
+        self.result = database.find(self.query, findParams,
                                     storeFullAnalysis=True)
         if subjectIndex in self.result.analysis:
             analysis = self.result.analysis[subjectIndex]

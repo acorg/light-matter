@@ -16,10 +16,8 @@ from dark.reads import AARead
 from light.connector import SimpleConnector, WampServerConnector
 from light.backend import Backend
 from light.parameters import Parameters
-from light.landmarks import (
-    findLandmarks, ALL_LANDMARK_CLASSES, DEFAULT_LANDMARK_CLASSES)
-from light.trig import (
-    findTrigPoints, ALL_TRIG_CLASSES, DEFAULT_TRIG_CLASSES)
+from light.landmarks import findLandmarks, DEFAULT_LANDMARK_CLASSES
+from light.trig import findTrigPoints, DEFAULT_TRIG_CLASSES
 from light.wamp import addArgsToParser as addWampArgsToParser
 from light.string import MultilineString
 from light.autobahn.client import ClientComponent
@@ -53,18 +51,21 @@ class Database:
 
         # Most of our implementation comes directly from our connector.
         for method in ('addSubject', 'find', 'getIndexBySubject',
-                       'getSubjectByIndex', 'getSubjects',  # 'hashCount',
-                       'subjectCount', 'totalResidues', 'totalCoveredResidues',
-                       'checksum'):
+                       'getSubjectByIndex', 'getSubjects', 'subjectCount',
+                       'totalResidues', 'totalCoveredResidues', 'checksum'):
             setattr(self, method, getattr(self._connector, method))
 
     def hashCount(self):
         """
+        Get the overall hash count for a database.
+
+        @return: An C{int} count of the number of hashes in the database.
         """
         result = self._connector.hashCount()
         if asyncio.iscoroutine(result):
             asyncio.ensure_future(result)
-            return 4
+            # TODO: FIX ME!
+            raise NotImplementedError()
         else:
             return result
 
@@ -249,7 +250,6 @@ class WampDatabaseClient:
 
         @return: An C{int} number of hashes.
         """
-        print('IN hashcount.....................')
         coro = self._component.call('hashCount')
         loop = asyncio.get_event_loop()
         hashCount = loop.run_until_complete(coro)
@@ -324,7 +324,6 @@ class DatabaseSpecifier:
 
         @param parser: An C{argparse.ArgumentParser} instance.
         """
-
         parser.add_argument(
             '--filePrefix',
             help=('The prefix of the name of a file containing saved '
@@ -348,64 +347,7 @@ class DatabaseSpecifier:
             addWampArgsToParser(parser)
 
         if self._allowCreation:
-            parser.add_argument(
-                '--landmark', action='append', dest='landmarkFinderNames',
-                choices=sorted(cl.NAME for cl in ALL_LANDMARK_CLASSES),
-                help=('The name of a landmark finder to use. May be specified '
-                      'multiple times.'))
-
-            parser.add_argument(
-                '--trig', action='append', dest='trigFinderNames',
-                choices=sorted(cl.NAME for cl in ALL_TRIG_CLASSES),
-                help=('The name of a trig point finder to use. May be '
-                      'specified multiple times.'))
-
-            parser.add_argument(
-                '--defaultLandmarks', action='store_true', default=False,
-                help=('If specified, use the default landmark finders: %s' %
-                      sorted(cl.NAME for cl in
-                             DEFAULT_LANDMARK_CLASSES)))
-
-            parser.add_argument(
-                '--defaultTrigPoints', action='store_true', default=False,
-                help=('If specified, use the default trig point finders: %s' %
-                      sorted(cl.NAME for cl in DEFAULT_TRIG_CLASSES)))
-
-            parser.add_argument(
-                '--limitPerLandmark', type=int,
-                default=Parameters.DEFAULT_LIMIT_PER_LANDMARK,
-                help=('A limit on the number of pairs to yield per landmark '
-                      'per read.'))
-
-            parser.add_argument(
-                '--maxDistance', type=int,
-                default=Parameters.DEFAULT_MAX_DISTANCE,
-                help='The maximum distance permitted between yielded pairs.')
-
-            parser.add_argument(
-                '--minDistance', type=int,
-                default=Parameters.DEFAULT_MIN_DISTANCE,
-                help='The minimum distance permitted between yielded pairs.')
-
-            parser.add_argument(
-                '--distanceBase', type=float,
-                default=Parameters.DEFAULT_DISTANCE_BASE,
-                help=('The distance between a landmark and a trig point is '
-                      'scaled to be its logarithm using this base. This '
-                      'reduces sensitivity to relatively small differences in '
-                      'distance.'))
-
-            parser.add_argument(
-                '--featureMatchScore', type=float,
-                default=Parameters.DEFAULT_FEATURE_MATCH_SCORE,
-                help=('The contribution (usally positive) to a score when a '
-                      'feature in a query and subject are part of a match.'))
-
-            parser.add_argument(
-                '--featureMismatchScore', type=float,
-                default=Parameters.DEFAULT_FEATURE_MISMATCH_SCORE,
-                help=('The contribution (usally negative) to a score when a '
-                      'feature in a query and subject are part of a match.'))
+            Parameters.addArgsToParser(parser)
 
         if self._allowPopulation:
             parser.add_argument(

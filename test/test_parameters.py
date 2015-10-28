@@ -1,10 +1,67 @@
+import argparse
 from unittest import TestCase
 from json import loads
 from io import StringIO
 
-from light.parameters import Parameters
+from light.parameters import Parameters, FindParameters
 from light.landmarks import DEFAULT_LANDMARK_CLASSES, AlphaHelix, BetaStrand
 from light.trig import DEFAULT_TRIG_CLASSES, Peaks, Troughs
+
+
+class TestFindParameters(TestCase):
+    """
+    Tests for the light.database.FindParameters class.
+    """
+    def testDefaults(self):
+        """
+        If no specific parameter values are given, the defaults must be set.
+        """
+        findParams = FindParameters([], [])
+        self.assertEqual(FindParameters.DEFAULT_SCORE_METHOD,
+                         findParams.scoreMethod)
+
+    def testNotDefaults(self):
+        """
+        If specific parameter values are given, the passed values must be set.
+        """
+        findParams = FindParameters(
+            significanceMethod='yyy', significanceFraction=0.5,
+            scoreMethod='xxx', featureMatchScore=3.4, featureMismatchScore=9.3)
+        self.assertEqual('yyy', findParams.significanceMethod)
+        self.assertEqual(0.5, findParams.significanceFraction)
+        self.assertEqual('xxx', findParams.scoreMethod)
+        self.assertEqual(3.4, findParams.featureMatchScore)
+        self.assertEqual(9.3, findParams.featureMismatchScore)
+
+    def testArgs(self):
+        """
+        It must be possible to parse command line arguments to create a new
+        instance of FindParameters.
+        """
+        parser = argparse.ArgumentParser()
+        FindParameters.addArgsToParser(parser)
+        args = parser.parse_args([
+            '--significanceMethod', 'Always',
+            '--significanceFraction', '0.4',
+            '--scoreMethod', 'MinHashesScore',
+            '--featureMatchScore', '5',
+            '--featureMismatchScore', '6',
+        ])
+
+        # Parsing must do the expected thing.
+        self.assertEqual('Always', args.significanceMethod)
+        self.assertEqual(0.4, args.significanceFraction)
+        self.assertEqual('MinHashesScore', args.scoreMethod)
+        self.assertEqual(5, args.featureMatchScore)
+        self.assertEqual(6, args.featureMismatchScore)
+
+        # We must be able to make an instance from the parsed args.
+        findParams = FindParameters.fromArgs(args)
+        self.assertEqual('Always', findParams.significanceMethod)
+        self.assertEqual(0.4, findParams.significanceFraction)
+        self.assertEqual('MinHashesScore', findParams.scoreMethod)
+        self.assertEqual(5, findParams.featureMatchScore)
+        self.assertEqual(6, findParams.featureMismatchScore)
 
 
 class TestParameters(TestCase):
@@ -95,8 +152,6 @@ class TestParameters(TestCase):
             'maxDistance': 19,
             'minDistance': 5,
             'distanceBase': 1.2,
-            'featureMatchScore': 1.0,
-            'featureMismatchScore': -1.0,
         }
         self.assertEqual(expected, loads(fp.getvalue()))
 

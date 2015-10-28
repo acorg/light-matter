@@ -6,7 +6,7 @@ import warnings
 from dark.reads import AARead
 
 from light.result import Result
-from light.parameters import Parameters
+from light.parameters import Parameters, FindParameters
 from light.features import Landmark, TrigPoint
 from light.database import Database
 from light.landmarks import AlphaHelix, BetaStrand, AminoAcids as AminoAcidsLm
@@ -25,10 +25,10 @@ class TestResult(TestCase):
         params = Parameters([], [])
         database = Database(params)
         hashCount = 0
-        result = Result(read, database, {}, hashCount,
-                        significanceMethod='HashFraction',
-                        scoreMethod='MinHashesScore',
-                        significanceFraction=0.1)
+        findParams = FindParameters(significanceMethod='HashFraction',
+                                    scoreMethod='MinHashesScore',
+                                    significanceFraction=0.1)
+        result = Result(read, database, {}, hashCount, findParams)
         self.assertEqual({}, result.matches)
         self.assertEqual([], list(result.significantSubjects()))
         self.assertIs(read, result.query)
@@ -54,10 +54,12 @@ class TestResult(TestCase):
         }
         hashCount = 1
         error = "^Unknown significance method 'xxx'$"
-        self.assertRaisesRegex(ValueError, error, Result, read, database,
-                               matches, hashCount, significanceMethod='xxx',
-                               scoreMethod='MinHashesScore',
-                               significanceFraction=0.1)
+        findParams = FindParameters(significanceMethod='xxx',
+                                    scoreMethod='MinHashesScore',
+                                    significanceFraction=0.1)
+        self.assertRaisesRegex(
+            ValueError, error, Result, read, database._connector,
+            matches, hashCount, findParams)
 
     def testAddOneMatch(self):
         """
@@ -79,10 +81,10 @@ class TestResult(TestCase):
                 },
             ],
         }
-        result = Result(read, database, matches, hashCount,
-                        significanceMethod='HashFraction',
-                        scoreMethod='MinHashesScore',
-                        significanceFraction=0.1)
+        findParams = FindParameters(significanceMethod='HashFraction',
+                                    scoreMethod='MinHashesScore',
+                                    significanceFraction=0.1)
+        result = Result(read, database, matches, hashCount, findParams)
         self.assertEqual(matches, result.matches)
 
     def testNoSignificantMatches(self):
@@ -105,10 +107,10 @@ class TestResult(TestCase):
                 },
             ],
         }
-        result = Result(read, database, matches, hashCount,
-                        significanceMethod='HashFraction',
-                        scoreMethod='MinHashesScore',
-                        significanceFraction=5)
+        findParams = FindParameters(significanceMethod='HashFraction',
+                                    scoreMethod='MinHashesScore',
+                                    significanceFraction=5)
+        result = Result(read, database, matches, hashCount, findParams)
         self.assertEqual([], list(result.significantSubjects()))
 
     def testOneSignificantMatch(self):
@@ -143,11 +145,10 @@ class TestResult(TestCase):
                 },
             ],
         }
-
-        result = Result(read, database, matches, hashCount,
-                        significanceMethod='HashFraction',
-                        scoreMethod='MinHashesScore',
-                        significanceFraction=0.25)
+        findParams = FindParameters(significanceMethod='HashFraction',
+                                    scoreMethod='MinHashesScore',
+                                    significanceFraction=0.25)
+        result = Result(read, database, matches, hashCount, findParams)
         self.assertEqual(['0'], list(result.significantSubjects()))
         self.assertEqual(0.5, result.analysis['0']['bestScore'])
 
@@ -203,11 +204,10 @@ class TestResult(TestCase):
                 },
             ],
         }
-
-        result = Result(read, database, matches, hashCount,
-                        significanceMethod='HashFraction',
-                        scoreMethod='MinHashesScore',
-                        significanceFraction=0.3)
+        findParams = FindParameters(significanceMethod='HashFraction',
+                                    scoreMethod='MinHashesScore',
+                                    significanceFraction=0.3)
+        result = Result(read, database, matches, hashCount, findParams)
         self.assertEqual(['0', '1'],
                          sorted(list(result.significantSubjects())))
         self.assertEqual(0.4, result.analysis['0']['bestScore'])
@@ -240,9 +240,10 @@ class TestResult(TestCase):
         read = AARead('id', 'A')
         params = Parameters([], [])
         database = Database(params)
-        result = Result(read, database, {}, 0,
-                        significanceMethod='HashFraction',
-                        scoreMethod='MinHashesScore', significanceFraction=0.1)
+        findParams = FindParameters(significanceMethod='HashFraction',
+                                    scoreMethod='MinHashesScore',
+                                    significanceFraction=0.1)
+        result = Result(read, database, {}, 0, findParams)
         fp = StringIO()
         self.assertIs(fp, result.save(fp))
 
@@ -275,10 +276,10 @@ class TestResult(TestCase):
                 },
             ],
         }
-        result = Result(read, database, matches, hashCount,
-                        significanceMethod='HashFraction',
-                        scoreMethod='MinHashesScore',
-                        significanceFraction=0.1)
+        findParams = FindParameters(significanceMethod='HashFraction',
+                                    scoreMethod='MinHashesScore',
+                                    significanceFraction=0.1)
+        result = Result(read, database, matches, hashCount, findParams)
         fp = StringIO()
         result.save(fp=fp)
         result = loads(fp.getvalue())
@@ -350,10 +351,11 @@ class TestResult(TestCase):
                 },
             ],
         }
-        result = Result(read, database, matches, hashCount,
-                        significanceMethod='HashFraction',
-                        scoreMethod='MinHashesScore',
-                        significanceFraction=0.1, storeFullAnalysis=True)
+        findParams = FindParameters(significanceMethod='HashFraction',
+                                    scoreMethod='MinHashesScore',
+                                    significanceFraction=0.1)
+        result = Result(read, database, matches, hashCount, findParams,
+                        storeFullAnalysis=True)
         self.assertEqual(21, result.analysis['0']['histogram'].nBins)
 
     def testRightNumberOfBucketsDefaultNonEven(self):
@@ -379,10 +381,11 @@ class TestResult(TestCase):
                 },
             ],
         }
-        result = Result(read, database, matches, hashCount,
-                        significanceMethod='HashFraction',
-                        scoreMethod='MinHashesScore',
-                        significanceFraction=0.1, storeFullAnalysis=True)
+        findParams = FindParameters(significanceMethod='HashFraction',
+                                    scoreMethod='MinHashesScore',
+                                    significanceFraction=0.1)
+        result = Result(read, database, matches, hashCount, findParams,
+                        storeFullAnalysis=True)
         self.assertEqual(21, result.analysis['0']['histogram'].nBins)
 
     def testRightNumberOfBucketsWithNonDefaultDistanceBase(self):
@@ -406,10 +409,11 @@ class TestResult(TestCase):
                 },
             ],
         }
-        result = Result(read, database, matches, hashCount,
-                        significanceMethod='HashFraction',
-                        scoreMethod='MinHashesScore',
-                        significanceFraction=0.1, storeFullAnalysis=True)
+        findParams = FindParameters(significanceMethod='HashFraction',
+                                    scoreMethod='MinHashesScore',
+                                    significanceFraction=0.1)
+        result = Result(read, database, matches, hashCount, findParams,
+                        storeFullAnalysis=True)
         self.assertEqual(11, result.analysis['0']['histogram'].nBins)
 
     def testPrintWithQueryWithNoMatchesDueToNoFinders(self):
@@ -422,18 +426,23 @@ class TestResult(TestCase):
         params = Parameters([], [])
         database = Database(params)
         database.addSubject(read)
-        result = database.find(read, significanceFraction=0.1,
-                               scoreMethod='MinHashesScore',
-                               storeFullAnalysis=True)
+        findParams = FindParameters(significanceFraction=0.1,
+                                    scoreMethod='MinHashesScore')
+        result = database.find(read, findParams, storeFullAnalysis=True)
 
         expected = ('Query title: read\n'
                     '  Length: 10\n'
                     '  Covered indices: 0 (0.00%)\n'
                     '  Landmark count 0, trig point count 0\n'
+                    'Find parameters:\n'
+                    '  Significance method: HashFraction\n'
+                    '  Significance fraction: 0.100000\n'
+                    '  Score method: MinHashesScore\n'
+                    '  Feature match score: 1.000000\n'
+                    '  Feature mismatch score: -1.000000\n'
                     'Overall matches: 0\n'
                     'Significant matches: 0\n'
-                    'Query hash count: 0\n'
-                    'Significance fraction: 0.100000')
+                    'Query hash count: 0')
 
         self.assertEqual(expected, result.print_())
 
@@ -447,13 +456,18 @@ class TestResult(TestCase):
         params = Parameters([], [])
         database = Database(params)
         database.addSubject(read)
-        result = database.find(read, significanceFraction=0.1,
-                               storeFullAnalysis=True)
+        findParams = FindParameters(significanceFraction=0.1)
+        result = database.find(read, findParams, storeFullAnalysis=True)
 
-        expected = ('Overall matches: 0\n'
+        expected = ('Find parameters:\n'
+                    '  Significance method: HashFraction\n'
+                    '  Significance fraction: 0.100000\n'
+                    '  Score method: MinHashesScore\n'
+                    '  Feature match score: 1.000000\n'
+                    '  Feature mismatch score: -1.000000\n'
+                    'Overall matches: 0\n'
                     'Significant matches: 0\n'
-                    'Query hash count: 0\n'
-                    'Significance fraction: 0.100000')
+                    'Query hash count: 0')
         self.assertEqual(expected, result.print_(printQuery=False))
 
     def testPrintNoMatchingSubjects(self):
@@ -468,10 +482,15 @@ class TestResult(TestCase):
         database.addSubject(subject)
         result = database.find(query, storeFullAnalysis=True)
 
-        expected = ('Overall matches: 0\n'
+        expected = ('Find parameters:\n'
+                    '  Significance method: HashFraction\n'
+                    '  Significance fraction: 0.250000\n'
+                    '  Score method: MinHashesScore\n'
+                    '  Feature match score: 1.000000\n'
+                    '  Feature mismatch score: -1.000000\n'
+                    'Overall matches: 0\n'
                     'Significant matches: 0\n'
-                    'Query hash count: 1\n'
-                    'Significance fraction: 0.250000')
+                    'Query hash count: 1')
         self.assertEqual(expected, result.print_(printQuery=False))
 
     def testPrintOneMatchStoredAnalysis(self):
@@ -485,14 +504,19 @@ class TestResult(TestCase):
         subject = AARead('subject', sequence)
         database.addSubject(subject)
         query = AARead('query', sequence)
-        result = database.find(query, significanceFraction=0.1,
-                               scoreMethod='MinHashesScore',
-                               storeFullAnalysis=True)
+        findParams = FindParameters(significanceFraction=0.1,
+                                    scoreMethod='MinHashesScore')
+        result = database.find(query, findParams, storeFullAnalysis=True)
 
-        expected = ('Overall matches: 1\n'
+        expected = ('Find parameters:\n'
+                    '  Significance method: HashFraction\n'
+                    '  Significance fraction: 0.100000\n'
+                    '  Score method: MinHashesScore\n'
+                    '  Feature match score: 1.000000\n'
+                    '  Feature mismatch score: -1.000000\n'
+                    'Overall matches: 1\n'
                     'Significant matches: 1\n'
                     'Query hash count: 1\n'
-                    'Significance fraction: 0.100000\n'
                     'Matched subjects:\n'
                     '  Subject 1:\n'
                     '    Title: subject\n'
@@ -522,15 +546,20 @@ class TestResult(TestCase):
         subject = AARead('subject', 'CACACAAACACA')
         database.addSubject(subject)
         query = AARead('query', 'CACACA')
-        result = database.find(query, significanceFraction=0.1,
-                               scoreMethod='MinHashesScore',
-                               storeFullAnalysis=True)
+        findParams = FindParameters(significanceFraction=0.1,
+                                    scoreMethod='MinHashesScore')
+        result = database.find(query, findParams, storeFullAnalysis=True)
 
         self.maxDiff = None
-        expected = ('Overall matches: 1\n'
+        expected = ('Find parameters:\n'
+                    '  Significance method: HashFraction\n'
+                    '  Significance fraction: 0.100000\n'
+                    '  Score method: MinHashesScore\n'
+                    '  Feature match score: 1.000000\n'
+                    '  Feature mismatch score: -1.000000\n'
+                    'Overall matches: 1\n'
                     'Significant matches: 1\n'
                     'Query hash count: 3\n'
-                    'Significance fraction: 0.100000\n'
                     'Matched subjects:\n'
                     '  Subject 1:\n'
                     '    Title: subject\n'
@@ -577,13 +606,19 @@ class TestResult(TestCase):
         subject = AARead('subject', sequence)
         database.addSubject(subject)
         query = AARead('query', sequence)
-        result = database.find(query, significanceFraction=0.1,
-                               scoreMethod='MinHashesScore')
+        findParams = FindParameters(significanceFraction=0.1,
+                                    scoreMethod='MinHashesScore')
+        result = database.find(query, findParams)
 
-        expected = ('Overall matches: 1\n'
+        expected = ('Find parameters:\n'
+                    '  Significance method: HashFraction\n'
+                    '  Significance fraction: 0.100000\n'
+                    '  Score method: MinHashesScore\n'
+                    '  Feature match score: 1.000000\n'
+                    '  Feature mismatch score: -1.000000\n'
+                    'Overall matches: 1\n'
                     'Significant matches: 1\n'
                     'Query hash count: 1\n'
-                    'Significance fraction: 0.100000\n'
                     'Matched subjects:\n'
                     '  Subject 1:\n'
                     '    Title: subject\n'
@@ -614,13 +649,19 @@ class TestResult(TestCase):
         subject = AARead('subject', sequence)
         database.addSubject(subject)
         query = AARead('query', sequence)
-        result = database.find(query, significanceFraction=0.1,
-                               scoreMethod='MinHashesScore')
+        findParams = FindParameters(significanceFraction=0.1,
+                                    scoreMethod='MinHashesScore')
+        result = database.find(query, findParams)
 
-        expected = ('Overall matches: 1\n'
+        expected = ('Find parameters:\n'
+                    '  Significance method: HashFraction\n'
+                    '  Significance fraction: 0.100000\n'
+                    '  Score method: MinHashesScore\n'
+                    '  Feature match score: 1.000000\n'
+                    '  Feature mismatch score: -1.000000\n'
+                    'Overall matches: 1\n'
                     'Significant matches: 1\n'
                     'Query hash count: 1\n'
-                    'Significance fraction: 0.100000\n'
                     'Matched subjects:\n'
                     '  Subject 1:\n'
                     '    Title: subject\n'
@@ -647,13 +688,19 @@ class TestResult(TestCase):
         subject = AARead('subject', 'CACACAAACACA')
         database.addSubject(subject)
         query = AARead('query', 'CACACA')
-        result = database.find(query, significanceFraction=0.1,
-                               scoreMethod='MinHashesScore')
+        findParams = FindParameters(significanceFraction=0.1,
+                                    scoreMethod='MinHashesScore')
+        result = database.find(query, findParams)
 
-        expected = ('Overall matches: 1\n'
+        expected = ('Find parameters:\n'
+                    '  Significance method: HashFraction\n'
+                    '  Significance fraction: 0.100000\n'
+                    '  Score method: MinHashesScore\n'
+                    '  Feature match score: 1.000000\n'
+                    '  Feature mismatch score: -1.000000\n'
+                    'Overall matches: 1\n'
                     'Significant matches: 1\n'
                     'Query hash count: 3\n'
-                    'Significance fraction: 0.100000\n'
                     'Matched subjects:\n'
                     '  Subject 1:\n'
                     '    Title: subject\n'
@@ -686,13 +733,19 @@ class TestResult(TestCase):
         subject = AARead('subject', 'CACACAAACACA')
         database.addSubject(subject)
         query = AARead('query', 'CACACA')
-        result = database.find(query, significanceFraction=0.1,
-                               scoreMethod='MinHashesScore')
+        findParams = FindParameters(significanceFraction=0.1,
+                                    scoreMethod='MinHashesScore')
+        result = database.find(query, findParams)
 
-        expected = ('Overall matches: 1\n'
+        expected = ('Find parameters:\n'
+                    '  Significance method: HashFraction\n'
+                    '  Significance fraction: 0.100000\n'
+                    '  Score method: MinHashesScore\n'
+                    '  Feature match score: 1.000000\n'
+                    '  Feature mismatch score: -1.000000\n'
+                    'Overall matches: 1\n'
                     'Significant matches: 1\n'
                     'Query hash count: 3\n'
-                    'Significance fraction: 0.100000\n'
                     'Matched subjects:\n'
                     '  Subject 1:\n'
                     '    Title: subject\n'
@@ -725,25 +778,32 @@ class TestResult(TestCase):
         subject = AARead('subject', sequence)
         database.addSubject(subject)
         query = AARead('query', sequence)
-        result = database.find(query, significanceFraction=0.1,
-                               scoreMethod='MinHashesScore')
+        findParams = FindParameters(significanceFraction=0.1,
+                                    scoreMethod='MinHashesScore')
+        result = database.find(query, findParams)
 
-        expected = ('Overall matches: 1\n'
-                    'Significant matches: 1\n'
-                    'Query hash count: 1\n'
-                    'Significance fraction: 0.100000\n'
-                    'Matched subjects:\n'
-                    '  Subject 1:\n'
-                    '    Title: subject\n'
-                    '    Best HSP score: 1.0\n'
-                    '    Sequence: FRRRFRRRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF\n'
-                    '    Index in database: 0\n'
-                    '    Subject hash count: 1\n'
-                    '    Subject/query min hash count: 1\n'
-                    '    Significance cutoff: 0.100000\n'
-                    '    Number of HSPs: 1\n'
-                    '      HSP 1 (bin 38): 1 matching hash, score '
-                    '1.000000')
+        expected = (
+            'Find parameters:\n'
+            '  Significance method: HashFraction\n'
+            '  Significance fraction: 0.100000\n'
+            '  Score method: MinHashesScore\n'
+            '  Feature match score: 1.000000\n'
+            '  Feature mismatch score: -1.000000\n'
+            'Overall matches: 1\n'
+            'Significant matches: 1\n'
+            'Query hash count: 1\n'
+            'Matched subjects:\n'
+            '  Subject 1:\n'
+            '    Title: subject\n'
+            '    Best HSP score: 1.0\n'
+            '    Sequence: FRRRFRRRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF\n'
+            '    Index in database: 0\n'
+            '    Subject hash count: 1\n'
+            '    Subject/query min hash count: 1\n'
+            '    Significance cutoff: 0.100000\n'
+            '    Number of HSPs: 1\n'
+            '      HSP 1 (bin 38): 1 matching hash, score '
+            '1.000000')
 
         self.assertEqual(expected,
                          result.print_(printQuery=False, printSequences=True,
@@ -811,9 +871,10 @@ class TestResult(TestCase):
                 },
             ],
         }
-        result = Result(read, database, matches, hashCount,
-                        significanceMethod='Always',
-                        scoreMethod='MinHashesScore', significanceFraction=0.1,
+        findParams = FindParameters(significanceMethod='Always',
+                                    scoreMethod='MinHashesScore',
+                                    significanceFraction=0.1)
+        result = Result(read, database, matches, hashCount, findParams,
                         storeFullAnalysis=True)
         significanceAnalysis = result.analysis['0']['significanceAnalysis']
         self.assertEqual('Always', significanceAnalysis['significanceMethod'])

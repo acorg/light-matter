@@ -4,7 +4,7 @@ from unittest import TestCase
 from dark.reads import AARead
 
 from light.features import Landmark, TrigPoint
-from light.parameters import Parameters
+from light.parameters import Parameters, FindParameters
 from light.subject import Subject
 from light.score import (
     MinHashesScore, FeatureMatchingScore, FeatureAAScore, histogramBinFeatures,
@@ -288,7 +288,7 @@ class TestFeatureMatchingScore(TestCase):
         query = AARead('id1', 'A')
         subject = Subject('id2', 'A', 0)
         fms = FeatureMatchingScore(histogram, query, subject, params)
-        self.assertEqual(4 * Parameters.DEFAULT_FEATURE_MATCH_SCORE,
+        self.assertEqual(4 * FindParameters.DEFAULT_FEATURE_MATCH_SCORE,
                          fms.calculateScore(0))
 
     def testOneHashInBinOccurringInTwoPlaces(self):
@@ -314,7 +314,7 @@ class TestFeatureMatchingScore(TestCase):
         query = AARead('id1', 'A')
         subject = Subject('id2', 'A', 0)
         fms = FeatureMatchingScore(histogram, query, subject, params)
-        self.assertEqual(8 * Parameters.DEFAULT_FEATURE_MATCH_SCORE,
+        self.assertEqual(8 * FindParameters.DEFAULT_FEATURE_MATCH_SCORE,
                          fms.calculateScore(0))
 
     def testOneHashInBinQueryHasOneFeatureOutsideMatch(self):
@@ -337,7 +337,7 @@ class TestFeatureMatchingScore(TestCase):
         query = AARead('id', 'FRRRFRRRF')
         subject = Subject('id2', 'A', 0)
         fms = FeatureMatchingScore(histogram, query, subject, params)
-        self.assertEqual(4 * Parameters.DEFAULT_FEATURE_MATCH_SCORE,
+        self.assertEqual(4 * FindParameters.DEFAULT_FEATURE_MATCH_SCORE,
                          fms.calculateScore(0))
 
     def testOneHashInBinQueryHasTwoFeaturesOutsideMatch(self):
@@ -360,7 +360,7 @@ class TestFeatureMatchingScore(TestCase):
         query = AARead('id', 'FRRRFRRRF' + ('F' * 200) + 'FRRRFRRRF')
         subject = Subject('id2', 'A', 0)
         fms = FeatureMatchingScore(histogram, query, subject, params)
-        self.assertEqual(4 * Parameters.DEFAULT_FEATURE_MATCH_SCORE,
+        self.assertEqual(4 * FindParameters.DEFAULT_FEATURE_MATCH_SCORE,
                          fms.calculateScore(0))
 
     def testOneHashInBinQueryAndSubjectHaveOneFeaturesOutsideMatch(self):
@@ -383,7 +383,7 @@ class TestFeatureMatchingScore(TestCase):
         query = AARead('id', 'FRRRFRRRF')
         subject = Subject('id2', ('F' * 200) + 'FRRRFRRRF', 0)
         fms = FeatureMatchingScore(histogram, query, subject, params)
-        self.assertEqual(4 * Parameters.DEFAULT_FEATURE_MATCH_SCORE,
+        self.assertEqual(4 * FindParameters.DEFAULT_FEATURE_MATCH_SCORE,
                          fms.calculateScore(0))
 
     def testOneHashInBinQueryHasOneUnmatchedFeatureInsideMatch(self):
@@ -407,8 +407,8 @@ class TestFeatureMatchingScore(TestCase):
         subject = Subject('id2', 'A', 0)
         fms = FeatureMatchingScore(histogram, query, subject, params)
         self.assertEqual(
-            4 * Parameters.DEFAULT_FEATURE_MATCH_SCORE +
-            Parameters.DEFAULT_FEATURE_MISMATCH_SCORE,
+            4 * FindParameters.DEFAULT_FEATURE_MATCH_SCORE +
+            FindParameters.DEFAULT_FEATURE_MISMATCH_SCORE,
             fms.calculateScore(0))
 
     def testOneHashInBinQueryHasOneUnmatchedFeatureExactlySpanningMatch(self):
@@ -432,8 +432,8 @@ class TestFeatureMatchingScore(TestCase):
         subject = Subject('id2', 'A', 0)
         fms = FeatureMatchingScore(histogram, query, subject, params)
         self.assertEqual(
-            4 * Parameters.DEFAULT_FEATURE_MATCH_SCORE +
-            Parameters.DEFAULT_FEATURE_MISMATCH_SCORE,
+            4 * FindParameters.DEFAULT_FEATURE_MATCH_SCORE +
+            FindParameters.DEFAULT_FEATURE_MISMATCH_SCORE,
             fms.calculateScore(0))
 
     def testOneHashInBinQueryHasOneUnmatchedFeatureExceedingMatch(self):
@@ -457,7 +457,7 @@ class TestFeatureMatchingScore(TestCase):
         subject = Subject('id2', 'A', 0)
         fms = FeatureMatchingScore(histogram, query, subject, params)
         self.assertEqual(
-            4 * Parameters.DEFAULT_FEATURE_MATCH_SCORE,
+            4 * FindParameters.DEFAULT_FEATURE_MATCH_SCORE,
             fms.calculateScore(0))
 
     def testOneHashInBinQueryHasTwoUnmatchedFeatureInsideMatch(self):
@@ -481,8 +481,8 @@ class TestFeatureMatchingScore(TestCase):
         subject = Subject('id2', 'A', 0)
         fms = FeatureMatchingScore(histogram, query, subject, params)
         self.assertEqual(
-            4 * Parameters.DEFAULT_FEATURE_MATCH_SCORE +
-            2 * Parameters.DEFAULT_FEATURE_MISMATCH_SCORE,
+            4 * FindParameters.DEFAULT_FEATURE_MATCH_SCORE +
+            2 * FindParameters.DEFAULT_FEATURE_MISMATCH_SCORE,
             fms.calculateScore(0))
 
     def testOneHashInBinQueryHasOneUnmatchedFeatureOverlappingMatchLeft(self):
@@ -507,7 +507,7 @@ class TestFeatureMatchingScore(TestCase):
         subject = Subject('id2', 'A', 0)
         fms = FeatureMatchingScore(histogram, query, subject, params)
         self.assertEqual(
-            4 * Parameters.DEFAULT_FEATURE_MATCH_SCORE,
+            4 * FindParameters.DEFAULT_FEATURE_MATCH_SCORE,
             fms.calculateScore(0))
 
     def testOneHashInBinQueryHasOneUnmatchedFeatureOverlappingMatchRight(self):
@@ -532,7 +532,7 @@ class TestFeatureMatchingScore(TestCase):
         subject = Subject('id2', 'A', 0)
         fms = FeatureMatchingScore(histogram, query, subject, params)
         self.assertEqual(
-            4 * Parameters.DEFAULT_FEATURE_MATCH_SCORE,
+            4 * FindParameters.DEFAULT_FEATURE_MATCH_SCORE,
             fms.calculateScore(0))
 
     def testOneHashInBinQueryHasOneUnmatchedFeatureInMatchNonDefault(self):
@@ -553,11 +553,13 @@ class TestFeatureMatchingScore(TestCase):
             'trigPoint': trigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix], [], featureMatchScore=3.1,
-                            featureMismatchScore=-1.2)
+        params = Parameters([AlphaHelix], [])
+        findParams = FindParameters(featureMatchScore=3.1,
+                                    featureMismatchScore=-1.2)
         query = AARead('id', 'FRRRFRRRF')
         subject = Subject('id2', 'A', 0)
-        fms = FeatureMatchingScore(histogram, query, subject, params)
+        fms = FeatureMatchingScore(histogram, query, subject, params,
+                                   findParams)
         self.assertEqual(4 * 3.1 - 1.2, fms.calculateScore(0))
 
 

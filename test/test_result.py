@@ -294,10 +294,13 @@ class TestResult(TestCase):
                                 'hspInfo': [
                                     {
                                         'landmark': 'AlphaHelix',
-                                        'landmarkLength': 9,
-                                        'queryOffsets': [0, 1],
-                                        'subjectOffsets': [0, 0],
+                                        'queryLandmarkLength': 9,
+                                        'queryLandmarkOffset': 0,
+                                        'subjectLandmarkLength': 9,
+                                        'subjectLandmarkOffset': 0,
                                         'trigPoint': 'Peaks',
+                                        'queryTrigPointOffset': 1,
+                                        'subjectTrigPointOffset': 0,
                                     },
                                 ],
                                 'score': 1.0,
@@ -312,10 +315,13 @@ class TestResult(TestCase):
                                 'hspInfo': [
                                     {
                                         'landmark': 'AlphaHelix',
-                                        'landmarkLength': 13,
-                                        'queryOffsets': [27, 1],
-                                        'subjectOffsets': [27, 0],
+                                        'queryLandmarkLength': 13,
+                                        'queryLandmarkOffset': 27,
+                                        'subjectLandmarkLength': 13,
+                                        'subjectLandmarkOffset': 27,
                                         'trigPoint': 'Peaks',
+                                        'queryTrigPointOffset': 1,
+                                        'subjectTrigPointOffset': 0,
                                     },
                                 ],
                                 'score': 1.0,
@@ -528,7 +534,7 @@ class TestResult(TestCase):
                     '    Number of HSPs: 1\n'
                     '      HSP 1 (bin 38): 1 matching hash, score 1.000000\n'
                     '        Landmark AlphaHelix symbol=A offset=0 len=9 '
-                    'detail=2 subjectOffsets=[0, 25]\n'
+                    'detail=2\n'
                     '        Trig point AlphaHelix symbol=A offset=25 '
                     'len=13 detail=3')
 
@@ -630,7 +636,7 @@ class TestResult(TestCase):
                     '    Number of HSPs: 1\n'
                     '      HSP 1 (bin 38): 1 matching hash, score 1.000000\n'
                     '        Landmark AlphaHelix symbol=A offset=0 len=9 '
-                    'detail=2 subjectOffsets=[0, 25]\n'
+                    'detail=2\n'
                     '        Trig point AlphaHelix symbol=A offset=25 '
                     'len=13 detail=3')
 

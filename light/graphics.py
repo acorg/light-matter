@@ -695,7 +695,8 @@ class PlotHashesInSubjectAndRead(object):
 
         for bin_ in self.bins:
             for match in bin_:
-                hash_ = backend.hash(match['landmark'], match['trigPoint'])
+                hash_ = backend.hash(match['subjectLandmark'],
+                                     match['subjectTrigPoint'])
                 self.matchingHashes[hash_].append(match)
                 try:
                     del self.subjectHashes[hash_]

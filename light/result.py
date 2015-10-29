@@ -1,5 +1,5 @@
 import sys
-from copy import deepcopy
+from copy import copy, deepcopy
 from json import dumps
 from collections import defaultdict
 from math import log10, ceil
@@ -90,11 +90,22 @@ class Result(object):
                         # point offset for the landmark / trig point pair
                         # involved in the hash that was present in the
                         # query and subject.
-                        #
+
+                        # Make landmark and trig point instances that have
+                        # the correct offsets for both query and subject.
+                        queryLandmark = copy(landmark)
+                        queryLandmark.offset = queryOffsets[0]
+                        queryTrigPoint = copy(trigPoint)
+                        queryTrigPoint.offset = queryOffsets[1]
+
+                        subjectLandmark = copy(landmark)
+                        subjectLandmark.offset = subjectOffsets[0]
+                        subjectTrigPoint = copy(trigPoint)
+                        subjectTrigPoint.offset = subjectOffsets[1]
+
                         # The delta is the difference between the
-                        # corresponding landmark offsets (hence the [0] in
-                        # the following).
-                        delta = subjectOffsets[0] - queryOffsets[0]
+                        # corresponding landmark offsets
+                        delta = subjectLandmark.offset - queryLandmark.offset
                         if negateDeltas:
                             delta = -delta
 
@@ -103,10 +114,10 @@ class Result(object):
                         # query landmark to subject landmark offset delta.
                         add(scale(delta, distanceBase),
                             {
-                                'landmark': landmark,
-                                'queryOffsets': queryOffsets,
-                                'subjectOffsets': subjectOffsets,
-                                'trigPoint': trigPoint,
+                                'queryLandmark': queryLandmark,
+                                'queryTrigPoint': queryTrigPoint,
+                                'subjectLandmark': subjectLandmark,
+                                'subjectTrigPoint': subjectTrigPoint,
                             })
 
             histogram.finalize()
@@ -210,11 +221,20 @@ class Result(object):
                 hspInfo = []
                 for binItem in significantBin['bin']:
                     hspInfo.append({
-                        'landmark': binItem['landmark'].name,
-                        'landmarkLength': binItem['landmark'].length,
-                        'queryOffsets': binItem['queryOffsets'],
-                        'subjectOffsets': binItem['subjectOffsets'],
-                        'trigPoint': binItem['trigPoint'].name,
+                        # Landmark.
+                        'landmark': binItem['queryLandmark'].name,
+                        'queryLandmarkLength': binItem['queryLandmark'].length,
+                        'queryLandmarkOffset': binItem['queryLandmark'].offset,
+                        'subjectLandmarkLength':
+                            binItem['subjectLandmark'].length,
+                        'subjectLandmarkOffset':
+                            binItem['subjectLandmark'].offset,
+                        # Trig point.
+                        'trigPoint': binItem['queryTrigPoint'].name,
+                        'queryTrigPointOffset':
+                            binItem['queryTrigPoint'].offset,
+                        'subjectTrigPointOffset':
+                            binItem['subjectTrigPoint'].offset,
                     })
 
                 hsps.append({
@@ -345,10 +365,8 @@ class Result(object):
                     indent()
                     for binItem in bin_['bin']:
                         extend([
-                            'Landmark %s subjectOffsets=%r' % (
-                                binItem['landmark'],
-                                binItem['subjectOffsets']),
-                            'Trig point %s' % binItem['trigPoint'],
+                            'Landmark %s' % binItem['subjectLandmark'],
+                            'Trig point %s' % binItem['subjectTrigPoint'],
                         ])
                     outdent()
             outdent()

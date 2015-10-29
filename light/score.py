@@ -1,5 +1,4 @@
 from warnings import warn
-from copy import copy
 
 
 class MinHashesScore(object):
@@ -68,18 +67,13 @@ def histogramBinFeatures(bin_, queryOrSubject):
     # 'subject' as the following item getter will raise a KeyError if it
     # cannot access the dict key in the bin element.
     for hashInfo in bin_:
-        offsets = hashInfo[queryOrSubject + 'Offsets']
-        # Copy the landmark, set its offset, add it to our results.
-        thisLandmark = copy(hashInfo['landmark'])
-        thisLandmark.offset = offsets[0]
-        allFeatures.add(thisLandmark)
-        allOffsets.add(thisLandmark.offset)
-        allOffsets.add(thisLandmark.offset + thisLandmark.length - 1)
-        # Copy the trig point, set its offset, add it to our results.
-        thisTrigPoint = copy(hashInfo['trigPoint'])
-        thisTrigPoint.offset = offsets[1]
-        allFeatures.add(thisTrigPoint)
-        allOffsets.add(thisTrigPoint.offset)
+        landmark = hashInfo[queryOrSubject + 'Landmark']
+        allFeatures.add(landmark)
+        allOffsets.add(landmark.offset)
+        allOffsets.add(landmark.offset + landmark.length - 1)
+        trigPoint = hashInfo[queryOrSubject + 'TrigPoint']
+        allFeatures.add(trigPoint)
+        allOffsets.add(trigPoint.offset)
 
     return allFeatures, allOffsets
 

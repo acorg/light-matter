@@ -91,19 +91,21 @@ class TestHistogramBinFeatures(TestCase):
         """
         If an invalid value for queryOrSubject ('xxx') is passed to
         histogramBinFeatures, it must raise a KeyError (when looking
-        in the bin item dictionary for 'xxxOffsets').
+        in the bin item dictionary for 'xxxLandmark').
         """
+        queryLandmark = Landmark('AlphaHelix', 'A', 100, 20)
+        queryTrigPoint = TrigPoint('Peak', 'P', 110)
+        subjectLandmark = Landmark('AlphaHelix', 'A', 101, 20)
+        subjectTrigPoint = TrigPoint('Peak', 'P', 111)
         histogram = Histogram(1)
         histogram.add(44, {
-            # It doesn't matter what values we pass here, as the KeyError
-            # will be triggered by the lack of a dictionary key.
-            'landmark': None,
-            'queryOffsets': None,
-            'subjectOffsets': None,
-            'trigPoint': None,
+            'queryLandmark': queryLandmark,
+            'queryTrigPoint': queryTrigPoint,
+            'subjectLandmark': subjectLandmark,
+            'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        self.assertRaisesRegexp(KeyError, 'xxxOffsets', histogramBinFeatures,
+        self.assertRaisesRegexp(KeyError, 'xxxLandmark', histogramBinFeatures,
                                 histogram[0], 'xxx')
 
     def testEmptyBin(self):
@@ -122,18 +124,20 @@ class TestHistogramBinFeatures(TestCase):
         If a histogram bin has just one feature, histogramBinFeatures must
         return the details of that feature in the query.
         """
-        landmark = Landmark('AlphaHelix', 'A', 100, 20)
-        trigPoint = TrigPoint('Peak', 'P', 110)
+        queryLandmark = Landmark('AlphaHelix', 'A', 100, 20)
+        queryTrigPoint = TrigPoint('Peak', 'P', 110)
+        subjectLandmark = Landmark('AlphaHelix', 'A', 101, 20)
+        subjectTrigPoint = TrigPoint('Peak', 'P', 111)
         histogram = Histogram(1)
         histogram.add(44, {
-            'landmark': landmark,
-            'queryOffsets': [100, 110],
-            'subjectOffsets': None,
-            'trigPoint': trigPoint,
+            'queryLandmark': queryLandmark,
+            'queryTrigPoint': queryTrigPoint,
+            'subjectLandmark': subjectLandmark,
+            'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
         features, offsets = histogramBinFeatures(histogram[0], 'query')
-        self.assertEqual(set([landmark, trigPoint]), features)
+        self.assertEqual(set([queryLandmark, queryTrigPoint]), features)
         self.assertEqual(set([100, 110, 119]), offsets)
 
     def testOneFeatureSubject(self):
@@ -141,47 +145,54 @@ class TestHistogramBinFeatures(TestCase):
         If a histogram bin has just one feature, histogramBinFeatures must
         return the details of that feature in the subject.
         """
-        landmark = Landmark('AlphaHelix', 'A', 100, 20)
-        trigPoint = TrigPoint('Peak', 'P', 110)
+        queryLandmark = Landmark('AlphaHelix', 'A', 100, 20)
+        queryTrigPoint = TrigPoint('Peak', 'P', 110)
+        subjectLandmark = Landmark('AlphaHelix', 'A', 101, 20)
+        subjectTrigPoint = TrigPoint('Peak', 'P', 111)
         histogram = Histogram(1)
         histogram.add(44, {
-            'landmark': landmark,
-            'queryOffsets': None,
-            'subjectOffsets': [100, 110],
-            'trigPoint': trigPoint,
+            'queryLandmark': queryLandmark,
+            'queryTrigPoint': queryTrigPoint,
+            'subjectLandmark': subjectLandmark,
+            'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
         features, offsets = histogramBinFeatures(histogram[0], 'subject')
-        self.assertEqual(set([landmark, trigPoint]), features)
-        self.assertEqual(set([100, 110, 119]), offsets)
+        self.assertEqual(set([subjectLandmark, subjectTrigPoint]), features)
+        self.assertEqual(set([101, 111, 120]), offsets)
 
     def testOneFeatureTwoLocations(self):
         """
         If a histogram bin has one feature that appears in two places,
         histogramBinFeatures must return the details of that feature.
         """
-        landmark1 = Landmark('AlphaHelix', 'A', 100, 20)
-        trigPoint1 = TrigPoint('Peak', 'P', 110)
+        queryLandmark1 = Landmark('AlphaHelix', 'A', 100, 20)
+        queryTrigPoint1 = TrigPoint('Peak', 'P', 110)
+        subjectLandmark1 = Landmark('AlphaHelix', 'A', 101, 20)
+        subjectTrigPoint1 = TrigPoint('Peak', 'P', 111)
+
+        queryLandmark2 = Landmark('AlphaHelix', 'A', 200, 20)
+        queryTrigPoint2 = TrigPoint('Peak', 'P', 210)
+        subjectLandmark2 = Landmark('AlphaHelix', 'A', 201, 20)
+        subjectTrigPoint2 = TrigPoint('Peak', 'P', 211)
+
         histogram = Histogram(1)
         histogram.add(44, {
-            'landmark': landmark1,
-            'queryOffsets': [100, 110],
-            'subjectOffsets': None,
-            'trigPoint': trigPoint1,
+            'queryLandmark': queryLandmark1,
+            'queryTrigPoint': queryTrigPoint1,
+            'subjectLandmark': subjectLandmark1,
+            'subjectTrigPoint': subjectTrigPoint1,
         })
         histogram.add(44, {
-            'landmark': landmark1,
-            'queryOffsets': [200, 210],
-            'subjectOffsets': None,
-            'trigPoint': trigPoint1,
+            'queryLandmark': queryLandmark2,
+            'queryTrigPoint': queryTrigPoint2,
+            'subjectLandmark': subjectLandmark2,
+            'subjectTrigPoint': subjectTrigPoint2,
         })
         histogram.finalize()
         features, offsets = histogramBinFeatures(histogram[0], 'query')
-        # Because the hash occurs at two locations, we get back 2 landmarks
-        # and 2 trig points from histogramBinFeatures.
-        landmark2 = Landmark('AlphaHelix', 'A', 200, 20)
-        trigPoint2 = TrigPoint('Peak', 'P', 210)
-        self.assertEqual(set([landmark1, trigPoint1, landmark2, trigPoint2]),
+        self.assertEqual(set([queryLandmark1, queryTrigPoint1,
+                              queryLandmark2, queryTrigPoint2]),
                          features)
         self.assertEqual(set([100, 110, 119, 200, 210, 219]), offsets)
 
@@ -280,14 +291,16 @@ class TestFeatureMatchingScore(TestCase):
         because both the landmark and the trig point (2) appear in both the
         query and the subject (2) and 2 x 2 = 4.
         """
-        landmark = Landmark('AlphaHelix', 'A', 100, 20)
-        trigPoint = TrigPoint('Peak', 'P', 110)
+        queryLandmark = Landmark('AlphaHelix', 'A', 100, 20)
+        queryTrigPoint = TrigPoint('Peak', 'P', 110)
+        subjectLandmark = Landmark('AlphaHelix', 'A', 100, 20)
+        subjectTrigPoint = TrigPoint('Peak', 'P', 110)
         histogram = Histogram(1)
         histogram.add(44, {
-            'landmark': landmark,
-            'queryOffsets': [100, 110],
-            'subjectOffsets': [100, 110],
-            'trigPoint': trigPoint,
+            'queryLandmark': queryLandmark,
+            'queryTrigPoint': queryTrigPoint,
+            'subjectLandmark': subjectLandmark,
+            'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
         params = Parameters([], [])
@@ -306,20 +319,28 @@ class TestFeatureMatchingScore(TestCase):
         appear twice (2) in both the query and the subject (2) and
         2 x 2 x 2 = 8.
         """
-        landmark = Landmark('AlphaHelix', 'A', 100, 20)
-        trigPoint = TrigPoint('Peak', 'P', 110)
+        queryLandmark1 = Landmark('AlphaHelix', 'A', 100, 20)
+        queryTrigPoint1 = TrigPoint('Peak', 'P', 110)
+        subjectLandmark1 = Landmark('AlphaHelix', 'A', 101, 20)
+        subjectTrigPoint1 = TrigPoint('Peak', 'P', 111)
+
+        queryLandmark2 = Landmark('AlphaHelix', 'A', 200, 20)
+        queryTrigPoint2 = TrigPoint('Peak', 'P', 210)
+        subjectLandmark2 = Landmark('AlphaHelix', 'A', 201, 20)
+        subjectTrigPoint2 = TrigPoint('Peak', 'P', 211)
+
         histogram = Histogram(1)
         histogram.add(44, {
-            'landmark': landmark,
-            'queryOffsets': [100, 110],
-            'subjectOffsets': [100, 110],
-            'trigPoint': trigPoint,
+            'queryLandmark': queryLandmark1,
+            'queryTrigPoint': queryTrigPoint1,
+            'subjectLandmark': subjectLandmark1,
+            'subjectTrigPoint': subjectTrigPoint1,
         })
         histogram.add(44, {
-            'landmark': landmark,
-            'queryOffsets': [200, 210],
-            'subjectOffsets': [200, 210],
-            'trigPoint': trigPoint,
+            'queryLandmark': queryLandmark2,
+            'queryTrigPoint': queryTrigPoint2,
+            'subjectLandmark': subjectLandmark2,
+            'subjectTrigPoint': subjectTrigPoint2,
         })
         histogram.finalize()
         params = Parameters([], [])
@@ -335,14 +356,16 @@ class TestFeatureMatchingScore(TestCase):
         match reward multiplied by four if the query has an additional feature
         that is outside the match area.
         """
-        landmark = Landmark('AlphaHelix', 'A', 100, 20)
-        trigPoint = TrigPoint('Peak', 'P', 110)
+        queryLandmark = Landmark('AlphaHelix', 'A', 100, 20)
+        queryTrigPoint = TrigPoint('Peak', 'P', 110)
+        subjectLandmark = Landmark('AlphaHelix', 'A', 100, 20)
+        subjectTrigPoint = TrigPoint('Peak', 'P', 110)
         histogram = Histogram(1)
         histogram.add(44, {
-            'landmark': landmark,
-            'queryOffsets': [100, 110],
-            'subjectOffsets': [100, 110],
-            'trigPoint': trigPoint,
+            'queryLandmark': queryLandmark,
+            'queryTrigPoint': queryTrigPoint,
+            'subjectLandmark': subjectLandmark,
+            'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
         params = Parameters([AlphaHelix], [])
@@ -358,14 +381,16 @@ class TestFeatureMatchingScore(TestCase):
         match reward multiplied by four if the query has two additional
         features that are outside the match area.
         """
-        landmark = Landmark('AlphaHelix', 'A', 100, 20)
-        trigPoint = TrigPoint('Peak', 'P', 110)
+        queryLandmark = Landmark('AlphaHelix', 'A', 100, 20)
+        queryTrigPoint = TrigPoint('Peak', 'P', 110)
+        subjectLandmark = Landmark('AlphaHelix', 'A', 100, 20)
+        subjectTrigPoint = TrigPoint('Peak', 'P', 110)
         histogram = Histogram(1)
         histogram.add(44, {
-            'landmark': landmark,
-            'queryOffsets': [100, 110],
-            'subjectOffsets': [100, 110],
-            'trigPoint': trigPoint,
+            'queryLandmark': queryLandmark,
+            'queryTrigPoint': queryTrigPoint,
+            'subjectLandmark': subjectLandmark,
+            'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
         params = Parameters([AlphaHelix], [])
@@ -381,14 +406,16 @@ class TestFeatureMatchingScore(TestCase):
         match reward multiplied by four if the query and the subject each have
         one additional feature that are both outside the match area.
         """
-        landmark = Landmark('AlphaHelix', 'A', 100, 20)
-        trigPoint = TrigPoint('Peak', 'P', 110)
+        queryLandmark = Landmark('AlphaHelix', 'A', 100, 20)
+        queryTrigPoint = TrigPoint('Peak', 'P', 110)
+        subjectLandmark = Landmark('AlphaHelix', 'A', 100, 20)
+        subjectTrigPoint = TrigPoint('Peak', 'P', 110)
         histogram = Histogram(1)
         histogram.add(44, {
-            'landmark': landmark,
-            'queryOffsets': [100, 110],
-            'subjectOffsets': [100, 110],
-            'trigPoint': trigPoint,
+            'queryLandmark': queryLandmark,
+            'queryTrigPoint': queryTrigPoint,
+            'subjectLandmark': subjectLandmark,
+            'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
         params = Parameters([AlphaHelix], [])
@@ -404,14 +431,16 @@ class TestFeatureMatchingScore(TestCase):
         reward multiplied by four, minus the feature mismatch score if the
         query has an additional feature that is inside the match area.
         """
-        landmark = Landmark('AlphaHelix_pi', 'C', 0, 20)
-        trigPoint = TrigPoint('Peak', 'P', 10)
+        queryLandmark = Landmark('AlphaHelix', 'A', 0, 20)
+        queryTrigPoint = TrigPoint('Peak', 'P', 10)
+        subjectLandmark = Landmark('AlphaHelix', 'A', 0, 20)
+        subjectTrigPoint = TrigPoint('Peak', 'P', 10)
         histogram = Histogram(1)
         histogram.add(44, {
-            'landmark': landmark,
-            'queryOffsets': [0, 10],
-            'subjectOffsets': [0, 10],
-            'trigPoint': trigPoint,
+            'queryLandmark': queryLandmark,
+            'queryTrigPoint': queryTrigPoint,
+            'subjectLandmark': subjectLandmark,
+            'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
         params = Parameters([AlphaHelix], [])
@@ -429,14 +458,16 @@ class TestFeatureMatchingScore(TestCase):
         reward multiplied by four, minus the feature mismatch score if the
         query has an additional feature that exactly spans the match area.
         """
-        landmark = Landmark('AlphaHelix_pi', 'C', 0, 9)
-        trigPoint = TrigPoint('Peak', 'P', 5)
+        queryLandmark = Landmark('AlphaHelix', 'A', 0, 9)
+        queryTrigPoint = TrigPoint('Peak', 'P', 5)
+        subjectLandmark = Landmark('AlphaHelix', 'A', 0, 9)
+        subjectTrigPoint = TrigPoint('Peak', 'P', 5)
         histogram = Histogram(1)
         histogram.add(44, {
-            'landmark': landmark,
-            'queryOffsets': [0, 5],
-            'subjectOffsets': [0, 5],
-            'trigPoint': trigPoint,
+            'queryLandmark': queryLandmark,
+            'queryTrigPoint': queryTrigPoint,
+            'subjectLandmark': subjectLandmark,
+            'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
         params = Parameters([AlphaHelix], [])
@@ -454,14 +485,16 @@ class TestFeatureMatchingScore(TestCase):
         reward multiplied by four if the query has an additional feature that
         exceeds the match area on both sides.
         """
-        landmark = Landmark('AlphaHelix_pi', 'C', 2, 5)
-        trigPoint = TrigPoint('Peak', 'P', 5)
+        queryLandmark = Landmark('AlphaHelix', 'A', 2, 5)
+        queryTrigPoint = TrigPoint('Peak', 'P', 5)
+        subjectLandmark = Landmark('AlphaHelix', 'A', 2, 5)
+        subjectTrigPoint = TrigPoint('Peak', 'P', 5)
         histogram = Histogram(1)
         histogram.add(44, {
-            'landmark': landmark,
-            'queryOffsets': [2, 5],
-            'subjectOffsets': [2, 5],
-            'trigPoint': trigPoint,
+            'queryLandmark': queryLandmark,
+            'queryTrigPoint': queryTrigPoint,
+            'subjectLandmark': subjectLandmark,
+            'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
         params = Parameters([AlphaHelix], [])
@@ -478,14 +511,16 @@ class TestFeatureMatchingScore(TestCase):
         reward multiplied by four, minus twice the feature mismatch score if
         the query has two additional features that are inside the match area.
         """
-        landmark = Landmark('AlphaHelix_pi', 'C', 0, 20)
-        trigPoint = TrigPoint('Peak', 'P', 10)
+        queryLandmark = Landmark('AlphaHelix', 'A', 0, 20)
+        queryTrigPoint = TrigPoint('Peak', 'P', 10)
+        subjectLandmark = Landmark('AlphaHelix', 'A', 0, 20)
+        subjectTrigPoint = TrigPoint('Peak', 'P', 10)
         histogram = Histogram(1)
         histogram.add(44, {
-            'landmark': landmark,
-            'queryOffsets': [0, 10],
-            'subjectOffsets': [0, 10],
-            'trigPoint': trigPoint,
+            'queryLandmark': queryLandmark,
+            'queryTrigPoint': queryTrigPoint,
+            'subjectLandmark': subjectLandmark,
+            'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
         params = Parameters([AlphaHelix], [])
@@ -504,14 +539,16 @@ class TestFeatureMatchingScore(TestCase):
         is only partly inside the match area (with the extra feature jutting
         out on the left).
         """
-        landmark = Landmark('AlphaHelix_pi', 'C', 5, 20)
-        trigPoint = TrigPoint('Peak', 'P', 10)
+        queryLandmark = Landmark('AlphaHelix', 'A', 5, 20)
+        queryTrigPoint = TrigPoint('Peak', 'P', 10)
+        subjectLandmark = Landmark('AlphaHelix', 'A', 5, 20)
+        subjectTrigPoint = TrigPoint('Peak', 'P', 10)
         histogram = Histogram(1)
         histogram.add(44, {
-            'landmark': landmark,
-            'queryOffsets': [5, 10],
-            'subjectOffsets': [5, 10],
-            'trigPoint': trigPoint,
+            'queryLandmark': queryLandmark,
+            'queryTrigPoint': queryTrigPoint,
+            'subjectLandmark': subjectLandmark,
+            'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
         params = Parameters([AlphaHelix], [])
@@ -529,14 +566,16 @@ class TestFeatureMatchingScore(TestCase):
         is only partly inside the match area (with the extra feature jutting
         out on the right).
         """
-        landmark = Landmark('AlphaHelix_pi', 'C', 2, 3)
-        trigPoint = TrigPoint('Peak', 'P', 5)
+        queryLandmark = Landmark('AlphaHelix', 'A', 2, 3)
+        queryTrigPoint = TrigPoint('Peak', 'P', 5)
+        subjectLandmark = Landmark('AlphaHelix', 'A', 2, 3)
+        subjectTrigPoint = TrigPoint('Peak', 'P', 5)
         histogram = Histogram(1)
         histogram.add(44, {
-            'landmark': landmark,
-            'queryOffsets': [2, 5],
-            'subjectOffsets': [2, 5],
-            'trigPoint': trigPoint,
+            'queryLandmark': queryLandmark,
+            'queryTrigPoint': queryTrigPoint,
+            'subjectLandmark': subjectLandmark,
+            'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
         params = Parameters([AlphaHelix], [])
@@ -555,14 +594,16 @@ class TestFeatureMatchingScore(TestCase):
         including when non-default values are used for the feature match and
         mismatch scores.
         """
-        landmark = Landmark('AlphaHelix_pi', 'C', 0, 20)
-        trigPoint = TrigPoint('Peak', 'P', 10)
+        queryLandmark = Landmark('AlphaHelix', 'A', 0, 20)
+        queryTrigPoint = TrigPoint('Peak', 'P', 10)
+        subjectLandmark = Landmark('AlphaHelix', 'A', 0, 20)
+        subjectTrigPoint = TrigPoint('Peak', 'P', 10)
         histogram = Histogram(1)
         histogram.add(44, {
-            'landmark': landmark,
-            'queryOffsets': [0, 10],
-            'subjectOffsets': [0, 10],
-            'trigPoint': trigPoint,
+            'queryLandmark': queryLandmark,
+            'queryTrigPoint': queryTrigPoint,
+            'subjectLandmark': subjectLandmark,
+            'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
         params = Parameters([AlphaHelix], [])
@@ -597,14 +638,16 @@ class TestFeatureAAScore(TestCase):
         A bin containing one hash must have a score of 1.0 if the query and
         subject have no additional (non-matching) features.
         """
-        landmark = Landmark('AlphaHelix', 'A', 100, 20)
-        trigPoint = TrigPoint('Peak', 'P', 110)
+        queryLandmark = Landmark('AlphaHelix', 'A', 100, 20)
+        queryTrigPoint = TrigPoint('Peak', 'P', 110)
+        subjectLandmark = Landmark('AlphaHelix', 'A', 100, 20)
+        subjectTrigPoint = TrigPoint('Peak', 'P', 110)
         histogram = Histogram(1)
         histogram.add(44, {
-            'landmark': landmark,
-            'queryOffsets': [100, 110],
-            'subjectOffsets': [100, 110],
-            'trigPoint': trigPoint,
+            'queryLandmark': queryLandmark,
+            'queryTrigPoint': queryTrigPoint,
+            'subjectLandmark': subjectLandmark,
+            'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
         params = Parameters([], [])
@@ -619,20 +662,28 @@ class TestFeatureAAScore(TestCase):
         of 1.0 if the query and subject have no additional (non-matching)
         features.
         """
-        landmark = Landmark('AlphaHelix', 'A', 100, 20)
-        trigPoint = TrigPoint('Peak', 'P', 110)
+        queryLandmark1 = Landmark('AlphaHelix', 'A', 100, 20)
+        queryTrigPoint1 = TrigPoint('Peak', 'P', 110)
+        subjectLandmark1 = Landmark('AlphaHelix', 'A', 101, 20)
+        subjectTrigPoint1 = TrigPoint('Peak', 'P', 111)
+
+        queryLandmark2 = Landmark('AlphaHelix', 'A', 200, 20)
+        queryTrigPoint2 = TrigPoint('Peak', 'P', 210)
+        subjectLandmark2 = Landmark('AlphaHelix', 'A', 201, 20)
+        subjectTrigPoint2 = TrigPoint('Peak', 'P', 211)
+
         histogram = Histogram(1)
         histogram.add(44, {
-            'landmark': landmark,
-            'queryOffsets': [100, 110],
-            'subjectOffsets': [100, 110],
-            'trigPoint': trigPoint,
+            'queryLandmark': queryLandmark1,
+            'queryTrigPoint': queryTrigPoint1,
+            'subjectLandmark': subjectLandmark1,
+            'subjectTrigPoint': subjectTrigPoint1,
         })
         histogram.add(44, {
-            'landmark': landmark,
-            'queryOffsets': [200, 210],
-            'subjectOffsets': [200, 210],
-            'trigPoint': trigPoint,
+            'queryLandmark': queryLandmark2,
+            'queryTrigPoint': queryTrigPoint2,
+            'subjectLandmark': subjectLandmark2,
+            'subjectTrigPoint': subjectTrigPoint2,
         })
         histogram.finalize()
         params = Parameters([], [])
@@ -646,14 +697,16 @@ class TestFeatureAAScore(TestCase):
         A bin containing one hash must have a score of 1.0 if the query has an
         additional feature that is outside the match area.
         """
-        landmark = Landmark('AlphaHelix', 'A', 100, 20)
-        trigPoint = TrigPoint('Peak', 'P', 110)
+        queryLandmark = Landmark('AlphaHelix', 'A', 100, 20)
+        queryTrigPoint = TrigPoint('Peak', 'P', 110)
+        subjectLandmark = Landmark('AlphaHelix', 'A', 100, 20)
+        subjectTrigPoint = TrigPoint('Peak', 'P', 110)
         histogram = Histogram(1)
         histogram.add(44, {
-            'landmark': landmark,
-            'queryOffsets': [100, 110],
-            'subjectOffsets': [100, 110],
-            'trigPoint': trigPoint,
+            'queryLandmark': queryLandmark,
+            'queryTrigPoint': queryTrigPoint,
+            'subjectLandmark': subjectLandmark,
+            'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
         params = Parameters([AlphaHelix], [])
@@ -667,14 +720,16 @@ class TestFeatureAAScore(TestCase):
         A bin containing one hash must have a score of 1.0 if the query has two
         additional features that are outside the match area.
         """
-        landmark = Landmark('AlphaHelix', 'A', 100, 20)
-        trigPoint = TrigPoint('Peak', 'P', 110)
+        queryLandmark = Landmark('AlphaHelix', 'A', 100, 20)
+        queryTrigPoint = TrigPoint('Peak', 'P', 110)
+        subjectLandmark = Landmark('AlphaHelix', 'A', 100, 20)
+        subjectTrigPoint = TrigPoint('Peak', 'P', 110)
         histogram = Histogram(1)
         histogram.add(44, {
-            'landmark': landmark,
-            'queryOffsets': [100, 110],
-            'subjectOffsets': [100, 110],
-            'trigPoint': trigPoint,
+            'queryLandmark': queryLandmark,
+            'queryTrigPoint': queryTrigPoint,
+            'subjectLandmark': subjectLandmark,
+            'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
         params = Parameters([AlphaHelix], [])
@@ -689,14 +744,16 @@ class TestFeatureAAScore(TestCase):
         subject each have one additional feature that are both outside the
         match area.
         """
-        landmark = Landmark('AlphaHelix', 'A', 100, 20)
-        trigPoint = TrigPoint('Peak', 'P', 110)
+        queryLandmark = Landmark('AlphaHelix', 'A', 100, 20)
+        queryTrigPoint = TrigPoint('Peak', 'P', 110)
+        subjectLandmark = Landmark('AlphaHelix', 'A', 100, 20)
+        subjectTrigPoint = TrigPoint('Peak', 'P', 110)
         histogram = Histogram(1)
         histogram.add(44, {
-            'landmark': landmark,
-            'queryOffsets': [100, 110],
-            'subjectOffsets': [100, 110],
-            'trigPoint': trigPoint,
+            'queryLandmark': queryLandmark,
+            'queryTrigPoint': queryTrigPoint,
+            'subjectLandmark': subjectLandmark,
+            'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
         params = Parameters([AlphaHelix], [])
@@ -711,14 +768,16 @@ class TestFeatureAAScore(TestCase):
         overlap must have the correct score if the query has an additional
         feature that is inside the match area.
         """
-        landmark = Landmark('AlphaHelix_pi', 'C', 0, 20)
-        trigPoint = TrigPoint('Peak', 'P', 50)
+        queryLandmark = Landmark('AlphaHelix', 'A', 0, 20)
+        queryTrigPoint = TrigPoint('Peak', 'P', 50)
+        subjectLandmark = Landmark('AlphaHelix', 'A', 0, 20)
+        subjectTrigPoint = TrigPoint('Peak', 'P', 50)
         histogram = Histogram(1)
         histogram.add(44, {
-            'landmark': landmark,
-            'queryOffsets': [0, 50],
-            'subjectOffsets': [0, 50],
-            'trigPoint': trigPoint,
+            'queryLandmark': queryLandmark,
+            'queryTrigPoint': queryTrigPoint,
+            'subjectLandmark': subjectLandmark,
+            'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
         params = Parameters([AlphaHelix], [])
@@ -735,14 +794,16 @@ class TestFeatureAAScore(TestCase):
         additional feature's offsets match those of the match (and so do not
         affect the score).
         """
-        landmark = Landmark('AlphaHelix_pi', 'C', 0, 9)
-        trigPoint = TrigPoint('Peak', 'P', 5)
+        queryLandmark = Landmark('AlphaHelix', 'A', 0, 9)
+        queryTrigPoint = TrigPoint('Peak', 'P', 5)
+        subjectLandmark = Landmark('AlphaHelix', 'A', 0, 9)
+        subjectTrigPoint = TrigPoint('Peak', 'P', 5)
         histogram = Histogram(1)
         histogram.add(44, {
-            'landmark': landmark,
-            'queryOffsets': [0, 5],
-            'subjectOffsets': [0, 5],
-            'trigPoint': trigPoint,
+            'queryLandmark': queryLandmark,
+            'queryTrigPoint': queryTrigPoint,
+            'subjectLandmark': subjectLandmark,
+            'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
         params = Parameters([AlphaHelix], [])
@@ -758,14 +819,16 @@ class TestFeatureAAScore(TestCase):
         A bin containing one hash must have a score of 1.0 if the query has
         an additional feature that exceeds the match area on both sides.
         """
-        landmark = Landmark('AlphaHelix_pi', 'C', 2, 5)
-        trigPoint = TrigPoint('Peak', 'P', 5)
+        queryLandmark = Landmark('AlphaHelix', 'A', 2, 5)
+        queryTrigPoint = TrigPoint('Peak', 'P', 5)
+        subjectLandmark = Landmark('AlphaHelix', 'A', 2, 5)
+        subjectTrigPoint = TrigPoint('Peak', 'P', 5)
         histogram = Histogram(1)
         histogram.add(44, {
-            'landmark': landmark,
-            'queryOffsets': [2, 5],
-            'subjectOffsets': [2, 5],
-            'trigPoint': trigPoint,
+            'queryLandmark': queryLandmark,
+            'queryTrigPoint': queryTrigPoint,
+            'subjectLandmark': subjectLandmark,
+            'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
         params = Parameters([AlphaHelix], [])
@@ -780,14 +843,16 @@ class TestFeatureAAScore(TestCase):
         two additional features that are inside the match area but which do not
         overlap the features in the hash.
         """
-        landmark = Landmark('AlphaHelix_pi', 'C', 0, 20)
-        trigPoint = TrigPoint('Peak', 'P', 50)
+        queryLandmark = Landmark('AlphaHelix', 'A', 0, 20)
+        queryTrigPoint = TrigPoint('Peak', 'P', 50)
+        subjectLandmark = Landmark('AlphaHelix', 'A', 0, 20)
+        subjectTrigPoint = TrigPoint('Peak', 'P', 50)
         histogram = Histogram(1)
         histogram.add(44, {
-            'landmark': landmark,
-            'queryOffsets': [0, 50],
-            'subjectOffsets': [0, 50],
-            'trigPoint': trigPoint,
+            'queryLandmark': queryLandmark,
+            'queryTrigPoint': queryTrigPoint,
+            'subjectLandmark': subjectLandmark,
+            'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
         params = Parameters([AlphaHelix], [])
@@ -804,14 +869,16 @@ class TestFeatureAAScore(TestCase):
         additional feature that is only partly inside the match area (with the
         extra feature jutting out on the left).
         """
-        landmark = Landmark('AlphaHelix_pi', 'C', 5, 20)
-        trigPoint = TrigPoint('Peak', 'P', 10)
+        queryLandmark = Landmark('AlphaHelix', 'A', 5, 20)
+        queryTrigPoint = TrigPoint('Peak', 'P', 10)
+        subjectLandmark = Landmark('AlphaHelix', 'A', 5, 20)
+        subjectTrigPoint = TrigPoint('Peak', 'P', 10)
         histogram = Histogram(1)
         histogram.add(44, {
-            'landmark': landmark,
-            'queryOffsets': [5, 10],
-            'subjectOffsets': [5, 10],
-            'trigPoint': trigPoint,
+            'queryLandmark': queryLandmark,
+            'queryTrigPoint': queryTrigPoint,
+            'subjectLandmark': subjectLandmark,
+            'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
         params = Parameters([AlphaHelix], [])
@@ -826,14 +893,16 @@ class TestFeatureAAScore(TestCase):
         additional feature that is only partly inside the match area (with the
         extra feature jutting out on the right).
         """
-        landmark = Landmark('AlphaHelix_pi', 'C', 2, 3)
-        trigPoint = TrigPoint('Peak', 'P', 5)
+        queryLandmark = Landmark('AlphaHelix', 'A', 2, 3)
+        queryTrigPoint = TrigPoint('Peak', 'P', 5)
+        subjectLandmark = Landmark('AlphaHelix', 'A', 2, 3)
+        subjectTrigPoint = TrigPoint('Peak', 'P', 5)
         histogram = Histogram(1)
         histogram.add(44, {
-            'landmark': landmark,
-            'queryOffsets': [2, 5],
-            'subjectOffsets': [2, 5],
-            'trigPoint': trigPoint,
+            'queryLandmark': queryLandmark,
+            'queryTrigPoint': queryTrigPoint,
+            'subjectLandmark': subjectLandmark,
+            'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
         params = Parameters([AlphaHelix], [])
@@ -847,22 +916,28 @@ class TestFeatureAAScore(TestCase):
         A bin containing two hashes must have the correct score if the query
         and subject both have an additional feature inside their match areas.
         """
-        landmark1 = Landmark('AlphaHelix_pi', 'C', 2, 3)
-        trigPoint1 = TrigPoint('Peak', 'P', 10)
+        queryLandmark1 = Landmark('AlphaHelix_pi', 'C', 2, 3)
+        queryTrigPoint1 = TrigPoint('Peak', 'P', 10)
+        subjectLandmark1 = Landmark('AlphaHelix_pi', 'C', 2, 3)
+        subjectTrigPoint1 = TrigPoint('Peak', 'P', 10)
+
+        queryLandmark2 = Landmark('AlphaHelix_pi', 'C', 50, 5)
+        queryTrigPoint2 = TrigPoint('Peak', 'P', 60)
+        subjectLandmark2 = Landmark('AlphaHelix_pi', 'C', 50, 5)
+        subjectTrigPoint2 = TrigPoint('Peak', 'P', 60)
+
         histogram = Histogram(1)
         histogram.add(44, {
-            'landmark': landmark1,
-            'queryOffsets': [2, 10],
-            'subjectOffsets': [2, 10],
-            'trigPoint': trigPoint1,
+            'queryLandmark': queryLandmark1,
+            'queryTrigPoint': queryTrigPoint1,
+            'subjectLandmark': subjectLandmark1,
+            'subjectTrigPoint': subjectTrigPoint1,
         })
-        landmark2 = Landmark('AlphaHelix_pi', 'C', 50, 5)
-        trigPoint2 = TrigPoint('Peak', 'P', 60)
         histogram.add(44, {
-            'landmark': landmark2,
-            'queryOffsets': [50, 60],
-            'subjectOffsets': [50, 60],
-            'trigPoint': trigPoint2,
+            'queryLandmark': queryLandmark2,
+            'queryTrigPoint': queryTrigPoint2,
+            'subjectLandmark': subjectLandmark2,
+            'subjectTrigPoint': subjectTrigPoint2,
         })
         histogram.finalize()
         params = Parameters([AlphaHelix], [])

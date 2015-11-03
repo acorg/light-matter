@@ -750,11 +750,14 @@ class PlotHashesInSubjectAndRead(object):
         readsAx.set_ylim(-0.5, len(self.query))
         readsAx.grid()
 
-    def plotHorizontal(self, ax=None):
+    def plotHorizontal(self, ax=None, addJitter=True):
         """
         Plot a graph with the subject and query drawn as two horizontal lines.
 
         @param ax: If not C{None}, use this as the subplot.
+        @param addJitter: If C{True}, add a small amount of jitter to the
+            x-axis offset used to plot landmarks and trig points to decrease
+            the probability that plotted lines completely overlap one another.
         """
 
         # In the code below, the following abbreviations are used in
@@ -865,7 +868,7 @@ class PlotHashesInSubjectAndRead(object):
 
                 # Add x-axis offset jitter to diagonal line plotting, so we
                 # can see more of them in case of overlap.
-                xJitter = uniform(-0.2, 0.2)
+                xJitter = uniform(-0.2, 0.2) if addJitter else 0.0
 
                 # Dashed diagonal line connecting trig point in query and
                 # subject.  Plot this before the diagonal landmark lines as

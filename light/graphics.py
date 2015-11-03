@@ -570,7 +570,8 @@ def plotFeatureSquare(read, significanceFraction=None, readsAx=None, **kwargs):
     readsAx.set_ylabel('Offset (trig points)', fontsize=14)
     readsAx.set_xlim(-0.2, len(read.sequence) + 0.2)
     readsAx.set_ylim(0, len(read.sequence))
-    readsAx.legend(handles=legendHandles(namesSeen), loc=2)
+    if namesSeen:
+        readsAx.legend(handles=legendHandles(namesSeen), loc=2)
     readsAx.grid()
 
     return scannedQuery
@@ -950,9 +951,10 @@ class PlotHashesInSubjectAndRead(object):
                             '-', color=tpColor, linewidth=3)
 
         if createdAx:
-            ax.legend(handles=legendHandles(namesSeen),
-                      bbox_to_anchor=(0.0, 1.02, 1.0, 0.102), loc=3, ncol=2,
-                      borderaxespad=0.5)
+            if namesSeen:
+                ax.legend(handles=legendHandles(namesSeen),
+                          bbox_to_anchor=(0.0, 1.02, 1.0, 0.102), loc=3,
+                          ncol=2, borderaxespad=0.5)
             ax.set_xlabel(fill('Subject (top): %s\n\n\nQuery (bottom): %s' %
                                (self.subject.id, self.query.id)), fontsize=17)
 
@@ -1037,9 +1039,10 @@ def plotLandmarksInSequences(sequences, maxTickLabelLength=None, **kwargs):
     ax.set_yticklabels(yticks)
     ax.set_yticks(range(nReads))
     # Add a legend above left on the plot.
-    ax.legend(handles=legendHandles(namesSeen),
-              bbox_to_anchor=(0.0, 1.02, 1.0, 0.102), loc=3, ncol=2,
-              borderaxespad=0.5)
+    if namesSeen:
+        ax.legend(handles=legendHandles(namesSeen),
+                  bbox_to_anchor=(0.0, 1.02, 1.0, 0.102), loc=3, ncol=2,
+                  borderaxespad=0.5)
 
     plt.tick_params(axis='x', which='both', bottom='off', top='off',
                     labelbottom='on')

@@ -808,13 +808,13 @@ class PlotHashesInSubjectAndRead(object):
         diagPlotted = set()
 
         # Plot matching hashes on the query and subject horizontal lines,
-        # as well as diagonal lines between the two (in colors that
+        # as well as diagonal lines between the two (using colors that
         # correspond to histogram bins).
         #
-        # Note that the keys of the items in histogram bins are different
-        # from those in the query-only hashes and subject-only hashes
-        # (processed later) as those are the result of calling getHashes in
-        # a backend.
+        # Note that the dictionary keys of the items in histogram bins are
+        # different from those in the query-only hashes and subject-only
+        # hashes (processed later) as those are the result of calling
+        # getHashes in a backend.
 
         nonEmptyBins = [b for b in self.bins if len(b)]
         binColors = colors.color_palette('hls', len(nonEmptyBins))
@@ -829,10 +829,13 @@ class PlotHashesInSubjectAndRead(object):
                 tpColor = COLORS[qtp.symbol]
                 qyLmOffset = qlm.offset
                 qyTpOffset = qtp.offset
-                sjLmOffset = match['subjectLandmark'].offset
-                namesSeen.update([lmName, Landmark])
+                slm = match['subjectLandmark']
+                stp = match['subjectTrigPoint']
+                sjLmOffset = slm.offset
+                sjTpOffset = stp.offset
+                namesSeen.update([lmName, tpName])
 
-                # tpName in the query.
+                # Landmark in the query.
                 key = (lmName, qyLmOffset, qlm.length)
                 if key not in qyPlotted:
                     qyPlotted.add(key)
@@ -847,20 +850,13 @@ class PlotHashesInSubjectAndRead(object):
                             '-', color=tpColor, linewidth=3)
 
                 # Landmark in the subject.
-                key = (lmName, sjLmOffset, qlm.length)
+                key = (lmName, sjLmOffset, slm.length)
                 if key not in sjPlotted:
                     sjPlotted.add(key)
-                    ax.plot([sjLmOffset, sjLmOffset + qlm.length], [sjY, sjY],
+                    ax.plot([sjLmOffset, sjLmOffset + slm.length], [sjY, sjY],
                             '-', color=lmColor, linewidth=3)
 
                 # Trig point in the subject.
-                #
-                # Note that we don't know the subject trig point offset for
-                # sure. We assume here that the distance between landmark
-                # and trig point in the subject is the same as it is in the
-                # query. That could be slightly wrong, depending on the
-                # landmark to trig point distance scaling in database.hash().
-                sjTpOffset = sjLmOffset + (qyTpOffset - qyLmOffset)
                 key = (tpName, sjTpOffset)
                 if key not in sjPlotted:
                     sjPlotted.add(key)

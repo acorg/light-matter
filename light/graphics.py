@@ -767,7 +767,7 @@ class PlotHashesInSubjectAndRead(object):
         #   diag: diagonal
         #
         # For consistency, query handling is always done before subject
-        # handling, and landmarks are handled befor trig points.
+        # handling, and landmarks are handled before trig points.
 
         if ax is None:
             fig = plt.figure(figsize=(15, 10))

@@ -570,7 +570,8 @@ def plotFeatureSquare(read, significanceFraction=None, readsAx=None, **kwargs):
     readsAx.set_ylabel('Offset (trig points)', fontsize=14)
     readsAx.set_xlim(-0.2, len(read.sequence) + 0.2)
     readsAx.set_ylim(0, len(read.sequence))
-    readsAx.legend(handles=legendHandles(namesSeen), loc=2)
+    if namesSeen:
+        readsAx.legend(handles=legendHandles(namesSeen), loc=2)
     readsAx.grid()
 
     return scannedQuery
@@ -750,11 +751,14 @@ class PlotHashesInSubjectAndRead(object):
         readsAx.set_ylim(-0.5, len(self.query))
         readsAx.grid()
 
-    def plotHorizontal(self, ax=None):
+    def plotHorizontal(self, ax=None, addJitter=True):
         """
         Plot a graph with the subject and query drawn as two horizontal lines.
 
         @param ax: If not C{None}, use this as the subplot.
+        @param addJitter: If C{True}, add a small amount of jitter to the
+            x-axis offset used to plot landmarks and trig points to decrease
+            the probability that plotted lines completely overlap one another.
         """
 
         # In the code below, the following abbreviations are used in
@@ -767,7 +771,7 @@ class PlotHashesInSubjectAndRead(object):
         #   diag: diagonal
         #
         # For consistency, query handling is always done before subject
-        # handling, and landmarks are handled befor trig points.
+        # handling, and landmarks are handled before trig points.
 
         if ax is None:
             fig = plt.figure(figsize=(15, 10))
@@ -808,30 +812,38 @@ class PlotHashesInSubjectAndRead(object):
         diagPlotted = set()
 
         # Plot matching hashes on the query and subject horizontal lines,
-        # as well as diagonal lines between the two (in colors that
+        # as well as diagonal lines between the two (using colors that
         # correspond to histogram bins).
+        #
+        # Note that the dictionary keys of the items in histogram bins are
+        # different from those in the query-only hashes and subject-only
+        # hashes (processed later) as those are the result of calling
+        # getHashes in a backend.
 
         nonEmptyBins = [b for b in self.bins if len(b)]
         binColors = colors.color_palette('hls', len(nonEmptyBins))
 
         for bin_, binColor in zip(nonEmptyBins, binColors):
             for match in bin_:
-                lm = match['landmark']
-                tp = match['trigPoint']
-                lmName = lm.name
-                tpName = tp.name
-                lmColor = COLORS[lm.symbol]
-                tpColor = COLORS[tp.symbol]
-                qyLmOffset = match['queryOffsets'][0]
-                qyTpOffset = match['queryOffsets'][1]
-                sjLmOffset = match['subjectOffsets'][0]
+                qlm = match['queryLandmark']
+                qtp = match['queryTrigPoint']
+                lmName = qlm.name
+                tpName = qtp.name
+                lmColor = COLORS[qlm.symbol]
+                tpColor = COLORS[qtp.symbol]
+                qyLmOffset = qlm.offset
+                qyTpOffset = qtp.offset
+                slm = match['subjectLandmark']
+                stp = match['subjectTrigPoint']
+                sjLmOffset = slm.offset
+                sjTpOffset = stp.offset
                 namesSeen.update([lmName, tpName])
 
                 # Landmark in the query.
-                key = (lmName, qyLmOffset, lm.length)
+                key = (lmName, qyLmOffset, qlm.length)
                 if key not in qyPlotted:
                     qyPlotted.add(key)
-                    ax.plot([qyLmOffset, qyLmOffset + lm.length], [qyY, qyY],
+                    ax.plot([qyLmOffset, qyLmOffset + qlm.length], [qyY, qyY],
                             '-', color=lmColor, linewidth=3)
 
                 # Trig point in the query.
@@ -842,20 +854,13 @@ class PlotHashesInSubjectAndRead(object):
                             '-', color=tpColor, linewidth=3)
 
                 # Landmark in the subject.
-                key = (lmName, sjLmOffset, lm.length)
+                key = (lmName, sjLmOffset, slm.length)
                 if key not in sjPlotted:
                     sjPlotted.add(key)
-                    ax.plot([sjLmOffset, sjLmOffset + lm.length], [sjY, sjY],
+                    ax.plot([sjLmOffset, sjLmOffset + slm.length], [sjY, sjY],
                             '-', color=lmColor, linewidth=3)
 
                 # Trig point in the subject.
-                #
-                # Note that we don't know the subject trig point offset for
-                # sure. We assume here that the distance between landmark
-                # and trig point in the subject is the same as it is in the
-                # query. That could be slightly wrong, depending on the
-                # landmark to trig point distance scaling in database.hash().
-                sjTpOffset = sjLmOffset + (qyTpOffset - qyLmOffset)
                 key = (tpName, sjTpOffset)
                 if key not in sjPlotted:
                     sjPlotted.add(key)
@@ -864,7 +869,7 @@ class PlotHashesInSubjectAndRead(object):
 
                 # Add x-axis offset jitter to diagonal line plotting, so we
                 # can see more of them in case of overlap.
-                xJitter = uniform(-0.2, 0.2)
+                xJitter = uniform(-0.2, 0.2) if addJitter else 0.0
 
                 # Dashed diagonal line connecting trig point in query and
                 # subject.  Plot this before the diagonal landmark lines as
@@ -887,6 +892,10 @@ class PlotHashesInSubjectAndRead(object):
                 # Don't plot the end of the landmark, to reduce clutter.
 
         # Query-only hashes, plotted just below (-missY) the query line.
+        #
+        # Note that the keys of the items in queryHashes are different from
+        # those in the histogram bins (processed above) as these hashes are
+        # the result of calling getHashes in a backend.
         for hashInfo in self.queryHashes.values():
             lm = hashInfo['landmark']
             tp = hashInfo['trigPoint']
@@ -912,6 +921,11 @@ class PlotHashesInSubjectAndRead(object):
                             '-', color=tpColor, linewidth=3)
 
         # Subject-only hashes, plotted just above (+missY) the subject line.
+        #
+        # Note that, as with query-only hashes, the keys of the items in
+        # subjectHashes are different from those in the histogram bins
+        # (processed above) as these hashes are the result of calling
+        # getHashes in a backend.
         for hashInfo in self.subjectHashes.values():
             lm = hashInfo['landmark']
             tp = hashInfo['trigPoint']
@@ -937,9 +951,10 @@ class PlotHashesInSubjectAndRead(object):
                             '-', color=tpColor, linewidth=3)
 
         if createdAx:
-            ax.legend(handles=legendHandles(namesSeen),
-                      bbox_to_anchor=(0.0, 1.02, 1.0, 0.102), loc=3, ncol=2,
-                      borderaxespad=0.5)
+            if namesSeen:
+                ax.legend(handles=legendHandles(namesSeen),
+                          bbox_to_anchor=(0.0, 1.02, 1.0, 0.102), loc=3,
+                          ncol=2, borderaxespad=0.5)
             ax.set_xlabel(fill('Subject (top): %s\n\n\nQuery (bottom): %s' %
                                (self.subject.id, self.query.id)), fontsize=17)
 
@@ -1024,9 +1039,10 @@ def plotLandmarksInSequences(sequences, maxTickLabelLength=None, **kwargs):
     ax.set_yticklabels(yticks)
     ax.set_yticks(range(nReads))
     # Add a legend above left on the plot.
-    ax.legend(handles=legendHandles(namesSeen),
-              bbox_to_anchor=(0.0, 1.02, 1.0, 0.102), loc=3, ncol=2,
-              borderaxespad=0.5)
+    if namesSeen:
+        ax.legend(handles=legendHandles(namesSeen),
+                  bbox_to_anchor=(0.0, 1.02, 1.0, 0.102), loc=3, ncol=2,
+                  borderaxespad=0.5)
 
     plt.tick_params(axis='x', which='both', bottom='off', top='off',
                     labelbottom='on')

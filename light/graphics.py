@@ -656,11 +656,14 @@ class PlotHashesInSubjectAndRead(object):
         be included in the set of hashes that match query and subject.
     @param showInsignificant: If C{True}, hashes from insignificant bins will
         be included in the set of hashes that match query and subject.
+    @param onlyShowBestBin: If C{True}, only show the bin with the best
+        score. Warn if there are multiple bins with the same high score.
     @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
         for additional keywords, all of which are optional.
     """
     def __init__(self, query, subject, significanceFraction=None,
-                 showSignificant=True, showInsignificant=True, **kwargs):
+                 showSignificant=True, showInsignificant=True,
+                 onlyShowBestBin=False, **kwargs):
         self.query = query
         self.subject = subject
 
@@ -677,17 +680,27 @@ class PlotHashesInSubjectAndRead(object):
         if subjectIndex in self.result.analysis:
             analysis = self.result.analysis[subjectIndex]
             self.score = analysis['bestScore']
-            significantBinIndices = set(
-                [bin_['index'] for bin_ in analysis['significantBins']])
-            self.significantBinCount = len(significantBinIndices)
-            self.bins = bins = []
-            for binIndex, bin_ in enumerate(analysis['histogram'].bins):
-                if binIndex in significantBinIndices:
-                    if showSignificant:
-                        bins.append(bin_)
-                else:
-                    if showInsignificant:
-                        bins.append(bin_)
+            self.significantBinCount = len(analysis['significantBins'])
+
+            # If onlyShowBestBin is true, we need significantBins to be
+            # non-empty in order to have a bin to examine.  This is because
+            # insignificant bins do not have a score computed for them.
+            # Note that the scores of the bins are sorted (best first) in
+            # the Result class, so the first bin is the one with the best
+            # score.
+            if onlyShowBestBin and analysis['significantBins']:
+                self.bins = [analysis['significantBins'][0]['bin']]
+            else:
+                significantBinIndices = set(
+                    [bin_['index'] for bin_ in analysis['significantBins']])
+                self.bins = bins = []
+                for binIndex, bin_ in enumerate(analysis['histogram'].bins):
+                    if binIndex in significantBinIndices:
+                        if showSignificant:
+                            bins.append(bin_)
+                    else:
+                        if showInsignificant:
+                            bins.append(bin_)
         else:
             # The subject was not matched.
             self.score = 0.0

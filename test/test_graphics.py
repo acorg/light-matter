@@ -109,3 +109,40 @@ class TestPlotHashesInSubjectAndRead(TestCase):
         self.assertEqual(0, len(hashes.matchingHashes))
         self.assertEqual(11, len(hashes.queryHashes))
         self.assertEqual(9, len(hashes.subjectHashes))
+
+    def testOnlyShowBestBin(self):
+        """
+        The onlyShowBestBin option must work correctly, by setting the 'bins'
+        attribute to contain just one bin.
+        """
+
+        A = 'FRRRFRRRFXXXXXX'
+        C = 'FRRRRFRRRRFXXXXXX'
+
+        subject = AARead('subject', 5 * A + C + 2 * A)
+        query = AARead('query', 5 * A)
+
+        significanceFraction = 0.01
+
+        # There are 11 significant bins.
+        hashes = PlotHashesInSubjectAndRead(
+            query, subject, landmarkNames=['AlphaHelix', 'AlphaHelix_pi'],
+            trigPointNames=[], distanceBase=1.025, limitPerLandmark=50,
+            minDistance=1, maxDistance=100, showInsignificant=False,
+            significanceFraction=significanceFraction)
+        self.assertEqual(11, len(hashes.bins))
+
+        bestScore = hashes.result.analysis['bestScore']
+
+        # Same input, but restricting ourselves to only the single most
+        # significant bin:
+        hashes = PlotHashesInSubjectAndRead(
+            query, subject, landmarkNames=['AlphaHelix', 'AlphaHelix_pi'],
+            trigPointNames=[], distanceBase=1.025, limitPerLandmark=50,
+            minDistance=1, maxDistance=100, showInsignificant=False,
+            significanceFraction=significanceFraction, onlyShowBestBin=True)
+        self.assertEqual(1, len(hashes.bins))
+
+        # Check that the best bin when we use onlyShowBestBin has the same
+        # score as the bin we get when we don't use onlyShowBestBin.
+        self.assertEqual(bestScore, hashes.result.analysis['bestScore'])

@@ -50,30 +50,26 @@ def histogramBinFeatures(bin_, queryOrSubject):
     """
     Extract all features of type C{queryOrSubject} (a C{str}, either
     'query' or 'subject') from a bin and return them as a set, along with
-    the min and max offsets of the features.
+    the offsets contained in all the features.
 
     @param bin_: A C{light.histogram.Histogram} bin.
     @param queryOrSubject: A C{str}, to indicate which features to extract,
         either 'query' or 'subject'.
     @raise KeyError: If C{queryOrSubject} is not 'query' or 'subject'.
     @return: A 2-tuple, containing 1) a C{set} of all features (landmarks and
-        trig points) in the hashes in C{bin_}, 2) a C{set} of the offsets of
-        all features in the bin (this includes the start and end of all
-        landmarks, plus the offset of all trig points).
+        trig points) in the hashes in C{bin_}, 2) a C{set} of all offsets of
+        all features (of type C{queryOrSubject}) in the bin.
     """
     allFeatures = set()
     allOffsets = set()
     # There is no error checking that queryOrSubject is 'query' or
-    # 'subject' as the following item getter will raise a KeyError if it
-    # cannot access the dict key in the bin element.
+    # 'subject' as the following will raise a KeyError if it cannot access
+    # the dict key in the bin element.
     for hashInfo in bin_:
-        landmark = hashInfo[queryOrSubject + 'Landmark']
-        allFeatures.add(landmark)
-        allOffsets.add(landmark.offset)
-        allOffsets.add(landmark.offset + landmark.length - 1)
-        trigPoint = hashInfo[queryOrSubject + 'TrigPoint']
-        allFeatures.add(trigPoint)
-        allOffsets.add(trigPoint.offset)
+        for suffix in 'Landmark', 'TrigPoint':
+            feature = hashInfo[queryOrSubject + suffix]
+            allFeatures.add(feature)
+            allOffsets.update(feature.coveredOffsets())
 
     return allFeatures, allOffsets
 
@@ -195,24 +191,15 @@ class FeatureAAScore:
         subject.
 
         @param binIndex: The C{int} index of the bin to examine.
-        @return: A C{float} of the score of that bin.
+        @return: The C{float} score of that bin.
         """
         matchedQueryFeatures, matchedQueryOffsets = histogramBinFeatures(
             self._histogram[binIndex], 'query')
 
-        matchedQueryOffsets = set()
-        for feature in matchedQueryFeatures:
-            matchedQueryOffsets.update(feature.coveredOffsets())
-
         matchedSubjectFeatures, matchedSubjectOffsets = histogramBinFeatures(
             self._histogram[binIndex], 'subject')
 
-        matchedSubjectOffsets = set()
-        for feature in matchedSubjectFeatures:
-            matchedSubjectOffsets.update(feature.coveredOffsets())
-
-        # Get the features and offsets in the matched region for the query
-        # and subject.
+        # Get the extreme offsets in the matched region of query and subject.
         minQueryOffset = min(matchedQueryOffsets, default=0)
         maxQueryOffset = max(matchedQueryOffsets, default=self._queryLen)
         minSubjectOffset = min(matchedSubjectOffsets, default=0)

@@ -150,13 +150,11 @@ class Result(object):
             else:
                 raise ValueError('Unknown score method %r' % scoreMethod)
 
-            # Look for bins with a significant number of elements (each
-            # element is a scaled hash offset delta).
+            # Look for bins with a significant number of elements.
             significantBins = []
             for binIndex, bin_ in enumerate(histogram.bins):
                 if significance.isSignificant(binIndex):
                     score = scorer.calculateScore(binIndex)
-
                     significantBins.append({
                         'bin': bin_,
                         'index': binIndex,

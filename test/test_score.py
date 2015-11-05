@@ -138,7 +138,7 @@ class TestHistogramBinFeatures(TestCase):
         histogram.finalize()
         features, offsets = histogramBinFeatures(histogram[0], 'query')
         self.assertEqual(set([queryLandmark, queryTrigPoint]), features)
-        self.assertEqual(set([100, 110, 119]), offsets)
+        self.assertEqual(set(range(100, 120)), offsets)
 
     def testOneFeatureSubject(self):
         """
@@ -159,7 +159,7 @@ class TestHistogramBinFeatures(TestCase):
         histogram.finalize()
         features, offsets = histogramBinFeatures(histogram[0], 'subject')
         self.assertEqual(set([subjectLandmark, subjectTrigPoint]), features)
-        self.assertEqual(set([101, 111, 120]), offsets)
+        self.assertEqual(set(range(101, 121)), offsets)
 
     def testOneFeatureTwoLocations(self):
         """
@@ -194,7 +194,9 @@ class TestHistogramBinFeatures(TestCase):
         self.assertEqual(set([queryLandmark1, queryTrigPoint1,
                               queryLandmark2, queryTrigPoint2]),
                          features)
-        self.assertEqual(set([100, 110, 119, 200, 210, 219]), offsets)
+        expectedOffsets = set(range(100, 120))
+        expectedOffsets.update(range(200, 220))
+        self.assertEqual(expectedOffsets, offsets)
 
 
 class TestFeatureInRange(TestCase):

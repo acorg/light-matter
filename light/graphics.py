@@ -669,6 +669,11 @@ class PlotHashesInSubjectAndRead(object):
         findParams = FindParameters(significanceFraction=significanceFraction)
         self.result = database.find(self.query, findParams,
                                     storeFullAnalysis=True)
+
+        # Use an 'in' test here, as self.result.analysis is a defaultdict.
+        # Relying on a KeyError via directly accessing
+        # self.result.analysis[subjectIndex] wont work as the key would
+        # just be created and no KeyError occurs.
         if subjectIndex in self.result.analysis:
             analysis = self.result.analysis[subjectIndex]
             self.score = analysis['bestScore']
@@ -684,9 +689,10 @@ class PlotHashesInSubjectAndRead(object):
                     if showInsignificant:
                         bins.append(bin_)
         else:
+            # The subject was not matched.
             self.score = 0.0
             self.significantBinCount = 0
-            self.bins = {}
+            self.bins = []
 
         self.queryHashes = self.result.nonMatchingHashes
         backend = Backend()

@@ -37,7 +37,7 @@ class TestPlotHashesInSubjectAndRead(TestCase):
         self.assertEqual(1, len(list(hashes.queryHashes)))
         self.assertEqual(1, len(list(hashes.subjectHashes)))
 
-    def testNoQuerysubjectHashes(self):
+    def testNoQueryOrSubjectHashes(self):
         """
         If all hashes in the query also occur in the subject, queryHashes must
         be empty.
@@ -65,7 +65,7 @@ class TestPlotHashesInSubjectAndRead(TestCase):
         self.assertEqual(4, len(hashes.queryHashes))
         self.assertEqual(0, len(hashes.subjectHashes))
 
-    def testHideSignificant(self):
+    def testShowSignificant(self):
         """
         The showSignificant option must work correctly.
         """
@@ -87,7 +87,7 @@ class TestPlotHashesInSubjectAndRead(TestCase):
         self.assertEqual(0, len(hashes.queryHashes))
         self.assertEqual(12, len(hashes.subjectHashes))
 
-    def testHideInsignificant(self):
+    def testShowInsignificant(self):
         """
         The showInsignificant option must work correctly.
         """

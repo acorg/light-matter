@@ -1,5 +1,6 @@
-from warnings import warn
 from copy import copy
+from itertools import filterfalse
+from warnings import warn
 
 
 class MinHashesScore(object):
@@ -197,16 +198,25 @@ class FeatureAAScore:
         self._histogram = histogram
         self._queryLen = len(query)
         self._subjectLen = len(subject)
+
         from light.backend import Backend
         backend = Backend()
         backend.configure(params)
+
         scannedQuery = backend.scan(query)
         allQueryHashes = backend.getHashes(scannedQuery)
         self._allQueryFeatures = getHashFeatures(allQueryHashes)
+        allQueryFeaturesLength = len(scannedQuery.coveredIndices())
 
         scannedSubject = backend.scan(subject)
         allSubjectHashes = backend.getHashes(scannedSubject)
         self._allSubjectFeatures = getHashFeatures(allSubjectHashes)
+        allSubjectFeaturesLength = len(scannedSubject.coveredIndices())
+
+        # Work out whether the query or the subject have more covered indices.
+        self._normaliseByQuery = True
+        if allQueryFeaturesLength > allSubjectFeaturesLength:
+            self._normaliseByQuery = False
 
     def calculateScore(self, binIndex):
         """
@@ -217,6 +227,9 @@ class FeatureAAScore:
         the subject and the query. The denominator is the number of AA
         locations that are in features which are in all hashes in the matching
         regions of the query and subject.
+        Leaving the score like this would mean that a short match can have the
+        same score as a long match. To account for this, the quotient from
+        above is multiplied by the matched fraction of the shorter sequence.
 
         @param binIndex: The C{int} index of the bin to examine.
         @return: The C{float} score of that bin.
@@ -265,10 +278,42 @@ class FeatureAAScore:
         totalOffsetCount = matchedOffsetCount + (
             len(unmatchedQueryOffsets) + len(unmatchedSubjectOffsets))
 
+        # The calculation of the fraction to normalise by length consists of
+        # three parts: the numerator is the matchedOffsetCount + either the
+        # unmatchedQueryOffsets or the unmatchedSubjectOffsets. The denominator
+        # is the numerator + the length of hashes in either subject or query
+        # which are outside the matched region. The sequence with less covered
+        # indices is used to do the normalisation.
+
+        offsetsNotInMatch = set()
+        if self._normaliseByQuery:
+            for feature in filterfalse(
+                    lambda f: featureInRange(f, minQueryOffset,
+                                             maxQueryOffset),
+                    self._allQueryFeatures - matchedQueryFeatures):
+                offsetsNotInMatch.update(feature.coveredOffsets())
+            numerator = matchedOffsetCount + len(unmatchedQueryOffsets)
+        else:
+            for feature in filterfalse(
+                    lambda f: featureInRange(f, minSubjectOffset,
+                                             maxSubjectOffset),
+                    self._allSubjectFeatures - matchedSubjectFeatures):
+                offsetsNotInMatch.update(feature.coveredOffsets())
+            numerator = matchedOffsetCount + len(unmatchedSubjectOffsets)
+
+        denominator = numerator + len(offsetsNotInMatch)
+
         try:
-            return matchedOffsetCount / totalOffsetCount
+            normaliser = numerator / denominator
         except ZeroDivisionError:
-            return 0.0
+            normaliser = 1.0
+
+        try:
+            score = matchedOffsetCount / totalOffsetCount
+        except ZeroDivisionError:
+            score = 0.0
+
+        return score * normaliser
 
 
 ALL_SCORE_CLASSES = (MinHashesScore, FeatureMatchingScore, FeatureAAScore)

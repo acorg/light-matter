@@ -290,7 +290,7 @@ class FeatureAAScore:
                                          maxQueryOffset),
                 self._allQueryFeatures - matchedQueryFeatures):
             offsetsNotInMatchQuery.update(feature.coveredOffsets())
-        numeratorQuery = (len(matchedSubjectOffsets) +
+        numeratorQuery = (len(matchedQueryOffsets) +
                           len(unmatchedQueryOffsets))
         denominatorQuery = numeratorQuery + len(offsetsNotInMatchQuery)
 

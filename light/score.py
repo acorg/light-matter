@@ -1,4 +1,5 @@
 from warnings import warn
+from copy import copy
 
 
 class MinHashesScore(object):
@@ -89,6 +90,34 @@ def featureInRange(feature, minOffset, maxOffset):
         (feature.offset + feature.length - 1) <= maxOffset)
 
 
+def getHashFeatures(readHashes):
+    """
+    Extract all features from hashes returned by backend.getHashes().
+
+    @param readHashes: The result from calling backend.getHashes().
+    @return: A C{set} of all features (landmarks and trig points) that are in
+        the hashes returned from calling backend.getHashes().
+    """
+    allFeatures = set()
+
+    for hash_ in readHashes:
+        for offsetPair in readHashes[hash_]['offsets']:
+            # Make sure all landmarks and trigPoints added to allFeatures have
+            # the correct offsets. Note that a hash might occur in more than
+            # one location on the sequence, which means that a landmark or
+            # trigPoint will have to be added to allFeatures twice but with
+            # different offsets.
+            landmark = copy(readHashes[hash_]['landmark'])
+            trigPoint = copy(readHashes[hash_]['trigPoint'])
+            landmark.offset = offsetPair[0]
+            trigPoint.offset = offsetPair[1]
+
+            allFeatures.add(landmark)
+            allFeatures.add(trigPoint)
+
+    return allFeatures
+
+
 class FeatureMatchingScore:
     """
     Calculates the score for histogram bins based on the features present
@@ -176,23 +205,30 @@ class FeatureAAScore:
         scannedQuery = backend.scan(query)
         self._allQueryFeatures = set(scannedQuery.landmarks +
                                      scannedQuery.trigPoints)
+        allQueryHashes = backend.getHashes(scannedQuery)
+        self._allQueryHashes = getHashFeatures(allQueryHashes)
+
         scannedSubject = backend.scan(subject)
         self._allSubjectFeatures = set(scannedSubject.landmarks +
                                        scannedSubject.trigPoints)
+        allSubjectHashes = backend.getHashes(scannedSubject)
+        self._allSubjectHashes = getHashFeatures(allSubjectHashes)
 
     def calculateScore(self, binIndex):
         """
         Calculates the score for a given histogram bin.
 
         The score is a quotient. In the numerator, we have the number of AA
-        locations that are in features that occur in both the query and the
-        subject in the match. The denominator is the number of AA locations
-        that are in all features in the matching regions of the query and
-        subject.
+        locations that are in features that are in hashes that match between
+        the subject and the query. The denominator is the number of AA
+        locations that are in features which are in all hashes in the matching
+        regions of the query and subject.
 
         @param binIndex: The C{int} index of the bin to examine.
         @return: The C{float} score of that bin.
         """
+        # Get the features and their offsets which match in subject and query.
+        # These will be used to calculate the numerator of the score.
         matchedQueryFeatures, matchedQueryOffsets = histogramBinFeatures(
             self._histogram[binIndex], 'query')
 
@@ -205,10 +241,13 @@ class FeatureAAScore:
         minSubjectOffset = min(matchedSubjectOffsets, default=0)
         maxSubjectOffset = max(matchedSubjectOffsets, default=self._subjectLen)
 
+        # Get all features and their offsets which are present in the subject
+        # and the query within the matched region. These will be used to
+        # calculate the denominator.
         unmatchedQueryOffsets = set()
         for feature in filter(
                 lambda f: featureInRange(f, minQueryOffset, maxQueryOffset),
-                self._allQueryFeatures - matchedQueryFeatures):
+                self._allQueryHashes - matchedQueryFeatures):
             unmatchedQueryOffsets.update(feature.coveredOffsets())
         # The unmatched offsets shouldn't contain any offsets that were
         # matched. This can occur if an unmatched feature overlaps with a
@@ -219,7 +258,7 @@ class FeatureAAScore:
         for feature in filter(
                 lambda f: featureInRange(f, minSubjectOffset,
                                          maxSubjectOffset),
-                self._allSubjectFeatures - matchedSubjectFeatures):
+                self._allSubjectHashes - matchedSubjectFeatures):
             unmatchedSubjectOffsets.update(feature.coveredOffsets())
         # The unmatched offsets shouldn't contain any offsets that were
         # matched. This can occur if an unmatched feature overlaps with a

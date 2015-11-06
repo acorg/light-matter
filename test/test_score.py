@@ -1,16 +1,19 @@
 import warnings
 from unittest import TestCase
 
-from dark.reads import AARead
+from dark.reads import AARead, Reads
 
 from light.features import Landmark, TrigPoint
 from light.parameters import Parameters, FindParameters
 from light.subject import Subject
 from light.score import (
     MinHashesScore, FeatureMatchingScore, FeatureAAScore, histogramBinFeatures,
-    featureInRange)
+    featureInRange, getHashFeatures)
 from light.histogram import Histogram
 from light.landmarks import AlphaHelix
+from light.landmarks import AminoAcids as AminoAcidsLm
+from light.trig import Peaks, AminoAcids
+from light.performance import affinity
 
 
 class TestMinHashesScore(TestCase):
@@ -266,6 +269,117 @@ class TestFeatureInRange(TestCase):
         """
         landmark = Landmark('AlphaHelix', 'A', 100, 20)
         self.assertTrue(featureInRange(landmark, 10, 200))
+
+
+class TestGetHashFeatures(TestCase):
+    """
+    Tests for the light.score.getHashFeatures function.
+    """
+    def testNoHashes(self):
+        """
+        If no hashes are passed in, the returned set must be empty.
+        """
+        hashes = {}
+        result = getHashFeatures(hashes)
+        self.assertEqual(set(), result)
+
+    def testOneHashOneLocation(self):
+        """
+        If one hash in one location is passed in, two features must be
+        returned.
+        """
+        helixAt0 = Landmark(AlphaHelix.NAME, AlphaHelix.SYMBOL, 0, 9, 2)
+        peakAt10 = TrigPoint(Peaks.NAME, Peaks.SYMBOL, 10)
+
+        hashes = {
+            'A2:A2:15': {
+                'landmark': helixAt0,
+                'offsets': [[0, 10]],
+                'trigPoint': peakAt10,
+            }
+        }
+
+        result = getHashFeatures(hashes)
+        self.assertEqual(set([helixAt0, peakAt10]), result)
+
+    def testOneHashTwoLocations(self):
+        """
+        If a hash which occurs in two locations is passed in, four features
+        with the right offsets must be returned.
+        """
+        helixAt0 = Landmark(AlphaHelix.NAME, AlphaHelix.SYMBOL, 0, 9, 2)
+        peakAt10 = TrigPoint(Peaks.NAME, Peaks.SYMBOL, 10)
+        helixAt30 = Landmark(AlphaHelix.NAME, AlphaHelix.SYMBOL, 30, 9, 2)
+        peakAt40 = TrigPoint(Peaks.NAME, Peaks.SYMBOL, 40)
+
+        hashes = {
+            'A2:A2:15': {
+                'landmark': helixAt0,
+                'offsets': [[0, 10], [30, 40]],
+                'trigPoint': peakAt10,
+            }
+        }
+
+        result = getHashFeatures(hashes)
+        self.assertEqual(set([helixAt0, peakAt10, helixAt30, peakAt40]),
+                         result)
+
+    def testTwoHashesTwoLocations(self):
+        """
+        If two hashes in two different locations are passed in, the four
+        correct features must be returned.
+        """
+        helixAt0 = Landmark(AlphaHelix.NAME, AlphaHelix.SYMBOL, 0, 9, 2)
+        peakAt10 = TrigPoint(Peaks.NAME, Peaks.SYMBOL, 10)
+        helixAt15 = Landmark(AlphaHelix.NAME, AlphaHelix.SYMBOL, 15, 9, 2)
+        peakAt13 = TrigPoint(Peaks.NAME, Peaks.SYMBOL, 13)
+
+        hashes = {
+            'A2:A2:15': {
+                'landmark': helixAt0,
+                'offsets': [[0, 10]],
+                'trigPoint': peakAt10,
+            },
+            'A2:P:-2': {
+                'landmark': helixAt15,
+                'offsets': [[15, 13]],
+                'trigPoint': peakAt13,
+            },
+        }
+
+        result = getHashFeatures(hashes)
+        self.assertEqual(set([helixAt0, peakAt10, helixAt15, peakAt13]),
+                         result)
+
+    def testTwoHashesOneOfThemInTwoLocations(self):
+        """
+        If two hashes, one of which occurs in two locations are passed in, six
+        features with the correct offsets must be returned.
+        """
+        helixAt0 = Landmark(AlphaHelix.NAME, AlphaHelix.SYMBOL, 0, 9, 2)
+        peakAt10 = TrigPoint(Peaks.NAME, Peaks.SYMBOL, 10)
+        helixAt30 = Landmark(AlphaHelix.NAME, AlphaHelix.SYMBOL, 30, 9, 2)
+        peakAt40 = TrigPoint(Peaks.NAME, Peaks.SYMBOL, 40)
+        helixAt15 = Landmark(AlphaHelix.NAME, AlphaHelix.SYMBOL, 15, 9, 2)
+        peakAt13 = TrigPoint(Peaks.NAME, Peaks.SYMBOL, 13)
+
+        hashes = {
+            'A2:A2:15': {
+                'landmark': helixAt0,
+                'offsets': [[0, 10], [30, 40]],
+                'trigPoint': peakAt10,
+            },
+            'A2:P:-2': {
+                'landmark': helixAt15,
+                'offsets': [[15, 13]],
+                'trigPoint': peakAt13,
+            },
+        }
+
+        result = getHashFeatures(hashes)
+        self.assertEqual(set([helixAt0, peakAt10, helixAt30, peakAt40,
+                         helixAt15, peakAt13]),
+                         result)
 
 
 class TestFeatureMatchingScore(TestCase):
@@ -638,7 +752,7 @@ class TestFeatureAAScore(TestCase):
     def testOneHashInBin(self):
         """
         A bin containing one hash must have a score of 1.0 if the query and
-        subject have no additional (non-matching) features.
+        subject have no additional (non-matching) hashes.
         """
         queryLandmark = Landmark('AlphaHelix', 'A', 100, 20)
         queryTrigPoint = TrigPoint('Peak', 'P', 110)
@@ -662,7 +776,7 @@ class TestFeatureAAScore(TestCase):
         """
         A bin containing one hash that occurs in two place must have a score
         of 1.0 if the query and subject have no additional (non-matching)
-        features.
+        hashes.
         """
         queryLandmark1 = Landmark('AlphaHelix', 'A', 100, 20)
         queryTrigPoint1 = TrigPoint('Peak', 'P', 110)
@@ -694,10 +808,10 @@ class TestFeatureAAScore(TestCase):
         faas = FeatureAAScore(histogram, query, subject, params)
         self.assertEqual(1.0, faas.calculateScore(0))
 
-    def testOneHashInBinQueryHasOneFeatureOutsideMatch(self):
+    def testOneHashInBinQueryHasOneHashOutsideMatch(self):
         """
         A bin containing one hash must have a score of 1.0 if the query has an
-        additional feature that is outside the match area.
+        additional hash that is outside the match area.
         """
         queryLandmark = Landmark('AlphaHelix', 'A', 100, 20)
         queryTrigPoint = TrigPoint('Peak', 'P', 110)
@@ -711,16 +825,16 @@ class TestFeatureAAScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix], [])
-        query = AARead('id', 'FRRRFRRRF')
+        params = Parameters([AlphaHelix, AminoAcidsLm], [])
+        query = AARead('id', 'FRRRFRRRF' + 3 * 'A' + 'C')
         subject = Subject('id2', 'A', 0)
         faas = FeatureAAScore(histogram, query, subject, params)
         self.assertEqual(1.0, faas.calculateScore(0))
 
-    def testOneHashInBinQueryHasTwoFeaturesOutsideMatch(self):
+    def testOneHashInBinQueryHasTwoHashesOutsideMatch(self):
         """
         A bin containing one hash must have a score of 1.0 if the query has two
-        additional features that are outside the match area.
+        additional hashes that are outside the match area.
         """
         queryLandmark = Landmark('AlphaHelix', 'A', 100, 20)
         queryTrigPoint = TrigPoint('Peak', 'P', 110)
@@ -734,16 +848,17 @@ class TestFeatureAAScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix], [])
-        query = AARead('id', 'FRRRFRRRF' + ('F' * 200) + 'FRRRFRRRF')
+        params = Parameters([AlphaHelix, AminoAcidsLm], [AminoAcids])
+        query = AARead('id', 'FRRRFRRRF' + ('F' * 200) + 'FRRRFRRRF' + 3 * 'A'
+                       + 'C' + 3 * 'A' + 'W')
         subject = Subject('id2', 'A', 0)
         faas = FeatureAAScore(histogram, query, subject, params)
         self.assertEqual(1.0, faas.calculateScore(0))
 
-    def testOneHashInBinQueryAndSubjectHaveOneFeaturesOutsideMatch(self):
+    def testOneHashInBinQueryAndSubjectHaveOneHashOutsideMatch(self):
         """
         A bin containing one hash must have a score of 1.0 if the query and the
-        subject each have one additional feature that are both outside the
+        subject each have one additional hash that are both outside the
         match area.
         """
         queryLandmark = Landmark('AlphaHelix', 'A', 100, 20)
@@ -758,17 +873,17 @@ class TestFeatureAAScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix], [])
-        query = AARead('id', 'FRRRFRRRF')
-        subject = Subject('id2', ('F' * 200) + 'FRRRFRRRF', 0)
+        params = Parameters([AlphaHelix, AminoAcidsLm], [])
+        query = AARead('id', 'FRRRFRRRF' + 3 * 'A' + 'C')
+        subject = Subject('id2', ('F' * 200) + 'FRRRFRRRF' + 5 * 'A' + 'C', 0)
         faas = FeatureAAScore(histogram, query, subject, params)
         self.assertEqual(1.0, faas.calculateScore(0))
 
-    def testOneHashInBinQueryHasOneUnmatchedFeatureInsideMatch(self):
+    def testOneHashInBinQueryHasOneUnmatchedHashInsideMatch(self):
         """
         A bin containing one hash where the landmark and trig point do not
         overlap must have the correct score if the query has an additional
-        feature that is inside the match area.
+        non-matching hash that is inside the match area.
         """
         queryLandmark = Landmark('AlphaHelix', 'A', 0, 20)
         queryTrigPoint = TrigPoint('Peak', 'P', 50)
@@ -782,24 +897,24 @@ class TestFeatureAAScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix], [])
-        query = AARead('id', 20 * 'A' + 'FRRRFRRRF')
+        params = Parameters([AlphaHelix, AminoAcidsLm], [])
+        query = AARead('id', 20 * 'A' + 'FRRRFRRRF' + 2 * 'A' + 'C')
         subject = Subject('id2', 'A', 0)
         faas = FeatureAAScore(histogram, query, subject, params)
-        self.assertEqual((21 + 21) / (21 + 21 + 9),
+        self.assertEqual((21 + 21) / (21 + 21 + 10),
                          faas.calculateScore(0))
 
-    def testOneHashInBinQueryHasOneUnmatchedFeatureExactlySpanningMatch(self):
+    def testOneHashInBinQueryHasOneUnmatchedHashExactlySpanningMatch(self):
         """
         A bin containing one hash must have a the correct score if the query
-        has an additional feature that exactly spans the match area but the
-        additional feature's offsets match those of the match (and so do not
+        has an additional hash that exactly spans the match area but the
+        additional hashes's offsets match those of the match (and so do not
         affect the score).
         """
         queryLandmark = Landmark('AlphaHelix', 'A', 0, 9)
-        queryTrigPoint = TrigPoint('Peak', 'P', 5)
+        queryTrigPoint = TrigPoint('Peak', 'P', 13)
         subjectLandmark = Landmark('AlphaHelix', 'A', 0, 9)
-        subjectTrigPoint = TrigPoint('Peak', 'P', 5)
+        subjectTrigPoint = TrigPoint('Peak', 'P', 13)
         histogram = Histogram(1)
         histogram.add(44, {
             'queryLandmark': queryLandmark,
@@ -808,18 +923,18 @@ class TestFeatureAAScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix], [])
-        query = AARead('id', 'FRRRFRRRF')
+        params = Parameters([AlphaHelix, AminoAcidsLm], [])
+        query = AARead('id', 'FRRRFRRRF' + 4 * 'A' + 'C')
         subject = Subject('id2', 'A', 0)
         faas = FeatureAAScore(histogram, query, subject, params)
         self.assertEqual(
             (9 + 9) / (9 + 9),
             faas.calculateScore(0))
 
-    def testOneHashInBinQueryHasOneUnmatchedFeatureExceedingMatch(self):
+    def testOneHashInBinQueryHasOneUnmatchedHashExceedingMatch(self):
         """
         A bin containing one hash must have a score of 1.0 if the query has
-        an additional feature that exceeds the match area on both sides.
+        an additional hash that exceeds the match area on both sides.
         """
         queryLandmark = Landmark('AlphaHelix', 'A', 2, 5)
         queryTrigPoint = TrigPoint('Peak', 'P', 5)
@@ -833,13 +948,13 @@ class TestFeatureAAScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix], [])
-        query = AARead('id', 'FRRRFRRRF')
+        params = Parameters([AlphaHelix, AminoAcidsLm], [])
+        query = AARead('id', 'FRRRFRRRF' + 20 * 'A' + 'C')
         subject = Subject('id2', 'A', 0)
         faas = FeatureAAScore(histogram, query, subject, params)
         self.assertEqual(1.0, faas.calculateScore(0))
 
-    def testOneHashInBinQueryHasTwoUnmatchedFeatureInsideMatch(self):
+    def testOneHashInBinQueryHasTwoUnmatchedFeaturesInsideMatch(self):
         """
         A bin containing one hash must have the correct score if the query has
         two additional features that are inside the match area but which do not
@@ -857,13 +972,11 @@ class TestFeatureAAScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix], [])
-        query = AARead('id', 22 * 'A' + 'FRRRFRRRFAFRRRFRRRF')
+        params = Parameters([AlphaHelix], [AminoAcids])
+        query = AARead('id', 22 * 'A' + 'WAAW')
         subject = Subject('id2', 'A', 0)
         faas = FeatureAAScore(histogram, query, subject, params)
-        self.assertEqual(
-            ((20 + 1) + (20 + 1)) / ((20 + 1) + (20 + 1) + (2 * 9)),
-            faas.calculateScore(0))
+        self.assertEqual(1.0, faas.calculateScore(0))
 
     def testOneHashInBinQueryHasOneUnmatchedFeatureOverlappingMatchLeft(self):
         """
@@ -942,10 +1055,41 @@ class TestFeatureAAScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint2,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix], [])
+        params = Parameters([AlphaHelix, AminoAcidsLm], [])
         query = AARead('id', 20 * 'A' + 'FRRRFRRRF')
-        subject = Subject('id2', 25 * 'A' + 'FRRRFRRRFRRRF', 0)
+        subject = Subject('id2', 25 * 'A' + 'FRRRFRRRFRRRF' + 2 * 'A' + 'C', 0)
         faas = FeatureAAScore(histogram, query, subject, params)
         matched = (3 + 1) + (5 + 1) + (3 + 1) + (5 + 1)
-        total = matched + 9 + 13
+        total = matched + 13 + 1
         self.assertEqual(matched / total, faas.calculateScore(0))
+
+    def testCompareEqualSequencesScoreMustBeOne(self):
+        """
+        If a sequence is compared to itself, the score must be 1.0.
+        """
+        findParams = FindParameters(significanceFraction=0.01,
+                                    scoreMethod='FeatureAAScore')
+        pichninde = AARead('pichninde', 'RLKFGLSYKEQVGGNRELYVGDLNTKLTTRLIEDYS'
+                                        'ESLMQNMRYTCLNNEKEFERALLDMKSVVRQSGLAV'
+                                        'SMDHSKWGPHMSPVIFAALLKGLEFNLKDGSEVPNA'
+                                        'AIVNILLWHIHKMVEVPFNVVEAYMKGFLKRGLGMM'
+                                        'DKGGCTIAEEFMFGYFEKGKVPSHISSVLDMGQGIL'
+                                        'HNTSDLYGLITEQFINYALELCYGVRFISYTSSDDE'
+                                        'IMLSLNEAFKFKDRDELNVDLVLDCMEFHYFLSDKL'
+                                        'NKFVSPKTVVGTFASEFKSRFFIWSQEVPLLTKFVA'
+                                        'AALH')
+        dbReads = Reads()
+        dbReads.add(pichninde)
+        bunya = affinity.affinityMatrix(dbReads, findParams,
+                                        landmarkNames=['AlphaHelix',
+                                                       'AlphaHelix_3_10',
+                                                       'AlphaHelix_pi',
+                                                       'AminoAcidsLm',
+                                                       'BetaStrand',
+                                                       'BetaTurn', 'Prosite'],
+                                        trigPointNames=['AminoAcids', 'Peaks',
+                                                        'Troughs'],
+                                        distanceBase=1.01, limitPerLandmark=50,
+                                        minDistance=1, maxDistance=100,
+                                        subjects=dbReads)
+        self.assertEqual(1.0, bunya[0][0])

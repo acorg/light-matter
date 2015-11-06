@@ -1,3 +1,4 @@
+from warnings import warn
 from random import uniform
 import matplotlib.pyplot as plt
 from matplotlib import patches
@@ -646,8 +647,9 @@ class PlotHashesInSubjectAndRead(object):
     query. 3) Hashes that match in subject and query. These can subsequently
     be plotted.
 
-    @param query: an AARead instance of the sequence of the query.
-    @param subject: an AARead instance of the sequence of the subject.
+    @param query: An AARead instance of the sequence of the query.
+    @param subject: An AARead instance of the sequence of the subject.
+    @param findParams: An instance of C{FindParameters}.
     @param significanceFraction: The C{float} fraction of all (landmark,
         trig point) pairs for a scannedRead that need to fall into the
         same histogram bucket for that bucket to be considered a
@@ -656,20 +658,19 @@ class PlotHashesInSubjectAndRead(object):
         be included in the set of hashes that match query and subject.
     @param showInsignificant: If C{True}, hashes from insignificant bins will
         be included in the set of hashes that match query and subject.
-    @param onlyShowBestBin: If C{True}, only show the bin with the best
+    @param showBestBinOnly: If C{True}, only show the bin with the best
         score. Warn if there are multiple bins with the same high score.
     @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
         for additional keywords, all of which are optional.
     """
-    def __init__(self, query, subject, significanceFraction=None,
-                 showSignificant=True, showInsignificant=True,
-                 onlyShowBestBin=False, **kwargs):
+    def __init__(self, query, subject, findParams=None, showSignificant=True,
+                 showInsignificant=True, showBestBinOnly=False, **kwargs):
         self.query = query
         self.subject = subject
 
         database = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
         _, subjectIndex, _ = database.addSubject(subject)
-        findParams = FindParameters(significanceFraction=significanceFraction)
+        findParams = findParams or FindParameters()
         self.result = database.find(self.query, findParams,
                                     storeFullAnalysis=True)
 
@@ -682,14 +683,22 @@ class PlotHashesInSubjectAndRead(object):
             self.score = analysis['bestScore']
             self.significantBinCount = len(analysis['significantBins'])
 
-            # If onlyShowBestBin is true, we need significantBins to be
+            # If showBestBinOnly is true, we need significantBins to be
             # non-empty in order to have a bin to examine.  This is because
             # insignificant bins do not have a score computed for them.
             # Note that the scores of the bins are sorted (best first) in
             # the Result class, so the first bin is the one with the best
             # score.
-            if onlyShowBestBin and analysis['significantBins']:
+            if showBestBinOnly and analysis['significantBins']:
                 self.bins = [analysis['significantBins'][0]['bin']]
+
+                if len(analysis['significantBins']) > 1 and (
+                        analysis['significantBins'][0]['score'] ==
+                        analysis['significantBins'][1]['score']):
+                    warn('Multiple bins share the best score (%f). '
+                         'Displaying just one of them.' %
+                         analysis['significantBins'][0]['score'],
+                         RuntimeWarning)
             else:
                 significantBinIndices = set(
                     [bin_['index'] for bin_ in analysis['significantBins']])

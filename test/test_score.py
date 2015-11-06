@@ -826,7 +826,7 @@ class TestFeatureAAScore(TestCase):
         })
         histogram.finalize()
         params = Parameters([AlphaHelix, AminoAcidsLm], [])
-        query = AARead('id', 'FRRRFRRRF' + 3 * 'A' + 'C')
+        query = AARead('id', 'FRRRFRRRFAAAC')
         subject = Subject('id2', 'A', 0)
         faas = FeatureAAScore(histogram, query, subject, params)
         self.assertEqual(1.0, faas.calculateScore(0))

@@ -109,11 +109,9 @@ def getHashFeatures(readHashes):
             # different offsets.
             landmark = copy(hashInfo['landmark'])
             trigPoint = copy(hashInfo['trigPoint'])
-            landmark.offset = offsetPair[0]
-            trigPoint.offset = offsetPair[1]
+            landmark.offset, trigPoint.offset = offsetPair
 
-            allFeatures.add(landmark)
-            allFeatures.add(trigPoint)
+            allFeatures.update([landmark, trigPoint])
 
     return allFeatures
 

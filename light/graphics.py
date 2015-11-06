@@ -578,9 +578,9 @@ def plotFeatureSquare(read, significanceFraction=None, readsAx=None, **kwargs):
     return scannedQuery
 
 
-def plotHorizontalPairPanel(sequences, equalizeXAxes=True,
-                            significanceFraction=None, showSignificant=True,
-                            showInsignificant=True, showUpper=True,
+def plotHorizontalPairPanel(sequences, findParams=None, equalizeXAxes=True,
+                            showSignificant=True, showInsignificant=True,
+                            showBestBinOnly=False, showUpper=True,
                             showLower=False, showDiagonal=True, **kwargs):
     """
     Plot a panel of paired horizontally aligned sequences showing matching
@@ -589,16 +589,15 @@ def plotHorizontalPairPanel(sequences, equalizeXAxes=True,
 
     @param sequences: Either A C{str} filename of sequences to consider or
         a C{light.reads.Reads} instance.
+    @param findParams: An instance of C{FindParameters}.
     @param equalizeXAxes: if C{True}, adjust the X axis on each sub-plot
         to cover the same range (the maximum range of all sub-plots).
-    @param significanceFraction: The C{float} fraction of all (landmark,
-        trig point) pairs for a scannedRead that need to fall into the
-        same histogram bucket for that bucket to be considered a
-        significant match with a database title.
     @param showSignificant: If C{True}, hashes from significant bins will
         be included in the set of hashes that match query and subject.
     @param showInsignificant: If C{True}, hashes from igsignificant bins will
         be included in the set of hashes that match query and subject.
+    @param showBestBinOnly: If C{True}, only show the bin with the best
+        score. Warn if there are multiple bins with the same high score.
     @param showUpper: If C{True}, show the sub-plots in the upper triangle.
         of the panel.
     @param showLower: If C{True}, show the sub-plots in the lower triangle.
@@ -627,9 +626,10 @@ def plotHorizontalPairPanel(sequences, equalizeXAxes=True,
         @param ax: The matplotlib axis for the sub-plot.
         """
         plotter = PlotHashesInSubjectAndRead(
-            reads[row], reads[col], significanceFraction=significanceFraction,
+            reads[row], reads[col], findParams,
             showSignificant=showSignificant,
-            showInsignificant=showInsignificant, database=database)
+            showInsignificant=showInsignificant,
+            showBestBinOnly=showBestBinOnly, database=database)
         return plotter.plotHorizontal(ax)
 
     return _rectangularPanel(

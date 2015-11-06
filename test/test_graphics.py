@@ -1,5 +1,7 @@
+import warnings
 from unittest import TestCase
 
+from light.parameters import FindParameters
 from light.graphics import PlotHashesInSubjectAndRead
 
 from dark.reads import AARead
@@ -109,3 +111,70 @@ class TestPlotHashesInSubjectAndRead(TestCase):
         self.assertEqual(0, len(hashes.matchingHashes))
         self.assertEqual(11, len(hashes.queryHashes))
         self.assertEqual(9, len(hashes.subjectHashes))
+
+    def testShowBestBinOnly(self):
+        """
+        The showBestBinOnly option must work correctly, by setting the 'bins'
+        attribute to contain just one bin.
+        """
+
+        A = 'FRRRFRRRFXXXXXX'
+        C = 'FRRRRFRRRRFXXXXXX'
+
+        subject = AARead('subject', 5 * A + C + 2 * A)
+        query = AARead('query', 5 * A)
+
+        findParams = FindParameters(significanceFraction=0.01)
+
+        # There are 11 significant bins.
+        hashes = PlotHashesInSubjectAndRead(
+            query, subject, findParams,
+            landmarkNames=['AlphaHelix', 'AlphaHelix_pi'], trigPointNames=[],
+            distanceBase=1.025, limitPerLandmark=50, minDistance=1,
+            maxDistance=100, showInsignificant=False)
+        self.assertEqual(11, len(hashes.bins))
+
+        bestScore = hashes.result.analysis['bestScore']
+
+        # Same input, but restricting ourselves to only the single most
+        # significant bin:
+        hashes = PlotHashesInSubjectAndRead(
+            query, subject, findParams,
+            landmarkNames=['AlphaHelix', 'AlphaHelix_pi'], trigPointNames=[],
+            distanceBase=1.025, limitPerLandmark=50, minDistance=1,
+            maxDistance=100, showInsignificant=False, showBestBinOnly=True)
+        self.assertEqual(1, len(hashes.bins))
+
+        # Check that the best bin when we use onlyShowBestBin has the same
+        # score as the bin we get when we don't use onlyShowBestBin.
+        self.assertEqual(bestScore, hashes.result.analysis['bestScore'])
+
+    def testShowBestBinOnlyIssuesWarning(self):
+        """
+        The showBestBinOnly option must issue a warning when more than one bin
+        has the best score.
+        """
+
+        A = 'FRRRFRRRFXXXXXX'
+        C = 'FRRRRFRRRRFXXXXXX'
+
+        subject = AARead('subject', 5 * A + C + 2 * A)
+        query = AARead('query', 5 * A)
+
+        findParams = FindParameters(significanceFraction=0.01,
+                                    scoreMethod='FeatureAAScore')
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
+            PlotHashesInSubjectAndRead(
+                query, subject, findParams,
+                landmarkNames=['AlphaHelix', 'AlphaHelix_pi'],
+                trigPointNames=[], distanceBase=1.025, limitPerLandmark=50,
+                minDistance=1, maxDistance=100, showInsignificant=False,
+                showBestBinOnly=True)
+
+            self.assertEqual(1, len(w))
+            self.assertTrue(issubclass(w[0].category, RuntimeWarning))
+            error = ('Multiple bins share the best score (1.000000). '
+                     'Displaying just one of them.')
+            self.assertIn(error, str(w[0].message))

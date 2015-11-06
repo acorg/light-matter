@@ -1,3 +1,4 @@
+from warnings import warn
 from random import uniform
 import matplotlib.pyplot as plt
 from matplotlib import patches
@@ -195,7 +196,7 @@ def plotHistogramPanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
         @param col: The C{int} panel column.
         @param ax: The matplotlib axis for the sub-plot.
         """
-        return plotHistogram(reads[row], col,
+        return plotHistogram(reads[row], reads[col],
                              significanceMethod=significanceMethod,
                              significanceFraction=significanceFraction,
                              readsAx=ax, showMean=showMean,
@@ -577,9 +578,9 @@ def plotFeatureSquare(read, significanceFraction=None, readsAx=None, **kwargs):
     return scannedQuery
 
 
-def plotHorizontalPairPanel(sequences, equalizeXAxes=True,
-                            significanceFraction=None, showSignificant=True,
-                            showInsignificant=True, showUpper=True,
+def plotHorizontalPairPanel(sequences, findParams=None, equalizeXAxes=True,
+                            showSignificant=True, showInsignificant=True,
+                            showBestBinOnly=False, showUpper=True,
                             showLower=False, showDiagonal=True, **kwargs):
     """
     Plot a panel of paired horizontally aligned sequences showing matching
@@ -588,16 +589,15 @@ def plotHorizontalPairPanel(sequences, equalizeXAxes=True,
 
     @param sequences: Either A C{str} filename of sequences to consider or
         a C{light.reads.Reads} instance.
+    @param findParams: An instance of C{FindParameters}.
     @param equalizeXAxes: if C{True}, adjust the X axis on each sub-plot
         to cover the same range (the maximum range of all sub-plots).
-    @param significanceFraction: The C{float} fraction of all (landmark,
-        trig point) pairs for a scannedRead that need to fall into the
-        same histogram bucket for that bucket to be considered a
-        significant match with a database title.
     @param showSignificant: If C{True}, hashes from significant bins will
         be included in the set of hashes that match query and subject.
     @param showInsignificant: If C{True}, hashes from igsignificant bins will
         be included in the set of hashes that match query and subject.
+    @param showBestBinOnly: If C{True}, only show the bin with the best
+        score. Warn if there are multiple bins with the same high score.
     @param showUpper: If C{True}, show the sub-plots in the upper triangle.
         of the panel.
     @param showLower: If C{True}, show the sub-plots in the lower triangle.
@@ -626,9 +626,10 @@ def plotHorizontalPairPanel(sequences, equalizeXAxes=True,
         @param ax: The matplotlib axis for the sub-plot.
         """
         plotter = PlotHashesInSubjectAndRead(
-            reads[row], reads[col], significanceFraction=significanceFraction,
+            reads[row], reads[col], findParams,
             showSignificant=showSignificant,
-            showInsignificant=showInsignificant, database=database)
+            showInsignificant=showInsignificant,
+            showBestBinOnly=showBestBinOnly, database=database)
         return plotter.plotHorizontal(ax)
 
     return _rectangularPanel(
@@ -646,8 +647,9 @@ class PlotHashesInSubjectAndRead(object):
     query. 3) Hashes that match in subject and query. These can subsequently
     be plotted.
 
-    @param query: an AARead instance of the sequence of the query.
-    @param subject: an AARead instance of the sequence of the subject.
+    @param query: An AARead instance of the sequence of the query.
+    @param subject: An AARead instance of the sequence of the subject.
+    @param findParams: An instance of C{FindParameters}.
     @param significanceFraction: The C{float} fraction of all (landmark,
         trig point) pairs for a scannedRead that need to fall into the
         same histogram bucket for that bucket to be considered a
@@ -656,17 +658,19 @@ class PlotHashesInSubjectAndRead(object):
         be included in the set of hashes that match query and subject.
     @param showInsignificant: If C{True}, hashes from insignificant bins will
         be included in the set of hashes that match query and subject.
+    @param showBestBinOnly: If C{True}, only show the bin with the best
+        score. Warn if there are multiple bins with the same high score.
     @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
         for additional keywords, all of which are optional.
     """
-    def __init__(self, query, subject, significanceFraction=None,
-                 showSignificant=True, showInsignificant=True, **kwargs):
+    def __init__(self, query, subject, findParams=None, showSignificant=True,
+                 showInsignificant=True, showBestBinOnly=False, **kwargs):
         self.query = query
         self.subject = subject
 
         database = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
         _, subjectIndex, _ = database.addSubject(subject)
-        findParams = FindParameters(significanceFraction=significanceFraction)
+        findParams = findParams or FindParameters()
         self.result = database.find(self.query, findParams,
                                     storeFullAnalysis=True)
 
@@ -677,17 +681,35 @@ class PlotHashesInSubjectAndRead(object):
         if subjectIndex in self.result.analysis:
             analysis = self.result.analysis[subjectIndex]
             self.score = analysis['bestScore']
-            significantBinIndices = set(
-                [bin_['index'] for bin_ in analysis['significantBins']])
-            self.significantBinCount = len(significantBinIndices)
-            self.bins = bins = []
-            for binIndex, bin_ in enumerate(analysis['histogram'].bins):
-                if binIndex in significantBinIndices:
-                    if showSignificant:
-                        bins.append(bin_)
-                else:
-                    if showInsignificant:
-                        bins.append(bin_)
+            self.significantBinCount = len(analysis['significantBins'])
+
+            # If showBestBinOnly is true, we need significantBins to be
+            # non-empty in order to have a bin to examine.  This is because
+            # insignificant bins do not have a score computed for them.
+            # Note that the scores of the bins are sorted (best first) in
+            # the Result class, so the first bin is the one with the best
+            # score.
+            if showBestBinOnly and analysis['significantBins']:
+                self.bins = [analysis['significantBins'][0]['bin']]
+
+                if len(analysis['significantBins']) > 1 and (
+                        analysis['significantBins'][0]['score'] ==
+                        analysis['significantBins'][1]['score']):
+                    warn('Multiple bins share the best score (%f). '
+                         'Displaying just one of them.' %
+                         analysis['significantBins'][0]['score'],
+                         RuntimeWarning)
+            else:
+                significantBinIndices = set(
+                    [bin_['index'] for bin_ in analysis['significantBins']])
+                self.bins = bins = []
+                for binIndex, bin_ in enumerate(analysis['histogram'].bins):
+                    if binIndex in significantBinIndices:
+                        if showSignificant:
+                            bins.append(bin_)
+                    else:
+                        if showInsignificant:
+                            bins.append(bin_)
         else:
             # The subject was not matched.
             self.score = 0.0

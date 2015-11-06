@@ -81,12 +81,13 @@ def featureInRange(feature, minOffset, maxOffset):
 
     @param feature: A C{light.features._Feature} subclass (i.e., a
         landmark or a trig point).
-    @param minOffset: The minimum allowed offset for the feature start.
+    @param minOffset: The minimum allowed offset for the feature start. If
+        C{None} is passed, no feature is considered in range.
     @param maxOffset: The maximum allowed offset for the feature end.
     @return: A C{bool} to indicate whether the feature falls completely
         within the allowed range.
     """
-    return feature.offset >= minOffset and (
+    return minOffset is not None and feature.offset >= minOffset and (
         (feature.offset + feature.length - 1) <= maxOffset)
 
 
@@ -161,10 +162,10 @@ class FeatureMatchingScore:
         matchScore = self._findParams.featureMatchScore * (
             len(queryFeatures) + len(subjectFeatures))
 
-        minQueryOffset = min(queryOffsets, default=0)
-        maxQueryOffset = max(queryOffsets, default=self._queryLen)
-        minSubjectOffset = min(subjectOffsets, default=0)
-        maxSubjectOffset = max(subjectOffsets, default=self._subjectLen)
+        minQueryOffset = min(queryOffsets, default=None)
+        maxQueryOffset = max(queryOffsets, default=None)
+        minSubjectOffset = min(subjectOffsets, default=None)
+        maxSubjectOffset = max(subjectOffsets, default=None)
 
         # The mismatch score is applied to all features that are not
         # among those in the bin and which fall inside the max and min
@@ -230,10 +231,10 @@ class FeatureAAScore:
             self._histogram[binIndex], 'subject')
 
         # Get the extreme offsets in the matched region of query and subject.
-        minQueryOffset = min(matchedQueryOffsets, default=0)
-        maxQueryOffset = max(matchedQueryOffsets, default=self._queryLen)
-        minSubjectOffset = min(matchedSubjectOffsets, default=0)
-        maxSubjectOffset = max(matchedSubjectOffsets, default=self._subjectLen)
+        minQueryOffset = min(matchedQueryOffsets, default=None)
+        maxQueryOffset = max(matchedQueryOffsets, default=None)
+        minSubjectOffset = min(matchedSubjectOffsets, default=None)
+        maxSubjectOffset = max(matchedSubjectOffsets, default=None)
 
         # Get all features and their offsets which are present in the subject
         # and the query within the matched region. These will be used to

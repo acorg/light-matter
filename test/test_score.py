@@ -206,6 +206,13 @@ class TestFeatureInRange(TestCase):
     """
     Tests for the light.score.featureInRange function.
     """
+    def testNoMatchWithNoneMinOffset(self):
+        """
+        If the min offset is passed as None, featureInRange must return False.
+        """
+        landmark = Landmark('AlphaHelix', 'A', 100, 20)
+        self.assertFalse(featureInRange(landmark, None, 2000))
+
     def testNoMatchLeft(self):
         """
         If the feature is to the left of the min offset, featureInRange
@@ -395,6 +402,20 @@ class TestFeatureMatchingScore(TestCase):
         histogram.finalize()
         params = Parameters([], [])
         query = AARead('id1', 'A')
+        subject = Subject('id2', 'A', 0)
+        fms = FeatureMatchingScore(histogram, query, subject, params)
+        self.assertEqual(0.0, fms.calculateScore(0))
+
+    def testEmptyBinQueryHasOneFeature(self):
+        """
+        A bin containing no hashes must have a score of zero, even if the query
+        has a feature. There is no match region, so no unmatched features can
+        fall inside it.
+        """
+        histogram = Histogram(1)
+        histogram.finalize()
+        params = Parameters([AlphaHelix], [])
+        query = AARead('id', 'FRRRFRRRF')
         subject = Subject('id2', 'A', 0)
         fms = FeatureMatchingScore(histogram, query, subject, params)
         self.assertEqual(0.0, fms.calculateScore(0))
@@ -745,6 +766,20 @@ class TestFeatureAAScore(TestCase):
         histogram.finalize()
         params = Parameters([], [])
         query = AARead('id1', 'A')
+        subject = Subject('id2', 'A', 0)
+        faas = FeatureAAScore(histogram, query, subject, params)
+        self.assertEqual(0.0, faas.calculateScore(0))
+
+    def testEmptyBinQueryHasOneFeature(self):
+        """
+        A bin containing no hashes must have a score of zero, even if the query
+        has a feature. There is no match region, so no unmatched features can
+        fall inside it.
+        """
+        histogram = Histogram(1)
+        histogram.finalize()
+        params = Parameters([AlphaHelix], [])
+        query = AARead('id', 'FRRRFRRRF')
         subject = Subject('id2', 'A', 0)
         faas = FeatureAAScore(histogram, query, subject, params)
         self.assertEqual(0.0, faas.calculateScore(0))

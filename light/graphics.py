@@ -818,16 +818,14 @@ class PlotHashesInSubjectAndRead(object):
         horizontalPad = 0.02 * maxLen
 
         # A line for query hashes that match the subject.
-        ax.plot([0.0, len(self.query)], [qyY, qyY],
-                '-', color='#bbbbbb')
+        ax.plot([0.0, len(self.query)], [qyY, qyY], '-', color='#bbbbbb')
 
         # A lower line for query hashes that don't match the subject.
         ax.plot([0.0, len(self.query)], [qyY - missY, qyY - missY],
                 '-', color='#cccccc')
 
         # A line for subject hashes that match the query.
-        ax.plot([0.0, len(self.subject)], [sjY, sjY],
-                '-', color='#bbbbbb')
+        ax.plot([0.0, len(self.subject)], [sjY, sjY], '-', color='#bbbbbb')
 
         # A higher line for subject hashes that don't match the query.
         ax.plot([0.0, len(self.subject)], [sjY + missY, sjY + missY],
@@ -839,6 +837,32 @@ class PlotHashesInSubjectAndRead(object):
         qyPlotted = set()
         sjPlotted = set()
         diagPlotted = set()
+
+        def plotFeature(feature, y, queryOrSubject):
+            """
+            Plot a feature.
+
+            @param feature: A C{light.features._Feature} instance.
+            @param y: The C{float} Y offset.
+            @param queryOrSubject: A C{str}, either 'query' or 'subject'.
+            """
+            seen = {
+                'query': qyPlotted,
+                'subject': sjPlotted,
+            }[queryOrSubject]
+
+            if feature in seen:
+                return
+
+            seen.add(feature)
+            color = COLORS[feature.symbol]
+
+            if isinstance(feature, Landmark):
+                ax.plot([feature.offset, feature.offset + feature.length],
+                        [y, y], '-', color=color, linewidth=3)
+            else:
+                ax.plot([feature.offset, feature.offset], [y + tpY, y - tpY],
+                        '-', color=color, linewidth=3)
 
         # Plot matching hashes on the query and subject horizontal lines,
         # and plot diagonal lines between the two (using colors corresponding
@@ -856,43 +880,16 @@ class PlotHashesInSubjectAndRead(object):
             for match in bin_:
                 qlm = match['queryLandmark']
                 qtp = match['queryTrigPoint']
-                qyLmOffset = qlm.offset
-                qyTpOffset = qtp.offset
-
                 slm = match['subjectLandmark']
                 stp = match['subjectTrigPoint']
-                sjLmOffset = slm.offset
-                sjTpOffset = stp.offset
 
-                lmName = qlm.name
-                tpName = qtp.name
-                lmColor = COLORS[qlm.symbol]
-                tpColor = COLORS[qtp.symbol]
-                namesSeen.update([lmName, tpName])
+                namesSeen.update([qlm.name, qtp.name])
 
-                # Landmark in the query.
-                if qlm not in qyPlotted:
-                    qyPlotted.add(qlm)
-                    ax.plot([qyLmOffset, qyLmOffset + qlm.length], [qyY, qyY],
-                            '-', color=lmColor, linewidth=3)
-
-                # Trig point in the query.
-                if qtp not in qyPlotted:
-                    qyPlotted.add(qtp)
-                    ax.plot([qyTpOffset, qyTpOffset], [qyY + tpY, qyY - tpY],
-                            '-', color=tpColor, linewidth=3)
-
-                # Landmark in the subject.
-                if slm not in sjPlotted:
-                    sjPlotted.add(slm)
-                    ax.plot([sjLmOffset, sjLmOffset + slm.length], [sjY, sjY],
-                            '-', color=lmColor, linewidth=3)
-
-                # Trig point in the subject.
-                if stp not in sjPlotted:
-                    sjPlotted.add(stp)
-                    ax.plot([sjTpOffset, sjTpOffset], [sjY + tpY, sjY - tpY],
-                            '-', color=lmColor, linewidth=3)
+                # Plot the landmark and trig point in the query and subject.
+                plotFeature(qlm, qyY, 'query')
+                plotFeature(qtp, qyY, 'query')
+                plotFeature(slm, sjY, 'subject')
+                plotFeature(stp, sjY, 'subject')
 
                 # Add x-axis offset jitter to diagonal line plotting, so we
                 # can see more of them in case of overlap.
@@ -905,7 +902,7 @@ class PlotHashesInSubjectAndRead(object):
                 key = (qtp, stp)
                 if key not in diagPlotted:
                     diagPlotted.add(key)
-                    ax.plot([qyTpOffset + xJitter, sjTpOffset + xJitter],
+                    ax.plot([qtp.offset + xJitter, stp.offset + xJitter],
                             [qyY, sjY], '--', color=binColor)
 
                 # Solid diagonal line connecting start of landmark in query
@@ -913,10 +910,8 @@ class PlotHashesInSubjectAndRead(object):
                 key = (qlm, slm)
                 if key not in diagPlotted:
                     diagPlotted.add(key)
-                    ax.plot([qyLmOffset + xJitter, sjLmOffset + xJitter],
+                    ax.plot([qlm.offset + xJitter, slm.offset + xJitter],
                             [qyY, sjY], '-', color=binColor)
-
-                # Don't plot the end of the landmarks, to reduce clutter.
 
         # Query-only hashes, plotted just below (-missY) the query line.
         #
@@ -926,28 +921,13 @@ class PlotHashesInSubjectAndRead(object):
         for hashInfo in self.queryHashes.values():
             lm = hashInfo['landmark']
             tp = hashInfo['trigPoint']
-            lmName = lm.name
-            tpName = tp.name
-            lmColor = COLORS[lm.symbol]
-            tpColor = COLORS[tp.symbol]
-            namesSeen.update([lmName, tpName])
+            namesSeen.update([lm.name, tp.name])
             for offsets in hashInfo['offsets']:
                 landmark = copy(lm)
                 trigPoint = copy(tp)
                 landmark.offset, trigPoint.offset = offsets
-                # Landmark.
-                if landmark not in qyPlotted:
-                    qyPlotted.add(landmark)
-                    ax.plot([landmark.offset,
-                             landmark.offset + landmark.length],
-                            [qyY - missY, qyY - missY],
-                            '-', color=lmColor, linewidth=3)
-                # Trig point.
-                if trigPoint not in qyPlotted:
-                    qyPlotted.add(trigPoint)
-                    ax.plot([trigPoint.offset, trigPoint.offset],
-                            [qyY - missY + tpY, qyY - missY - tpY],
-                            '-', color=tpColor, linewidth=3)
+                plotFeature(landmark, qyY - missY, 'query')
+                plotFeature(trigPoint, qyY - missY, 'query')
 
         # Subject-only hashes, plotted just above (+missY) the subject line.
         #
@@ -958,28 +938,13 @@ class PlotHashesInSubjectAndRead(object):
         for hashInfo in self.subjectHashes.values():
             lm = hashInfo['landmark']
             tp = hashInfo['trigPoint']
-            lmName = lm.name
-            tpName = tp.name
-            lmColor = COLORS[lm.symbol]
-            tpColor = COLORS[tp.symbol]
-            namesSeen.update([lmName, tpName])
+            namesSeen.update([lm.name, tp.name])
             for offsets in hashInfo['offsets']:
                 landmark = copy(lm)
                 trigPoint = copy(tp)
                 landmark.offset, trigPoint.offset = offsets
-                # Landmark.
-                if landmark not in sjPlotted:
-                    sjPlotted.add(landmark)
-                    ax.plot([landmark.offset,
-                             landmark.offset + landmark.length],
-                            [sjY + missY, sjY + missY],
-                            '-', color=lmColor, linewidth=3)
-                # Trig point.
-                if trigPoint not in sjPlotted:
-                    sjPlotted.add(trigPoint)
-                    ax.plot([trigPoint.offset, trigPoint.offset],
-                            [sjY + missY + tpY, sjY + missY - tpY],
-                            '-', color=tpColor, linewidth=3)
+                plotFeature(landmark, sjY + missY, 'subject')
+                plotFeature(trigPoint, sjY + missY, 'subject')
 
         if createdAx:
             if namesSeen:

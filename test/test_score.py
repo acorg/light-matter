@@ -292,7 +292,7 @@ class TestGetHashFeatures(TestCase):
         peakAt10 = TrigPoint(Peaks.NAME, Peaks.SYMBOL, 10)
 
         hashes = {
-            'A2:A2:15': {
+            'A2:P:15': {
                 'landmark': helixAt0,
                 'offsets': [[0, 10]],
                 'trigPoint': peakAt10,
@@ -849,8 +849,7 @@ class TestFeatureAAScore(TestCase):
         })
         histogram.finalize()
         params = Parameters([AlphaHelix, AminoAcidsLm], [AminoAcids])
-        query = AARead('id', 'FRRRFRRRF' + ('F' * 200) + 'FRRRFRRRF' + 3 * 'A'
-                       + 'C' + 3 * 'A' + 'W')
+        query = AARead('id', 'FRRRFRRRF' + ('F' * 200) + 'FRRRFRRRFAAACAAAW')
         subject = Subject('id2', 'A', 0)
         faas = FeatureAAScore(histogram, query, subject, params)
         self.assertEqual(1.0, faas.calculateScore(0))
@@ -1065,7 +1064,11 @@ class TestFeatureAAScore(TestCase):
 
     def testCompareEqualSequencesScoreMustBeOne(self):
         """
-        If a sequence is compared to itself, the score must be 1.0.
+        If a sequence is compared to itself, the score must be 1.0. See
+        https://github.com/acorg/light-matter/issues/321.
+        When making distance matrices for neighbor joining trees, the diagonal
+        of the distance matrix must be 0.0. This is a real-life test that it
+        actually works.
         """
         findParams = FindParameters(significanceFraction=0.01,
                                     scoreMethod='FeatureAAScore')
@@ -1080,16 +1083,17 @@ class TestFeatureAAScore(TestCase):
                                         'AALH')
         dbReads = Reads()
         dbReads.add(pichninde)
-        bunya = affinity.affinityMatrix(dbReads, findParams,
-                                        landmarkNames=['AlphaHelix',
-                                                       'AlphaHelix_3_10',
-                                                       'AlphaHelix_pi',
-                                                       'AminoAcidsLm',
-                                                       'BetaStrand',
-                                                       'BetaTurn', 'Prosite'],
-                                        trigPointNames=['AminoAcids', 'Peaks',
-                                                        'Troughs'],
-                                        distanceBase=1.01, limitPerLandmark=50,
-                                        minDistance=1, maxDistance=100,
-                                        subjects=dbReads)
-        self.assertEqual(1.0, bunya[0][0])
+        matrix = affinity.affinityMatrix(dbReads, findParams,
+                                         landmarkNames=['AlphaHelix',
+                                                        'AlphaHelix_3_10',
+                                                        'AlphaHelix_pi',
+                                                        'AminoAcidsLm',
+                                                        'BetaStrand',
+                                                        'BetaTurn', 'Prosite'],
+                                         trigPointNames=['AminoAcids', 'Peaks',
+                                                         'Troughs'],
+                                         distanceBase=1.01,
+                                         limitPerLandmark=50,
+                                         minDistance=1, maxDistance=100,
+                                         subjects=dbReads)
+        self.assertEqual(1.0, matrix[0][0])

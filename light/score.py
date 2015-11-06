@@ -100,15 +100,15 @@ def getHashFeatures(readHashes):
     """
     allFeatures = set()
 
-    for hash_ in readHashes:
-        for offsetPair in readHashes[hash_]['offsets']:
+    for hashInfo in readHashes.values():
+        for offsetPair in hashInfo['offsets']:
             # Make sure all landmarks and trigPoints added to allFeatures have
             # the correct offsets. Note that a hash might occur in more than
             # one location on the sequence, which means that a landmark or
             # trigPoint will have to be added to allFeatures twice but with
             # different offsets.
-            landmark = copy(readHashes[hash_]['landmark'])
-            trigPoint = copy(readHashes[hash_]['trigPoint'])
+            landmark = copy(hashInfo['landmark'])
+            trigPoint = copy(hashInfo['trigPoint'])
             landmark.offset = offsetPair[0]
             trigPoint.offset = offsetPair[1]
 
@@ -203,16 +203,12 @@ class FeatureAAScore:
         backend = Backend()
         backend.configure(params)
         scannedQuery = backend.scan(query)
-        self._allQueryFeatures = set(scannedQuery.landmarks +
-                                     scannedQuery.trigPoints)
         allQueryHashes = backend.getHashes(scannedQuery)
-        self._allQueryHashes = getHashFeatures(allQueryHashes)
+        self._allQueryFeatures = getHashFeatures(allQueryHashes)
 
         scannedSubject = backend.scan(subject)
-        self._allSubjectFeatures = set(scannedSubject.landmarks +
-                                       scannedSubject.trigPoints)
         allSubjectHashes = backend.getHashes(scannedSubject)
-        self._allSubjectHashes = getHashFeatures(allSubjectHashes)
+        self._allSubjectFeatures = getHashFeatures(allSubjectHashes)
 
     def calculateScore(self, binIndex):
         """
@@ -247,7 +243,7 @@ class FeatureAAScore:
         unmatchedQueryOffsets = set()
         for feature in filter(
                 lambda f: featureInRange(f, minQueryOffset, maxQueryOffset),
-                self._allQueryHashes - matchedQueryFeatures):
+                self._allQueryFeatures - matchedQueryFeatures):
             unmatchedQueryOffsets.update(feature.coveredOffsets())
         # The unmatched offsets shouldn't contain any offsets that were
         # matched. This can occur if an unmatched feature overlaps with a
@@ -258,7 +254,7 @@ class FeatureAAScore:
         for feature in filter(
                 lambda f: featureInRange(f, minSubjectOffset,
                                          maxSubjectOffset),
-                self._allSubjectHashes - matchedSubjectFeatures):
+                self._allSubjectFeatures - matchedSubjectFeatures):
             unmatchedSubjectOffsets.update(feature.coveredOffsets())
         # The unmatched offsets shouldn't contain any offsets that were
         # matched. This can occur if an unmatched feature overlaps with a

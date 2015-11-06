@@ -207,17 +207,10 @@ class FeatureAAScore:
         scannedQuery = backend.scan(query)
         allQueryHashes = backend.getHashes(scannedQuery)
         self._allQueryFeatures = getHashFeatures(allQueryHashes)
-        allQueryFeaturesLength = len(scannedQuery.coveredIndices())
 
         scannedSubject = backend.scan(subject)
         allSubjectHashes = backend.getHashes(scannedSubject)
         self._allSubjectFeatures = getHashFeatures(allSubjectHashes)
-        allSubjectFeaturesLength = len(scannedSubject.coveredIndices())
-
-        # Work out whether the query or the subject have more covered indices.
-        self._normaliseByQuery = True
-        if allQueryFeaturesLength > allSubjectFeaturesLength:
-            self._normaliseByQuery = False
 
     def calculateScore(self, binIndex):
         """
@@ -279,6 +272,11 @@ class FeatureAAScore:
         totalOffsetCount = matchedOffsetCount + (
             len(unmatchedQueryOffsets) + len(unmatchedSubjectOffsets))
 
+        try:
+            score = matchedOffsetCount / totalOffsetCount
+        except ZeroDivisionError:
+            score = 0.0
+
         # The calculation of the fraction to normalise by length consists of
         # three parts: the numerator is the matchedOffsetCount + either the
         # unmatchedQueryOffsets or the unmatchedSubjectOffsets. The denominator
@@ -286,35 +284,37 @@ class FeatureAAScore:
         # which are outside the matched region. The sequence with less covered
         # indices is used to do the normalisation.
 
-        offsetsNotInMatch = set()
-        if self._normaliseByQuery:
-            for feature in filterfalse(
-                    lambda f: featureInRange(f, minQueryOffset,
-                                             maxQueryOffset),
-                    self._allQueryFeatures - matchedQueryFeatures):
-                offsetsNotInMatch.update(feature.coveredOffsets())
-            numerator = matchedOffsetCount + len(unmatchedQueryOffsets)
-        else:
-            for feature in filterfalse(
-                    lambda f: featureInRange(f, minSubjectOffset,
-                                             maxSubjectOffset),
-                    self._allSubjectFeatures - matchedSubjectFeatures):
-                offsetsNotInMatch.update(feature.coveredOffsets())
-            numerator = matchedOffsetCount + len(unmatchedSubjectOffsets)
+        offsetsNotInMatchQuery = set()
+        for feature in filterfalse(
+                lambda f: featureInRange(f, minQueryOffset,
+                                         maxQueryOffset),
+                self._allQueryFeatures - matchedQueryFeatures):
+            offsetsNotInMatchQuery.update(feature.coveredOffsets())
+        numeratorQuery = (len(matchedSubjectOffsets) +
+                          len(unmatchedQueryOffsets))
+        denominatorQuery = numeratorQuery + len(offsetsNotInMatchQuery)
 
-        denominator = numerator + len(offsetsNotInMatch)
-
-        try:
-            normaliser = numerator / denominator
-        except ZeroDivisionError:
-            normaliser = 1.0
+        offsetsNotInMatchSubject = set()
+        for feature in filterfalse(
+                lambda f: featureInRange(f, minSubjectOffset,
+                                         maxSubjectOffset),
+                self._allSubjectFeatures - matchedSubjectFeatures):
+            offsetsNotInMatchSubject.update(feature.coveredOffsets())
+        numeratorSubject = (len(matchedSubjectOffsets) +
+                            len(unmatchedSubjectOffsets))
+        denominatorSubject = numeratorSubject + len(offsetsNotInMatchSubject)
 
         try:
-            score = matchedOffsetCount / totalOffsetCount
+            normaliserQuery = numeratorQuery / denominatorQuery
         except ZeroDivisionError:
-            score = 0.0
+            normaliserQuery = 1.0
 
-        return score * normaliser
+        try:
+            normaliserSubject = numeratorSubject / denominatorSubject
+        except ZeroDivisionError:
+            normaliserSubject = 1.0
+
+        return score * max(normaliserQuery, normaliserSubject)
 
 
 ALL_SCORE_CLASSES = (MinHashesScore, FeatureMatchingScore, FeatureAAScore)

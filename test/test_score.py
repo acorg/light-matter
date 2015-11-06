@@ -912,7 +912,7 @@ class TestFeatureAAScore(TestCase):
         query = AARead('id', 'FRRRFRRRF' + 'AAACAAAW')
         subject = Subject('id2', 'FRRRFRRRF' + 'AAAC', 0)
         faas = FeatureAAScore(histogram, query, subject, params)
-        self.assertEqual(0.8, faas.calculateScore(0))
+        self.assertEqual(0.6666666666666666, faas.calculateScore(0))
 
     def testOneHashInBinQuery1Subject2HashOutsideMatch(self):
         """
@@ -935,7 +935,7 @@ class TestFeatureAAScore(TestCase):
         subject = AARead('id', 'FRRRFRRRF' + 'AAACAAAW')
         query = Subject('id2', 'FRRRFRRRF' + 'AAAC', 0)
         faas = FeatureAAScore(histogram, query, subject, params)
-        self.assertEqual(0.8, faas.calculateScore(0))
+        self.assertEqual(0.6666666666666666, faas.calculateScore(0))
 
     def testOneHashInBinQueryHasOneUnmatchedHashInsideMatch(self):
         """

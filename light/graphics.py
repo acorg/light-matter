@@ -1,3 +1,4 @@
+from copy import copy
 from warnings import warn
 from random import uniform
 import matplotlib.pyplot as plt
@@ -840,8 +841,8 @@ class PlotHashesInSubjectAndRead(object):
         diagPlotted = set()
 
         # Plot matching hashes on the query and subject horizontal lines,
-        # as well as diagonal lines between the two (using colors that
-        # correspond to histogram bins).
+        # and plot diagonal lines between the two (using colors corresponding
+        # to histogram bins).
         #
         # Note that the dictionary keys of the items in histogram bins are
         # different from those in the query-only hashes and subject-only
@@ -855,43 +856,41 @@ class PlotHashesInSubjectAndRead(object):
             for match in bin_:
                 qlm = match['queryLandmark']
                 qtp = match['queryTrigPoint']
-                lmName = qlm.name
-                tpName = qtp.name
-                lmColor = COLORS[qlm.symbol]
-                tpColor = COLORS[qtp.symbol]
                 qyLmOffset = qlm.offset
                 qyTpOffset = qtp.offset
+
                 slm = match['subjectLandmark']
                 stp = match['subjectTrigPoint']
                 sjLmOffset = slm.offset
                 sjTpOffset = stp.offset
+
+                lmName = qlm.name
+                tpName = qtp.name
+                lmColor = COLORS[qlm.symbol]
+                tpColor = COLORS[qtp.symbol]
                 namesSeen.update([lmName, tpName])
 
                 # Landmark in the query.
-                key = (lmName, qyLmOffset, qlm.length)
-                if key not in qyPlotted:
-                    qyPlotted.add(key)
+                if qlm not in qyPlotted:
+                    qyPlotted.add(qlm)
                     ax.plot([qyLmOffset, qyLmOffset + qlm.length], [qyY, qyY],
                             '-', color=lmColor, linewidth=3)
 
                 # Trig point in the query.
-                key = (tpName, qyTpOffset)
-                if key not in qyPlotted:
-                    qyPlotted.add(key)
+                if qtp not in qyPlotted:
+                    qyPlotted.add(qtp)
                     ax.plot([qyTpOffset, qyTpOffset], [qyY + tpY, qyY - tpY],
                             '-', color=tpColor, linewidth=3)
 
                 # Landmark in the subject.
-                key = (lmName, sjLmOffset, slm.length)
-                if key not in sjPlotted:
-                    sjPlotted.add(key)
+                if slm not in sjPlotted:
+                    sjPlotted.add(slm)
                     ax.plot([sjLmOffset, sjLmOffset + slm.length], [sjY, sjY],
                             '-', color=lmColor, linewidth=3)
 
                 # Trig point in the subject.
-                key = (tpName, sjTpOffset)
-                if key not in sjPlotted:
-                    sjPlotted.add(key)
+                if stp not in sjPlotted:
+                    sjPlotted.add(stp)
                     ax.plot([sjTpOffset, sjTpOffset], [sjY + tpY, sjY - tpY],
                             '-', color=lmColor, linewidth=3)
 
@@ -903,7 +902,7 @@ class PlotHashesInSubjectAndRead(object):
                 # subject.  Plot this before the diagonal landmark lines as
                 # it's arguably less important (there's a chance we will
                 # paint over it with the landmark lines).
-                key = (tpName, qyTpOffset, sjTpOffset)
+                key = (qtp, stp)
                 if key not in diagPlotted:
                     diagPlotted.add(key)
                     ax.plot([qyTpOffset + xJitter, sjTpOffset + xJitter],
@@ -911,13 +910,13 @@ class PlotHashesInSubjectAndRead(object):
 
                 # Solid diagonal line connecting start of landmark in query
                 # and subject.
-                key = (lmName, qyLmOffset, sjLmOffset)
+                key = (qlm, slm)
                 if key not in diagPlotted:
                     diagPlotted.add(key)
                     ax.plot([qyLmOffset + xJitter, sjLmOffset + xJitter],
                             [qyY, sjY], '-', color=binColor)
 
-                # Don't plot the end of the landmark, to reduce clutter.
+                # Don't plot the end of the landmarks, to reduce clutter.
 
         # Query-only hashes, plotted just below (-missY) the query line.
         #
@@ -932,19 +931,21 @@ class PlotHashesInSubjectAndRead(object):
             lmColor = COLORS[lm.symbol]
             tpColor = COLORS[tp.symbol]
             namesSeen.update([lmName, tpName])
-            for lmOffset, tpOffset in hashInfo['offsets']:
+            for offsets in hashInfo['offsets']:
+                landmark = copy(lm)
+                trigPoint = copy(tp)
+                landmark.offset, trigPoint.offset = offsets
                 # Landmark.
-                key = (lmName, lmOffset, lm.length)
-                if key not in qyPlotted:
-                    qyPlotted.add(key)
-                    ax.plot([lmOffset, lmOffset + lm.length],
+                if landmark not in qyPlotted:
+                    qyPlotted.add(landmark)
+                    ax.plot([landmark.offset,
+                             landmark.offset + landmark.length],
                             [qyY - missY, qyY - missY],
                             '-', color=lmColor, linewidth=3)
                 # Trig point.
-                key = (tpName, tpOffset)
-                if key not in qyPlotted:
-                    qyPlotted.add(key)
-                    ax.plot([tpOffset, tpOffset],
+                if trigPoint not in qyPlotted:
+                    qyPlotted.add(trigPoint)
+                    ax.plot([trigPoint.offset, trigPoint.offset],
                             [qyY - missY + tpY, qyY - missY - tpY],
                             '-', color=tpColor, linewidth=3)
 
@@ -962,19 +963,21 @@ class PlotHashesInSubjectAndRead(object):
             lmColor = COLORS[lm.symbol]
             tpColor = COLORS[tp.symbol]
             namesSeen.update([lmName, tpName])
-            for lmOffset, tpOffset in hashInfo['offsets']:
+            for offsets in hashInfo['offsets']:
+                landmark = copy(lm)
+                trigPoint = copy(tp)
+                landmark.offset, trigPoint.offset = offsets
                 # Landmark.
-                key = (lmName, lmOffset, lm.length)
-                if key not in sjPlotted:
-                    sjPlotted.add(key)
-                    ax.plot([lmOffset, lmOffset + lm.length],
+                if landmark not in sjPlotted:
+                    sjPlotted.add(landmark)
+                    ax.plot([landmark.offset,
+                             landmark.offset + landmark.length],
                             [sjY + missY, sjY + missY],
                             '-', color=lmColor, linewidth=3)
                 # Trig point.
-                key = (tpName, tpOffset)
-                if key not in sjPlotted:
-                    sjPlotted.add(key)
-                    ax.plot([tpOffset, tpOffset],
+                if trigPoint not in sjPlotted:
+                    sjPlotted.add(trigPoint)
+                    ax.plot([trigPoint.offset, trigPoint.offset],
                             [sjY + missY + tpY, sjY + missY - tpY],
                             '-', color=tpColor, linewidth=3)
 

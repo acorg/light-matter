@@ -845,6 +845,7 @@ class PlotHashesInSubjectAndRead(object):
             @param feature: A C{light.features._Feature} instance.
             @param y: The C{float} Y offset.
             @param queryOrSubject: A C{str}, either 'query' or 'subject'.
+            @raise KeyError: If C{queryOrSubject} is not 'query' or 'subject'.
             """
             seen = {
                 'query': qyPlotted,

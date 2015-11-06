@@ -196,7 +196,7 @@ def plotHistogramPanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
         @param col: The C{int} panel column.
         @param ax: The matplotlib axis for the sub-plot.
         """
-        return plotHistogram(reads[row], col,
+        return plotHistogram(reads[row], reads[col],
                              significanceMethod=significanceMethod,
                              significanceFraction=significanceFraction,
                              readsAx=ax, showMean=showMean,

@@ -875,6 +875,7 @@ class PlotHashesInSubjectAndRead(object):
 
         nonEmptyBins = [b for b in self.bins if len(b)]
         binColors = colors.color_palette('hls', len(nonEmptyBins))
+        jitterRange = 0.005 * max(len(self.query), len(self.subject))
 
         for bin_, binColor in zip(nonEmptyBins, binColors):
             for match in bin_:
@@ -893,13 +894,14 @@ class PlotHashesInSubjectAndRead(object):
 
                 # Add x-axis offset jitter to diagonal line plotting, so we
                 # can see more of them in case of overlap.
-                xJitter = uniform(-0.2, 0.2) if addJitter else 0.0
+                xJitter = (
+                    uniform(-jitterRange, jitterRange) if addJitter else 0.0)
 
                 # Dashed diagonal line connecting trig point in query and
                 # subject.  Plot this before the diagonal landmark lines as
                 # it's arguably less important (there's a chance we will
                 # paint over it with the landmark lines).
-                key = (qtp, stp)
+                key = (qtp, stp, 'trigPoint')
                 if key not in diagPlotted:
                     diagPlotted.add(key)
                     ax.plot([qtp.offset + xJitter, stp.offset + xJitter],
@@ -907,7 +909,7 @@ class PlotHashesInSubjectAndRead(object):
 
                 # Solid diagonal line connecting start of landmark in query
                 # and subject.
-                key = (qlm, slm)
+                key = (qlm, slm, 'landmark')
                 if key not in diagPlotted:
                     diagPlotted.add(key)
                     ax.plot([qlm.offset + xJitter, slm.offset + xJitter],

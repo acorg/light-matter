@@ -692,7 +692,6 @@ class PlotHashesInSubjectAndRead(object):
             # score.
             if showBestBinOnly and analysis['significantBins']:
                 self.bins = [analysis['significantBins'][0]['bin']]
-
                 if len(analysis['significantBins']) > 1 and (
                         analysis['significantBins'][0]['score'] ==
                         analysis['significantBins'][1]['score']):

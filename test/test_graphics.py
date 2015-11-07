@@ -158,7 +158,7 @@ class TestPlotHashesInSubjectAndRead(TestCase):
         A = 'FRRRFRRRFXXXXXX'
         C = 'FRRRRFRRRRFXXXXXX'
 
-        subject = AARead('subject', 5 * A + C + 2 * A)
+        subject = AARead('subject', 5 * A + C + 5 * A)
         query = AARead('query', 5 * A)
 
         findParams = FindParameters(significanceFraction=0.01,

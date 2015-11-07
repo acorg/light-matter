@@ -270,7 +270,7 @@ def plotHistogram(query, subject, significanceMethod=None,
             fig = plt.figure()
             readsAx = fig.add_subplot(111)
             readsAx.set_title(title)
-            readsAx.set_xlabel('Offsets (database-read)')
+            readsAx.set_xlabel('Offset delta (subject - query)', fontsize=14)
             readsAx.xaxis.tick_bottom()
 
         readsAx.bar(center, counts, align='center', width=width)
@@ -424,8 +424,8 @@ def plotHistogramLine(query, subject, significanceMethod=False,
         if readsAx is None:
             fig = plt.figure()
             readsAx = fig.add_subplot(111)
-            readsAx.set_title(title)
-            readsAx.set_ylabel('Number of hashes')
+            readsAx.set_title(title, fontsize=17)
+            readsAx.set_ylabel('Number of hashes', fontsize=14)
             readsAx.xaxis.tick_bottom()
 
         readsAx.plot(range(len(counts)), counts)
@@ -499,8 +499,8 @@ def plotHistogramLines(sequences, significanceFraction=None, **kwargs):
                 counts = sorted([len(bin) for bin in histogram.bins])
                 readsAx.plot(range(len(counts)), counts)
 
-    readsAx.set_title('Histogram line plot')
-    readsAx.set_ylabel('Number of hashes')
+    readsAx.set_title('Histogram line plot', fontsize=17)
+    readsAx.set_ylabel('Number of hashes', fontsize=14)
     readsAx.xaxis.tick_bottom()
 
 
@@ -772,9 +772,9 @@ class PlotHashesInSubjectAndRead(object):
             'Hashes: matching=%d, subject-only=%d, query-only=%d' % (
                 firstTitleLine, self.score or 0.0, self.significantBinCount,
                 len(self.matchingHashes), len(self.subjectHashes),
-                len(self.queryHashes)))
-        readsAx.set_ylabel('Query: %s' % self.query.id)
-        readsAx.set_xlabel('Subject: %s' % self.subject.id)
+                len(self.queryHashes)), fontsize=17)
+        readsAx.set_ylabel('Query: %s' % self.query.id, fontsize=14)
+        readsAx.set_xlabel('Subject: %s' % self.subject.id, fontsize=14)
         readsAx.set_xlim(-0.5, len(self.subject))
         readsAx.set_ylim(-0.5, len(self.query))
         readsAx.grid()
@@ -802,7 +802,7 @@ class PlotHashesInSubjectAndRead(object):
         # handling, and landmarks are handled before trig points.
 
         if ax is None:
-            fig = plt.figure(figsize=(15, 10))
+            fig = plt.figure()
             ax = fig.add_subplot(111)
             createdAx = True
         else:
@@ -953,8 +953,8 @@ class PlotHashesInSubjectAndRead(object):
                 ax.legend(handles=legendHandles(namesSeen),
                           bbox_to_anchor=(0.0, 1.02, 1.0, 0.102), loc=3,
                           ncol=2, borderaxespad=0.5)
-            ax.set_xlabel(fill('Subject (top): %s\n\n\nQuery (bottom): %s' %
-                               (self.subject.id, self.query.id)), fontsize=17)
+            ax.set_xlabel(fill('%s (top) vs %s (bottom)' %
+                               (self.subject.id, self.query.id)), fontsize=14)
 
         minX = -horizontalPad
         maxX = maxLen + horizontalPad
@@ -1025,7 +1025,7 @@ def plotLandmarksInSequences(sequences, maxTickLabelLength=None, **kwargs):
                      [y - 0.125, y + 0.125], '-',
                      color=COLORS[trigPoint.symbol], linewidth=2)
 
-    ax.set_title('Landmarks and features\n', fontsize=15)
+    ax.set_title('Landmarks and features\n', fontsize=17)
     ax.spines['top'].set_linewidth(0)
     ax.spines['right'].set_linewidth(0)
     ax.spines['bottom'].set_linewidth(0)

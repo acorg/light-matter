@@ -1,3 +1,4 @@
+from copy import copy
 from warnings import warn
 from random import uniform
 import matplotlib.pyplot as plt
@@ -269,7 +270,7 @@ def plotHistogram(query, subject, significanceMethod=None,
             fig = plt.figure()
             readsAx = fig.add_subplot(111)
             readsAx.set_title(title)
-            readsAx.set_xlabel('Offsets (database-read)')
+            readsAx.set_xlabel('Offset delta (subject - query)', fontsize=14)
             readsAx.xaxis.tick_bottom()
 
         readsAx.bar(center, counts, align='center', width=width)
@@ -423,8 +424,8 @@ def plotHistogramLine(query, subject, significanceMethod=False,
         if readsAx is None:
             fig = plt.figure()
             readsAx = fig.add_subplot(111)
-            readsAx.set_title(title)
-            readsAx.set_ylabel('Number of hashes')
+            readsAx.set_title(title, fontsize=17)
+            readsAx.set_ylabel('Number of hashes', fontsize=14)
             readsAx.xaxis.tick_bottom()
 
         readsAx.plot(range(len(counts)), counts)
@@ -498,8 +499,8 @@ def plotHistogramLines(sequences, significanceFraction=None, **kwargs):
                 counts = sorted([len(bin) for bin in histogram.bins])
                 readsAx.plot(range(len(counts)), counts)
 
-    readsAx.set_title('Histogram line plot')
-    readsAx.set_ylabel('Number of hashes')
+    readsAx.set_title('Histogram line plot', fontsize=17)
+    readsAx.set_ylabel('Number of hashes', fontsize=14)
     readsAx.xaxis.tick_bottom()
 
 
@@ -771,9 +772,9 @@ class PlotHashesInSubjectAndRead(object):
             'Hashes: matching=%d, subject-only=%d, query-only=%d' % (
                 firstTitleLine, self.score or 0.0, self.significantBinCount,
                 len(self.matchingHashes), len(self.subjectHashes),
-                len(self.queryHashes)))
-        readsAx.set_ylabel('Query: %s' % self.query.id)
-        readsAx.set_xlabel('Subject: %s' % self.subject.id)
+                len(self.queryHashes)), fontsize=17)
+        readsAx.set_ylabel('Query: %s' % self.query.id, fontsize=14)
+        readsAx.set_xlabel('Subject: %s' % self.subject.id, fontsize=14)
         readsAx.set_xlim(-0.5, len(self.subject))
         readsAx.set_ylim(-0.5, len(self.query))
         readsAx.grid()
@@ -801,7 +802,7 @@ class PlotHashesInSubjectAndRead(object):
         # handling, and landmarks are handled before trig points.
 
         if ax is None:
-            fig = plt.figure(figsize=(15, 10))
+            fig = plt.figure()
             ax = fig.add_subplot(111)
             createdAx = True
         else:
@@ -816,16 +817,14 @@ class PlotHashesInSubjectAndRead(object):
         horizontalPad = 0.02 * maxLen
 
         # A line for query hashes that match the subject.
-        ax.plot([0.0, len(self.query)], [qyY, qyY],
-                '-', color='#bbbbbb')
+        ax.plot([0.0, len(self.query)], [qyY, qyY], '-', color='#bbbbbb')
 
         # A lower line for query hashes that don't match the subject.
         ax.plot([0.0, len(self.query)], [qyY - missY, qyY - missY],
                 '-', color='#cccccc')
 
         # A line for subject hashes that match the query.
-        ax.plot([0.0, len(self.subject)], [sjY, sjY],
-                '-', color='#bbbbbb')
+        ax.plot([0.0, len(self.subject)], [sjY, sjY], '-', color='#bbbbbb')
 
         # A higher line for subject hashes that don't match the query.
         ax.plot([0.0, len(self.subject)], [sjY + missY, sjY + missY],
@@ -838,9 +837,36 @@ class PlotHashesInSubjectAndRead(object):
         sjPlotted = set()
         diagPlotted = set()
 
+        def plotFeature(feature, y, queryOrSubject):
+            """
+            Plot a feature.
+
+            @param feature: A C{light.features._Feature} instance.
+            @param y: The C{float} Y offset.
+            @param queryOrSubject: A C{str}, either 'query' or 'subject'.
+            @raise KeyError: If C{queryOrSubject} is not 'query' or 'subject'.
+            """
+            seen = {
+                'query': qyPlotted,
+                'subject': sjPlotted,
+            }[queryOrSubject]
+
+            if feature in seen:
+                return
+
+            seen.add(feature)
+            color = COLORS[feature.symbol]
+
+            if isinstance(feature, Landmark):
+                ax.plot([feature.offset, feature.offset + feature.length],
+                        [y, y], '-', color=color, linewidth=3)
+            else:
+                ax.plot([feature.offset, feature.offset], [y + tpY, y - tpY],
+                        '-', color=color, linewidth=3)
+
         # Plot matching hashes on the query and subject horizontal lines,
-        # as well as diagonal lines between the two (using colors that
-        # correspond to histogram bins).
+        # and plot diagonal lines between the two (using colors corresponding
+        # to histogram bins).
         #
         # Note that the dictionary keys of the items in histogram bins are
         # different from those in the query-only hashes and subject-only
@@ -849,74 +875,45 @@ class PlotHashesInSubjectAndRead(object):
 
         nonEmptyBins = [b for b in self.bins if len(b)]
         binColors = colors.color_palette('hls', len(nonEmptyBins))
+        jitterRange = 0.005 * max(len(self.query), len(self.subject))
 
         for bin_, binColor in zip(nonEmptyBins, binColors):
             for match in bin_:
                 qlm = match['queryLandmark']
                 qtp = match['queryTrigPoint']
-                lmName = qlm.name
-                tpName = qtp.name
-                lmColor = COLORS[qlm.symbol]
-                tpColor = COLORS[qtp.symbol]
-                qyLmOffset = qlm.offset
-                qyTpOffset = qtp.offset
                 slm = match['subjectLandmark']
                 stp = match['subjectTrigPoint']
-                sjLmOffset = slm.offset
-                sjTpOffset = stp.offset
-                namesSeen.update([lmName, tpName])
 
-                # Landmark in the query.
-                key = (lmName, qyLmOffset, qlm.length)
-                if key not in qyPlotted:
-                    qyPlotted.add(key)
-                    ax.plot([qyLmOffset, qyLmOffset + qlm.length], [qyY, qyY],
-                            '-', color=lmColor, linewidth=3)
+                namesSeen.update([qlm.name, qtp.name])
 
-                # Trig point in the query.
-                key = (tpName, qyTpOffset)
-                if key not in qyPlotted:
-                    qyPlotted.add(key)
-                    ax.plot([qyTpOffset, qyTpOffset], [qyY + tpY, qyY - tpY],
-                            '-', color=tpColor, linewidth=3)
-
-                # Landmark in the subject.
-                key = (lmName, sjLmOffset, slm.length)
-                if key not in sjPlotted:
-                    sjPlotted.add(key)
-                    ax.plot([sjLmOffset, sjLmOffset + slm.length], [sjY, sjY],
-                            '-', color=lmColor, linewidth=3)
-
-                # Trig point in the subject.
-                key = (tpName, sjTpOffset)
-                if key not in sjPlotted:
-                    sjPlotted.add(key)
-                    ax.plot([sjTpOffset, sjTpOffset], [sjY + tpY, sjY - tpY],
-                            '-', color=lmColor, linewidth=3)
+                # Plot the landmark and trig point in the query and subject.
+                plotFeature(qlm, qyY, 'query')
+                plotFeature(qtp, qyY, 'query')
+                plotFeature(slm, sjY, 'subject')
+                plotFeature(stp, sjY, 'subject')
 
                 # Add x-axis offset jitter to diagonal line plotting, so we
                 # can see more of them in case of overlap.
-                xJitter = uniform(-0.2, 0.2) if addJitter else 0.0
+                xJitter = (
+                    uniform(-jitterRange, jitterRange) if addJitter else 0.0)
 
                 # Dashed diagonal line connecting trig point in query and
                 # subject.  Plot this before the diagonal landmark lines as
                 # it's arguably less important (there's a chance we will
                 # paint over it with the landmark lines).
-                key = (tpName, qyTpOffset, sjTpOffset)
+                key = (qtp, stp, 'trigPoint')
                 if key not in diagPlotted:
                     diagPlotted.add(key)
-                    ax.plot([qyTpOffset + xJitter, sjTpOffset + xJitter],
+                    ax.plot([qtp.offset + xJitter, stp.offset + xJitter],
                             [qyY, sjY], '--', color=binColor)
 
                 # Solid diagonal line connecting start of landmark in query
                 # and subject.
-                key = (lmName, qyLmOffset, sjLmOffset)
+                key = (qlm, slm, 'landmark')
                 if key not in diagPlotted:
                     diagPlotted.add(key)
-                    ax.plot([qyLmOffset + xJitter, sjLmOffset + xJitter],
+                    ax.plot([qlm.offset + xJitter, slm.offset + xJitter],
                             [qyY, sjY], '-', color=binColor)
-
-                # Don't plot the end of the landmark, to reduce clutter.
 
         # Query-only hashes, plotted just below (-missY) the query line.
         #
@@ -926,26 +923,13 @@ class PlotHashesInSubjectAndRead(object):
         for hashInfo in self.queryHashes.values():
             lm = hashInfo['landmark']
             tp = hashInfo['trigPoint']
-            lmName = lm.name
-            tpName = tp.name
-            lmColor = COLORS[lm.symbol]
-            tpColor = COLORS[tp.symbol]
-            namesSeen.update([lmName, tpName])
-            for lmOffset, tpOffset in hashInfo['offsets']:
-                # Landmark.
-                key = (lmName, lmOffset, lm.length)
-                if key not in qyPlotted:
-                    qyPlotted.add(key)
-                    ax.plot([lmOffset, lmOffset + lm.length],
-                            [qyY - missY, qyY - missY],
-                            '-', color=lmColor, linewidth=3)
-                # Trig point.
-                key = (tpName, tpOffset)
-                if key not in qyPlotted:
-                    qyPlotted.add(key)
-                    ax.plot([tpOffset, tpOffset],
-                            [qyY - missY + tpY, qyY - missY - tpY],
-                            '-', color=tpColor, linewidth=3)
+            namesSeen.update([lm.name, tp.name])
+            for offsets in hashInfo['offsets']:
+                landmark = copy(lm)
+                trigPoint = copy(tp)
+                landmark.offset, trigPoint.offset = offsets
+                plotFeature(landmark, qyY - missY, 'query')
+                plotFeature(trigPoint, qyY - missY, 'query')
 
         # Subject-only hashes, plotted just above (+missY) the subject line.
         #
@@ -956,34 +940,21 @@ class PlotHashesInSubjectAndRead(object):
         for hashInfo in self.subjectHashes.values():
             lm = hashInfo['landmark']
             tp = hashInfo['trigPoint']
-            lmName = lm.name
-            tpName = tp.name
-            lmColor = COLORS[lm.symbol]
-            tpColor = COLORS[tp.symbol]
-            namesSeen.update([lmName, tpName])
-            for lmOffset, tpOffset in hashInfo['offsets']:
-                # Landmark.
-                key = (lmName, lmOffset, lm.length)
-                if key not in sjPlotted:
-                    sjPlotted.add(key)
-                    ax.plot([lmOffset, lmOffset + lm.length],
-                            [sjY + missY, sjY + missY],
-                            '-', color=lmColor, linewidth=3)
-                # Trig point.
-                key = (tpName, tpOffset)
-                if key not in sjPlotted:
-                    sjPlotted.add(key)
-                    ax.plot([tpOffset, tpOffset],
-                            [sjY + missY + tpY, sjY + missY - tpY],
-                            '-', color=tpColor, linewidth=3)
+            namesSeen.update([lm.name, tp.name])
+            for offsets in hashInfo['offsets']:
+                landmark = copy(lm)
+                trigPoint = copy(tp)
+                landmark.offset, trigPoint.offset = offsets
+                plotFeature(landmark, sjY + missY, 'subject')
+                plotFeature(trigPoint, sjY + missY, 'subject')
 
         if createdAx:
             if namesSeen:
                 ax.legend(handles=legendHandles(namesSeen),
                           bbox_to_anchor=(0.0, 1.02, 1.0, 0.102), loc=3,
                           ncol=2, borderaxespad=0.5)
-            ax.set_xlabel(fill('Subject (top): %s\n\n\nQuery (bottom): %s' %
-                               (self.subject.id, self.query.id)), fontsize=17)
+            ax.set_xlabel(fill('%s (top) vs %s (bottom)' %
+                               (self.subject.id, self.query.id)), fontsize=14)
 
         minX = -horizontalPad
         maxX = maxLen + horizontalPad
@@ -1054,7 +1025,7 @@ def plotLandmarksInSequences(sequences, maxTickLabelLength=None, **kwargs):
                      [y - 0.125, y + 0.125], '-',
                      color=COLORS[trigPoint.symbol], linewidth=2)
 
-    ax.set_title('Landmarks and features\n', fontsize=15)
+    ax.set_title('Landmarks and features\n', fontsize=17)
     ax.spines['top'].set_linewidth(0)
     ax.spines['right'].set_linewidth(0)
     ax.spines['bottom'].set_linewidth(0)

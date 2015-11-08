@@ -53,7 +53,7 @@ class MinHashesScore(object):
             'minHashCount': self._minHashCount,
             'binCount': binCount,
             'score': score,
-            'scoreMethod': self.__class__.__name__,
+            'scoreClass': self.__class__,
         }
 
         return score, analysis
@@ -70,7 +70,7 @@ class MinHashesScore(object):
         result = MultilineString(margin=margin)
 
         result.extend([
-            'Score method: %(scoreMethod)s' % analysis,
+            'Score method: %s' % analysis['scoreClass'].__name__,
             'Minimum hash count: %(minHashCount)d' % analysis,
             'Bin count: %(binCount)d' % analysis,
             'Score: %(score).4f' % analysis,
@@ -226,7 +226,7 @@ class FeatureMatchingScore:
             'matchScore': matchScore,
             'mismatchScore': mismatchScore,
             'score': score,
-            'scoreMethod': self.__class__.__name__,
+            'scoreClass': self.__class__,
         }
 
         return score, analysis
@@ -243,7 +243,7 @@ class FeatureMatchingScore:
         result = MultilineString(margin=margin)
 
         result.extend([
-            'Score method: %(scoreMethod)s' % analysis,
+            'Score method: %s' % analysis['scoreClass'].__name__,
             ('Matched offset range in query: %(minQueryOffset)d to '
              '%(maxQueryOffset)d' % analysis),
             ('Matched offset range in subject: %(minSubjectOffset)d to '
@@ -406,7 +406,7 @@ class FeatureAAScore:
             'normaliserQuery': normaliserQuery,
             'normaliserSubject': normaliserSubject,
             'score': score,
-            'scoreMethod': self.__class__.__name__,
+            'scoreClass': self.__class__,
             'totalOffsetCount': totalOffsetCount,
         }
 
@@ -424,7 +424,7 @@ class FeatureAAScore:
         result = MultilineString(margin=margin)
 
         result.extend([
-            'Score method: %(scoreMethod)s' % analysis,
+            'Score method: %s' % analysis['scoreClass'].__name__,
             ('Matched offset range in query: %(minQueryOffset)d to '
              '%(maxQueryOffset)d' % analysis),
             ('Matched offset range in subject: %(minSubjectOffset)d to '

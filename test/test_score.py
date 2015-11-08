@@ -34,7 +34,7 @@ class TestMinHashesScore(TestCase):
                 'binCount': 0,
                 'minHashCount': 0,
                 'score': score,
-                'scoreMethod': 'MinHashesScore',
+                'scoreClass': MinHashesScore,
             },
             analysis)
 
@@ -56,7 +56,7 @@ class TestMinHashesScore(TestCase):
                 'binCount': 1,
                 'minHashCount': 0,
                 'score': score,
-                'scoreMethod': 'MinHashesScore',
+                'scoreClass': MinHashesScore,
             },
             analysis)
 
@@ -76,7 +76,7 @@ class TestMinHashesScore(TestCase):
                 'binCount': 1,
                 'minHashCount': 1,
                 'score': score,
-                'scoreMethod': 'MinHashesScore',
+                'scoreClass': MinHashesScore,
             },
             analysis)
 
@@ -96,7 +96,7 @@ class TestMinHashesScore(TestCase):
                 'binCount': 1,
                 'minHashCount': 2,
                 'score': score,
-                'scoreMethod': 'MinHashesScore',
+                'scoreClass': MinHashesScore,
             },
             analysis)
 
@@ -125,13 +125,15 @@ class TestMinHashesScore(TestCase):
                 'binCount': 2,
                 'minHashCount': 1,
                 'score': score,
-                'scoreMethod': 'MinHashesScore',
+                'scoreClass': MinHashesScore,
             },
             analysis)
 
     def testPrintAnalysis(self):
         """
-        The analysis of a score calculation must print correctly.
+        The analysis of a score calculation must print correctly, whether
+        we print it using the class name explicitly or the score class that's
+        given in the analysis.
         """
         histogram = Histogram(1)
         histogram.add(444)
@@ -146,12 +148,16 @@ class TestMinHashesScore(TestCase):
             error = ('Bin contains 2 deltas for a query/subject pair with a '
                      'minimum hash count of only 1.')
             self.assertIn(error, str(w[0].message))
-        self.assertEqual((
+
+        expected = (
             'Score method: MinHashesScore\n'
             'Minimum hash count: 1\n'
             'Bin count: 2\n'
-            'Score: %.4f' % score),
-            MinHashesScore.printAnalysis(analysis))
+            'Score: %.4f' % score)
+
+        self.assertEqual(expected, MinHashesScore.printAnalysis(analysis))
+        self.assertEqual(expected,
+                         analysis['scoreClass'].printAnalysis(analysis))
 
 
 class TestHistogramBinFeatures(TestCase):
@@ -483,7 +489,7 @@ class TestFeatureMatchingScore(TestCase):
                 'minSubjectOffset': None,
                 'mismatchScore': 0.0,
                 'score': score,
-                'scoreMethod': 'FeatureMatchingScore',
+                'scoreClass': FeatureMatchingScore,
             },
             analysis)
 
@@ -510,7 +516,7 @@ class TestFeatureMatchingScore(TestCase):
                 'minSubjectOffset': None,
                 'mismatchScore': 0.0,
                 'score': score,
-                'scoreMethod': 'FeatureMatchingScore',
+                'scoreClass': FeatureMatchingScore,
             },
             analysis)
 
@@ -550,7 +556,7 @@ class TestFeatureMatchingScore(TestCase):
                 'minSubjectOffset': 100,
                 'mismatchScore': 0.0,
                 'score': score,
-                'scoreMethod': 'FeatureMatchingScore',
+                'scoreClass': FeatureMatchingScore,
             },
             analysis)
 
@@ -603,7 +609,7 @@ class TestFeatureMatchingScore(TestCase):
                 'minSubjectOffset': 101,
                 'mismatchScore': 0.0,
                 'score': score,
-                'scoreMethod': 'FeatureMatchingScore',
+                'scoreClass': FeatureMatchingScore,
             },
             analysis)
 
@@ -641,7 +647,7 @@ class TestFeatureMatchingScore(TestCase):
                 'minSubjectOffset': 100,
                 'mismatchScore': 0.0,
                 'score': score,
-                'scoreMethod': 'FeatureMatchingScore',
+                'scoreClass': FeatureMatchingScore,
             },
             analysis)
 
@@ -679,7 +685,7 @@ class TestFeatureMatchingScore(TestCase):
                 'minSubjectOffset': 100,
                 'mismatchScore': 0.0,
                 'score': score,
-                'scoreMethod': 'FeatureMatchingScore',
+                'scoreClass': FeatureMatchingScore,
             },
             analysis)
 
@@ -717,7 +723,7 @@ class TestFeatureMatchingScore(TestCase):
                 'minSubjectOffset': 100,
                 'mismatchScore': 0.0,
                 'score': score,
-                'scoreMethod': 'FeatureMatchingScore',
+                'scoreClass': FeatureMatchingScore,
             },
             analysis)
 
@@ -757,7 +763,7 @@ class TestFeatureMatchingScore(TestCase):
                 'minSubjectOffset': 0,
                 'mismatchScore': FindParameters.DEFAULT_FEATURE_MISMATCH_SCORE,
                 'score': score,
-                'scoreMethod': 'FeatureMatchingScore',
+                'scoreClass': FeatureMatchingScore,
             },
             analysis)
 
@@ -797,7 +803,7 @@ class TestFeatureMatchingScore(TestCase):
                 'minSubjectOffset': 0,
                 'mismatchScore': FindParameters.DEFAULT_FEATURE_MISMATCH_SCORE,
                 'score': score,
-                'scoreMethod': 'FeatureMatchingScore',
+                'scoreClass': FeatureMatchingScore,
             },
             analysis)
 
@@ -836,7 +842,7 @@ class TestFeatureMatchingScore(TestCase):
                 'minSubjectOffset': 2,
                 'mismatchScore': 0.0,
                 'score': score,
-                'scoreMethod': 'FeatureMatchingScore',
+                'scoreClass': FeatureMatchingScore,
             },
             analysis)
 
@@ -877,7 +883,7 @@ class TestFeatureMatchingScore(TestCase):
                 'mismatchScore': (
                     2 * FindParameters.DEFAULT_FEATURE_MISMATCH_SCORE),
                 'score': score,
-                'scoreMethod': 'FeatureMatchingScore',
+                'scoreClass': FeatureMatchingScore,
             },
             analysis)
 
@@ -917,7 +923,7 @@ class TestFeatureMatchingScore(TestCase):
                 'minSubjectOffset': 5,
                 'mismatchScore': 0.0,
                 'score': score,
-                'scoreMethod': 'FeatureMatchingScore',
+                'scoreClass': FeatureMatchingScore,
             },
             analysis)
 
@@ -957,7 +963,7 @@ class TestFeatureMatchingScore(TestCase):
                 'minSubjectOffset': 2,
                 'mismatchScore': 0.0,
                 'score': score,
-                'scoreMethod': 'FeatureMatchingScore',
+                'scoreClass': FeatureMatchingScore,
             },
             analysis)
 
@@ -999,13 +1005,15 @@ class TestFeatureMatchingScore(TestCase):
                 'minSubjectOffset': 0,
                 'mismatchScore': -1.2,
                 'score': score,
-                'scoreMethod': 'FeatureMatchingScore',
+                'scoreClass': FeatureMatchingScore,
             },
             analysis)
 
     def testPrintAnalysis(self):
         """
-        The analysis of a score calculation must print correctly.
+        The analysis of a score calculation must print correctly, whether
+        we print it using the class name explicitly or the score class that's
+        given in the analysis.
         """
         queryLandmark = Landmark('AlphaHelix', 'A', 0, 20)
         queryTrigPoint = TrigPoint('Peak', 'P', 10)
@@ -1027,14 +1035,18 @@ class TestFeatureMatchingScore(TestCase):
         fms = FeatureMatchingScore(histogram, query, subject, params,
                                    findParams)
         score, analysis = fms.calculateScore(0)
-        self.assertEqual((
+        expected = (
             'Score method: FeatureMatchingScore\n'
             'Matched offset range in query: 0 to 19\n'
             'Matched offset range in subject: 0 to 19\n'
             'Match score: 12.4000\n'
             'Mismatch score: -1.2000\n'
-            'Score: 11.2000'),
-            FeatureMatchingScore.printAnalysis(analysis))
+            'Score: 11.2000')
+
+        self.assertEqual(expected,
+                         FeatureMatchingScore.printAnalysis(analysis))
+        self.assertEqual(expected,
+                         analysis['scoreClass'].printAnalysis(analysis))
 
 
 class TestFeatureAAScore(TestCase):
@@ -1070,7 +1082,7 @@ class TestFeatureAAScore(TestCase):
                 'normaliserQuery': 1.0,
                 'normaliserSubject': 1.0,
                 'score': score,
-                'scoreMethod': 'FeatureAAScore',
+                'scoreClass': FeatureAAScore,
                 'totalOffsetCount': 0,
             },
             analysis)
@@ -1104,7 +1116,7 @@ class TestFeatureAAScore(TestCase):
                 'normaliserQuery': 1.0,
                 'normaliserSubject': 1.0,
                 'score': score,
-                'scoreMethod': 'FeatureAAScore',
+                'scoreClass': FeatureAAScore,
                 'totalOffsetCount': 0,
             },
             analysis)
@@ -1139,7 +1151,7 @@ class TestFeatureAAScore(TestCase):
                 'normaliserQuery': 1.0,
                 'normaliserSubject': 1.0,
                 'score': score,
-                'scoreMethod': 'FeatureAAScore',
+                'scoreClass': FeatureAAScore,
                 'totalOffsetCount': 0,
             },
             analysis)
@@ -1182,7 +1194,7 @@ class TestFeatureAAScore(TestCase):
                 'normaliserQuery': 1.0,
                 'normaliserSubject': 1.0,
                 'score': score,
-                'scoreMethod': 'FeatureAAScore',
+                'scoreClass': FeatureAAScore,
                 'totalOffsetCount': 40,
             },
             analysis)
@@ -1238,7 +1250,7 @@ class TestFeatureAAScore(TestCase):
                 'normaliserQuery': 1.0,
                 'normaliserSubject': 1.0,
                 'score': score,
-                'scoreMethod': 'FeatureAAScore',
+                'scoreClass': FeatureAAScore,
                 'totalOffsetCount': 40,
             },
             analysis)
@@ -1282,7 +1294,7 @@ class TestFeatureAAScore(TestCase):
                 'normaliserQuery': 0.5,
                 'normaliserSubject': 1.0,
                 'score': score,
-                'scoreMethod': 'FeatureAAScore',
+                'scoreClass': FeatureAAScore,
                 'totalOffsetCount': 20,
             },
             analysis)
@@ -1326,7 +1338,7 @@ class TestFeatureAAScore(TestCase):
                 'normaliserQuery': 10 / 21,
                 'normaliserSubject': 1.0,
                 'score': score,
-                'scoreMethod': 'FeatureAAScore',
+                'scoreClass': FeatureAAScore,
                 'totalOffsetCount': 20,
             },
             analysis)
@@ -1369,7 +1381,7 @@ class TestFeatureAAScore(TestCase):
                 'normaliserQuery': 20 / 31,
                 'normaliserSubject': 2 / 3,
                 'score': score,
-                'scoreMethod': 'FeatureAAScore',
+                'scoreClass': FeatureAAScore,
                 'totalOffsetCount': 40,
             },
             analysis)
@@ -1412,7 +1424,7 @@ class TestFeatureAAScore(TestCase):
                 'normaliserQuery': 2 / 3,
                 'normaliserSubject': 20 / 31,
                 'score': score,
-                'scoreMethod': 'FeatureAAScore',
+                'scoreClass': FeatureAAScore,
                 'totalOffsetCount': 40,
             },
             analysis)
@@ -1456,7 +1468,7 @@ class TestFeatureAAScore(TestCase):
                 'normaliserQuery': 1.0,
                 'normaliserSubject': 1.0,
                 'score': score,
-                'scoreMethod': 'FeatureAAScore',
+                'scoreClass': FeatureAAScore,
                 'totalOffsetCount': 52,
             },
             analysis)
@@ -1501,7 +1513,7 @@ class TestFeatureAAScore(TestCase):
                 'normaliserQuery': 1.0,
                 'normaliserSubject': 1.0,
                 'score': score,
-                'scoreMethod': 'FeatureAAScore',
+                'scoreClass': FeatureAAScore,
                 'totalOffsetCount': 20,
             },
             analysis)
@@ -1551,7 +1563,7 @@ class TestFeatureAAScore(TestCase):
                 'normaliserQuery': 0.5,
                 'normaliserSubject': 1.0,
                 'score': score,
-                'scoreMethod': 'FeatureAAScore',
+                'scoreClass': FeatureAAScore,
                 'totalOffsetCount': 10,
             },
             analysis)
@@ -1595,7 +1607,7 @@ class TestFeatureAAScore(TestCase):
                 'normaliserQuery': 1.0,
                 'normaliserSubject': 1.0,
                 'score': score,
-                'scoreMethod': 'FeatureAAScore',
+                'scoreClass': FeatureAAScore,
                 'totalOffsetCount': 44,
             },
             analysis)
@@ -1639,7 +1651,7 @@ class TestFeatureAAScore(TestCase):
                 'normaliserQuery': 0.8,
                 'normaliserSubject': 1.0,
                 'score': score,
-                'scoreMethod': 'FeatureAAScore',
+                'scoreClass': FeatureAAScore,
                 'totalOffsetCount': 40,
             },
             analysis)
@@ -1683,7 +1695,7 @@ class TestFeatureAAScore(TestCase):
                 'normaliserQuery': 4 / 11,
                 'normaliserSubject': 1.0,
                 'score': score,
-                'scoreMethod': 'FeatureAAScore',
+                'scoreClass': FeatureAAScore,
                 'totalOffsetCount': 8,
             },
             analysis)
@@ -1740,7 +1752,7 @@ class TestFeatureAAScore(TestCase):
                 'normaliserQuery': 1.0,
                 'normaliserSubject': 1.0,
                 'score': score,
-                'scoreMethod': 'FeatureAAScore',
+                'scoreClass': FeatureAAScore,
                 'totalOffsetCount': 44,
             },
             analysis)
@@ -1793,7 +1805,47 @@ class TestFeatureAAScore(TestCase):
                 'normaliserQuery': 1.0,
                 'normaliserSubject': 1.0,
                 'score': 1.0,
-                'scoreMethod': 'FeatureAAScore',
+                'scoreClass': FeatureAAScore,
                 'totalOffsetCount': 364,
             },
             scoreAnalysis)
+
+    def testPrintAnalysis(self):
+        """
+        The analysis of a score calculation must print correctly, whether
+        we print it using the class name explicitly or the score class that's
+        given in the analysis.
+        """
+        queryLandmark = Landmark('AlphaHelix', 'A', 5, 20)
+        queryTrigPoint = TrigPoint('Peak', 'P', 10)
+        subjectLandmark = Landmark('AlphaHelix', 'A', 5, 20)
+        subjectTrigPoint = TrigPoint('Peak', 'P', 10)
+        histogram = Histogram(1)
+        histogram.add(44, {
+            'queryLandmark': queryLandmark,
+            'queryTrigPoint': queryTrigPoint,
+            'subjectLandmark': subjectLandmark,
+            'subjectTrigPoint': subjectTrigPoint,
+        })
+        histogram.finalize()
+        params = Parameters([AlphaHelix, AminoAcidsLm], [])
+        query = AARead('id', 'FRRRFRRRFC')
+        subject = Subject('id2', 'A', 0)
+        faas = FeatureAAScore(histogram, query, subject, params)
+        score, analysis = faas.calculateScore(0)
+        self.assertEqual(1.0, score)
+
+        expected = (
+            'Score method: FeatureAAScore\n'
+            'Matched offset range in query: 5 to 24\n'
+            'Matched offset range in subject: 5 to 24\n'
+            'Total (query+subject) AA offsets in matched hashes: 40\n'
+            'Total (query+subject) AA offsets in hashes in matched '
+            'region: 40\n'
+            'Matched region score 1.0000 (40 / 40)\n'
+            'Query normalizer: 0.8000 (20 / 25)\n'
+            'Subject normalizer: 1.0000 (20 / 20)\n'
+            'Score: 1.0000')
+        self.assertEqual(expected, FeatureAAScore.printAnalysis(analysis))
+        self.assertEqual(expected,
+                         analysis['scoreClass'].printAnalysis(analysis))

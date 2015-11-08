@@ -857,10 +857,10 @@ class TestResult(TestCase):
             self.assertIn(error, str(w[0].message))
             self.assertEqual(1.0, result.analysis['0']['bestScore'])
 
-    def testRightSignificanceAnalysisAlways(self):
+    def testCorrectSignificanceAnalysisAlways(self):
         """
-        StoreFullAnalysis must keep the right significanceAnalysis if the
-        Always significanceMethod is used.
+        When storeFullAnalysis is True, the result must have the correct
+        significance analysis if the Always significance method was used.
         """
         read = AARead('read', 'AGTARFSDDD')
         params = Parameters([], [])
@@ -884,3 +884,66 @@ class TestResult(TestCase):
                         storeFullAnalysis=True)
         significanceAnalysis = result.analysis['0']['significanceAnalysis']
         self.assertEqual('Always', significanceAnalysis['significanceMethod'])
+
+    def testScoreAnalysisAddedToResult(self):
+        """
+        When storeFullAnalysis is True, the result must have a scoreAnalysis
+        in each significant bin.
+        """
+        read = AARead('read', 'AGTARFSDDD')
+        params = Parameters([AlphaHelix], [AminoAcids])
+        database = Database(params)
+        _, subjectIndex1, _ = database.addSubject(AARead('subject0',
+                                                         'ADDDADDDAWWWWW'))
+        _, subjectIndex2, _ = database.addSubject(AARead('subject1',
+                                                         'ADDDADDDAWWWWW'))
+        hashCount = 5
+        matches = {
+            '0': [
+                {
+                    'landmark': Landmark('AlphaHelix', 'A', 0, 9),
+                    'queryOffsets': [(0, 1)],
+                    'subjectOffsets': [(0, 0)],
+                    'trigPoint': TrigPoint('Peaks', 'P', 1),
+                },
+                {
+                    'landmark': Landmark('AlphaHelix', 'A', 0, 9),
+                    'queryOffsets': [(0, 2)],
+                    'subjectOffsets': [(0, 0)],
+                    'trigPoint': TrigPoint('Peaks', 'P', 2),
+                },
+                {
+                    'landmark': Landmark('AlphaHelix', 'A', 0, 9),
+                    'queryOffsets': [(0, 3)],
+                    'subjectOffsets': [(10, 0)],
+                    'trigPoint': TrigPoint('Peaks', 'P', 3),
+                },
+            ],
+
+            '1': [
+                {
+                    'landmark': Landmark('AlphaHelix', 'A', 0, 9),
+                    'queryOffsets': [(0, 1)],
+                    'subjectOffsets': [(0, 0)],
+                    'trigPoint': TrigPoint('Peaks', 'P', 1),
+                },
+                {
+                    'landmark': Landmark('AlphaHelix', 'A', 0, 9),
+                    'queryOffsets': [(0, 2)],
+                    'subjectOffsets': [(0, 0)],
+                    'trigPoint': TrigPoint('Peaks', 'P', 2),
+                },
+            ],
+        }
+        findParams = FindParameters(significanceMethod='HashFraction',
+                                    scoreMethod='MinHashesScore',
+                                    significanceFraction=0.3)
+        result = Result(read, database, matches, hashCount, findParams,
+                        storeFullAnalysis=True)
+
+        # Note that the contents of the score analysis for each scoring
+        # method are checked in test/test_score.py, so here we just check
+        # that the Result class has made the analysis available.
+        for subjectIndex in subjectIndex1, subjectIndex2:
+            self.assertIn('scoreAnalysis',
+                          result.analysis[subjectIndex]['significantBins'][0])

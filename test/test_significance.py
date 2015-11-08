@@ -35,16 +35,15 @@ class TestHashFraction(TestCase):
 
     def testHashFractionSignificanceAnalysis(self):
         """
-        The right significanceAnalysis must be returned.
+        The correct analysis must be provided.
         """
         histogram = Histogram(5)
         list(map(histogram.add, [1, 1, 1, 1, 1, 6, 7, 8, 9]))
         histogram.finalize()
         significance = HashFraction(histogram, 10, 0.1)
-        significanceAnalysis = significance.getSignificanceAnalysis()
         self.assertEqual({'significanceCutoff': 1.0,
                           'significanceMethod': 'HashFraction'},
-                         significanceAnalysis)
+                         significance.analysis)
 
 
 class TestMeanBinHeight(TestCase):
@@ -75,18 +74,17 @@ class TestMeanBinHeight(TestCase):
 
     def testMeanBinHeightSignificanceAnalysis(self):
         """
-        The right significanceAnalysis must be returned.
+        The right analysis must be returned.
         """
         histogram = Histogram(5)
         list(map(histogram.add, [1, 1, 1, 1, 1, 6, 7, 8, 9]))
         histogram.finalize()
         significance = MeanBinHeight(histogram, COWPOX, DB)
-        significanceAnalysis = significance.getSignificanceAnalysis()
         self.assertEqual({'meanBinHeight': 0.0,
                           'significanceCutoff': 0.0,
                           'significanceMethod': 'MeanBinHeight',
                           'standardDeviation': 0.0},
-                         significanceAnalysis)
+                         significance.analysis)
 
 
 class TestMaxBinHeight(TestCase):
@@ -117,16 +115,15 @@ class TestMaxBinHeight(TestCase):
 
     def testMaxBinHeightSignificanceAnalysis(self):
         """
-        The right significanceAnalysis must be returned.
+        The correct analysis must be provided.
         """
         histogram = Histogram(5)
         list(map(histogram.add, [1, 1, 1, 1, 1, 6, 7, 8, 9]))
         histogram.finalize()
         significance = MaxBinHeight(histogram, COWPOX, DB)
-        significanceAnalysis = significance.getSignificanceAnalysis()
         self.assertEqual({'significanceCutoff': 0.0,
                           'significanceMethod': 'MaxBinHeight'},
-                         significanceAnalysis)
+                         significance.analysis)
 
 
 class TestAlways(TestCase):
@@ -145,12 +142,11 @@ class TestAlways(TestCase):
 
     def testAlwaysSignificanceAnalysis(self):
         """
-        The right significanceAnalysis must be returned.
+        The correct analysis must be provided.
         """
         histogram = Histogram(5)
         list(map(histogram.add, [1, 1, 1, 1, 1, 6, 7, 8, 9]))
         histogram.finalize()
         significance = Always()
-        significanceAnalysis = significance.getSignificanceAnalysis()
         self.assertEqual({'significanceMethod': 'Always'},
-                         significanceAnalysis)
+                         significance.analysis)

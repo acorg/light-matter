@@ -150,16 +150,19 @@ class Result(object):
             else:
                 raise ValueError('Unknown score method %r' % scoreMethod)
 
-            # Look for bins with a significant number of elements.
+            # Find bins with a significant number of elements and score them.
             significantBins = []
             for binIndex, bin_ in enumerate(histogram.bins):
                 if significance.isSignificant(binIndex):
-                    score = scorer.calculateScore(binIndex)
-                    significantBins.append({
+                    score, scoreAnalysis = scorer.calculateScore(binIndex)
+                    significantBin = {
                         'bin': bin_,
                         'index': binIndex,
-                        'score': score,
-                    })
+                        'score': score
+                    }
+                    if storeFullAnalysis:
+                        significantBin['scoreAnalysis'] = scoreAnalysis
+                    significantBins.append(significantBin)
 
             if significantBins:
                 significantBins.sort(key=scoreGetter, reverse=True)
@@ -168,12 +171,11 @@ class Result(object):
                 bestScore = None
 
             if storeFullAnalysis:
-                significanceAnalysis = significance.getSignificanceAnalysis()
                 self.analysis[subjectIndex] = {
                     'histogram': histogram,
                     'bestScore': bestScore,
                     'significantBins': significantBins,
-                    'significanceAnalysis': significanceAnalysis,
+                    'significanceAnalysis': significance.analysis,
                 }
             elif significantBins:
                 self.analysis[subjectIndex] = {

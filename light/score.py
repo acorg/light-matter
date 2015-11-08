@@ -2,6 +2,8 @@ from copy import copy
 from itertools import filterfalse
 from warnings import warn
 
+from light.string import MultilineString
+
 
 class MinHashesScore(object):
     """
@@ -22,7 +24,8 @@ class MinHashesScore(object):
         Calculates the score for a given histogram bin.
 
         @param binIndex: The C{int} index of the bin to examine.
-        @return: A C{float} of the score of that bin.
+        @return: A 2-tuple, containing the C{float} score of the bin and a
+            C{dict} with the analysis leading to the score.
         """
         binCount = len(self._histogram[binIndex])
         try:
@@ -46,13 +49,34 @@ class MinHashesScore(object):
                  'might not be a good thing.' %
                  (binCount, self._minHashCount), RuntimeWarning)
 
-        self.analysis = {
+        analysis = {
             'minHashCount': self._minHashCount,
             'binCount': binCount,
+            'score': score,
             'scoreMethod': self.__class__.__name__,
         }
 
-        return score
+        return score, analysis
+
+    @staticmethod
+    def printAnalysis(analysis, margin=''):
+        """
+        Convert an analysis to a nicely formatted string.
+
+        @param margin: A C{str} that should be inserted at the start of each
+            line of output.
+        @return: A C{str} human-readable version of the last analysis.
+        """
+        result = MultilineString(margin=margin)
+
+        result.extend([
+            'Score method: %(scoreMethod)s' % analysis,
+            'Minimum hash count: %(minHashCount)d' % analysis,
+            'Bin count: %(binCount)d' % analysis,
+            'Score: %(score).4f' % analysis,
+        ])
+
+        return str(result)
 
 
 def histogramBinFeatures(bin_, queryOrSubject):
@@ -154,14 +178,14 @@ class FeatureMatchingScore:
         scannedSubject = backend.scan(subject)
         self._allSubjectFeatures = set(scannedSubject.landmarks +
                                        scannedSubject.trigPoints)
-        self.analysis = None
 
     def calculateScore(self, binIndex):
         """
         Calculates the score for a given histogram bin.
 
         @param binIndex: The C{int} index of the bin to examine.
-        @return: A C{float} of the score of that bin.
+        @return: A 2-tuple, containing the C{float} score of the bin and a
+            C{dict} with the analysis leading to the score.
         """
         queryFeatures, queryOffsets = histogramBinFeatures(
             self._histogram[binIndex], 'query')
@@ -188,21 +212,48 @@ class FeatureMatchingScore:
                                          maxSubjectOffset),
                 self._allSubjectFeatures - subjectFeatures))))
 
+        score = matchScore + mismatchScore
+
         # We could put more in here, but I have a feeling we wont be using
         # this score method as FeatureAAScore is (hopefully) better. If we
         # need to add more detail (e.g., the number of features in each
         # class) we can easily add it.
-        self.analysis = {
+        analysis = {
             'minQueryOffset': minQueryOffset,
             'maxQueryOffset': maxQueryOffset,
             'minSubjectOffset': minSubjectOffset,
             'maxSubjectOffset': maxSubjectOffset,
             'matchScore': matchScore,
             'mismatchScore': mismatchScore,
+            'score': score,
             'scoreMethod': self.__class__.__name__,
         }
 
-        return matchScore + mismatchScore
+        return score, analysis
+
+    @staticmethod
+    def printAnalysis(analysis, margin=''):
+        """
+        Convert an analysis to a nicely formatted string.
+
+        @param margin: A C{str} that should be inserted at the start of each
+            line of output.
+        @return: A C{str} human-readable version of the last analysis.
+        """
+        result = MultilineString(margin=margin)
+
+        result.extend([
+            'Score method: %(scoreMethod)s' % analysis,
+            ('Matched offset range in query: %(minQueryOffset)d to '
+             '%(maxQueryOffset)d' % analysis),
+            ('Matched offset range in subject: %(minSubjectOffset)d to '
+             '%(maxSubjectOffset)d' % analysis),
+            ('Match score: %(matchScore).4f' % analysis),
+            ('Mismatch score: %(mismatchScore).4f' % analysis),
+            'Score: %(score).4f' % analysis,
+        ])
+
+        return str(result)
 
 
 class FeatureAAScore:
@@ -234,8 +285,6 @@ class FeatureAAScore:
         allSubjectHashes = backend.getHashes(scannedSubject)
         self._allSubjectFeatures = getHashFeatures(allSubjectHashes)
 
-        self.analysis = None
-
     def calculateScore(self, binIndex):
         """
         Calculates the score for a given histogram bin.
@@ -250,7 +299,8 @@ class FeatureAAScore:
         above is multiplied by the matched fraction of the shorter sequence.
 
         @param binIndex: The C{int} index of the bin to examine.
-        @return: The C{float} score of that bin.
+        @return: A 2-tuple, containing the C{float} score of the bin and a
+            C{dict} with the analysis leading to the score.
         """
         # Get the features and their offsets which match in subject and query.
         # These will be used to calculate the numerator of the score.
@@ -340,7 +390,9 @@ class FeatureAAScore:
         except ZeroDivisionError:
             normaliserSubject = 1.0
 
-        self.analysis = {
+        score = matchedRegionScore * max(normaliserQuery, normaliserSubject)
+
+        analysis = {
             'denominatorQuery': denominatorQuery,
             'denominatorSubject': denominatorSubject,
             'matchedOffsetCount': matchedOffsetCount,
@@ -353,11 +405,43 @@ class FeatureAAScore:
             'numeratorSubject': numeratorSubject,
             'normaliserQuery': normaliserQuery,
             'normaliserSubject': normaliserSubject,
+            'score': score,
             'scoreMethod': self.__class__.__name__,
             'totalOffsetCount': totalOffsetCount,
         }
 
-        return matchedRegionScore * max(normaliserQuery, normaliserSubject)
+        return score, analysis
 
+    @staticmethod
+    def printAnalysis(analysis, margin=''):
+        """
+        Convert an analysis to a nicely formatted string.
+
+        @param margin: A C{str} that should be inserted at the start of each
+            line of output.
+        @return: A C{str} human-readable version of the last analysis.
+        """
+        result = MultilineString(margin=margin)
+
+        result.extend([
+            'Score method: %(scoreMethod)s' % analysis,
+            ('Matched offset range in query: %(minQueryOffset)d to '
+             '%(maxQueryOffset)d' % analysis),
+            ('Matched offset range in subject: %(minSubjectOffset)d to '
+             '%(maxSubjectOffset)d' % analysis),
+            ('Total (query+subject) AA offsets in matched hashes: '
+             '%(matchedOffsetCount)d' % analysis),
+            ('Total (query+subject) AA offsets in hashes in matched region: '
+             '%(totalOffsetCount)d' % analysis),
+            ('Matched region score %(matchedRegionScore).4f '
+             '(%(matchedOffsetCount)d / %(totalOffsetCount)d)' % analysis),
+            ('Query normalizer: %(normaliserQuery).4f (%(numeratorQuery)d / '
+             '%(denominatorQuery)d)' % analysis),
+            ('Subject normalizer: %(normaliserSubject).4f '
+             '(%(numeratorSubject)d / %(denominatorSubject)d)' % analysis),
+            'Score: %(score).4f' % analysis,
+        ])
+
+        return str(result)
 
 ALL_SCORE_CLASSES = (MinHashesScore, FeatureMatchingScore, FeatureAAScore)

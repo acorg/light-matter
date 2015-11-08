@@ -150,18 +150,18 @@ class Result(object):
             else:
                 raise ValueError('Unknown score method %r' % scoreMethod)
 
-            # Look for bins with a significant number of elements.
+            # Find bins with a significant number of elements and score them.
             significantBins = []
             for binIndex, bin_ in enumerate(histogram.bins):
                 if significance.isSignificant(binIndex):
-                    score = scorer.calculateScore(binIndex)
+                    score, scoreAnalysis = scorer.calculateScore(binIndex)
                     significantBin = {
                         'bin': bin_,
                         'index': binIndex,
-                        'score': score,
+                        'score': score
                     }
                     if storeFullAnalysis:
-                        significantBin['scoreAnalysis'] = scorer.analysis
+                        significantBin['scoreAnalysis'] = scoreAnalysis
                     significantBins.append(significantBin)
 
             if significantBins:

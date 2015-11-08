@@ -14,7 +14,8 @@ class MinHashesScore(object):
     """
     def __init__(self, histogram, minHashCount):
         self._histogram = histogram
-        self.minHashCount = minHashCount
+        self._minHashCount = minHashCount
+        self.analysis = None
 
     def calculateScore(self, binIndex):
         """
@@ -25,7 +26,7 @@ class MinHashesScore(object):
         """
         binCount = len(self._histogram[binIndex])
         try:
-            score = float(binCount) / self.minHashCount
+            score = float(binCount) / self._minHashCount
         except ZeroDivisionError:
             score = 0.0
 
@@ -43,7 +44,13 @@ class MinHashesScore(object):
                  'database distanceBase is causing different '
                  'distances to be scaled into the same bin, which '
                  'might not be a good thing.' %
-                 (binCount, self.minHashCount), RuntimeWarning)
+                 (binCount, self._minHashCount), RuntimeWarning)
+
+        self.analysis = {
+            'minHashCount': self._minHashCount,
+            'binCount': binCount,
+            'scoreMethod': self.__class__.__name__,
+        }
 
         return score
 
@@ -147,6 +154,7 @@ class FeatureMatchingScore:
         scannedSubject = backend.scan(subject)
         self._allSubjectFeatures = set(scannedSubject.landmarks +
                                        scannedSubject.trigPoints)
+        self.analysis = None
 
     def calculateScore(self, binIndex):
         """
@@ -180,6 +188,20 @@ class FeatureMatchingScore:
                                          maxSubjectOffset),
                 self._allSubjectFeatures - subjectFeatures))))
 
+        # We could put more in here, but I have a feeling we wont be using
+        # this score method as FeatureAAScore is (hopefully) better. If we
+        # need to add more detail (e.g., the number of features in each
+        # class) we can easily add it.
+        self.analysis = {
+            'minQueryOffset': minQueryOffset,
+            'maxQueryOffset': maxQueryOffset,
+            'minSubjectOffset': minSubjectOffset,
+            'maxSubjectOffset': maxSubjectOffset,
+            'matchScore': matchScore,
+            'mismatchScore': mismatchScore,
+            'scoreMethod': self.__class__.__name__,
+        }
+
         return matchScore + mismatchScore
 
 
@@ -211,6 +233,8 @@ class FeatureAAScore:
         scannedSubject = backend.scan(subject)
         allSubjectHashes = backend.getHashes(scannedSubject)
         self._allSubjectFeatures = getHashFeatures(allSubjectHashes)
+
+        self.analysis = None
 
     def calculateScore(self, binIndex):
         """
@@ -273,9 +297,9 @@ class FeatureAAScore:
             len(unmatchedQueryOffsets) + len(unmatchedSubjectOffsets))
 
         try:
-            score = matchedOffsetCount / totalOffsetCount
+            matchedRegionScore = matchedOffsetCount / totalOffsetCount
         except ZeroDivisionError:
-            score = 0.0
+            matchedRegionScore = 0.0
 
         # The calculation of the fraction to normalise by length consists of
         # three parts: the numerator is the matchedOffsetCount + either the
@@ -290,6 +314,7 @@ class FeatureAAScore:
                                          maxQueryOffset),
                 self._allQueryFeatures - matchedQueryFeatures):
             offsetsNotInMatchQuery.update(feature.coveredOffsets())
+        offsetsNotInMatchQuery -= matchedQueryOffsets
         numeratorQuery = (len(matchedQueryOffsets) +
                           len(unmatchedQueryOffsets))
         denominatorQuery = numeratorQuery + len(offsetsNotInMatchQuery)
@@ -300,6 +325,7 @@ class FeatureAAScore:
                                          maxSubjectOffset),
                 self._allSubjectFeatures - matchedSubjectFeatures):
             offsetsNotInMatchSubject.update(feature.coveredOffsets())
+        offsetsNotInMatchSubject -= matchedSubjectOffsets
         numeratorSubject = (len(matchedSubjectOffsets) +
                             len(unmatchedSubjectOffsets))
         denominatorSubject = numeratorSubject + len(offsetsNotInMatchSubject)
@@ -314,7 +340,24 @@ class FeatureAAScore:
         except ZeroDivisionError:
             normaliserSubject = 1.0
 
-        return score * max(normaliserQuery, normaliserSubject)
+        self.analysis = {
+            'denominatorQuery': denominatorQuery,
+            'denominatorSubject': denominatorSubject,
+            'matchedOffsetCount': matchedOffsetCount,
+            'matchedRegionScore': matchedRegionScore,
+            'maxQueryOffset': maxQueryOffset,
+            'maxSubjectOffset': maxSubjectOffset,
+            'minQueryOffset': minQueryOffset,
+            'minSubjectOffset': minSubjectOffset,
+            'numeratorQuery': numeratorQuery,
+            'numeratorSubject': numeratorSubject,
+            'normaliserQuery': normaliserQuery,
+            'normaliserSubject': normaliserSubject,
+            'scoreMethod': self.__class__.__name__,
+            'totalOffsetCount': totalOffsetCount,
+        }
+
+        return matchedRegionScore * max(normaliserQuery, normaliserSubject)
 
 
 ALL_SCORE_CLASSES = (MinHashesScore, FeatureMatchingScore, FeatureAAScore)

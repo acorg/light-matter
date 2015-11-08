@@ -1,8 +1,9 @@
 import warnings
 from unittest import TestCase
 
-from dark.reads import AARead, Reads
+from dark.reads import AARead
 
+from light.database import DatabaseSpecifier
 from light.features import Landmark, TrigPoint
 from light.parameters import Parameters, FindParameters
 from light.subject import Subject
@@ -13,7 +14,6 @@ from light.histogram import Histogram
 from light.landmarks import AlphaHelix
 from light.landmarks import AminoAcids as AminoAcidsLm
 from light.trig import Peaks, AminoAcids
-from light.performance import affinity
 
 
 class TestMinHashesScore(TestCase):
@@ -28,6 +28,13 @@ class TestMinHashesScore(TestCase):
         histogram.finalize()
         mhs = MinHashesScore(histogram, 0)
         self.assertEqual(0.0, mhs.calculateScore(0))
+        self.assertEqual(
+            {
+                'binCount': 0,
+                'minHashCount': 0,
+                'scoreMethod': 'MinHashesScore',
+            },
+            mhs.analysis)
 
     def testZeroMinHashCount(self):
         """
@@ -41,6 +48,13 @@ class TestMinHashesScore(TestCase):
         histogram.finalize()
         mhs = MinHashesScore(histogram, 0)
         self.assertEqual(0.0, mhs.calculateScore(0))
+        self.assertEqual(
+            {
+                'binCount': 1,
+                'minHashCount': 0,
+                'scoreMethod': 'MinHashesScore',
+            },
+            mhs.analysis)
 
     def testBinWithOneElementMinHashCountOne(self):
         """
@@ -52,6 +66,13 @@ class TestMinHashesScore(TestCase):
         histogram.finalize()
         mhs = MinHashesScore(histogram, 1)
         self.assertEqual(1.0, mhs.calculateScore(0))
+        self.assertEqual(
+            {
+                'binCount': 1,
+                'minHashCount': 1,
+                'scoreMethod': 'MinHashesScore',
+            },
+            mhs.analysis)
 
     def testBinWithOneElementMinHashCountTwo(self):
         """
@@ -63,6 +84,13 @@ class TestMinHashesScore(TestCase):
         histogram.finalize()
         mhs = MinHashesScore(histogram, 2)
         self.assertEqual(0.5, mhs.calculateScore(0))
+        self.assertEqual(
+            {
+                'binCount': 1,
+                'minHashCount': 2,
+                'scoreMethod': 'MinHashesScore',
+            },
+            mhs.analysis)
 
     def testBinWithTwoElementsMinHashCountOne(self):
         """
@@ -84,6 +112,24 @@ class TestMinHashesScore(TestCase):
             error = ('Bin contains 2 deltas for a query/subject pair with a '
                      'minimum hash count of only 1.')
             self.assertIn(error, str(w[0].message))
+        self.assertEqual(
+            {
+                'binCount': 2,
+                'minHashCount': 1,
+                'scoreMethod': 'MinHashesScore',
+            },
+            mhs.analysis)
+
+    def testAnalysisBeforeAnyScoreIsCalculated(self):
+        """
+        The analysis attribute must be None if no score has previously been
+        calculated.
+        """
+        histogram = Histogram(1)
+        histogram.add(555)
+        histogram.finalize()
+        mhs = MinHashesScore(histogram, 5)
+        self.assertIs(None, mhs.analysis)
 
 
 class TestHistogramBinFeatures(TestCase):
@@ -405,6 +451,17 @@ class TestFeatureMatchingScore(TestCase):
         subject = Subject('id2', 'A', 0)
         fms = FeatureMatchingScore(histogram, query, subject, params)
         self.assertEqual(0.0, fms.calculateScore(0))
+        self.assertEqual(
+            {
+                'matchScore': 0.0,
+                'maxQueryOffset': None,
+                'maxSubjectOffset': None,
+                'minQueryOffset': None,
+                'minSubjectOffset': None,
+                'mismatchScore': 0.0,
+                'scoreMethod': 'FeatureMatchingScore',
+            },
+            fms.analysis)
 
     def testEmptyBinQueryHasOneFeature(self):
         """
@@ -419,6 +476,17 @@ class TestFeatureMatchingScore(TestCase):
         subject = Subject('id2', 'A', 0)
         fms = FeatureMatchingScore(histogram, query, subject, params)
         self.assertEqual(0.0, fms.calculateScore(0))
+        self.assertEqual(
+            {
+                'matchScore': 0.0,
+                'maxQueryOffset': None,
+                'maxSubjectOffset': None,
+                'minQueryOffset': None,
+                'minSubjectOffset': None,
+                'mismatchScore': 0.0,
+                'scoreMethod': 'FeatureMatchingScore',
+            },
+            fms.analysis)
 
     def testOneHashInBin(self):
         """
@@ -446,6 +514,17 @@ class TestFeatureMatchingScore(TestCase):
         fms = FeatureMatchingScore(histogram, query, subject, params)
         self.assertEqual(4 * FindParameters.DEFAULT_FEATURE_MATCH_SCORE,
                          fms.calculateScore(0))
+        self.assertEqual(
+            {
+                'matchScore': 4 * FindParameters.DEFAULT_FEATURE_MATCH_SCORE,
+                'maxQueryOffset': 119,
+                'maxSubjectOffset': 119,
+                'minQueryOffset': 100,
+                'minSubjectOffset': 100,
+                'mismatchScore': 0.0,
+                'scoreMethod': 'FeatureMatchingScore',
+            },
+            fms.analysis)
 
     def testOneHashInBinOccurringInTwoPlaces(self):
         """
@@ -486,6 +565,17 @@ class TestFeatureMatchingScore(TestCase):
         fms = FeatureMatchingScore(histogram, query, subject, params)
         self.assertEqual(8 * FindParameters.DEFAULT_FEATURE_MATCH_SCORE,
                          fms.calculateScore(0))
+        self.assertEqual(
+            {
+                'matchScore': 8 * FindParameters.DEFAULT_FEATURE_MATCH_SCORE,
+                'maxQueryOffset': 219,
+                'maxSubjectOffset': 220,
+                'minQueryOffset': 100,
+                'minSubjectOffset': 101,
+                'mismatchScore': 0.0,
+                'scoreMethod': 'FeatureMatchingScore',
+            },
+            fms.analysis)
 
     def testOneHashInBinQueryHasOneFeatureOutsideMatch(self):
         """
@@ -511,6 +601,17 @@ class TestFeatureMatchingScore(TestCase):
         fms = FeatureMatchingScore(histogram, query, subject, params)
         self.assertEqual(4 * FindParameters.DEFAULT_FEATURE_MATCH_SCORE,
                          fms.calculateScore(0))
+        self.assertEqual(
+            {
+                'matchScore': 4 * FindParameters.DEFAULT_FEATURE_MATCH_SCORE,
+                'maxQueryOffset': 119,
+                'maxSubjectOffset': 119,
+                'minQueryOffset': 100,
+                'minSubjectOffset': 100,
+                'mismatchScore': 0.0,
+                'scoreMethod': 'FeatureMatchingScore',
+            },
+            fms.analysis)
 
     def testOneHashInBinQueryHasTwoFeaturesOutsideMatch(self):
         """
@@ -536,6 +637,17 @@ class TestFeatureMatchingScore(TestCase):
         fms = FeatureMatchingScore(histogram, query, subject, params)
         self.assertEqual(4 * FindParameters.DEFAULT_FEATURE_MATCH_SCORE,
                          fms.calculateScore(0))
+        self.assertEqual(
+            {
+                'matchScore': 4 * FindParameters.DEFAULT_FEATURE_MATCH_SCORE,
+                'maxQueryOffset': 119,
+                'maxSubjectOffset': 119,
+                'minQueryOffset': 100,
+                'minSubjectOffset': 100,
+                'mismatchScore': 0.0,
+                'scoreMethod': 'FeatureMatchingScore',
+            },
+            fms.analysis)
 
     def testOneHashInBinQueryAndSubjectHaveOneFeaturesOutsideMatch(self):
         """
@@ -561,6 +673,17 @@ class TestFeatureMatchingScore(TestCase):
         fms = FeatureMatchingScore(histogram, query, subject, params)
         self.assertEqual(4 * FindParameters.DEFAULT_FEATURE_MATCH_SCORE,
                          fms.calculateScore(0))
+        self.assertEqual(
+            {
+                'matchScore': 4 * FindParameters.DEFAULT_FEATURE_MATCH_SCORE,
+                'maxQueryOffset': 119,
+                'maxSubjectOffset': 119,
+                'minQueryOffset': 100,
+                'minSubjectOffset': 100,
+                'mismatchScore': 0.0,
+                'scoreMethod': 'FeatureMatchingScore',
+            },
+            fms.analysis)
 
     def testOneHashInBinQueryHasOneUnmatchedFeatureInsideMatch(self):
         """
@@ -588,6 +711,17 @@ class TestFeatureMatchingScore(TestCase):
             4 * FindParameters.DEFAULT_FEATURE_MATCH_SCORE +
             FindParameters.DEFAULT_FEATURE_MISMATCH_SCORE,
             fms.calculateScore(0))
+        self.assertEqual(
+            {
+                'matchScore': 4 * FindParameters.DEFAULT_FEATURE_MATCH_SCORE,
+                'maxQueryOffset': 19,
+                'maxSubjectOffset': 19,
+                'minQueryOffset': 0,
+                'minSubjectOffset': 0,
+                'mismatchScore': FindParameters.DEFAULT_FEATURE_MISMATCH_SCORE,
+                'scoreMethod': 'FeatureMatchingScore',
+            },
+            fms.analysis)
 
     def testOneHashInBinQueryHasOneUnmatchedFeatureExactlySpanningMatch(self):
         """
@@ -615,6 +749,17 @@ class TestFeatureMatchingScore(TestCase):
             4 * FindParameters.DEFAULT_FEATURE_MATCH_SCORE +
             FindParameters.DEFAULT_FEATURE_MISMATCH_SCORE,
             fms.calculateScore(0))
+        self.assertEqual(
+            {
+                'matchScore': 4 * FindParameters.DEFAULT_FEATURE_MATCH_SCORE,
+                'maxQueryOffset': 8,
+                'maxSubjectOffset': 8,
+                'minQueryOffset': 0,
+                'minSubjectOffset': 0,
+                'mismatchScore': FindParameters.DEFAULT_FEATURE_MISMATCH_SCORE,
+                'scoreMethod': 'FeatureMatchingScore',
+            },
+            fms.analysis)
 
     def testOneHashInBinQueryHasOneUnmatchedFeatureExceedingMatch(self):
         """
@@ -641,6 +786,17 @@ class TestFeatureMatchingScore(TestCase):
         self.assertEqual(
             4 * FindParameters.DEFAULT_FEATURE_MATCH_SCORE,
             fms.calculateScore(0))
+        self.assertEqual(
+            {
+                'matchScore': 4 * FindParameters.DEFAULT_FEATURE_MATCH_SCORE,
+                'maxQueryOffset': 6,
+                'maxSubjectOffset': 6,
+                'minQueryOffset': 2,
+                'minSubjectOffset': 2,
+                'mismatchScore': 0.0,
+                'scoreMethod': 'FeatureMatchingScore',
+            },
+            fms.analysis)
 
     def testOneHashInBinQueryHasTwoUnmatchedFeatureInsideMatch(self):
         """
@@ -668,6 +824,18 @@ class TestFeatureMatchingScore(TestCase):
             4 * FindParameters.DEFAULT_FEATURE_MATCH_SCORE +
             2 * FindParameters.DEFAULT_FEATURE_MISMATCH_SCORE,
             fms.calculateScore(0))
+        self.assertEqual(
+            {
+                'matchScore': 4 * FindParameters.DEFAULT_FEATURE_MATCH_SCORE,
+                'maxQueryOffset': 19,
+                'maxSubjectOffset': 19,
+                'minQueryOffset': 0,
+                'minSubjectOffset': 0,
+                'mismatchScore': (
+                    2 * FindParameters.DEFAULT_FEATURE_MISMATCH_SCORE),
+                'scoreMethod': 'FeatureMatchingScore',
+            },
+            fms.analysis)
 
     def testOneHashInBinQueryHasOneUnmatchedFeatureOverlappingMatchLeft(self):
         """
@@ -695,6 +863,17 @@ class TestFeatureMatchingScore(TestCase):
         self.assertEqual(
             4 * FindParameters.DEFAULT_FEATURE_MATCH_SCORE,
             fms.calculateScore(0))
+        self.assertEqual(
+            {
+                'matchScore': 4 * FindParameters.DEFAULT_FEATURE_MATCH_SCORE,
+                'maxQueryOffset': 24,
+                'maxSubjectOffset': 24,
+                'minQueryOffset': 5,
+                'minSubjectOffset': 5,
+                'mismatchScore': 0.0,
+                'scoreMethod': 'FeatureMatchingScore',
+            },
+            fms.analysis)
 
     def testOneHashInBinQueryHasOneUnmatchedFeatureOverlappingMatchRight(self):
         """
@@ -722,6 +901,17 @@ class TestFeatureMatchingScore(TestCase):
         self.assertEqual(
             4 * FindParameters.DEFAULT_FEATURE_MATCH_SCORE,
             fms.calculateScore(0))
+        self.assertEqual(
+            {
+                'matchScore': 4 * FindParameters.DEFAULT_FEATURE_MATCH_SCORE,
+                'maxQueryOffset': 5,
+                'maxSubjectOffset': 5,
+                'minQueryOffset': 2,
+                'minSubjectOffset': 2,
+                'mismatchScore': 0.0,
+                'scoreMethod': 'FeatureMatchingScore',
+            },
+            fms.analysis)
 
     def testOneHashInBinQueryHasOneUnmatchedFeatureInMatchNonDefault(self):
         """
@@ -751,12 +941,39 @@ class TestFeatureMatchingScore(TestCase):
         fms = FeatureMatchingScore(histogram, query, subject, params,
                                    findParams)
         self.assertEqual(4 * 3.1 - 1.2, fms.calculateScore(0))
+        self.assertEqual(
+            {
+                'matchScore': 4 * 3.1,
+                'maxQueryOffset': 19,
+                'maxSubjectOffset': 19,
+                'minQueryOffset': 0,
+                'minSubjectOffset': 0,
+                'mismatchScore': -1.2,
+                'scoreMethod': 'FeatureMatchingScore',
+            },
+            fms.analysis)
+
+    def testAnalysisBeforeAnyScoreIsCalculated(self):
+        """
+        The analysis attribute must be None if no score has previously been
+        calculated.
+        """
+        histogram = Histogram(1)
+        histogram.finalize()
+        params = Parameters([AlphaHelix], [])
+        findParams = FindParameters()
+        query = AARead('id1', 'A')
+        subject = Subject('id2', 'A', 0)
+        fms = FeatureMatchingScore(histogram, query, subject, params,
+                                   findParams)
+        self.assertIs(None, fms.analysis)
 
 
 class TestFeatureAAScore(TestCase):
     """
     Tests for the light.score.FeatureAAScore class.
     """
+
     def testEmptyBin(self):
         """
         A bin containing no elements must have a score of 0.0 if the query and
@@ -769,12 +986,30 @@ class TestFeatureAAScore(TestCase):
         subject = Subject('id2', 'A', 0)
         faas = FeatureAAScore(histogram, query, subject, params)
         self.assertEqual(0.0, faas.calculateScore(0))
+        self.assertEqual(
+            {
+                'denominatorQuery': 0,
+                'denominatorSubject': 0,
+                'matchedOffsetCount': 0,
+                'matchedRegionScore': 0.0,
+                'maxQueryOffset': None,
+                'maxSubjectOffset': None,
+                'minQueryOffset': None,
+                'minSubjectOffset': None,
+                'numeratorQuery': 0,
+                'numeratorSubject': 0,
+                'normaliserQuery': 1.0,
+                'normaliserSubject': 1.0,
+                'scoreMethod': 'FeatureAAScore',
+                'totalOffsetCount': 0,
+            },
+            faas.analysis)
 
     def testEmptyBinQueryHasOneFeature(self):
         """
         A bin containing no hashes must have a score of zero, even if the query
-        has a feature. There is no match region, so no unmatched features can
-        fall inside it.
+        has a feature (but no hashes). There is no match region, so that part
+        of the score is zero which causes the overall score to be zero.
         """
         histogram = Histogram(1)
         histogram.finalize()
@@ -783,6 +1018,57 @@ class TestFeatureAAScore(TestCase):
         subject = Subject('id2', 'A', 0)
         faas = FeatureAAScore(histogram, query, subject, params)
         self.assertEqual(0.0, faas.calculateScore(0))
+        self.assertEqual(
+            {
+                'denominatorQuery': 0,
+                'denominatorSubject': 0,
+                'matchedOffsetCount': 0,
+                'matchedRegionScore': 0.0,
+                'maxQueryOffset': None,
+                'maxSubjectOffset': None,
+                'minQueryOffset': None,
+                'minSubjectOffset': None,
+                'numeratorQuery': 0,
+                'numeratorSubject': 0,
+                'normaliserQuery': 1.0,
+                'normaliserSubject': 1.0,
+                'scoreMethod': 'FeatureAAScore',
+                'totalOffsetCount': 0,
+            },
+            faas.analysis)
+
+    def testEmptyBinQueryAndSubjectHaveOneFeature(self):
+        """
+        A bin containing no hashes must have a score of zero, when the query
+        and subject both have one feature (but no hashes). There is no match
+        region, so that part of the score is zero which causes the overall
+        score to be zero.
+        """
+        histogram = Histogram(1)
+        histogram.finalize()
+        params = Parameters([AlphaHelix], [])
+        query = AARead('id', 'FRRRFRRRF')
+        subject = Subject('id2', 'AAAAAAAAAAAAAAFRRRFRRRF', 0)
+        faas = FeatureAAScore(histogram, query, subject, params)
+        self.assertEqual(0.0, faas.calculateScore(0))
+        self.assertEqual(
+            {
+                'denominatorQuery': 0,
+                'denominatorSubject': 0,
+                'matchedOffsetCount': 0,
+                'matchedRegionScore': 0.0,
+                'maxQueryOffset': None,
+                'maxSubjectOffset': None,
+                'minQueryOffset': None,
+                'minSubjectOffset': None,
+                'numeratorQuery': 0,
+                'numeratorSubject': 0,
+                'normaliserQuery': 1.0,
+                'normaliserSubject': 1.0,
+                'scoreMethod': 'FeatureAAScore',
+                'totalOffsetCount': 0,
+            },
+            faas.analysis)
 
     def testOneHashInBin(self):
         """
@@ -806,6 +1092,24 @@ class TestFeatureAAScore(TestCase):
         subject = Subject('id2', 'A', 0)
         faas = FeatureAAScore(histogram, query, subject, params)
         self.assertEqual(1.0, faas.calculateScore(0))
+        self.assertEqual(
+            {
+                'denominatorQuery': 20,
+                'denominatorSubject': 20,
+                'matchedOffsetCount': 40,
+                'matchedRegionScore': 1.0,
+                'maxQueryOffset': 119,
+                'maxSubjectOffset': 119,
+                'minQueryOffset': 100,
+                'minSubjectOffset': 100,
+                'numeratorQuery': 20,
+                'numeratorSubject': 20,
+                'normaliserQuery': 1.0,
+                'normaliserSubject': 1.0,
+                'scoreMethod': 'FeatureAAScore',
+                'totalOffsetCount': 40,
+            },
+            faas.analysis)
 
     def testOneHashInBinOccurringInTwoPlaces(self):
         """
@@ -842,6 +1146,24 @@ class TestFeatureAAScore(TestCase):
         subject = Subject('id2', 'A', 0)
         faas = FeatureAAScore(histogram, query, subject, params)
         self.assertEqual(1.0, faas.calculateScore(0))
+        self.assertEqual(
+            {
+                'denominatorQuery': 20,
+                'denominatorSubject': 20,
+                'matchedOffsetCount': 40,
+                'matchedRegionScore': 1.0,
+                'maxQueryOffset': 30,
+                'maxSubjectOffset': 30,
+                'minQueryOffset': 0,
+                'minSubjectOffset': 1,
+                'numeratorQuery': 20,
+                'numeratorSubject': 20,
+                'normaliserQuery': 1.0,
+                'normaliserSubject': 1.0,
+                'scoreMethod': 'FeatureAAScore',
+                'totalOffsetCount': 40,
+            },
+            faas.analysis)
 
     def testOneHashInBinQueryHasOneHashOutsideMatch(self):
         """
@@ -866,6 +1188,24 @@ class TestFeatureAAScore(TestCase):
         subject = Subject('id', 30 * 'A', 0)
         faas = FeatureAAScore(histogram, query, subject, params)
         self.assertEqual(1.0, faas.calculateScore(0))
+        self.assertEqual(
+            {
+                'denominatorQuery': 20,
+                'denominatorSubject': 10,
+                'matchedOffsetCount': 20,
+                'matchedRegionScore': 1.0,
+                'maxQueryOffset': 10,
+                'maxSubjectOffset': 10,
+                'minQueryOffset': 0,
+                'minSubjectOffset': 0,
+                'numeratorQuery': 10,
+                'numeratorSubject': 10,
+                'normaliserQuery': 0.5,
+                'normaliserSubject': 1.0,
+                'scoreMethod': 'FeatureAAScore',
+                'totalOffsetCount': 20,
+            },
+            faas.analysis)
 
     def testOneHashInBinQueryHasTwoHashesOutsideMatch(self):
         """
@@ -890,6 +1230,24 @@ class TestFeatureAAScore(TestCase):
         subject = Subject('id2', 'A', 0)
         faas = FeatureAAScore(histogram, query, subject, params)
         self.assertEqual(1.0, faas.calculateScore(0))
+        self.assertEqual(
+            {
+                'denominatorQuery': 21,
+                'denominatorSubject': 10,
+                'matchedOffsetCount': 20,
+                'matchedRegionScore': 1.0,
+                'maxQueryOffset': 110,
+                'maxSubjectOffset': 110,
+                'minQueryOffset': 100,
+                'minSubjectOffset': 100,
+                'numeratorQuery': 10,
+                'numeratorSubject': 10,
+                'normaliserQuery': 10 / 21,
+                'normaliserSubject': 1.0,
+                'scoreMethod': 'FeatureAAScore',
+                'totalOffsetCount': 20,
+            },
+            faas.analysis)
 
     def testOneHashInBinQuery2Subject1HashOutsideMatch(self):
         """
@@ -912,7 +1270,25 @@ class TestFeatureAAScore(TestCase):
         query = AARead('id', 'FRRRFRRRF' + 'AAACAAAW')
         subject = Subject('id2', 'FRRRFRRRF' + 'AAAC', 0)
         faas = FeatureAAScore(histogram, query, subject, params)
-        self.assertEqual(0.6666666666666666, faas.calculateScore(0))
+        self.assertAlmostEqual(2 / 3, faas.calculateScore(0))
+        self.assertEqual(
+            {
+                'denominatorQuery': 31,
+                'denominatorSubject': 30,
+                'matchedOffsetCount': 40,
+                'matchedRegionScore': 1.0,
+                'maxQueryOffset': 119,
+                'maxSubjectOffset': 119,
+                'minQueryOffset': 100,
+                'minSubjectOffset': 100,
+                'numeratorQuery': 20,
+                'numeratorSubject': 20,
+                'normaliserQuery': 20 / 31,
+                'normaliserSubject': 2 / 3,
+                'scoreMethod': 'FeatureAAScore',
+                'totalOffsetCount': 40,
+            },
+            faas.analysis)
 
     def testOneHashInBinQuery1Subject2HashOutsideMatch(self):
         """
@@ -932,10 +1308,28 @@ class TestFeatureAAScore(TestCase):
         })
         histogram.finalize()
         params = Parameters([AlphaHelix, AminoAcidsLm], [AminoAcids])
-        subject = AARead('id', 'FRRRFRRRF' + 'AAACAAAW')
         query = Subject('id2', 'FRRRFRRRF' + 'AAAC', 0)
+        subject = AARead('id', 'FRRRFRRRF' + 'AAACAAAW')
         faas = FeatureAAScore(histogram, query, subject, params)
-        self.assertEqual(0.6666666666666666, faas.calculateScore(0))
+        self.assertAlmostEqual(2 / 3, faas.calculateScore(0))
+        self.assertEqual(
+            {
+                'denominatorQuery': 30,
+                'denominatorSubject': 31,
+                'matchedOffsetCount': 40,
+                'matchedRegionScore': 1.0,
+                'maxQueryOffset': 119,
+                'maxSubjectOffset': 119,
+                'minQueryOffset': 100,
+                'minSubjectOffset': 100,
+                'numeratorQuery': 20,
+                'numeratorSubject': 20,
+                'normaliserQuery': 2 / 3,
+                'normaliserSubject': 20 / 31,
+                'scoreMethod': 'FeatureAAScore',
+                'totalOffsetCount': 40,
+            },
+            faas.analysis)
 
     def testOneHashInBinQueryHasOneUnmatchedHashInsideMatch(self):
         """
@@ -956,17 +1350,35 @@ class TestFeatureAAScore(TestCase):
         })
         histogram.finalize()
         params = Parameters([AlphaHelix, AminoAcidsLm], [])
-        query = AARead('id', 20 * 'A' + 'FRRRFRRRF' + 2 * 'A' + 'C')
+        query = AARead('id', 20 * 'A' + 'FRRRFRRRFAAC')
         subject = Subject('id2', 'A', 0)
         faas = FeatureAAScore(histogram, query, subject, params)
         self.assertEqual((21 + 21) / (21 + 21 + 10),
                          faas.calculateScore(0))
+        self.assertEqual(
+            {
+                'denominatorQuery': 31,
+                'denominatorSubject': 21,
+                'matchedOffsetCount': 42,
+                'matchedRegionScore': 42 / 52,
+                'maxQueryOffset': 50,
+                'maxSubjectOffset': 50,
+                'minQueryOffset': 0,
+                'minSubjectOffset': 0,
+                'numeratorQuery': 31,
+                'numeratorSubject': 21,
+                'normaliserQuery': 1.0,
+                'normaliserSubject': 1.0,
+                'scoreMethod': 'FeatureAAScore',
+                'totalOffsetCount': 52,
+            },
+            faas.analysis)
 
     def testOneHashInBinQueryHasOneUnmatchedHashExactlySpanningMatch(self):
         """
         A bin containing one hash must have a the correct score if the query
         has an additional hash that exactly spans the match area but the
-        additional hashes's offsets match those of the match (and so do not
+        additional hashes' offsets match those of the match (and so do not
         affect the score).
         """
         queryLandmark = Landmark('AlphaHelix', 'A', 0, 9)
@@ -982,12 +1394,30 @@ class TestFeatureAAScore(TestCase):
         })
         histogram.finalize()
         params = Parameters([AlphaHelix, AminoAcidsLm], [])
-        query = AARead('id', 'FRRRFRRRF' + 4 * 'A' + 'C')
+        query = AARead('id', 'FRRRFRRRFAAAAC')
         subject = Subject('id2', 'A', 0)
         faas = FeatureAAScore(histogram, query, subject, params)
         self.assertEqual(
             (9 + 9) / (9 + 9),
             faas.calculateScore(0))
+        self.assertEqual(
+            {
+                'denominatorQuery': 10,
+                'denominatorSubject': 10,
+                'matchedOffsetCount': 20,
+                'matchedRegionScore': 1.0,
+                'maxQueryOffset': 13,
+                'maxSubjectOffset': 13,
+                'minQueryOffset': 0,
+                'minSubjectOffset': 0,
+                'numeratorQuery': 10,
+                'numeratorSubject': 10,
+                'normaliserQuery': 1.0,
+                'normaliserSubject': 1.0,
+                'scoreMethod': 'FeatureAAScore',
+                'totalOffsetCount': 20,
+            },
+            faas.analysis)
 
     def testOneHashInBinQueryHasOneUnmatchedHashExceedingMatch(self):
         """
@@ -1013,12 +1443,35 @@ class TestFeatureAAScore(TestCase):
         subject = Subject('id2', 'A', 0)
         faas = FeatureAAScore(histogram, query, subject, params)
         self.assertEqual(1.0, faas.calculateScore(0))
+        # Note that the landmark in the unmatched hash completely overlaps
+        # the alpha helix from offset 2-6 in the query. Because we give
+        # priority to AAs that do match, only 5 of the 10 AAs in that
+        # unmatched hash get counted as not being matched. For that reason,
+        # the denominator of the query is 10, not 15.
+        self.assertEqual(
+            {
+                'denominatorQuery': 10,
+                'denominatorSubject': 5,
+                'matchedOffsetCount': 10,
+                'matchedRegionScore': 1.0,
+                'maxQueryOffset': 6,
+                'maxSubjectOffset': 6,
+                'minQueryOffset': 2,
+                'minSubjectOffset': 2,
+                'numeratorQuery': 5,
+                'numeratorSubject': 5,
+                'normaliserQuery': 0.5,
+                'normaliserSubject': 1.0,
+                'scoreMethod': 'FeatureAAScore',
+                'totalOffsetCount': 10,
+            },
+            faas.analysis)
 
     def testOneHashInBinQueryHasTwoUnmatchedFeaturesInsideMatch(self):
         """
         A bin containing one hash must have the correct score if the query has
-        two additional features that are inside the match area but which do not
-        overlap the features in the hash.
+        two additional features (making a hash) that are inside the match area
+        but which do not overlap the features in the hash.
         """
         queryLandmark = Landmark('AlphaHelix', 'A', 0, 20)
         queryTrigPoint = TrigPoint('Peak', 'P', 50)
@@ -1032,11 +1485,29 @@ class TestFeatureAAScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix], [AminoAcids])
-        query = AARead('id', 22 * 'A' + 'WAAW')
+        params = Parameters([AlphaHelix, AminoAcidsLm], [AminoAcids])
+        query = AARead('id', 22 * 'A' + 'CAAW')
         subject = Subject('id2', 'A', 0)
         faas = FeatureAAScore(histogram, query, subject, params)
-        self.assertEqual(1.0, faas.calculateScore(0))
+        self.assertEqual(42 / 44, faas.calculateScore(0))
+        self.assertEqual(
+            {
+                'denominatorQuery': 23,
+                'denominatorSubject': 21,
+                'matchedOffsetCount': 42,
+                'matchedRegionScore': 42 / 44,
+                'maxQueryOffset': 50,
+                'maxSubjectOffset': 50,
+                'minQueryOffset': 0,
+                'minSubjectOffset': 0,
+                'numeratorQuery': 23,
+                'numeratorSubject': 21,
+                'normaliserQuery': 1.0,
+                'normaliserSubject': 1.0,
+                'scoreMethod': 'FeatureAAScore',
+                'totalOffsetCount': 44,
+            },
+            faas.analysis)
 
     def testOneHashInBinQueryHasOneUnmatchedFeatureOverlappingMatchLeft(self):
         """
@@ -1056,11 +1527,29 @@ class TestFeatureAAScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix], [])
-        query = AARead('id', 'FRRRFRRRF')
+        params = Parameters([AlphaHelix, AminoAcidsLm], [])
+        query = AARead('id', 'FRRRFRRRFC')
         subject = Subject('id2', 'A', 0)
         faas = FeatureAAScore(histogram, query, subject, params)
         self.assertEqual(1.0, faas.calculateScore(0))
+        self.assertEqual(
+            {
+                'denominatorQuery': 25,
+                'denominatorSubject': 20,
+                'matchedOffsetCount': 40,
+                'matchedRegionScore': 1.0,
+                'maxQueryOffset': 24,
+                'maxSubjectOffset': 24,
+                'minQueryOffset': 5,
+                'minSubjectOffset': 5,
+                'numeratorQuery': 20,
+                'numeratorSubject': 20,
+                'normaliserQuery': 0.8,
+                'normaliserSubject': 1.0,
+                'scoreMethod': 'FeatureAAScore',
+                'totalOffsetCount': 40,
+            },
+            faas.analysis)
 
     def testOneHashInBinQueryHasOneUnmatchedFeatureOverlappingMatchRight(self):
         """
@@ -1080,11 +1569,29 @@ class TestFeatureAAScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix], [])
-        query = AARead('id', 'AAAFRRRFRRRF')
+        params = Parameters([AlphaHelix, AminoAcidsLm], [])
+        query = AARead('id', 'AAAFRRRFRRRFC')
         subject = Subject('id2', 'A', 0)
         faas = FeatureAAScore(histogram, query, subject, params)
         self.assertEqual(1.0, faas.calculateScore(0))
+        self.assertEqual(
+            {
+                'denominatorQuery': 11,
+                'denominatorSubject': 4,
+                'matchedOffsetCount': 8,
+                'matchedRegionScore': 1.0,
+                'maxQueryOffset': 5,
+                'maxSubjectOffset': 5,
+                'minQueryOffset': 2,
+                'minSubjectOffset': 2,
+                'numeratorQuery': 4,
+                'numeratorSubject': 4,
+                'normaliserQuery': 4 / 11,
+                'normaliserSubject': 1.0,
+                'scoreMethod': 'FeatureAAScore',
+                'totalOffsetCount': 8,
+            },
+            faas.analysis)
 
     def testTwoHashes(self):
         """
@@ -1116,23 +1623,37 @@ class TestFeatureAAScore(TestCase):
         })
         histogram.finalize()
         params = Parameters([AlphaHelix, AminoAcidsLm], [])
-        query = AARead('id', 20 * 'A' + 'FRRRFRRRF')
-        subject = Subject('id2', 25 * 'A' + 'FRRRFRRRFRRRF' + 2 * 'A' + 'C', 0)
+        query = AARead('id', 20 * 'A' + 'FRRRFRRRFC')
+        subject = Subject('id2', 25 * 'A' + 'FRRRFRRRFRRRFAAC', 0)
         faas = FeatureAAScore(histogram, query, subject, params)
         matched = (3 + 1) + (5 + 1) + (3 + 1) + (5 + 1)
-        total = matched + 13 + 1
+        total = matched + (9 + 1) + (13 + 1)
         self.assertEqual(matched / total, faas.calculateScore(0))
+        self.assertEqual(
+            {
+                'denominatorQuery': 20,
+                'denominatorSubject': 24,
+                'matchedOffsetCount': 20,
+                'matchedRegionScore': 20 / 44,
+                'maxQueryOffset': 60,
+                'maxSubjectOffset': 60,
+                'minQueryOffset': 2,
+                'minSubjectOffset': 2,
+                'numeratorQuery': 20,
+                'numeratorSubject': 24,
+                'normaliserQuery': 1.0,
+                'normaliserSubject': 1.0,
+                'scoreMethod': 'FeatureAAScore',
+                'totalOffsetCount': 44,
+            },
+            faas.analysis)
 
     def testCompareEqualSequencesScoreMustBeOne(self):
         """
         If a sequence is compared to itself, the score must be 1.0. See
         https://github.com/acorg/light-matter/issues/321.
-        When making distance matrices for neighbor joining trees, the diagonal
-        of the distance matrix must be 0.0. This is a real-life test that it
-        actually works.
+        This is a real-life test that it actually works.
         """
-        findParams = FindParameters(significanceFraction=0.01,
-                                    scoreMethod='FeatureAAScore')
         pichninde = AARead('pichninde', 'RLKFGLSYKEQVGGNRELYVGDLNTKLTTRLIEDYS'
                                         'ESLMQNMRYTCLNNEKEFERALLDMKSVVRQSGLAV'
                                         'SMDHSKWGPHMSPVIFAALLKGLEFNLKDGSEVPNA'
@@ -1142,19 +1663,53 @@ class TestFeatureAAScore(TestCase):
                                         'IMLSLNEAFKFKDRDELNVDLVLDCMEFHYFLSDKL'
                                         'NKFVSPKTVVGTFASEFKSRFFIWSQEVPLLTKFVA'
                                         'AALH')
-        dbReads = Reads()
-        dbReads.add(pichninde)
-        matrix = affinity.affinityMatrix(dbReads, findParams,
-                                         landmarkNames=['AlphaHelix',
-                                                        'AlphaHelix_3_10',
-                                                        'AlphaHelix_pi',
-                                                        'AminoAcidsLm',
-                                                        'BetaStrand',
-                                                        'BetaTurn', 'Prosite'],
-                                         trigPointNames=['AminoAcids', 'Peaks',
-                                                         'Troughs'],
-                                         distanceBase=1.01,
-                                         limitPerLandmark=50,
-                                         minDistance=1, maxDistance=100,
-                                         subjects=dbReads)
-        self.assertEqual(1.0, matrix[0][0])
+
+        db = DatabaseSpecifier().getDatabaseFromKeywords(
+            landmarkNames=[
+                'AlphaHelix', 'AlphaHelix_3_10', 'AlphaHelix_pi',
+                'AminoAcidsLm', 'BetaStrand', 'BetaTurn', 'Prosite'],
+            trigPointNames=['AminoAcids', 'Peaks', 'Troughs'],
+            distanceBase=1.01, limitPerLandmark=50, minDistance=1,
+            maxDistance=100)
+        _, subjectIndex, _ = db.addSubject(pichninde)
+
+        findParams = FindParameters(significanceFraction=0.01,
+                                    scoreMethod='FeatureAAScore')
+        result = db.find(pichninde, findParams, storeFullAnalysis=True)
+        self.assertEqual(1.0, result.analysis[subjectIndex]['bestScore'])
+
+        scoreAnalysis = result.analysis[
+            subjectIndex]['significantBins'][0]['scoreAnalysis']
+        self.assertEqual(
+            {
+                'denominatorQuery': 182,
+                'denominatorSubject': 182,
+                'matchedOffsetCount': 364,
+                'matchedRegionScore': 1.0,
+                'maxQueryOffset': 290,
+                'maxSubjectOffset': 290,
+                'minQueryOffset': 1,
+                'minSubjectOffset': 1,
+                'numeratorQuery': 182,
+                'numeratorSubject': 182,
+                'normaliserQuery': 1.0,
+                'normaliserSubject': 1.0,
+                'scoreMethod': 'FeatureAAScore',
+                'totalOffsetCount': 364,
+            },
+            scoreAnalysis)
+
+    def testAnalysisBeforeAnyScoreIsCalculated(self):
+        """
+        The analysis attribute must be None if no score has previously been
+        calculated.
+        """
+        histogram = Histogram(1)
+        histogram.finalize()
+        params = Parameters([AlphaHelix], [])
+        findParams = FindParameters()
+        query = AARead('id1', 'A')
+        subject = Subject('id2', 'A', 0)
+        fms = FeatureMatchingScore(histogram, query, subject, params,
+                                   findParams)
+        self.assertIs(None, fms.analysis)

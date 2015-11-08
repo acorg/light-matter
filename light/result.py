@@ -155,11 +155,14 @@ class Result(object):
             for binIndex, bin_ in enumerate(histogram.bins):
                 if significance.isSignificant(binIndex):
                     score = scorer.calculateScore(binIndex)
-                    significantBins.append({
+                    significantBin = {
                         'bin': bin_,
                         'index': binIndex,
                         'score': score,
-                    })
+                    }
+                    if storeFullAnalysis:
+                        significantBin['scoreAnalysis'] = scorer.analysis
+                    significantBins.append(significantBin)
 
             if significantBins:
                 significantBins.sort(key=scoreGetter, reverse=True)
@@ -168,12 +171,11 @@ class Result(object):
                 bestScore = None
 
             if storeFullAnalysis:
-                significanceAnalysis = significance.getSignificanceAnalysis()
                 self.analysis[subjectIndex] = {
                     'histogram': histogram,
                     'bestScore': bestScore,
                     'significantBins': significantBins,
-                    'significanceAnalysis': significanceAnalysis,
+                    'significanceAnalysis': significance.analysis,
                 }
             elif significantBins:
                 self.analysis[subjectIndex] = {

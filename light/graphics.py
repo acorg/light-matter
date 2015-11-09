@@ -595,7 +595,7 @@ def plotHorizontalPairPanel(sequences, findParams=None, equalizeXAxes=True,
         to cover the same range (the maximum range of all sub-plots).
     @param showSignificant: If C{True}, hashes from significant bins will
         be included in the set of hashes that match query and subject.
-    @param showInsignificant: If C{True}, hashes from igsignificant bins will
+    @param showInsignificant: If C{True}, hashes from insignificant bins will
         be included in the set of hashes that match query and subject.
     @param showBestBinOnly: If C{True}, only show the bin with the best
         score. Warn if there are multiple bins with the same high score.

@@ -132,7 +132,7 @@ class TestProsite(TestCase):
         [ABC]), negated alternation (e.g., [^ABC]), and repetition (e.g.,
         .(7,8) or [ABC](1,3)).
         """
-        # The pattern we're matching is [FY](1,2)C[RH].(3,4)[^WY]C
+        # The pattern we're matching (see above) is [FY]{1,2}C[RH].{3,4}[^WY]C
         mockOpener = mockOpen(read_data=self.SIMPLE_DB)
         with patch.object(builtins, 'open', mockOpener):
             landmark = Prosite()

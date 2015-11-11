@@ -1070,3 +1070,123 @@ def confusionMatrix(confusionMatrix):
     ax.spines['right'].set_linewidth(0)
     ax.spines['bottom'].set_linewidth(0)
     ax.spines['left'].set_linewidth(0)
+
+
+def featureComparison(aaSequence, ssSequence, **kwargs):
+    """
+    A function which provides plotting options for sequences, the predicted
+    secondary structures from PDB and our features.
+
+    Abbreviations in the pdb secondary structures:
+    H = α-helix
+    B = residue in isolated β-bridge
+    E = extended strand, participates in β ladder
+    G = 3-helix (310 helix)
+    I = 5-helix (π-helix)
+    T = hydrogen bonded turn
+    S = bend
+
+    @param aaSequence: A C{dark.reads.AARead} AA sequence.
+    @param ssSequence: A C{str} sequence of secondary structures.
+    """
+    ssSequenceColors = {
+        'H': (0.12156862745098039, 0.4666666666666667, 0.7058823529411765),
+        'B': '#848484',
+        'E': (0.596078431372549, 0.8745098039215686, 0.5411764705882353),
+        'G': (0.6823529411764706, 0.7803921568627451, 0.9098039215686274),
+        'I': (1.0, 0.4980392156862745, 0.054901960784313725),
+        'T': '#848484',
+        'S': '#848484',
+    }
+
+    # parse the ssSequence so that it can be plotted easily.
+    all_ = {
+        ' ': [],
+        'H': [],
+        'B': [],
+        'E': [],
+        'G': [],
+        'I': [],
+        'T': [],
+        'S': [],
+    }
+
+    previous = None
+    start = 0
+    for i, item in enumerate(ssSequence):
+        # item is the last item of the sequence
+        try:
+            ssSequence[i + 1]
+        except IndexError:
+            if item == previous:
+                all_[item].append([start, i])
+            else:
+                all_[item].append([i, i])
+            break
+        if item == previous and ssSequence[i + 1] != item:
+            all_[item].append([start, i])
+        # item is the only item of the sequence
+        elif item != previous and ssSequence[i + 1] != item:
+            previous = item
+            all_[item].append([i, i])
+        # item is the first one in the sequence:
+        elif item != previous and ssSequence[i + 1] == item:
+            previous = item
+            start = i
+
+    # set up database and scan read.
+    db = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
+    backend = Backend()
+    backend.configure(db.params)
+    scannedRead = backend.scan(aaSequence)
+
+    fig = plt.figure(figsize=(15, 10))
+    ax = fig.add_subplot(111)
+    lmNames = [landmark.NAME for landmark in db.params.landmarkClasses]
+    tpNames = [trigPoint.NAME for trigPoint in db.params.trigPointClasses]
+    yticks = ['S', 'T', 'E', 'B', 'I', 'G', 'H', ' '] + lmNames + tpNames
+    ytickLabels = (['Bend', 'H-bonded turn', 'BetaStrand (?)', 'BetaBridge',
+                    'AlphaHelixPi', 'AlphaHelix_3_10', 'AlphaHelix', ' ']
+                   + lmNames + tpNames)
+    title = aaSequence.id
+
+    for i, item in enumerate(yticks):
+        plt.plot([0, len(aaSequence.sequence)], [i, i], '-', linewidth=0.5,
+                 color='grey')
+
+    for landmark in scannedRead.landmarks:
+        y = yticks.index(landmark.name)
+        if landmark.name != 'AminoAcidsLm':
+            plt.plot([landmark.offset, landmark.offset + landmark.length],
+                     [y, y], '-', color=COLORS[landmark.symbol], linewidth=4)
+        else:
+            plt.plot([landmark.offset, landmark.offset + landmark.length],
+                     [y - 0.125, y + 0.125], '-',
+                     color=COLORS[landmark.symbol], linewidth=2)
+    for trigPoint in scannedRead.trigPoints:
+        y = yticks.index(trigPoint.name)
+        plt.plot([trigPoint.offset, trigPoint.offset], [y - 0.125, y + 0.125],
+                 '-', color=COLORS[trigPoint.symbol], linewidth=2)
+
+    plt.plot([0, len(aaSequence.sequence)], [7, 7], '-', linewidth=3,
+             color='black')
+
+    for feature, offsets in all_.items():
+        y = yticks.index(feature)
+        if feature != ' ':
+            for offset in offsets:
+                plt.plot([offset[0], offset[1]], [y, y],
+                         color=ssSequenceColors[feature], linewidth=4)
+
+    print(COLORS)
+
+    ax.set_yticklabels(ytickLabels)
+    ax.set_yticks(range(len(yticks)))
+    plt.title(title, fontsize=15)
+    ax.spines['top'].set_linewidth(0)
+    ax.spines['right'].set_linewidth(0)
+    ax.spines['bottom'].set_linewidth(0)
+    ax.spines['left'].set_linewidth(0)
+    ax.xaxis.grid()
+    ax.set_ylim(-0.1, len(yticks) - 1 + 0.1)
+    ax.set_xlim(0, len(aaSequence.sequence))

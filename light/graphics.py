@@ -1178,8 +1178,6 @@ def featureComparison(aaSequence, ssSequence, **kwargs):
                 plt.plot([offset[0], offset[1]], [y, y],
                          color=ssSequenceColors[feature], linewidth=4)
 
-    print(COLORS)
-
     ax.set_yticklabels(ytickLabels)
     ax.set_yticks(range(len(yticks)))
     plt.title(title, fontsize=15)

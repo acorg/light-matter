@@ -12,12 +12,14 @@ def patternToRegex(pattern):
     """
     switch = {'{': '[^',
               '}': ']',
+              '(': '{',
+              ')': '}',
               'x': '.',
               '<': '',
               '>': '',
               '-': '',
               }
-    aa = set('ARNDCEQGHILKMFPSTWYVUX[](),1234567890')
+    aa = set('ARNDCEQGHILKMFPSTWYVUX[],1234567890')
     return ''.join((element if element in aa else switch[element])
                    for element in pattern)
 

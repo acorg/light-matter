@@ -1792,21 +1792,21 @@ class TestFeatureAAScore(TestCase):
         self.maxDiff = None
         self.assertEqual(
             {
-                'denominatorQuery': 182,
-                'denominatorSubject': 182,
-                'matchedOffsetCount': 364,
+                'denominatorQuery': 210,
+                'denominatorSubject': 210,
+                'matchedOffsetCount': 420,
                 'matchedRegionScore': 1.0,
                 'maxQueryOffset': 290,
                 'maxSubjectOffset': 290,
                 'minQueryOffset': 1,
                 'minSubjectOffset': 1,
-                'numeratorQuery': 182,
-                'numeratorSubject': 182,
+                'numeratorQuery': 210,
+                'numeratorSubject': 210,
                 'normaliserQuery': 1.0,
                 'normaliserSubject': 1.0,
                 'score': 1.0,
                 'scoreClass': FeatureAAScore,
-                'totalOffsetCount': 364,
+                'totalOffsetCount': 420,
             },
             scoreAnalysis)
 

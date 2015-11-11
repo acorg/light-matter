@@ -6,7 +6,7 @@ import light
 from light.features import Landmark, Finder
 
 
-_DB_FILE = join(dirname(light.__file__), '..', 'data', 'prosite-20-110.json')
+_DB_FILE = join(dirname(light.__file__), '..', 'data', 'prosite-20.119.json')
 
 
 class Prosite(Finder):

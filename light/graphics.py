@@ -1106,37 +1106,53 @@ class SequenceFeatureAnalysis:
             self.trigPointNames.add(feature.name)
             self.offsets[feature.name].update(feature.coveredOffsets())
 
-        self.landmarksNotFound = sorted(
+        self.landmarksNotFound = (
             set(kwargs.get('landmarkNames', [])) - self.landmarkNames)
 
-        self.trigPointsNotFound = sorted(
+        self.trigPointsNotFound = (
             set(kwargs.get('trigPointNames', [])) - self.trigPointNames)
 
-        self.featureCount = len(self.landmarkNames) + len(self.trigPointNames)
         self.allNames = (sorted(self.landmarkNames) +
                          sorted(self.trigPointNames))
+
+    def pairwiseOffsetOverlaps(self):
+        """
+        For each pair of features, work out the fraction of AAs that are
+        covered by both features compared to the number covered by either.
+
+        @return: A numpy array containing the overlap fractions. The rows
+            and columns are in the order of names in self.allNames. The
+            matrix will be symmetric, with 1.0 diagonal values.
+        """
+        allNames = self.allNames
+        overlaps = np.zeros((len(allNames), len(allNames)))
+        offsets = self.offsets
+
+        for i, name1 in enumerate(allNames):
+            for j, name2 in enumerate(allNames):
+                if i == j:
+                    overlaps[i, i] = 1.0
+                else:
+                    inCommon = len(offsets[name1] & offsets[name2])
+                    inTotal = len(offsets[name1] | offsets[name2])
+                    try:
+                        overlaps[i, j] = inCommon / inTotal
+                    except ZeroDivisionError:
+                        pass
+
+        return overlaps
 
     def plotPairwiseHeatmap(self):
         """
         Plot a heatmap showing the pairwise feature offset overlap.
         """
-        counts = np.zeros((self.featureCount, self.featureCount))
-        offsets = self.offsets
+        overlaps = self.pairwiseOffsetOverlaps()
+        # Set the diagonal to 0.0 to not wildly distort the color bar with
+        # 1.0 values.
+        for i in range(len(self.allNames)):
+            overlaps[i][i] = 0.0
 
-        for i, name1 in enumerate(self.allNames):
-            for j, name2 in enumerate(self.allNames):
-                # The i != j makes sure the diagonal is 0.0 to not wildly
-                # distort the color bar with 1.0 values.
-                if i != j:
-                    inCommon = len(offsets[name1] & offsets[name2])
-                    inTotal = len(offsets[name1] | offsets[name2])
-                    try:
-                        counts[i, j] = inCommon / inTotal
-                    except ZeroDivisionError:
-                        pass
-
-        img = plt.imshow(np.array(counts), interpolation='nearest',
-                         cmap=plt.cm.GnBu)
+        img = plt.imshow(overlaps, interpolation='nearest', cmap=plt.cm.GnBu)
 
         left, right, bottom, top = img.get_extent()
 
@@ -1157,7 +1173,6 @@ class SequenceFeatureAnalysis:
 
         plt.colorbar(img)
         plt.title('Pairwise feature offset overlap\n', fontsize=18)
-        # gcf().set_size_inches(featureCount / 1.25, featureCount / 1.25)
         plt.show()
 
     def printDensities(self, margin=''):
@@ -1175,16 +1190,26 @@ class SequenceFeatureAnalysis:
 
         totalOffsetCount = len(self.sequence)
         uncoveredOffsets = set(range(totalOffsetCount))
+        unique = self.uniqueOffsets()
         maxName = max(len(name) for name in self.offsets)
         maxCount = int(log10(totalOffsetCount)) + 1
+        maxOffsetCount = int(log10(max(
+            len(offsets) for offsets in self.offsets.values()))) + 1
+        maxUniqueOffsetCount = int(log10(max(
+            len(offsets) for offsets in unique.values()))) + 1
 
+        result.append('%*s OVERALL%*s   UNIQUE' % (
+            maxName + 1, '',
+            10 + maxOffsetCount + maxCount - len('OVERALL'), ''))
         for name in self.allNames:
             offsets = self.offsets[name]
             offsetCount = len(offsets)
-            result.append('%-*s %5.2f%% (%*d / %d)' % (
+            result.append('%-*s %5.2f%% (%*d/%d)   %5.2f%% (%*d/%d)' % (
                 maxName + 1, name + ':',
                 offsetCount / totalOffsetCount * 100.0,
-                maxCount, offsetCount, totalOffsetCount))
+                maxOffsetCount, offsetCount, totalOffsetCount,
+                len(unique[name]) / totalOffsetCount * 100.0,
+                maxUniqueOffsetCount, len(unique[name]), totalOffsetCount))
             uncoveredOffsets -= offsets
 
         uncoveredOffsetCount = len(uncoveredOffsets)
@@ -1192,8 +1217,36 @@ class SequenceFeatureAnalysis:
         result.outdent()
         result.append('')
         result.append(
-            '%5.2f%% (%d / %d) of sequence offsets were not covered by any '
+            '%5.2f%% (%d/%d) of sequence offsets were not covered by any '
             'feature.' % (uncoveredOffsetCount / totalOffsetCount * 100.0,
                           uncoveredOffsetCount, totalOffsetCount))
 
         return str(result)
+
+    def uniqueOffsets(self):
+        """
+        Calculate the set of offsets that each feature is unique in covering.
+
+        @return: A C{dict} whose keys are feature names and whose values are
+            sets of offsets that only that feature covers. There is a key
+            present even for finders that found no features.
+        """
+        unique = {}
+        offsets = self.offsets
+
+        # First, copy the offsets for each feature.
+        for name in self.allNames:
+            unique[name] = set(offsets[name])
+
+        # Then, from each finder, subtract the offsets of all other finders.
+        for name in self.allNames:
+            offsetsForThisFinder = unique[name]
+            for otherName in self.allNames:
+                if otherName != name:
+                    offsetsForThisFinder -= offsets[otherName]
+
+        # Add in an empty set for those finders that found nothing.
+        for name in self.landmarksNotFound | self.trigPointsNotFound:
+            unique[name] = set()
+
+        return unique

@@ -1074,8 +1074,8 @@ def confusionMatrix(confusionMatrix):
 
 def featureComparison(aaSequence, ssSequence, **kwargs):
     """
-    A function which provides plotting options for sequences, the predicted
-    secondary structures from PDB and our features.
+    A function which provides plotting options for sequences, given the
+    predicted secondary structures from PDB and our features.
 
     Abbreviations in the pdb secondary structures:
     H = α-helix
@@ -1100,16 +1100,7 @@ def featureComparison(aaSequence, ssSequence, **kwargs):
     }
 
     # parse the ssSequence so that it can be plotted easily.
-    all_ = {
-        ' ': [],
-        'H': [],
-        'B': [],
-        'E': [],
-        'G': [],
-        'I': [],
-        'T': [],
-        'S': [],
-    }
+    all_ = defaultdict(list)
 
     previous = None
     start = 0
@@ -1140,7 +1131,7 @@ def featureComparison(aaSequence, ssSequence, **kwargs):
     backend.configure(db.params)
     scannedRead = backend.scan(aaSequence)
 
-    fig = plt.figure(figsize=(15, 10))
+    fig = plt.figure()
     ax = fig.add_subplot(111)
     lmNames = [landmark.NAME for landmark in db.params.landmarkClasses]
     tpNames = [trigPoint.NAME for trigPoint in db.params.trigPointClasses]
@@ -1150,7 +1141,7 @@ def featureComparison(aaSequence, ssSequence, **kwargs):
                    + lmNames + tpNames)
     title = aaSequence.id
 
-    for i, item in enumerate(yticks):
+    for i, item in enumerate(ytickLabels):
         plt.plot([0, len(aaSequence.sequence)], [i, i], '-', linewidth=0.5,
                  color='grey')
 

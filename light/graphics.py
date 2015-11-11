@@ -7,6 +7,7 @@ import numpy as np
 from operator import attrgetter
 from textwrap import fill
 from collections import defaultdict
+from math import log10
 
 from dark.dimension import dimensionalIterator
 
@@ -17,6 +18,7 @@ from light.trig import ALL_TRIG_CLASSES
 from light.landmarks import ALL_LANDMARK_CLASSES
 from light.features import Landmark
 from light.colors import colors
+from light.string import MultilineString
 
 from dark.fasta import FastaReads
 from dark.reads import AARead
@@ -1070,3 +1072,181 @@ def confusionMatrix(confusionMatrix):
     ax.spines['right'].set_linewidth(0)
     ax.spines['bottom'].set_linewidth(0)
     ax.spines['left'].set_linewidth(0)
+
+
+class SequenceFeatureAnalysis:
+    """
+    Analyze a sequence for its features and provide methods to plot and
+    print useful summaries.
+
+    @param sequence: Either a C{str} AA sequence or an C{AARead} instance.
+    @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
+        for additional keywords, all of which are optional.
+    """
+    def __init__(self, sequence, **kwargs):
+        if isinstance(sequence, str):
+            sequence = AARead('id', sequence)
+
+        self.sequence = sequence
+
+        db = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
+        backend = Backend()
+        backend.configure(db.params)
+        scannedSequence = backend.scan(sequence)
+
+        self.offsets = defaultdict(set)
+        self.landmarkNames = set()
+        self.trigPointNames = set()
+
+        for feature in scannedSequence.landmarks:
+            self.landmarkNames.add(feature.name)
+            self.offsets[feature.name].update(feature.coveredOffsets())
+
+        for feature in scannedSequence.trigPoints:
+            self.trigPointNames.add(feature.name)
+            self.offsets[feature.name].update(feature.coveredOffsets())
+
+        self.landmarksNotFound = (
+            set(kwargs.get('landmarkNames', [])) - self.landmarkNames)
+
+        self.trigPointsNotFound = (
+            set(kwargs.get('trigPointNames', [])) - self.trigPointNames)
+
+        self.allNames = (sorted(self.landmarkNames) +
+                         sorted(self.trigPointNames))
+
+    def pairwiseOffsetOverlaps(self):
+        """
+        For each pair of features, work out the fraction of AAs that are
+        covered by both features compared to the number covered by either.
+
+        @return: A numpy array containing the overlap fractions. The rows
+            and columns are in the order of names in self.allNames. The
+            matrix will be symmetric, with 1.0 diagonal values.
+        """
+        allNames = self.allNames
+        overlaps = np.zeros((len(allNames), len(allNames)))
+        offsets = self.offsets
+
+        for i, name1 in enumerate(allNames):
+            for j, name2 in enumerate(allNames):
+                if i == j:
+                    overlaps[i, i] = 1.0
+                else:
+                    inCommon = len(offsets[name1] & offsets[name2])
+                    inTotal = len(offsets[name1] | offsets[name2])
+                    try:
+                        overlaps[i, j] = inCommon / inTotal
+                    except ZeroDivisionError:
+                        pass
+
+        return overlaps
+
+    def plotPairwiseHeatmap(self):
+        """
+        Plot a heatmap showing the pairwise feature offset overlap.
+        """
+        overlaps = self.pairwiseOffsetOverlaps()
+        # Set the diagonal to 0.0 to not wildly distort the color bar with
+        # 1.0 values.
+        for i in range(len(self.allNames)):
+            overlaps[i][i] = 0.0
+
+        img = plt.imshow(overlaps, interpolation='nearest', cmap=plt.cm.GnBu)
+
+        left, right, bottom, top = img.get_extent()
+
+        # Draw feature names on the left and bottom of the image.
+        for i, name in enumerate(self.allNames):
+            plt.text(left - 6, top + i + 0.75, name, fontsize=15)
+            plt.text(left + i + 0.3, bottom + 1, name, fontsize=15,
+                     rotation='vertical')
+
+        plt.xticks([])
+        plt.yticks([])
+
+        # Draw lines to mark off landmarks from trig points.
+        plt.axhline(y=bottom - len(self.trigPointNames), linestyle=':',
+                    color='#888888')
+        plt.axvline(x=right - len(self.trigPointNames), linestyle=':',
+                    color='#888888')
+
+        plt.colorbar(img)
+        plt.title('Pairwise feature offset overlap\n', fontsize=18)
+        plt.show()
+
+    def printDensities(self, margin=''):
+        """
+        Produce a table of offset densities for each feature.
+
+        @param margin: A C{str} that should be inserted at the start of each
+            line of output.
+        @return: A C{str} summarizing feature densities and the number of
+            offsets that are not covered by any feature.
+        """
+        result = MultilineString(margin=margin, indent='  ')
+        result.append('Feature densities:')
+        result.indent()
+
+        totalOffsetCount = len(self.sequence)
+        uncoveredOffsets = set(range(totalOffsetCount))
+        unique = self.uniqueOffsets()
+        maxName = max(len(name) for name in self.offsets)
+        maxCount = int(log10(totalOffsetCount)) + 1
+        maxOffsetCount = int(log10(max(
+            len(offsets) for offsets in self.offsets.values()))) + 1
+        maxUniqueOffsetCount = int(log10(max(
+            len(offsets) for offsets in unique.values()))) + 1
+
+        result.append('%*s OVERALL%*s   UNIQUE' % (
+            maxName + 1, '',
+            10 + maxOffsetCount + maxCount - len('OVERALL'), ''))
+        for name in self.allNames:
+            offsets = self.offsets[name]
+            offsetCount = len(offsets)
+            result.append('%-*s %5.2f%% (%*d/%d)   %5.2f%% (%*d/%d)' % (
+                maxName + 1, name + ':',
+                offsetCount / totalOffsetCount * 100.0,
+                maxOffsetCount, offsetCount, totalOffsetCount,
+                len(unique[name]) / totalOffsetCount * 100.0,
+                maxUniqueOffsetCount, len(unique[name]), totalOffsetCount))
+            uncoveredOffsets -= offsets
+
+        uncoveredOffsetCount = len(uncoveredOffsets)
+
+        result.outdent()
+        result.append('')
+        result.append(
+            '%5.2f%% (%d/%d) of sequence offsets were not covered by any '
+            'feature.' % (uncoveredOffsetCount / totalOffsetCount * 100.0,
+                          uncoveredOffsetCount, totalOffsetCount))
+
+        return str(result)
+
+    def uniqueOffsets(self):
+        """
+        Calculate the set of offsets that each feature is unique in covering.
+
+        @return: A C{dict} whose keys are feature names and whose values are
+            sets of offsets that only that feature covers. There is a key
+            present even for finders that found no features.
+        """
+        unique = {}
+        offsets = self.offsets
+
+        # First, copy the offsets for each feature.
+        for name in self.allNames:
+            unique[name] = set(offsets[name])
+
+        # Then, from each finder, subtract the offsets of all other finders.
+        for name in self.allNames:
+            offsetsForThisFinder = unique[name]
+            for otherName in self.allNames:
+                if otherName != name:
+                    offsetsForThisFinder -= offsets[otherName]
+
+        # Add in an empty set for those finders that found nothing.
+        for name in self.landmarksNotFound | self.trigPointsNotFound:
+            unique[name] = set()
+
+        return unique

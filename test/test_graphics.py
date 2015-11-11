@@ -1,8 +1,9 @@
 import warnings
 from unittest import TestCase
+import numpy as np
 
 from light.parameters import FindParameters
-from light.graphics import PlotHashesInSubjectAndRead
+from light.graphics import PlotHashesInSubjectAndRead, SequenceFeatureAnalysis
 
 from dark.reads import AARead
 
@@ -178,3 +179,161 @@ class TestPlotHashesInSubjectAndRead(TestCase):
             error = ('Multiple bins share the best score (1.000000). '
                      'Displaying just one of them.')
             self.assertIn(error, str(w[0].message))
+
+
+class TestSequenceFeatureAnalysis(TestCase):
+    """
+    Tests for the light.graphics.SequenceFeatureAnalysis class.
+    """
+    def testOneFeatureUniqueOffsets(self):
+        """
+        If the sequence contains a single feature, the unique offsets method
+        must return the correct value.
+        """
+        read = AARead('id', 'FRRRFRRRF')
+        s = SequenceFeatureAnalysis(read, landmarkNames=['AlphaHelix'],
+                                    trigPointNames=['Peaks'])
+        self.assertEqual(
+            {
+                'AlphaHelix': {0, 1, 2, 3, 4, 5, 6, 7, 8},
+                'Peaks': set(),
+            },
+            s.uniqueOffsets())
+
+    def testTwoNonOverlappingFeatureUniqueOffsets(self):
+        """
+        If the sequence contains two non-overlapping features, the unique
+        offsets method must return the correct value.
+        """
+        read = AARead('id', 'FRRRFRRRFW')
+        s = SequenceFeatureAnalysis(read, landmarkNames=['AlphaHelix'],
+                                    trigPointNames=['AminoAcids'])
+        self.assertEqual(
+            {
+                'AlphaHelix': {0, 1, 2, 3, 4, 5, 6, 7, 8},
+                'AminoAcids': {9},
+            },
+            s.uniqueOffsets())
+
+    def testTwoSpreadOutNonOverlappingFeatureUniqueOffsets(self):
+        """
+        If the sequence contains two non-overlapping features with other AAs
+        before and after them, the unique offsets method must return the
+        correct value.
+        """
+        read = AARead('id', 'XXFRRRFRRRFXXWX')
+        s = SequenceFeatureAnalysis(read, landmarkNames=['AlphaHelix'],
+                                    trigPointNames=['AminoAcids'])
+        self.assertEqual(
+            {
+                'AlphaHelix': {2, 3, 4, 5, 6, 7, 8, 9, 10},
+                'AminoAcids': {13},
+            },
+            s.uniqueOffsets())
+
+    def testTwoOverlappingFeatureUniqueOffsets(self):
+        """
+        If the sequence contains two features that overlap, the unique offsets
+        method must return the correct value, which will exclude the offset(s)
+        in common.
+        """
+        read = AARead('id', 'AGYGSTWT')
+        s = SequenceFeatureAnalysis(read,
+                                    landmarkNames=['AlphaHelix', 'Prosite'],
+                                    trigPointNames=['AminoAcids'])
+        # There is an AminoAcid trig point at offset 6, but that's also in
+        # the Prosite feature, so offset 6 is not unique to either finder.
+        self.assertEqual(
+            {
+                'AlphaHelix': set(),
+                'AminoAcids': set(),
+                'Prosite': {0, 1, 2, 3, 4, 5, 7},
+            },
+            s.uniqueOffsets())
+
+    def testNames(self):
+        """
+        The __init__ method of SequenceFeatureAnalysis must set the correct
+        landmark and trig point names based on what's in the sequence and what
+        we were looking for.
+        """
+        read = AARead('id', 'FRRRFRRRFWNPNW')
+        s = SequenceFeatureAnalysis(read,
+                                    landmarkNames=['AlphaHelix', 'BetaTurn'],
+                                    trigPointNames=['AminoAcids'])
+        self.assertEqual(set(['AlphaHelix', 'BetaTurn']), s.landmarkNames)
+        self.assertEqual(set(['AminoAcids']), s.trigPointNames)
+
+    def testMissingNames(self):
+        """
+        The __init__ method of SequenceFeatureAnalysis must set the correct
+        missing landmark and trig point names based on what's in the sequence
+        and what we were looking for.
+        """
+        read = AARead('id', 'FRRRFRRRF')
+        s = SequenceFeatureAnalysis(read,
+                                    landmarkNames=['AlphaHelix', 'BetaTurn'],
+                                    trigPointNames=['AminoAcids'])
+        self.assertEqual(set(['BetaTurn']), s.landmarksNotFound)
+        self.assertEqual(set(['AminoAcids']), s.trigPointsNotFound)
+
+    def testOffsets(self):
+        """
+        The __init__ method of SequenceFeatureAnalysis must set the correct
+        landmark and trig point offsets.
+        """
+        read = AARead('id', 'FRRRFRRRFWNPNW')
+        s = SequenceFeatureAnalysis(read,
+                                    landmarkNames=['AlphaHelix', 'BetaTurn'],
+                                    trigPointNames=['AminoAcids'])
+        self.assertEqual(
+            {
+                'AlphaHelix': {0, 1, 2, 3, 4, 5, 6, 7, 8},
+                'AminoAcids': {9, 13},
+                'BetaTurn': {10, 11, 12, 13},
+            },
+            s.offsets)
+
+    def testPairwiseOffsetOverlaps(self):
+        """
+        The pairwiseOffsetOverlaps method must return the correct overlap
+        matrix.
+        """
+        read = AARead('id', 'FRRRFRRRFWNPNW')
+        s = SequenceFeatureAnalysis(read,
+                                    landmarkNames=['AlphaHelix', 'BetaTurn'],
+                                    trigPointNames=['AminoAcids'])
+        # The order in the overlaps array is AlphaHelix, BetaTurn,
+        # AminoAcids, so the 0.2 value corresponds to the
+        self.assertTrue(np.array_equal(
+            np.array([
+                [1.0, 0.0, 0.0],
+                [0.0, 1.0, 0.2],
+                [0.0, 0.2, 1.0],
+            ]),
+            s.pairwiseOffsetOverlaps()))
+
+    def testPrintDensities(self):
+        """
+        The printDensities method must return the correct string.
+        """
+        read = AARead('id', 'AAFRRRFRRRFWNPNWXX')
+        s = SequenceFeatureAnalysis(
+            read,
+            landmarkNames=['AlphaHelix', 'AlphaHelix_pi', 'BetaTurn'],
+            trigPointNames=['AminoAcids'])
+        # Note that AlphaHelix_pi does not appear in the output as it finds
+        # no features (it will be present in s.landmarksNotFound). Arguably
+        # it should also be in the output.
+        self.assertEqual(
+            (
+                'Feature densities:\n'
+                '              OVERALL         UNIQUE\n'
+                '  AlphaHelix: 50.00% (9/18)   50.00% (9/18)\n'
+                '  BetaTurn:   22.22% (4/18)   16.67% (3/18)\n'
+                '  AminoAcids: 11.11% (2/18)    5.56% (1/18)\n'
+                '\n'
+                '22.22% (4/18) of sequence offsets were not covered by any '
+                'feature.'
+            ),
+            s.printDensities())

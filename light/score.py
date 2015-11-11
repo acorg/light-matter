@@ -396,6 +396,8 @@ class FeatureAAScore:
             'denominatorQuery': denominatorQuery,
             'denominatorSubject': denominatorSubject,
             'matchedOffsetCount': matchedOffsetCount,
+            'matchedSubjectOffsetCount': len(matchedSubjectOffsets),
+            'matchedQueryOffsetCount': len(matchedQueryOffsets),
             'matchedRegionScore': matchedRegionScore,
             'maxQueryOffset': maxQueryOffset,
             'maxSubjectOffset': maxSubjectOffset,
@@ -431,6 +433,10 @@ class FeatureAAScore:
              '%(maxSubjectOffset)d' % analysis),
             ('Total (query+subject) AA offsets in matched hashes: '
              '%(matchedOffsetCount)d' % analysis),
+            ('Subject AA offsets in matched hashes: '
+             '%(matchedSubjectOffsetCount)d' % analysis),
+            ('Query AA offsets in matched hashes: '
+             '%(matchedQueryOffsetCount)d' % analysis),
             ('Total (query+subject) AA offsets in hashes in matched region: '
              '%(totalOffsetCount)d' % analysis),
             ('Matched region score %(matchedRegionScore).4f '

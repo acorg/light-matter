@@ -30,7 +30,9 @@ class Prosite(Finder):
         with open(_DB_FILE) as fp:
             for line in fp:
                 motif = loads(line)
-                regex = re.compile(motif['pattern'])
+                pattern = motif['pattern']
+                # Replace () with {} for correct Python regex syntax.
+                regex = re.compile(pattern.replace('(', '{').replace(')', '}'))
                 self.database.append({
                                      'accession': motif['accession'],
                                      'regex': regex,

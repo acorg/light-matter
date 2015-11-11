@@ -21,7 +21,7 @@ class TestProsite(TestCase):
         '\n'
         '{"accession": "60002", "pattern": "EGGELGY"}'
         '\n'
-        '{"accession": "00021", "pattern": "[FY](1,2)C[RH].(3,4)[^WY]C"}'
+        '{"accession": "00021", "pattern": "[FY]{1,2}C[RH].{3,4}[^WY]C"}'
     )
 
     def testFindWithoutMotif(self):
@@ -167,4 +167,5 @@ class TestProsite(TestCase):
         the default database, which must have the correct length.
         """
         landmark = Prosite()
-        self.assertEqual(1308, len(landmark.database))
+        # The 1309 is based on Prosite database 20.119 of 14-Oct-2015
+        self.assertEqual(1309, len(landmark.database))

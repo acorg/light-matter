@@ -6,7 +6,7 @@ import light
 from light.features import Landmark, Finder
 
 
-_DB_FILE = join(dirname(light.__file__), '..', 'data', 'prosite-20-110.json')
+_DB_FILE = join(dirname(light.__file__), '..', 'data', 'prosite-20.119.json')
 
 
 class Prosite(Finder):
@@ -30,9 +30,7 @@ class Prosite(Finder):
         with open(_DB_FILE) as fp:
             for line in fp:
                 motif = loads(line)
-                pattern = motif['pattern']
-                # Replace () with {} for correct Python regex syntax.
-                regex = re.compile(pattern.replace('(', '{').replace(')', '}'))
+                regex = re.compile(motif['pattern'])
                 self.database.append({
                                      'accession': motif['accession'],
                                      'regex': regex,

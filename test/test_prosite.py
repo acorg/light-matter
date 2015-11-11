@@ -23,7 +23,7 @@ class TestProsite(TestCase):
                           'DT   APR-1990 (CREATED); APR-1990 (DATA UPDATE); '
                           'APR-1990 (INFO UPDATE).',
                           'DE   N-glycosylation site.',
-                          'PA   N-{P}-[ST]-{P}.',
+                          'PA   N(3,4)-{P}-[ST]-{P}.',
                           'CC   /SITE=1,carbohydrate;',
                           'CC   /SKIP-FLAG=TRUE;',
                           'CC   /VERSION=1;'
@@ -36,7 +36,7 @@ class TestProsite(TestCase):
             prositeToJSON('prosite.dat', fp=fp)
             fp.seek(0)
             result = load(fp)
-            self.assertEqual({'pattern': 'N[^P][ST][^P]',
+            self.assertEqual({'pattern': 'N{3,4}[^P][ST][^P]',
                               'accession': '00001'},
                              result)
 
@@ -44,9 +44,9 @@ class TestProsite(TestCase):
         """
         The prosite pattern must be translated to the right regex.
         """
-        pattern = ('D-{W}-[DNS]-{ILVFYW}-[DENSTG]-[DNQGHRK]-{GP}-[LIVMC]-'
+        pattern = ('D-{W}-[DNS](3,7)-{ILVFYW}-[DENSTG]-[DNQGHRK]-{GP}-[LIVMC]-'
                    '[DENQSTAGC]-x(2)-[DE]-[LIVMFYW]')
         regex = patternToRegex(pattern)
-        expected = ('D[^W][DNS][^ILVFYW][DENSTG][DNQGHRK][^GP][LIVMC]'
-                    '[DENQSTAGC].(2)[DE][LIVMFYW]')
+        expected = ('D[^W][DNS]{3,7}[^ILVFYW][DENSTG][DNQGHRK][^GP][LIVMC]'
+                    '[DENQSTAGC].{2}[DE][LIVMFYW]')
         self.assertEqual(expected, regex)

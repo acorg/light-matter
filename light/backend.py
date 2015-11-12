@@ -203,7 +203,7 @@ class Backend:
             # Don't use a tuple for the offsets because JSON save/load will
             # convert it to a list and we'll need to convert all those lists
             # to tuples on database load.
-            offsets = [landmark.offset, trigPoint.offset]
+            offsets = [landmark.offset, landmark.length, trigPoint.offset]
             try:
                 subjectDict[subjectIndex].append(offsets)
             except KeyError:
@@ -282,17 +282,18 @@ class Backend:
         hashes = OrderedDict()
 
         for (landmark, trigPoint) in self.getScannedPairs(scannedSequence):
+            offsets = [landmark.offset, landmark.length, trigPoint.offset]
             hash_ = self.hash(landmark, trigPoint)
             try:
                 hashInfo = hashes[hash_]
             except KeyError:
                 hashes[hash_] = {
                     'landmark': landmark,
-                    'offsets': [[landmark.offset, trigPoint.offset]],
+                    'offsets': [offsets],
                     'trigPoint': trigPoint,
                 }
             else:
-                hashInfo['offsets'].append([landmark.offset, trigPoint.offset])
+                hashInfo['offsets'].append(offsets)
 
         return hashes
 
@@ -317,13 +318,11 @@ class Backend:
         scannedRead = self.scan(read)
 
         for readHash, hashInfo in self.getHashes(scannedRead).items():
-            # Note that readHashCount is incremented for every hash in the
-            # read, even those that are not found in the database. Basing
-            # significance (in result.py) on a fraction of that overall
-            # read hash count therefore takes into account the fact that
-            # some hashes may have been missed. We may later want to do
-            # that at a finer level of granularity, though.  E.g., by
-            # considering where in the read the misses were.
+            # readHashCount is incremented for every hash in the read, even
+            # those not found in the subject database. Basing significance
+            # on a fraction of that overall read hash count (as is done by
+            # HashFraction (see significance.py)), therefore takes into
+            # account the fact that some hashes may have been missed.
             readHashCount += len(hashInfo['offsets'])
             try:
                 subjectDict = self.d[readHash]

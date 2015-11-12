@@ -194,37 +194,37 @@ class TestBackend(TestCase):
             {
                 'A2:A2:15': {
                     'landmark': helixAt0,
-                    'offsets': [[0, 15]],
+                    'offsets': [[0, 9, 15]],
                     'trigPoint': helixAt15,
                 },
                 'A2:P:-2': {
                     'landmark': helixAt15,
-                    'offsets': [[15, 13]],
+                    'offsets': [[15, 9, 13]],
                     'trigPoint': peakAt13,
                 },
                 'A2:P:-5': {
                     'landmark': helixAt15,
-                    'offsets': [[15, 10]],
+                    'offsets': [[15, 9, 10]],
                     'trigPoint': peakAt10,
                 },
                 'A2:P:10': {
                     'landmark': helixAt0,
-                    'offsets': [[0, 10], [15, 25]],
+                    'offsets': [[0, 9, 10], [15, 9, 25]],
                     'trigPoint': peakAt10,
                 },
                 'A2:P:13': {
                     'landmark': helixAt0,
-                    'offsets': [[0, 13], [15, 28]],
+                    'offsets': [[0, 9, 13], [15, 9, 28]],
                     'trigPoint': peakAt13,
                 },
                 'A2:P:25': {
                     'landmark': helixAt0,
-                    'offsets': [[0, 25]],
+                    'offsets': [[0, 9, 25]],
                     'trigPoint': peakAt25,
                 },
                 'A2:P:28': {
                     'landmark': helixAt0,
-                    'offsets': [[0, 28]],
+                    'offsets': [[0, 9, 28]],
                     'trigPoint': peakAt28,
                 },
             }, hashCount)
@@ -281,7 +281,7 @@ class TestBackend(TestCase):
         distance23 = str(scale(23, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
             {
-                'A2:A3:' + distance23: {'0': [[0, 23]]},
+                'A2:A3:' + distance23: {'0': [[0, 9, 23]]},
             },
             be.d)
 
@@ -319,7 +319,7 @@ class TestBackend(TestCase):
         distance23 = str(scale(23, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
             {
-                'A2:A3:' + distance23: {'0': [[1, 24]], '1': [[0, 23]]},
+                'A2:A3:' + distance23: {'0': [[1, 9, 24]], '1': [[0, 9, 23]]},
             },
             be.d)
 
@@ -335,7 +335,7 @@ class TestBackend(TestCase):
         distance10 = str(scale(10, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
             {
-                'A2:P:' + distance10: {'0': [[0, 10]]},
+                'A2:P:' + distance10: {'0': [[0, 9, 10]]},
             },
             be.d)
 
@@ -356,7 +356,7 @@ class TestBackend(TestCase):
         distance10 = str(scale(10, distanceBase))
         self.assertEqual(
             {
-                'A2:P:' + distance10: {'0': [[0, 10]]},
+                'A2:P:' + distance10: {'0': [[0, 9, 10]]},
             },
             be.d)
 
@@ -384,8 +384,8 @@ class TestBackend(TestCase):
         distance10 = str(scale(10, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
             {
-                'A2:P:' + distance13: {'0': [[0, 13]]},
-                'A2:P:' + distance10: {'0': [[0, 10]]},
+                'A2:P:' + distance13: {'0': [[0, 9, 13]]},
+                'A2:P:' + distance10: {'0': [[0, 9, 10]]},
             },
             be.d)
 
@@ -402,7 +402,7 @@ class TestBackend(TestCase):
         distance10 = str(scale(10, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
             {
-                'A2:P:' + distance10: {'0': [[0, 10]]},
+                'A2:P:' + distance10: {'0': [[0, 9, 10]]},
             },
             be.d)
 
@@ -431,7 +431,7 @@ class TestBackend(TestCase):
         distance10 = str(scale(10, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
             {
-                'A2:P:' + distance10: {'0': [[0, 10]]},
+                'A2:P:' + distance10: {'0': [[0, 9, 10]]},
             },
             be.d)
 
@@ -449,8 +449,8 @@ class TestBackend(TestCase):
         distance10 = str(scale(10, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
             {
-                'A2:P:' + distance13: {'0': [[0, 13]]},
-                'A2:P:' + distance10: {'0': [[0, 10]]},
+                'A2:P:' + distance13: {'0': [[0, 9, 13]]},
+                'A2:P:' + distance10: {'0': [[0, 9, 10]]},
             },
             be.d)
 
@@ -468,8 +468,8 @@ class TestBackend(TestCase):
         distance10 = str(scale(10, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
             {
-                'A2:P:' + distance13: {'0': [[0, 13]]},
-                'A2:P:' + distance10: {'0': [[0, 10]]},
+                'A2:P:' + distance13: {'0': [[0, 9, 13]]},
+                'A2:P:' + distance10: {'0': [[0, 9, 10]]},
             },
             be.d)
 
@@ -486,7 +486,7 @@ class TestBackend(TestCase):
         distance13 = str(scale(13, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
             {
-                'A2:P:' + distance13: {'0': [[0, 13]]},
+                'A2:P:' + distance13: {'0': [[0, 9, 13]]},
             },
             be.d)
 
@@ -521,7 +521,7 @@ class TestBackend(TestCase):
         distance10 = str(scale(10, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
             {
-                'A2:P:' + distance10: {'0': [[0, 10], [12, 22]]},
+                'A2:P:' + distance10: {'0': [[0, 9, 10], [12, 9, 22]]},
             },
             be.d)
 
@@ -545,7 +545,7 @@ class TestBackend(TestCase):
         distance23 = str(scale(23, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
             {
-                'A2:A3:' + distance23: {'0': [[0, 23]], '1': [[0, 23]]},
+                'A2:A3:' + distance23: {'0': [[0, 9, 23]], '1': [[0, 9, 23]]},
             },
             be.d)
 
@@ -584,8 +584,8 @@ class TestBackend(TestCase):
                 '0': [
                     {
                         'landmark': Landmark('AlphaHelix', 'A', 1, 9, 2),
-                        'queryOffsets': [[1, 11]],
-                        'subjectOffsets': [[1, 11]],
+                        'queryOffsets': [[1, 9, 11]],
+                        'subjectOffsets': [[1, 9, 11]],
                         'trigPoint': TrigPoint('Peaks', 'P', 11),
                     },
                 ],
@@ -612,14 +612,14 @@ class TestBackend(TestCase):
                 '0': [
                     {
                         'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                        'queryOffsets': [[0, 10]],
-                        'subjectOffsets': [[1, 11]],
+                        'queryOffsets': [[0, 9, 10]],
+                        'subjectOffsets': [[1, 9, 11]],
                         'trigPoint': TrigPoint('Peaks', 'P', 10),
                     },
                     {
                         'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                        'queryOffsets': [[0, 13]],
-                        'subjectOffsets': [[1, 14]],
+                        'queryOffsets': [[0, 9, 13]],
+                        'subjectOffsets': [[1, 9, 14]],
                         'trigPoint': TrigPoint('Peaks', 'P', 13),
                     }
                 ]
@@ -647,13 +647,13 @@ class TestBackend(TestCase):
                 'A2:P:10': {
                     'landmark': Landmark(
                         AlphaHelix.NAME, AlphaHelix.SYMBOL, 1, 9, 2),
-                    'offsets': [[1, 11]],
+                    'offsets': [[1, 9, 11]],
                     'trigPoint': TrigPoint(Peaks.NAME, Peaks.SYMBOL, 11),
                 },
                 'A2:P:13': {
                     'landmark': Landmark(
                         AlphaHelix.NAME, AlphaHelix.SYMBOL, 1, 9, 2),
-                    'offsets': [[1, 14]],
+                    'offsets': [[1, 9, 14]],
                     'trigPoint': TrigPoint(Peaks.NAME, Peaks.SYMBOL, 14),
                 }
             },
@@ -712,14 +712,14 @@ class TestBackend(TestCase):
                 '0': [
                     {
                         'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                        'queryOffsets': [[0, 10]],
-                        'subjectOffsets': [[0, 10]],
+                        'queryOffsets': [[0, 9, 10]],
+                        'subjectOffsets': [[0, 9, 10]],
                         'trigPoint': TrigPoint('Peaks', 'P', 10),
                     },
                     {
                         'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                        'queryOffsets': [[0, 13]],
-                        'subjectOffsets': [[0, 13]],
+                        'queryOffsets': [[0, 9, 13]],
+                        'subjectOffsets': [[0, 9, 13]],
                         'trigPoint': TrigPoint('Peaks', 'P', 13),
                     }
                 ],
@@ -877,11 +877,11 @@ class TestBackend(TestCase):
             'Checksum: 20379718\n'
             'Subjects (with offsets) by hash:\n'
             '  A2:P:10\n'
-            '    0 [[0, 10]]\n'
+            '    0 [[0, 9, 10]]\n'
             '  A2:T:4\n'
-            '    0 [[0, 4]]\n'
+            '    0 [[0, 9, 4]]\n'
             '  A2:T:8\n'
-            '    0 [[0, 8]]\n'
+            '    0 [[0, 9, 8]]\n'
             'Landmark symbol counts:\n'
             '  AlphaHelix (A2): 3\n'
             'Trig point symbol counts:\n'

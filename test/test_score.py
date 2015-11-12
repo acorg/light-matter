@@ -11,8 +11,7 @@ from light.score import (
     MinHashesScore, FeatureMatchingScore, FeatureAAScore, histogramBinFeatures,
     featureInRange, getHashFeatures)
 from light.histogram import Histogram
-from light.landmarks import AlphaHelix
-from light.landmarks import AminoAcids as AminoAcidsLm
+from light.landmarks import AlphaHelix, AminoAcids as AminoAcidsLm
 from light.trig import Peaks, AminoAcids
 
 
@@ -375,7 +374,7 @@ class TestGetHashFeatures(TestCase):
         hashes = {
             'A2:P:15': {
                 'landmark': helixAt0,
-                'offsets': [[0, 10]],
+                'offsets': [[0, 9, 10]],
                 'trigPoint': peakAt10,
             }
         }
@@ -396,7 +395,7 @@ class TestGetHashFeatures(TestCase):
         hashes = {
             'A2:A2:15': {
                 'landmark': helixAt0,
-                'offsets': [[0, 10], [30, 40]],
+                'offsets': [[0, 9, 10], [30, 9, 40]],
                 'trigPoint': peakAt10,
             }
         }
@@ -418,12 +417,12 @@ class TestGetHashFeatures(TestCase):
         hashes = {
             'A2:A2:15': {
                 'landmark': helixAt0,
-                'offsets': [[0, 10]],
+                'offsets': [[0, 9, 10]],
                 'trigPoint': peakAt10,
             },
             'A2:P:-2': {
                 'landmark': helixAt15,
-                'offsets': [[15, 13]],
+                'offsets': [[15, 9, 13]],
                 'trigPoint': peakAt13,
             },
         }
@@ -447,12 +446,12 @@ class TestGetHashFeatures(TestCase):
         hashes = {
             'A2:A2:15': {
                 'landmark': helixAt0,
-                'offsets': [[0, 10], [30, 40]],
+                'offsets': [[0, 9, 10], [30, 9, 40]],
                 'trigPoint': peakAt10,
             },
             'A2:P:-2': {
                 'landmark': helixAt15,
-                'offsets': [[15, 13]],
+                'offsets': [[15, 9, 13]],
                 'trigPoint': peakAt13,
             },
         }
@@ -1844,10 +1843,14 @@ class TestFeatureAAScore(TestCase):
             },
             scoreAnalysis)
 
-    def testScoresMustBeSymmetrical(self):
+    def testScoresMustBeSymmetric(self):
         """
-        When comparing two sequences against themselves, the scores must be the
-        same, no matter which one is used as the query or the subject.
+        When comparing two sequences, the scores must be the same, no matter
+        which one is used as the query or subject.
+
+        This was a (formerly) failing test built during the resolution of
+        https://github.com/acorg/light-matter/issues/341 based on two of the
+        sequences received from Sandra Junglen on March 13, 2015.
         """
         golv = AARead('GOLV', 'RVDIFKKNQHGGLREIYVLDLASRIVQLCLEEISRAVCQELPIEMM'
                               'MHPELKLKKPQEHMYKAAISPESYKSNVSSSNDAKVWNQGHHVAKF'
@@ -1856,6 +1859,7 @@ class TestFeatureAAScore(TestCase):
                               'HASLLMMRDSLWRSYSEQLGVKSITTDLVSSDDSSRMTDIFYRDSK'
                               'NFKRGKIFARADHMAIEPLSRCFGIWMSPKSTYCCNGIMEFNSEYF'
                               'FRASLYRPTLKWSYACLG')
+
         akav = AARead('AKAV', 'VFTYFNKGQKTAKDREIFVGEFEAKMCLYLVERISKERCKLNPDEM'
                               'ISEPGDGKLKKLEDMAEYEIRYTANTLKSMKDKALQEFSKFADDFN'
                               'FKPHSTKIEINADMSKWSAQDVLFKYFWLFALDPALYKPEKERILY'
@@ -1867,30 +1871,20 @@ class TestFeatureAAScore(TestCase):
         findParams = FindParameters(significanceFraction=0.01,
                                     scoreMethod='FeatureAAScore')
 
-        db1 = DatabaseSpecifier().getDatabaseFromKeywords(
-            landmarkNames=[
-                'AlphaHelix', 'AlphaHelix_3_10', 'AlphaHelix_pi',
-                'AminoAcidsLm', 'BetaStrand', 'BetaTurn', 'Prosite'],
-            trigPointNames=['AminoAcids', 'Peaks', 'Troughs'],
-            distanceBase=1.01, limitPerLandmark=50, minDistance=1,
-            maxDistance=100)
-        _, subjectIndex1, _ = db1.addSubject(golv)
+        kwds = dict(landmarkNames=['Prosite'], trigPointNames=['Peaks'],
+                    distanceBase=1, limitPerLandmark=40, minDistance=1,
+                    maxDistance=10000)
 
+        db1 = DatabaseSpecifier().getDatabaseFromKeywords(**kwds)
+        _, subjectIndex1, _ = db1.addSubject(golv)
         result1 = db1.find(akav, findParams, storeFullAnalysis=True)
 
-        db2 = DatabaseSpecifier().getDatabaseFromKeywords(
-            landmarkNames=[
-                'AlphaHelix', 'AlphaHelix_3_10', 'AlphaHelix_pi',
-                'AminoAcidsLm', 'BetaStrand', 'BetaTurn', 'Prosite'],
-            trigPointNames=['AminoAcids', 'Peaks', 'Troughs'],
-            distanceBase=1.01, limitPerLandmark=50, minDistance=1,
-            maxDistance=100)
+        db2 = DatabaseSpecifier().getDatabaseFromKeywords(**kwds)
         _, subjectIndex2, _ = db2.addSubject(akav)
-
         result2 = db2.find(golv, findParams, storeFullAnalysis=True)
 
-        self.assertEqual(result2.analysis[subjectIndex2]['bestScore'],
-                         result1.analysis[subjectIndex1]['bestScore'])
+        self.assertEqual(result1.analysis[subjectIndex1]['bestScore'],
+                         result2.analysis[subjectIndex2]['bestScore'])
 
     def testPrintAnalysis(self):
         """

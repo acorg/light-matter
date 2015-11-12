@@ -134,15 +134,15 @@ def getHashFeatures(readHashes):
     allFeatures = set()
 
     for hashInfo in readHashes.values():
-        for offsetPair in hashInfo['offsets']:
-            # Make sure all landmarks and trigPoints added to allFeatures have
-            # the correct offsets. Note that a hash might occur in more than
-            # one location on the sequence, which means that a landmark or
-            # trigPoint will have to be added to allFeatures twice but with
-            # different offsets.
+        for offsets in hashInfo['offsets']:
+            # Make sure all landmarks and trigPoints added to allFeatures
+            # have the correct offsets and lengths. Note that a hash might
+            # occur in more than one location on the sequence, which means
+            # that a landmark or trigPoint will have to be added to
+            # allFeatures twice but with different offsets.
             landmark = copy(hashInfo['landmark'])
             trigPoint = copy(hashInfo['trigPoint'])
-            landmark.offset, trigPoint.offset = offsetPair
+            landmark.offset, landmark.length, trigPoint.offset = offsets
 
             allFeatures.update([landmark, trigPoint])
 
@@ -396,6 +396,8 @@ class FeatureAAScore:
             'denominatorQuery': denominatorQuery,
             'denominatorSubject': denominatorSubject,
             'matchedOffsetCount': matchedOffsetCount,
+            'matchedSubjectOffsetCount': len(matchedSubjectOffsets),
+            'matchedQueryOffsetCount': len(matchedQueryOffsets),
             'matchedRegionScore': matchedRegionScore,
             'maxQueryOffset': maxQueryOffset,
             'maxSubjectOffset': maxSubjectOffset,
@@ -431,6 +433,10 @@ class FeatureAAScore:
              '%(maxSubjectOffset)d' % analysis),
             ('Total (query+subject) AA offsets in matched hashes: '
              '%(matchedOffsetCount)d' % analysis),
+            ('Subject AA offsets in matched hashes: '
+             '%(matchedSubjectOffsetCount)d' % analysis),
+            ('Query AA offsets in matched hashes: '
+             '%(matchedQueryOffsetCount)d' % analysis),
             ('Total (query+subject) AA offsets in hashes in matched region: '
              '%(totalOffsetCount)d' % analysis),
             ('Matched region score %(matchedRegionScore).4f '

@@ -351,14 +351,14 @@ class TestDatabase(TestCase):
             '0': [
                 {
                     'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                    'queryOffsets': [[0, 10]],
-                    'subjectOffsets': [[1, 11]],
+                    'queryOffsets': [[0, 9, 10]],
+                    'subjectOffsets': [[1, 9, 11]],
                     'trigPoint': TrigPoint('Peaks', 'P', 10),
                 },
                 {
                     'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                    'queryOffsets': [[0, 13]],
-                    'subjectOffsets': [[1, 14]],
+                    'queryOffsets': [[0, 9, 13]],
+                    'subjectOffsets': [[1, 9, 14]],
                     'trigPoint': TrigPoint('Peaks', 'P', 13),
                 }
             ]
@@ -387,14 +387,14 @@ class TestDatabase(TestCase):
                 '0': [
                     {
                         'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                        'queryOffsets': [[0, 10]],
-                        'subjectOffsets': [[1, 11]],
+                        'queryOffsets': [[0, 9, 10]],
+                        'subjectOffsets': [[1, 9, 11]],
                         'trigPoint': TrigPoint('Peaks', 'P', 10),
                     },
                     {
                         'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                        'queryOffsets': [[0, 13]],
-                        'subjectOffsets': [[1, 14]],
+                        'queryOffsets': [[0, 9, 13]],
+                        'subjectOffsets': [[1, 9, 14]],
                         'trigPoint': TrigPoint('Peaks', 'P', 13),
                     }
                 ]
@@ -419,8 +419,8 @@ class TestDatabase(TestCase):
                 '0': [
                     {
                         'landmark': Landmark('AlphaHelix', 'A', 1, 9, 2),
-                        'queryOffsets': [[1, 11]],
-                        'subjectOffsets': [[1, 11]],
+                        'queryOffsets': [[1, 9, 11]],
+                        'subjectOffsets': [[1, 9, 11]],
                         'trigPoint': TrigPoint('Peaks', 'P', 11),
                     },
                 ],
@@ -470,14 +470,14 @@ class TestDatabase(TestCase):
                 '0': [
                     {
                         'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                        'queryOffsets': [[0, 10]],
-                        'subjectOffsets': [[0, 10]],
+                        'queryOffsets': [[0, 9, 10]],
+                        'subjectOffsets': [[0, 9, 10]],
                         'trigPoint': TrigPoint('Peaks', 'P', 10),
                     },
                     {
                         'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                        'queryOffsets': [[0, 13]],
-                        'subjectOffsets': [[0, 13]],
+                        'queryOffsets': [[0, 9, 13]],
+                        'subjectOffsets': [[0, 9, 13]],
                         'trigPoint': TrigPoint('Peaks', 'P', 13),
                     }
                 ],
@@ -648,11 +648,11 @@ class TestDatabase(TestCase):
             '  Checksum: 20379718\n'
             '  Subjects (with offsets) by hash:\n'
             '    A2:P:10\n'
-            '      0 [[0, 10]]\n'
+            '      0 [[0, 9, 10]]\n'
             '    A2:T:4\n'
-            '      0 [[0, 4]]\n'
+            '      0 [[0, 9, 4]]\n'
             '    A2:T:8\n'
-            '      0 [[0, 8]]\n'
+            '      0 [[0, 9, 8]]\n'
             '  Landmark symbol counts:\n'
             '    AlphaHelix (A2): 3\n'
             '  Trig point symbol counts:\n'

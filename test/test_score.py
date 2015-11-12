@@ -11,8 +11,7 @@ from light.score import (
     MinHashesScore, FeatureMatchingScore, FeatureAAScore, histogramBinFeatures,
     featureInRange, getHashFeatures)
 from light.histogram import Histogram
-from light.landmarks import AlphaHelix
-from light.landmarks import AminoAcids as AminoAcidsLm
+from light.landmarks import AlphaHelix, AminoAcids as AminoAcidsLm
 from light.trig import Peaks, AminoAcids
 
 
@@ -375,7 +374,7 @@ class TestGetHashFeatures(TestCase):
         hashes = {
             'A2:P:15': {
                 'landmark': helixAt0,
-                'offsets': [[0, 10]],
+                'offsets': [[0, 9, 10]],
                 'trigPoint': peakAt10,
             }
         }
@@ -396,7 +395,7 @@ class TestGetHashFeatures(TestCase):
         hashes = {
             'A2:A2:15': {
                 'landmark': helixAt0,
-                'offsets': [[0, 10], [30, 40]],
+                'offsets': [[0, 9, 10], [30, 9, 40]],
                 'trigPoint': peakAt10,
             }
         }
@@ -418,12 +417,12 @@ class TestGetHashFeatures(TestCase):
         hashes = {
             'A2:A2:15': {
                 'landmark': helixAt0,
-                'offsets': [[0, 10]],
+                'offsets': [[0, 9, 10]],
                 'trigPoint': peakAt10,
             },
             'A2:P:-2': {
                 'landmark': helixAt15,
-                'offsets': [[15, 13]],
+                'offsets': [[15, 9, 13]],
                 'trigPoint': peakAt13,
             },
         }
@@ -447,12 +446,12 @@ class TestGetHashFeatures(TestCase):
         hashes = {
             'A2:A2:15': {
                 'landmark': helixAt0,
-                'offsets': [[0, 10], [30, 40]],
+                'offsets': [[0, 9, 10], [30, 9, 40]],
                 'trigPoint': peakAt10,
             },
             'A2:P:-2': {
                 'landmark': helixAt15,
-                'offsets': [[15, 13]],
+                'offsets': [[15, 9, 13]],
                 'trigPoint': peakAt13,
             },
         }
@@ -1072,7 +1071,9 @@ class TestFeatureAAScore(TestCase):
                 'denominatorQuery': 0,
                 'denominatorSubject': 0,
                 'matchedOffsetCount': 0,
+                'matchedQueryOffsetCount': 0,
                 'matchedRegionScore': 0.0,
+                'matchedSubjectOffsetCount': 0,
                 'maxQueryOffset': None,
                 'maxSubjectOffset': None,
                 'minQueryOffset': None,
@@ -1106,7 +1107,9 @@ class TestFeatureAAScore(TestCase):
                 'denominatorQuery': 0,
                 'denominatorSubject': 0,
                 'matchedOffsetCount': 0,
+                'matchedQueryOffsetCount': 0,
                 'matchedRegionScore': 0.0,
+                'matchedSubjectOffsetCount': 0,
                 'maxQueryOffset': None,
                 'maxSubjectOffset': None,
                 'minQueryOffset': None,
@@ -1141,7 +1144,9 @@ class TestFeatureAAScore(TestCase):
                 'denominatorQuery': 0,
                 'denominatorSubject': 0,
                 'matchedOffsetCount': 0,
+                'matchedQueryOffsetCount': 0,
                 'matchedRegionScore': 0.0,
+                'matchedSubjectOffsetCount': 0,
                 'maxQueryOffset': None,
                 'maxSubjectOffset': None,
                 'minQueryOffset': None,
@@ -1184,7 +1189,9 @@ class TestFeatureAAScore(TestCase):
                 'denominatorQuery': 20,
                 'denominatorSubject': 20,
                 'matchedOffsetCount': 40,
+                'matchedQueryOffsetCount': 20,
                 'matchedRegionScore': 1.0,
+                'matchedSubjectOffsetCount': 20,
                 'maxQueryOffset': 119,
                 'maxSubjectOffset': 119,
                 'minQueryOffset': 100,
@@ -1240,7 +1247,9 @@ class TestFeatureAAScore(TestCase):
                 'denominatorQuery': 20,
                 'denominatorSubject': 20,
                 'matchedOffsetCount': 40,
+                'matchedQueryOffsetCount': 20,
                 'matchedRegionScore': 1.0,
+                'matchedSubjectOffsetCount': 20,
                 'maxQueryOffset': 30,
                 'maxSubjectOffset': 30,
                 'minQueryOffset': 0,
@@ -1284,7 +1293,9 @@ class TestFeatureAAScore(TestCase):
                 'denominatorQuery': 20,
                 'denominatorSubject': 10,
                 'matchedOffsetCount': 20,
+                'matchedQueryOffsetCount': 10,
                 'matchedRegionScore': 1.0,
+                'matchedSubjectOffsetCount': 10,
                 'maxQueryOffset': 10,
                 'maxSubjectOffset': 10,
                 'minQueryOffset': 0,
@@ -1328,7 +1339,9 @@ class TestFeatureAAScore(TestCase):
                 'denominatorQuery': 21,
                 'denominatorSubject': 10,
                 'matchedOffsetCount': 20,
+                'matchedQueryOffsetCount': 10,
                 'matchedRegionScore': 1.0,
+                'matchedSubjectOffsetCount': 10,
                 'maxQueryOffset': 110,
                 'maxSubjectOffset': 110,
                 'minQueryOffset': 100,
@@ -1371,7 +1384,9 @@ class TestFeatureAAScore(TestCase):
                 'denominatorQuery': 31,
                 'denominatorSubject': 30,
                 'matchedOffsetCount': 40,
+                'matchedQueryOffsetCount': 20,
                 'matchedRegionScore': 1.0,
+                'matchedSubjectOffsetCount': 20,
                 'maxQueryOffset': 119,
                 'maxSubjectOffset': 119,
                 'minQueryOffset': 100,
@@ -1414,7 +1429,9 @@ class TestFeatureAAScore(TestCase):
                 'denominatorQuery': 30,
                 'denominatorSubject': 31,
                 'matchedOffsetCount': 40,
+                'matchedQueryOffsetCount': 20,
                 'matchedRegionScore': 1.0,
+                'matchedSubjectOffsetCount': 20,
                 'maxQueryOffset': 119,
                 'maxSubjectOffset': 119,
                 'minQueryOffset': 100,
@@ -1458,7 +1475,9 @@ class TestFeatureAAScore(TestCase):
                 'denominatorQuery': 31,
                 'denominatorSubject': 21,
                 'matchedOffsetCount': 42,
+                'matchedQueryOffsetCount': 21,
                 'matchedRegionScore': 42 / 52,
+                'matchedSubjectOffsetCount': 21,
                 'maxQueryOffset': 50,
                 'maxSubjectOffset': 50,
                 'minQueryOffset': 0,
@@ -1503,7 +1522,9 @@ class TestFeatureAAScore(TestCase):
                 'denominatorQuery': 10,
                 'denominatorSubject': 10,
                 'matchedOffsetCount': 20,
+                'matchedQueryOffsetCount': 10,
                 'matchedRegionScore': 1.0,
+                'matchedSubjectOffsetCount': 10,
                 'maxQueryOffset': 13,
                 'maxSubjectOffset': 13,
                 'minQueryOffset': 0,
@@ -1553,7 +1574,9 @@ class TestFeatureAAScore(TestCase):
                 'denominatorQuery': 10,
                 'denominatorSubject': 5,
                 'matchedOffsetCount': 10,
+                'matchedQueryOffsetCount': 5,
                 'matchedRegionScore': 1.0,
+                'matchedSubjectOffsetCount': 5,
                 'maxQueryOffset': 6,
                 'maxSubjectOffset': 6,
                 'minQueryOffset': 2,
@@ -1597,7 +1620,9 @@ class TestFeatureAAScore(TestCase):
                 'denominatorQuery': 23,
                 'denominatorSubject': 21,
                 'matchedOffsetCount': 42,
+                'matchedQueryOffsetCount': 21,
                 'matchedRegionScore': 42 / 44,
+                'matchedSubjectOffsetCount': 21,
                 'maxQueryOffset': 50,
                 'maxSubjectOffset': 50,
                 'minQueryOffset': 0,
@@ -1641,7 +1666,9 @@ class TestFeatureAAScore(TestCase):
                 'denominatorQuery': 25,
                 'denominatorSubject': 20,
                 'matchedOffsetCount': 40,
+                'matchedQueryOffsetCount': 20,
                 'matchedRegionScore': 1.0,
+                'matchedSubjectOffsetCount': 20,
                 'maxQueryOffset': 24,
                 'maxSubjectOffset': 24,
                 'minQueryOffset': 5,
@@ -1685,7 +1712,9 @@ class TestFeatureAAScore(TestCase):
                 'denominatorQuery': 11,
                 'denominatorSubject': 4,
                 'matchedOffsetCount': 8,
+                'matchedQueryOffsetCount': 4,
                 'matchedRegionScore': 1.0,
+                'matchedSubjectOffsetCount': 4,
                 'maxQueryOffset': 5,
                 'maxSubjectOffset': 5,
                 'minQueryOffset': 2,
@@ -1742,7 +1771,9 @@ class TestFeatureAAScore(TestCase):
                 'denominatorQuery': 20,
                 'denominatorSubject': 24,
                 'matchedOffsetCount': 20,
+                'matchedQueryOffsetCount': 10,
                 'matchedRegionScore': 20 / 44,
+                'matchedSubjectOffsetCount': 10,
                 'maxQueryOffset': 60,
                 'maxSubjectOffset': 60,
                 'minQueryOffset': 2,
@@ -1795,7 +1826,9 @@ class TestFeatureAAScore(TestCase):
                 'denominatorQuery': 210,
                 'denominatorSubject': 210,
                 'matchedOffsetCount': 420,
+                'matchedQueryOffsetCount': 210,
                 'matchedRegionScore': 1.0,
+                'matchedSubjectOffsetCount': 210,
                 'maxQueryOffset': 290,
                 'maxSubjectOffset': 290,
                 'minQueryOffset': 1,
@@ -1809,6 +1842,49 @@ class TestFeatureAAScore(TestCase):
                 'totalOffsetCount': 420,
             },
             scoreAnalysis)
+
+    def testScoresMustBeSymmetric(self):
+        """
+        When comparing two sequences, the scores must be the same, no matter
+        which one is used as the query or subject.
+
+        This was a (formerly) failing test built during the resolution of
+        https://github.com/acorg/light-matter/issues/341 based on two of the
+        sequences received from Sandra Junglen on March 13, 2015.
+        """
+        golv = AARead('GOLV', 'RVDIFKKNQHGGLREIYVLDLASRIVQLCLEEISRAVCQELPIEMM'
+                              'MHPELKLKKPQEHMYKAAISPESYKSNVSSSNDAKVWNQGHHVAKF'
+                              'AQFLCRLLSPEWHGLIVNGLKLWTNKKIALPDGVMNILSRANTPLF'
+                              'RNSIHQAVHDSYKGITPMRWLRPGETFMRIESGMMQGILHYTSSLF'
+                              'HASLLMMRDSLWRSYSEQLGVKSITTDLVSSDDSSRMTDIFYRDSK'
+                              'NFKRGKIFARADHMAIEPLSRCFGIWMSPKSTYCCNGIMEFNSEYF'
+                              'FRASLYRPTLKWSYACLG')
+
+        akav = AARead('AKAV', 'VFTYFNKGQKTAKDREIFVGEFEAKMCLYLVERISKERCKLNPDEM'
+                              'ISEPGDGKLKKLEDMAEYEIRYTANTLKSMKDKALQEFSKFADDFN'
+                              'FKPHSTKIEINADMSKWSAQDVLFKYFWLFALDPALYKPEKERILY'
+                              'FLCNYMDKVLVIPDDVMTSILDQRVKREKDIIYEMTNGLKQNWVSI'
+                              'KRNWLQGNLNYTSSYLHSCCMNVYKDIIKNVATLLEGDVLVNSMVH'
+                              'SDDNHTSITMIQDKFPDDIIIEYCIKLFEKICLSFGNQANMKKTYV'
+                              'TNFIKEFVSLFNIYGEPFSVYGRFLLTAVG')
+
+        findParams = FindParameters(significanceFraction=0.01,
+                                    scoreMethod='FeatureAAScore')
+
+        kwds = dict(landmarkNames=['Prosite'], trigPointNames=['Peaks'],
+                    distanceBase=1, limitPerLandmark=40, minDistance=1,
+                    maxDistance=10000)
+
+        db1 = DatabaseSpecifier().getDatabaseFromKeywords(**kwds)
+        _, subjectIndex1, _ = db1.addSubject(golv)
+        result1 = db1.find(akav, findParams, storeFullAnalysis=True)
+
+        db2 = DatabaseSpecifier().getDatabaseFromKeywords(**kwds)
+        _, subjectIndex2, _ = db2.addSubject(akav)
+        result2 = db2.find(golv, findParams, storeFullAnalysis=True)
+
+        self.assertEqual(result1.analysis[subjectIndex1]['bestScore'],
+                         result2.analysis[subjectIndex2]['bestScore'])
 
     def testPrintAnalysis(self):
         """
@@ -1840,6 +1916,8 @@ class TestFeatureAAScore(TestCase):
             'Matched offset range in query: 5 to 24\n'
             'Matched offset range in subject: 5 to 24\n'
             'Total (query+subject) AA offsets in matched hashes: 40\n'
+            'Subject AA offsets in matched hashes: 20\n'
+            'Query AA offsets in matched hashes: 20\n'
             'Total (query+subject) AA offsets in hashes in matched '
             'region: 40\n'
             'Matched region score 1.0000 (40 / 40)\n'

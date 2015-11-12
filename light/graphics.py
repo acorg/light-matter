@@ -929,7 +929,7 @@ class PlotHashesInSubjectAndRead(object):
             for offsets in hashInfo['offsets']:
                 landmark = copy(lm)
                 trigPoint = copy(tp)
-                landmark.offset, trigPoint.offset = offsets
+                landmark.offset, landmark.length, trigPoint.offset = offsets
                 plotFeature(landmark, qyY - missY, 'query')
                 plotFeature(trigPoint, qyY - missY, 'query')
 
@@ -946,7 +946,7 @@ class PlotHashesInSubjectAndRead(object):
             for offsets in hashInfo['offsets']:
                 landmark = copy(lm)
                 trigPoint = copy(tp)
-                landmark.offset, trigPoint.offset = offsets
+                landmark.offset, landmark.length, trigPoint.offset = offsets
                 plotFeature(landmark, sjY + missY, 'subject')
                 plotFeature(trigPoint, sjY + missY, 'subject')
 

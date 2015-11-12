@@ -98,12 +98,14 @@ class Result(object):
                         queryLandmark.length = queryOffsets[1]
                         queryTrigPoint = copy(trigPoint)
                         queryTrigPoint.offset = queryOffsets[2]
+                        queryTrigPoint.length = queryOffsets[3]
 
                         subjectLandmark = copy(landmark)
                         subjectLandmark.offset = subjectOffsets[0]
                         subjectLandmark.length = subjectOffsets[1]
                         subjectTrigPoint = copy(trigPoint)
                         subjectTrigPoint.offset = subjectOffsets[2]
+                        subjectTrigPoint.length = subjectOffsets[3]
 
                         # The delta is the difference between the
                         # corresponding landmark offsets

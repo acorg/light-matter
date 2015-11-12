@@ -142,7 +142,8 @@ def getHashFeatures(readHashes):
             # allFeatures twice but with different offsets.
             landmark = copy(hashInfo['landmark'])
             trigPoint = copy(hashInfo['trigPoint'])
-            landmark.offset, landmark.length, trigPoint.offset = offsets
+            (landmark.offset, landmark.length,
+             trigPoint.offset, trigPoint.length) = offsets
 
             allFeatures.update([landmark, trigPoint])
 

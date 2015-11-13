@@ -929,7 +929,8 @@ class PlotHashesInSubjectAndRead(object):
             for offsets in hashInfo['offsets']:
                 landmark = copy(lm)
                 trigPoint = copy(tp)
-                landmark.offset, landmark.length, trigPoint.offset = offsets
+                (landmark.offset, landmark.length,
+                 trigPoint.offset, trigPoint.length) = offsets
                 plotFeature(landmark, qyY - missY, 'query')
                 plotFeature(trigPoint, qyY - missY, 'query')
 
@@ -946,7 +947,8 @@ class PlotHashesInSubjectAndRead(object):
             for offsets in hashInfo['offsets']:
                 landmark = copy(lm)
                 trigPoint = copy(tp)
-                landmark.offset, landmark.length, trigPoint.offset = offsets
+                (landmark.offset, landmark.length,
+                 trigPoint.offset, trigPoint.length) = offsets
                 plotFeature(landmark, sjY + missY, 'subject')
                 plotFeature(trigPoint, sjY + missY, 'subject')
 
@@ -1139,8 +1141,8 @@ def featureComparison(aaSequence, ssSequence, **kwargs):
     tpNames = [trigPoint.NAME for trigPoint in db.params.trigPointClasses]
     yticks = ['S', 'T', 'E', 'B', 'I', 'G', 'H', ' '] + lmNames + tpNames
     ytickLabels = (['Bend', 'H-bonded turn', 'BetaStrand (?)', 'BetaBridge',
-                    'AlphaHelixPi', 'AlphaHelix_3_10', 'AlphaHelix', ' ']
-                   + lmNames + tpNames)
+                    'AlphaHelixPi', 'AlphaHelix_3_10', 'AlphaHelix', ' '] +
+                   lmNames + tpNames)
     title = aaSequence.id
 
     for i, item in enumerate(ytickLabels):

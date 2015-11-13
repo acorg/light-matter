@@ -374,7 +374,7 @@ class TestGetHashFeatures(TestCase):
         hashes = {
             'A2:P:15': {
                 'landmark': helixAt0,
-                'offsets': [[0, 9, 10]],
+                'offsets': [[0, 9, 10, 1]],
                 'trigPoint': peakAt10,
             }
         }
@@ -395,7 +395,7 @@ class TestGetHashFeatures(TestCase):
         hashes = {
             'A2:A2:15': {
                 'landmark': helixAt0,
-                'offsets': [[0, 9, 10], [30, 9, 40]],
+                'offsets': [[0, 9, 10, 1], [30, 9, 40, 1]],
                 'trigPoint': peakAt10,
             }
         }
@@ -417,12 +417,12 @@ class TestGetHashFeatures(TestCase):
         hashes = {
             'A2:A2:15': {
                 'landmark': helixAt0,
-                'offsets': [[0, 9, 10]],
+                'offsets': [[0, 9, 10, 1]],
                 'trigPoint': peakAt10,
             },
             'A2:P:-2': {
                 'landmark': helixAt15,
-                'offsets': [[15, 9, 13]],
+                'offsets': [[15, 9, 13, 1]],
                 'trigPoint': peakAt13,
             },
         }
@@ -446,12 +446,12 @@ class TestGetHashFeatures(TestCase):
         hashes = {
             'A2:A2:15': {
                 'landmark': helixAt0,
-                'offsets': [[0, 9, 10], [30, 9, 40]],
+                'offsets': [[0, 9, 10, 1], [30, 9, 40, 1]],
                 'trigPoint': peakAt10,
             },
             'A2:P:-2': {
                 'landmark': helixAt15,
-                'offsets': [[15, 9, 13]],
+                'offsets': [[15, 9, 13, 1]],
                 'trigPoint': peakAt13,
             },
         }

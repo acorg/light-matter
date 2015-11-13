@@ -1139,8 +1139,8 @@ def featureComparison(aaSequence, ssSequence, **kwargs):
     tpNames = [trigPoint.NAME for trigPoint in db.params.trigPointClasses]
     yticks = ['S', 'T', 'E', 'B', 'I', 'G', 'H', ' '] + lmNames + tpNames
     ytickLabels = (['Bend', 'H-bonded turn', 'BetaStrand (?)', 'BetaBridge',
-                    'AlphaHelixPi', 'AlphaHelix_3_10', 'AlphaHelix', ' ']
-                   + lmNames + tpNames)
+                    'AlphaHelixPi', 'AlphaHelix_3_10', 'AlphaHelix', ' '] +
+                   lmNames + tpNames)
     title = aaSequence.id
 
     for i, item in enumerate(ytickLabels):

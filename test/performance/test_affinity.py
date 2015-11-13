@@ -1,4 +1,5 @@
 from unittest import TestCase
+import numpy as np
 
 from dark.reads import Reads, AARead
 
@@ -20,7 +21,7 @@ class TestAffinityMatrix(TestCase):
         """
         reads = Reads()
         matrix = affinityMatrix(reads, landmarkNames=['AlphaHelix'])
-        self.assertEqual([], matrix)
+        self.assertTrue(np.array_equal(np.zeros((0, 0)), matrix))
 
     def testEmptyDatabase(self):
         """
@@ -30,7 +31,7 @@ class TestAffinityMatrix(TestCase):
         reads = Reads()
         matrix = affinityMatrix(reads, landmarkNames=['AlphaHelix'],
                                 subjects=reads)
-        self.assertEqual([], matrix)
+        self.assertTrue(np.array_equal(np.zeros((0, 0)), matrix))
 
     def testSequenceWithNoFeaturesAgainstItself(self):
         """
@@ -72,7 +73,7 @@ class TestAffinityMatrix(TestCase):
         subjects.add(AARead('id4', 'FRRRFRRRFAAAFRRRFRRRF'))
         matrix = affinityMatrix(reads, landmarkNames=['AlphaHelix'],
                                 subjects=subjects)
-        self.assertEqual([[1.0, 1.0, 1.0]], matrix)
+        self.assertTrue(np.array_equal([[1.0, 1.0, 1.0]], matrix))
 
     def testTwoByThree(self):
         """
@@ -89,24 +90,31 @@ class TestAffinityMatrix(TestCase):
         subjects.add(AARead('id4', 'FRRRFRRRFAAAFRRRFRRRF'))
         matrix = affinityMatrix(reads, landmarkNames=['AlphaHelix'],
                                 subjects=subjects)
-        self.assertEqual([
-            [1.0, 1.0, 1.0],
-            [1.0, 1.0, 1.0]
-        ], matrix)
+        self.assertTrue(np.array_equal(
+            [
+                [1.0, 1.0, 1.0],
+                [1.0, 1.0, 1.0]
+            ],
+            matrix)
+        )
 
-    def _checkSymmetry(self, sequences, findParams, **kwargs):
+    def _checkSymmetry(self, sequences, findParams, symmetric=False, **kwargs):
         """
         Create an affinity matrix for a set of sequences and check its
         symmetry.
 
         @param sequences: A C{list} of C{AARead} instances.
         @param findParams: A {light.parameters.FindParameters} instance.
+        @param symmetric: If C{True}, pass symmetric=True to the affinityMatrix
+            function, allowing it to speed up the calculation by assuming
+            scores are symmetric. We still check that the result actually is
+            symmetric.
         @param kwargs: See
             C{database.DatabaseSpecifier.getDatabaseFromKeywords} for
             additional keywords, all of which are optional.
         """
         matrix = affinityMatrix(sequences, findParams, subjects=sequences,
-                                **kwargs)
+                                symmetric=symmetric, **kwargs)
 
         for i in range(len(sequences)):
 
@@ -169,6 +177,53 @@ class TestAffinityMatrix(TestCase):
             landmarkNames=[cls.NAME for cls in ALL_LANDMARK_CLASSES],
             trigPointNames=[cls.NAME for cls in ALL_TRIG_CLASSES],
             limitPerLandmark=50, minDistance=1, maxDistance=100)
+
+    def testSandraSymmetryWithSymmetricSpeedup_235(self):
+        """
+        Make sure we get a symmetric affinity matrix on a few of the sequences
+        received from Sandra Junglen on March 13, 2015 if we pass
+        symmetric=True to affinityMatrix.
+
+        The sequences below are the ones that caused the non-symmetric
+        scores issue in https://github.com/acorg/light-matter/issues/235
+        """
+        sequences = [
+            # Read index 3.
+            AARead('BUNV', ('SFTFFNKGQKTAKDREIFVGEFEAKMCMYVVERISKERCKLNTDE'
+                            'MISEPGDSKLKILEKKAEEEIRYIVERTKDSIIKGDPSKALKLEI'
+                            'NADMSKWSAQDVFYKYFWLIAMDPILYPAEKTRILYFMCNYMQKL'
+                            'LILPDDLIANILDQKRPYNDDLILEMTNGLNYNYVQIKRNWLQGN'
+                            'FNYISSYVHSCAMLVYKDILKECMKLLDGDCLINSMVHSDDNQTS'
+                            'LAIIQNKVSDQIVIQYAANTFESVCLTFGCQANMKKTYITHTCKE'
+                            'FVSLFNLHGEPLSVFGRFLLPSVG')),
+
+            # Read index 24.
+            AARead('LACV', ('YFTFFNKGQKTSKDREIFVGEYEAKMCMYAVERIAKERCKLNPDE'
+                            'MISEPGDGKLKVLEQKSEQEIRFLVETTRQKNREIDEAIEALAAE'
+                            'GYESNLEKIEKLSLGKAKGLKMEINADMSKWSAQDVFYKYFWLIA'
+                            'LDPILYPQEKERILYFMCNYMDKELILPDELLFNLLDQKVAYQND'
+                            'IIATMTNQLNSNTVLIKRNWLQGNFNYTSSYVHSCAMSVYKEILK'
+                            'EAITLLDGSILVNSLVHSDDNQTSITIVQDKMENDKIIDFAMKEF'
+                            'ERACLTFGCQANMKKTYVTNCIKEFVSLFNLYGEPFSIYGRFLLT'
+                            'SVG')),
+
+            # Read index 48.
+            AARead('WYOV', ('TFTFFNKGQKTAKDREIFVGEFEAKMCMYVVERIAKERCKLNSDE'
+                            'MISEPGDAKLKILEQKAEQELRFIVERTKDKFLKGDPCKALKMEI'
+                            'NADMSKWSAQDVFYKYFWLIAMDPILYPKEKYRILFFMCNYLQKV'
+                            'LVLPDELIGNILDQKKTYNNDIILEGTDFLHQNYVNIRRNWLQGN'
+                            'FNYLSSYIHTCAMSVFKDILKEVSYLLDGDVLVNSMVHSDDNQTS'
+                            'ITYVQNKIEESVLINHGLKTFETVCLTFGCQANMKKTYLTHNIKE'
+                            'FVSLFNIHGEPMSVYGRFLLPSVG')),
+        ]
+
+        findParams = FindParameters(significanceFraction=0.05)
+        self._checkSymmetry(
+            sequences, findParams, distanceBase=1.0,
+            landmarkNames=[cls.NAME for cls in ALL_LANDMARK_CLASSES],
+            trigPointNames=[cls.NAME for cls in ALL_TRIG_CLASSES],
+            limitPerLandmark=50, minDistance=1, maxDistance=100,
+            symmetric=True)
 
     def testSandraSymmetry_259(self):
         """

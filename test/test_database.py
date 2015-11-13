@@ -427,6 +427,49 @@ class TestDatabase(TestCase):
             },
             result.matches)
 
+    def testFindOneMatchingSignificantWithSubjectIndicesIncludingIt(self):
+        """
+        One matching and significant subject must be found, including when a
+        non-empty subjectIndices is passed which includes the found index (and
+        other non-matched subject indices)
+        """
+        sequence = 'AFRRRFRRRFASAASA'
+        subject = AARead('subject', sequence)
+        query = AARead('query', sequence)
+        params = Parameters([AlphaHelix], [Peaks], maxDistance=11)
+        db = Database(params)
+        db.addSubject(subject)
+        findParams = FindParameters(significanceFraction=0.0)
+        result = db.find(query, findParams, subjectIndices={'0', 'x', 'y'})
+        self.assertEqual(
+            {
+                '0': [
+                    {
+                        'landmark': Landmark('AlphaHelix', 'A', 1, 9, 2),
+                        'queryOffsets': [[1, 9, 11, 1]],
+                        'subjectOffsets': [[1, 9, 11, 1]],
+                        'trigPoint': TrigPoint('Peaks', 'P', 11),
+                    },
+                ],
+            },
+            result.matches)
+
+    def testFindOneMatchingButSubjectExcluded(self):
+        """
+        Despite one matching and significant subject, no result should be
+        returned if a subjectIndices argument that excludes it is passed to
+        find.
+        """
+        sequence = 'AFRRRFRRRFASAASA'
+        subject = AARead('subject', sequence)
+        query = AARead('query', sequence)
+        params = Parameters([AlphaHelix], [Peaks], maxDistance=11)
+        db = Database(params)
+        db.addSubject(subject)
+        findParams = FindParameters(significanceFraction=0.0)
+        result = db.find(query, findParams, subjectIndices=set())
+        self.assertEqual({}, result.matches)
+
     def testFindNoneMatchingTooSmallDistance(self):
         """
         No matches should be found if the max distance is too small.

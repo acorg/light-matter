@@ -600,6 +600,26 @@ class TestBackend(TestCase):
         self.assertEqual(1, hashCount)
         self.assertEqual({}, nonMatchingHashes)
 
+    def testFindOneMatchingHashButSubjectExcluded(self):
+        """
+        One matching subject with one matching hash (that occurs in one
+        location) must not be returned if a subjectIndices argument that
+        excludes it is passed to find.
+        """
+        sequence = 'AFRRRFRRRFASAASA'
+        subject = AARead('subject', sequence)
+        query = AARead('query', sequence)
+        params = Parameters([AlphaHelix], [Peaks], maxDistance=11)
+        be = Backend()
+        be.configure(params)
+        be.addSubject(subject, '0')
+        matches, hashCount, nonMatchingHashes = be.find(query,
+                                                        subjectIndices=set())
+
+        self.assertEqual({}, matches)
+        self.assertEqual(1, hashCount)
+        self.assertEqual({}, nonMatchingHashes)
+
     def testFindOneMatchingHashInTwoLocations(self):
         """
         One matching subject with one matching hash (that occurs in two

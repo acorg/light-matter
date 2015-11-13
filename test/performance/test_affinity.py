@@ -16,21 +16,11 @@ class TestAffinityMatrix(TestCase):
 
     def testNoReads(self):
         """
-        If affinityMatrix is called with no reads, an empty matrix must be
-        returned.
+        If affinityMatrix is called with no reads and no subjects, an empty
+        matrix must be returned.
         """
         reads = Reads()
         matrix = affinityMatrix(reads, landmarkNames=['AlphaHelix'])
-        self.assertTrue(np.array_equal(np.zeros((0, 0)), matrix))
-
-    def testEmptyDatabase(self):
-        """
-        If affinityMatrix is called with reads but the database is empty, an
-        empty matrix must be returned.
-        """
-        reads = Reads()
-        matrix = affinityMatrix(reads, landmarkNames=['AlphaHelix'],
-                                subjects=reads)
         self.assertTrue(np.array_equal(np.zeros((0, 0)), matrix))
 
     def testSequenceWithNoFeaturesAgainstItself(self):
@@ -43,8 +33,20 @@ class TestAffinityMatrix(TestCase):
         read = AARead('id1', 'AAA')
         reads.add(read)
         matrix = affinityMatrix(reads, landmarkNames=['AlphaHelix'],
-                                subjects=reads)
+                                computeDiagonal=True)
         self.assertEqual([[0.0]], matrix)
+
+    def testOneSequenceSpecificDiagonalValue(self):
+        """
+        If affinityMatrix is called with a single read and a specific
+        diagonal value, that diagonal value must be in the result.
+        """
+        reads = Reads()
+        read = AARead('id1', 'AAA')
+        reads.add(read)
+        matrix = affinityMatrix(reads, landmarkNames=['AlphaHelix'],
+                                diagonalValue=2.0)
+        self.assertEqual([[2.0]], matrix)
 
     def testSequenceWithFeaturesAgainstItself(self):
         """
@@ -56,8 +58,35 @@ class TestAffinityMatrix(TestCase):
         read = AARead('id1', 'FRRRFRRRFAAAFRRRFRRRF')
         reads.add(read)
         matrix = affinityMatrix(reads, landmarkNames=['AlphaHelix'],
-                                subjects=reads)
+                                computeDiagonal=True)
         self.assertEqual([[1.0]], matrix)
+
+    def testZeroByThree(self):
+        """
+        If affinityMatrix is called with no reads and three subjects, the
+        resulting matrix must be 0x3.
+        """
+        reads = Reads()
+        subjects = Reads()
+        subjects.add(AARead('id2', 'FRRRFRRRFAAAFRRRFRRRF'))
+        subjects.add(AARead('id3', 'FRRRFRRRFAAAFRRRFRRRF'))
+        subjects.add(AARead('id4', 'FRRRFRRRFAAAFRRRFRRRF'))
+        matrix = affinityMatrix(reads, landmarkNames=['AlphaHelix'],
+                                subjects=subjects, computeDiagonal=True)
+        self.assertTrue(np.array_equal(np.zeros((0, 3)), matrix))
+
+    def testOneByZero(self):
+        """
+        If affinityMatrix is called with no reads and three subjects, the
+        resulting matrix must be 1x0.
+        """
+        reads = Reads()
+        read = AARead('id1', 'FRRRFRRRFAAAFRRRFRRRF')
+        reads.add(read)
+        subjects = Reads()
+        matrix = affinityMatrix(reads, landmarkNames=['AlphaHelix'],
+                                subjects=subjects, computeDiagonal=True)
+        self.assertTrue(np.array_equal(np.zeros((1, 0)), matrix))
 
     def testOneByThree(self):
         """
@@ -72,7 +101,7 @@ class TestAffinityMatrix(TestCase):
         subjects.add(AARead('id3', 'FRRRFRRRFAAAFRRRFRRRF'))
         subjects.add(AARead('id4', 'FRRRFRRRFAAAFRRRFRRRF'))
         matrix = affinityMatrix(reads, landmarkNames=['AlphaHelix'],
-                                subjects=subjects)
+                                subjects=subjects, computeDiagonal=True)
         self.assertTrue(np.array_equal([[1.0, 1.0, 1.0]], matrix))
 
     def testTwoByThree(self):
@@ -89,7 +118,7 @@ class TestAffinityMatrix(TestCase):
         subjects.add(AARead('id3', 'FRRRFRRRFAAAFRRRFRRRF'))
         subjects.add(AARead('id4', 'FRRRFRRRFAAAFRRRFRRRF'))
         matrix = affinityMatrix(reads, landmarkNames=['AlphaHelix'],
-                                subjects=subjects)
+                                subjects=subjects, computeDiagonal=True)
         self.assertTrue(np.array_equal(
             [
                 [1.0, 1.0, 1.0],
@@ -113,8 +142,8 @@ class TestAffinityMatrix(TestCase):
             C{database.DatabaseSpecifier.getDatabaseFromKeywords} for
             additional keywords, all of which are optional.
         """
-        matrix = affinityMatrix(sequences, findParams, subjects=sequences,
-                                symmetric=symmetric, **kwargs)
+        matrix = affinityMatrix(sequences, findParams, symmetric=symmetric,
+                                **kwargs)
 
         for i in range(len(sequences)):
 
@@ -176,13 +205,14 @@ class TestAffinityMatrix(TestCase):
             sequences, findParams, distanceBase=1.0,
             landmarkNames=[cls.NAME for cls in ALL_LANDMARK_CLASSES],
             trigPointNames=[cls.NAME for cls in ALL_TRIG_CLASSES],
-            limitPerLandmark=50, minDistance=1, maxDistance=100)
+            limitPerLandmark=50, minDistance=1, maxDistance=100,
+            symmetric=False)
 
     def testSandraSymmetryWithSymmetricSpeedup_235(self):
         """
         Make sure we get a symmetric affinity matrix on a few of the sequences
-        received from Sandra Junglen on March 13, 2015 if we pass
-        symmetric=True to affinityMatrix.
+        received from Sandra Junglen on March 13, 2015 if we pass no value for
+        'symmetric' (which defaults to True) to affinityMatrix.
 
         The sequences below are the ones that caused the non-symmetric
         scores issue in https://github.com/acorg/light-matter/issues/235
@@ -222,8 +252,7 @@ class TestAffinityMatrix(TestCase):
             sequences, findParams, distanceBase=1.0,
             landmarkNames=[cls.NAME for cls in ALL_LANDMARK_CLASSES],
             trigPointNames=[cls.NAME for cls in ALL_TRIG_CLASSES],
-            limitPerLandmark=50, minDistance=1, maxDistance=100,
-            symmetric=True)
+            limitPerLandmark=50, minDistance=1, maxDistance=100)
 
     def testSandraSymmetry_259(self):
         """
@@ -258,4 +287,5 @@ class TestAffinityMatrix(TestCase):
             sequences, findParams, distanceBase=1.025,
             landmarkNames=['GOR4AlphaHelix', 'GOR4Coil'],
             trigPointNames=['Peaks', 'Troughs'],
-            limitPerLandmark=50, minDistance=1, maxDistance=100)
+            limitPerLandmark=50, minDistance=1, maxDistance=100,
+            symmetric=False)

@@ -203,7 +203,8 @@ class Backend:
             # Don't use a tuple for the offsets because JSON save/load will
             # convert it to a list and we'll need to convert all those lists
             # to tuples on database load.
-            offsets = [landmark.offset, landmark.length, trigPoint.offset]
+            offsets = [landmark.offset, landmark.length,
+                       trigPoint.offset, trigPoint.length]
             try:
                 subjectDict[subjectIndex].append(offsets)
             except KeyError:
@@ -282,7 +283,8 @@ class Backend:
         hashes = OrderedDict()
 
         for (landmark, trigPoint) in self.getScannedPairs(scannedSequence):
-            offsets = [landmark.offset, landmark.length, trigPoint.offset]
+            offsets = [landmark.offset, landmark.length,
+                       trigPoint.offset, trigPoint.length]
             hash_ = self.hash(landmark, trigPoint)
             try:
                 hashInfo = hashes[hash_]

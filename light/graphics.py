@@ -1368,7 +1368,7 @@ def compareScores(subject, query, scoreMethods=None,
                   plotHashesInSubjectAndRead=True, showBestBinOnly=True,
                   showHistogram=True, findParams=None, showInsignificant=False,
                   showFeatures=False, showScoreAnalysis=True,
-                  showSignificantBinsDetails=False, **kwds):
+                  showSignificantBinsDetails=False, **kwargs):
     """
     Plot the features in two sequences, the hashes in their match, and
     the scores for the match calculated under different score methods.
@@ -1391,11 +1391,11 @@ def compareScores(subject, query, scoreMethods=None,
     @param showScoreAnalysis: If C{True}, print details of the score analysis.
     @param showSignificantBinsDetails: If C{True}, print information about the
         contents of the significant bins in the histogram.
-    @param kwds: See
+    @param kwargs: See
         C{database.DatabaseSpecifier.getDatabaseFromKeywords} for
         additional keywords, all of which are optional.
     """
-    db = DatabaseSpecifier().getDatabaseFromKeywords(**kwds)
+    db = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
     _, subjectIndex, _ = db.addSubject(subject)
     scoreMethods = scoreMethods or sorted(
         cls.__name__ for cls in ALL_SCORE_CLASSES)
@@ -1428,17 +1428,17 @@ def compareScores(subject, query, scoreMethods=None,
             PlotHashesInSubjectAndRead(
                 query, subject, findParams=findParams,
                 showInsignificant=showInsignificant, showSignificant=True,
-                showBestBinOnly=showBestBinOnly, **kwds).plotHorizontal(
+                showBestBinOnly=showBestBinOnly, **kwargs).plotHorizontal(
                     addJitter=True)
 
         if showHistogram:
             plotHistogram(
                 query, subject, showSignificanceCutoff=True,
-                significanceFraction=findParams.significanceFraction, **kwds)
+                significanceFraction=findParams.significanceFraction, **kwargs)
         else:
             print('Subject %r was not matched.', subject.id)
         print()
 
     if showFeatures:
         # Plot landmarks and trig points horizontally.
-        plotLandmarksInSequences([subject, query], **kwds)
+        plotLandmarksInSequences([subject, query], **kwargs)

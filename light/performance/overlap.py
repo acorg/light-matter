@@ -17,8 +17,7 @@ class SSAARead(AARead):
     @param structure: A C{str} of structure information.
     """
     def __init__(self, id, sequence, structure):
-        self.id = id
-        self.sequence = sequence
+        super().__init__(id, sequence)
         self.structure = structure
 
 
@@ -33,9 +32,12 @@ class CalculateOverlap(object):
         sequence and structural information.
     """
     def __init__(self, pdbFile):
+        # The pdb file is in fasta format. For each structure it contains the
+        # amino acid sequence on one line and the predicted secondary structure
+        # sequence on the other.
         self.SSAAReads = Reads()
         records = [record for record in SeqIO.parse(pdbFile, 'fasta')]
-        for i in range(len(records))[::2]:
+        for i in range(0, len(records), 2):
             record = records[i]
             read = SSAARead(record.id, record.seq,
                             records[i + 1].seq)
@@ -56,35 +58,38 @@ class CalculateOverlap(object):
             aaSeqFeatures, ssSeqFeatures, intersects = self.getFeatures(
                 read, printAll=printAll)
             for feature, indices in aaSeqFeatures:
-                allAASequenceFeatures.extend(indices)
+                allAASequenceFeatures.extend(feature[indices])
             for feature, indices in ssSeqFeatures:
-                allSSSequenceFeatures.extend(indices)
+                allSSSequenceFeatures.extend(feature[indices])
             for featureIntersect, indices in intersects:
-                allIntersects.extend(indices)
+                allIntersects.extend(feature[indices])
 
         self.calculateFraction(allAASequenceFeatures, allSSSequenceFeatures,
                                allIntersects, print_=printAll)
 
     @staticmethod
     def getFeatures(ssAARead, printAll=False,
-                    landmarkNames=['AlphaHelix', 'AlphaHelix_pi',
-                                   'AlphaHelix_3_10', 'BetaStrand',
-                                   'GOR4AlphaHelix', 'GOR4BetaStrand'],
-                    trigPointNames=[], **kwargs):
+                    landmarkNames=None, trigPointNames=None, **kwargs):
         """
         Extract the features from the sequence and the structural information.
 
-        @param ssAARead: A C{SSAARead} instance.
+        @param ssAARead: An C{SSAARead} instance.
         @param printAll: A C{bool} saying whether the information about the
-            overlap in should be printed out.
+            overlap in the ssAARead should be printed out.
         @param landmarkNames: A C{list} of names of landmarks that should be
             used.
-        @param trigPointNames: A C{list} of names of trigPoints that should be
+        @param trigPointNames: A C{list} of names of trig points that should be
             used.
         @param kwargs: See
             C{database.DatabaseSpecifier.getDatabaseFromKeywords} for
             additional keywords, all of which are optional.
         """
+        if landmarkNames is None:
+            landmarkNames = ['AlphaHelix', 'AlphaHelix_pi', 'AlphaHelix_3_10',
+                             'BetaStrand', 'GOR4AlphaHelix', 'GOR4BetaStrand']
+        if trigPointNames is None:
+            trigPointNames = []
+
         db = DatabaseSpecifier().getDatabaseFromKeywords(landmarkNames,
                                                          trigPointNames,
                                                          **kwargs)
@@ -97,11 +102,11 @@ class CalculateOverlap(object):
 
         scannedAaSequence = backend.scan(ssAARead)
 
-        # Get all offsets for each landmark seperately.
+        # Get all offsets for each landmark separately.
         for landmark in scannedAaSequence.landmarks:
             aaSequenceFeatures[landmark.name].update(landmark.coveredOffsets())
 
-        # Get all offsets for each secondary structure feature seperately.
+        # Get all offsets for each secondary structure feature separately.
         for offset, structure in enumerate(ssAARead.structure):
             ssSequenceFeatures[structure].add(offset)
 
@@ -146,37 +151,37 @@ class CalculateOverlap(object):
             structure feature contains the offsets that are covered by it.
         @param intersectDict: A C{dict} which contains the intersects of
             secondary structure features and the features from our finders.
-        @param print_: A C{bool} about whether the results of the calculation
-            should be printed.
+        @param print_: A C{bool} indicating whether the results of the
+            calculation should be printed.
         """
         try:
             alphaHelix = (len(aaSequenceFeatureDict['AlphaHelix']) /
-                          (len(intersectDict['AlphaHelix_H'])))
+                          len(intersectDict['AlphaHelix_H']))
         except ZeroDivisionError:
             alphaHelix = 0.0
         try:
             alphaHelix_3_10 = (len(aaSequenceFeatureDict['AlphaHelix_3_10']) /
-                               (len(intersectDict['AlphaHelix_3_10_G'])))
+                               len(intersectDict['AlphaHelix_3_10_G']))
         except ZeroDivisionError:
             alphaHelix_3_10 = 0.0
         try:
             alphaHelix_pi = (len(aaSequenceFeatureDict['AlphaHelix_pi']) /
-                             (len(intersectDict['AlphaHelix_pi_I'])))
+                             len(intersectDict['AlphaHelix_pi_I']))
         except ZeroDivisionError:
             alphaHelix_pi = 0.0
         try:
             gor4AlphaHelix = (len(aaSequenceFeatureDict['GOR4AlphaHelix']) /
-                              (len(intersectDict['GOR4AlphaHelix_HGI'])))
+                              len(intersectDict['GOR4AlphaHelix_HGI']))
         except ZeroDivisionError:
             gor4AlphaHelix = 0.0
         try:
             betaStrand = (len(aaSequenceFeatureDict['Betastrand']) /
-                          (len(intersectDict['Betastrand_E'])))
+                          len(intersectDict['Betastrand_E']))
         except ZeroDivisionError:
             betaStrand = 0.0
         try:
             gor4BetaStrand = (len(aaSequenceFeatureDict['GOR4BetaStrand']) /
-                              (len(intersectDict['GOR4BetaStrand_E'])))
+                              len(intersectDict['GOR4BetaStrand_E']))
         except ZeroDivisionError:
             gor4BetaStrand = 0.0
 

@@ -49,7 +49,7 @@ class TestCalculateOverlap(TestCase):
             co = CalculateOverlap('pdb.fasta')
             self.assertEqual(list(reads), list(co.SSAAReads))
 
-    def xtestOneReadFileParsing(self):
+    def testOneReadFileParsing(self):
         """
         Parsing of the pdb file with one read must work correctly.
         """
@@ -147,6 +147,6 @@ class TestCalculateOverlap(TestCase):
         self.assertEqual(0.0, alphaHelix)
         self.assertEqual(0.0, alphaHelix_pi)
         self.assertEqual(1.0, alphaHelix_3_10)
-        self.assertAlmostEqual(0.7142857, gor4AlphaHelix)
+        self.assertEqual(5 / 7, gor4AlphaHelix)
         self.assertEqual(0.0, betaStrand)
         self.assertEqual(1.0, gor4BetaStrand)

@@ -19,6 +19,12 @@ def affinityMatrix(queries, findParams=None, subjects=None, symmetric=True,
     @param subjects: Either 1) a C{str} filename of sequences to consider, or
         2) a C{light.reads.Reads} instance, or 3) C{None}, in which case
         the C{queries} will also be used as the subjects.
+    @param symmetric: If C{True}, corresponding off-diagonal scores will be
+        assumed to be equal and only computed once. I.e., this is a speedup
+        when scores (affinities) are symmetric. This option gives the biggest
+        speed up on a square matrix, but can also be used when the matrix is
+        not square (e.g., when making a 2x4 matrix comparing {A, B} against
+        {A, B, C, D}, the A->B distance can be used to set the B->A distance).
     @param computeDiagonal: If C{True}, values on the diagonal will be computed
         (i.e., obtained from find). Otherwise, all diagonal values will be set
         to C{diagonalValue}.

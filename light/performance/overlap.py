@@ -68,31 +68,25 @@ class CalculateOverlap(object):
                                allIntersects, print_=printAll)
 
     @staticmethod
-    def getFeatures(ssAARead, printAll=False,
-                    landmarkNames=None, trigPointNames=None, **kwargs):
+    def getFeatures(ssAARead, printAll=False, **kwargs):
         """
         Extract the features from the sequence and the structural information.
 
         @param ssAARead: An C{SSAARead} instance.
         @param printAll: A C{bool} saying whether the information about the
             overlap in the ssAARead should be printed out.
-        @param landmarkNames: A C{list} of names of landmarks that should be
-            used.
-        @param trigPointNames: A C{list} of names of trig points that should be
-            used.
         @param kwargs: See
             C{database.DatabaseSpecifier.getDatabaseFromKeywords} for
             additional keywords, all of which are optional.
         """
-        if landmarkNames is None:
-            landmarkNames = ['AlphaHelix', 'AlphaHelix_pi', 'AlphaHelix_3_10',
-                             'BetaStrand', 'GOR4AlphaHelix', 'GOR4BetaStrand']
-        if trigPointNames is None:
-            trigPointNames = []
+        if 'landmarkNames' not in kwargs:
+            kwargs['landmarkNames'] = ['AlphaHelix', 'AlphaHelix_pi',
+                                       'AlphaHelix_3_10', 'BetaStrand',
+                                       'GOR4AlphaHelix', 'GOR4BetaStrand']
+        if 'trigPointNames' not in kwargs:
+            kwargs['trigPointNames'] = []
 
-        db = DatabaseSpecifier().getDatabaseFromKeywords(landmarkNames,
-                                                         trigPointNames,
-                                                         **kwargs)
+        db = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
         backend = Backend()
         backend.configure(db.params)
 

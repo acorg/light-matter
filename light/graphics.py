@@ -9,18 +9,18 @@ from textwrap import fill
 from collections import defaultdict
 from math import log10
 
-from dark.dimension import dimensionalIterator
-
 from light.backend import Backend
 from light.colors import colors
 from light.database import DatabaseSpecifier
 from light.features import Landmark
 from light.landmarks import ALL_LANDMARK_CLASSES
 from light.parameters import FindParameters
+from light.performance.overlap import CalculateOverlap
 from light.score import ALL_SCORE_CLASSES
 from light.string import MultilineString
 from light.trig import ALL_TRIG_CLASSES
 
+from dark.dimension import dimensionalIterator
 from dark.fasta import FastaReads
 from dark.reads import AARead
 
@@ -1077,7 +1077,7 @@ def confusionMatrix(confusionMatrix):
     ax.spines['left'].set_linewidth(0)
 
 
-def featureComparison(aaSequence, ssSequence, **kwargs):
+def featureComparison(ssAARead, print_=True, **kwargs):
     """
     A function which provides plotting options for sequences, given the
     predicted secondary structures from PDB and our features.
@@ -1091,10 +1091,14 @@ def featureComparison(aaSequence, ssSequence, **kwargs):
     T = hydrogen bonded turn
     S = bend
 
-    @param aaSequence: A C{dark.reads.AARead} AA sequence.
-    @param ssSequence: A C{str} sequence of secondary structures.
+    @param ssAARead: A C{light.performance.overlap.SSAARead} instance.
+    @param print_: A C{bool} indicating if the result of the overlap
+        calculation should be printed.
+    @param kwargs: See
+        C{database.DatabaseSpecifier.getDatabaseFromKeywords} for
+        additional keywords, all of which are optional.
     """
-    ssSequenceColors = {
+    ssStructureColors = {
         'H': (0.12156862745098039, 0.4666666666666667, 0.7058823529411765),
         'B': '#848484',
         'E': (0.596078431372549, 0.8745098039215686, 0.5411764705882353),
@@ -1104,29 +1108,32 @@ def featureComparison(aaSequence, ssSequence, **kwargs):
         'S': '#848484',
     }
 
-    # parse the ssSequence so that it can be plotted easily.
+    aaSequence = ssAARead.sequence
+    ssStructure = ssAARead.structure
+
+    # parse the ssStructure so that it can be plotted easily.
     all_ = defaultdict(list)
 
     previous = None
     start = 0
-    for i, item in enumerate(ssSequence):
+    for i, item in enumerate(ssStructure):
         # item is the last item of the sequence
         try:
-            ssSequence[i + 1]
+            ssStructure[i + 1]
         except IndexError:
             if item == previous:
                 all_[item].append([start, i])
             else:
                 all_[item].append([i, i])
             break
-        if item == previous and ssSequence[i + 1] != item:
+        if item == previous and ssStructure[i + 1] != item:
             all_[item].append([start, i])
         # item is the only item of the sequence
-        elif item != previous and ssSequence[i + 1] != item:
+        elif item != previous and ssStructure[i + 1] != item:
             previous = item
             all_[item].append([i, i])
         # item is the first one in the sequence:
-        elif item != previous and ssSequence[i + 1] == item:
+        elif item != previous and ssStructure[i + 1] == item:
             previous = item
             start = i
 
@@ -1172,7 +1179,7 @@ def featureComparison(aaSequence, ssSequence, **kwargs):
         if feature != ' ':
             for offset in offsets:
                 plt.plot([offset[0], offset[1]], [y, y],
-                         color=ssSequenceColors[feature], linewidth=4)
+                         color=ssStructureColors[feature], linewidth=4)
 
     ax.set_yticklabels(ytickLabels)
     ax.set_yticks(range(len(yticks)))
@@ -1184,6 +1191,12 @@ def featureComparison(aaSequence, ssSequence, **kwargs):
     ax.xaxis.grid()
     ax.set_ylim(-0.1, len(yticks) - 1 + 0.1)
     ax.set_xlim(0, len(aaSequence.sequence))
+
+    if print_:
+        aaSeqF, ssSeqF, intersects = CalculateOverlap.getFeatures(ssAARead,
+                                                                  **kwargs)
+        CalculateOverlap.calculateFraction(aaSeqF, ssSeqF, intersects,
+                                           print_=True)
 
 
 class SequenceFeatureAnalysis:

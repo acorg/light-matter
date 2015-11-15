@@ -1,3 +1,4 @@
+from copy import copy
 import logging
 from io import StringIO
 from collections import defaultdict, OrderedDict
@@ -335,13 +336,24 @@ class Backend:
                 if storeFullAnalysis:
                     nonMatchingHashes[readHash] = hashInfo
             else:
-                for (subjectIndex, subjectOffsets) in subjectDict.items():
+                for (sI, subjectOffsets) in subjectDict.items():
                     if (subjectIndices is None or
-                            subjectIndex in subjectIndices):
+                            sI in subjectIndices):
                         try:
-                            matches[subjectIndex].extend(hashInfo)
+                            matches[sI]['queryFeatures'].extend(hashInfo)
                         except KeyError:
-                            matches[subjectIndex] = hashInfo
+                            matches[sI] = {'queryFeatures': hashInfo,
+                                           'subjectFeatures': [],
+                                           }
+                            for subjectOffset in subjectOffsets:
+                                sLm = copy(hashInfo[0][0])
+                                sLm.offset = subjectOffset[0]
+                                sLm.length = subjectOffset[1]
+                                sTp = copy(hashInfo[0][1])
+                                sTp.offset = subjectOffset[2]
+                                sTp.length = subjectOffset[3]
+                                matches[sI]['subjectFeatures'].append(
+                                    [sLm, sTp])
 
         return matches, readHashCount, nonMatchingHashes
 

@@ -53,7 +53,8 @@ class SimpleConnector:
                        'totalResidues', 'totalCoveredResidues', 'checksum'):
             setattr(self, method, getattr(self._backend, method))
 
-    def find(self, read, findParams=None, storeFullAnalysis=False):
+    def find(self, read, findParams=None, storeFullAnalysis=False,
+             subjectIndices=None):
         """
         Check which database sequences a read matches.
 
@@ -61,10 +62,15 @@ class SimpleConnector:
         @param findParams: An instance of C{light.parameters.FindParameters}.
         @param storeFullAnalysis: A C{bool}. If C{True} the intermediate
             significance analysis computed in the Result will be stored.
+        @param subjectIndices: A C{set} of subject indices, or C{None}. If a
+            set is passed, only subject indices in the set will be returned
+            in the results. If C{None}, all matching subject indices are
+            returned.
         @return: A C{light.result.Result} instance.
         """
         matches, hashCount, nonMatchingHashes = self._backend.find(
-            read, storeFullAnalysis)
+            read, storeFullAnalysis=storeFullAnalysis,
+            subjectIndices=subjectIndices)
 
         return Result(read, self, matches, hashCount,
                       findParams or FindParameters(),
@@ -429,6 +435,8 @@ class WampServerConnector:
 
         return False, subjectIndex
 
+    # TODO: The signature of this find method needs to be fixed to be in
+    #       line with SimpleConnector above.
     async def find(self, read, significanceMethod=None, scoreMethod=None,
                    significanceFraction=None, storeFullAnalysis=False):
         """

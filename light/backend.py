@@ -203,7 +203,8 @@ class Backend:
             # Don't use a tuple for the offsets because JSON save/load will
             # convert it to a list and we'll need to convert all those lists
             # to tuples on database load.
-            offsets = [landmark.offset, landmark.length, trigPoint.offset]
+            offsets = [landmark.offset, landmark.length,
+                       trigPoint.offset, trigPoint.length]
             try:
                 subjectDict[subjectIndex].append(offsets)
             except KeyError:
@@ -282,7 +283,8 @@ class Backend:
         hashes = OrderedDict()
 
         for (landmark, trigPoint) in self.getScannedPairs(scannedSequence):
-            offsets = [landmark.offset, landmark.length, trigPoint.offset]
+            offsets = [landmark.offset, landmark.length,
+                       trigPoint.offset, trigPoint.length]
             hash_ = self.hash(landmark, trigPoint)
             try:
                 hashInfo = hashes[hash_]
@@ -297,7 +299,7 @@ class Backend:
 
         return hashes
 
-    def find(self, read, storeFullAnalysis=False):
+    def find(self, read, storeFullAnalysis=False, subjectIndices=None):
         """
         Given a read, compute all hashes for it, look up matching hashes and
         check which database sequences it matches.
@@ -305,6 +307,10 @@ class Backend:
         @param read: A C{dark.reads.AARead} instance.
         @param storeFullAnalysis: A C{bool}. If C{True} the intermediate
             significance analysis computed in the Result will be stored.
+        @param subjectIndices: A C{set} of subject indices, or C{None}. If a
+            set is passed, only subject indices in the set will be returned
+            in the results. If C{None}, all matching subject indices are
+            returned.
         @return: A tuple of length three, containing
             1. Matches, a C{dict} keyed by subject index and whose values are
                as shown below.
@@ -337,11 +343,13 @@ class Backend:
                     nonMatchingHashes[readHash] = hashInfo
             else:
                 for (subjectIndex, subjectOffsets) in subjectDict.items():
-                    matches[subjectIndex].append({
-                        'landmark': hashInfo['landmark'],
-                        'queryOffsets': hashInfo['offsets'],
-                        'subjectOffsets': subjectOffsets,
-                        'trigPoint': hashInfo['trigPoint']})
+                    if (subjectIndices is None or
+                            subjectIndex in subjectIndices):
+                        matches[subjectIndex].append({
+                            'landmark': hashInfo['landmark'],
+                            'queryOffsets': hashInfo['offsets'],
+                            'subjectOffsets': subjectOffsets,
+                            'trigPoint': hashInfo['trigPoint']})
 
         return matches, readHashCount, nonMatchingHashes
 

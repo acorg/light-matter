@@ -351,14 +351,14 @@ class TestDatabase(TestCase):
             '0': [
                 {
                     'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                    'queryOffsets': [[0, 9, 10]],
-                    'subjectOffsets': [[1, 9, 11]],
+                    'queryOffsets': [[0, 9, 10, 1]],
+                    'subjectOffsets': [[1, 9, 11, 1]],
                     'trigPoint': TrigPoint('Peaks', 'P', 10),
                 },
                 {
                     'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                    'queryOffsets': [[0, 9, 13]],
-                    'subjectOffsets': [[1, 9, 14]],
+                    'queryOffsets': [[0, 9, 13, 1]],
+                    'subjectOffsets': [[1, 9, 14, 1]],
                     'trigPoint': TrigPoint('Peaks', 'P', 13),
                 }
             ]
@@ -387,14 +387,14 @@ class TestDatabase(TestCase):
                 '0': [
                     {
                         'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                        'queryOffsets': [[0, 9, 10]],
-                        'subjectOffsets': [[1, 9, 11]],
+                        'queryOffsets': [[0, 9, 10, 1]],
+                        'subjectOffsets': [[1, 9, 11, 1]],
                         'trigPoint': TrigPoint('Peaks', 'P', 10),
                     },
                     {
                         'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                        'queryOffsets': [[0, 9, 13]],
-                        'subjectOffsets': [[1, 9, 14]],
+                        'queryOffsets': [[0, 9, 13, 1]],
+                        'subjectOffsets': [[1, 9, 14, 1]],
                         'trigPoint': TrigPoint('Peaks', 'P', 13),
                     }
                 ]
@@ -419,13 +419,56 @@ class TestDatabase(TestCase):
                 '0': [
                     {
                         'landmark': Landmark('AlphaHelix', 'A', 1, 9, 2),
-                        'queryOffsets': [[1, 9, 11]],
-                        'subjectOffsets': [[1, 9, 11]],
+                        'queryOffsets': [[1, 9, 11, 1]],
+                        'subjectOffsets': [[1, 9, 11, 1]],
                         'trigPoint': TrigPoint('Peaks', 'P', 11),
                     },
                 ],
             },
             result.matches)
+
+    def testFindOneMatchingSignificantWithSubjectIndicesIncludingIt(self):
+        """
+        One matching and significant subject must be found, including when a
+        non-empty subjectIndices is passed which includes the found index (and
+        other non-matched subject indices)
+        """
+        sequence = 'AFRRRFRRRFASAASA'
+        subject = AARead('subject', sequence)
+        query = AARead('query', sequence)
+        params = Parameters([AlphaHelix], [Peaks], maxDistance=11)
+        db = Database(params)
+        db.addSubject(subject)
+        findParams = FindParameters(significanceFraction=0.0)
+        result = db.find(query, findParams, subjectIndices={'0', 'x', 'y'})
+        self.assertEqual(
+            {
+                '0': [
+                    {
+                        'landmark': Landmark('AlphaHelix', 'A', 1, 9, 2),
+                        'queryOffsets': [[1, 9, 11, 1]],
+                        'subjectOffsets': [[1, 9, 11, 1]],
+                        'trigPoint': TrigPoint('Peaks', 'P', 11),
+                    },
+                ],
+            },
+            result.matches)
+
+    def testFindOneMatchingButSubjectExcluded(self):
+        """
+        Despite one matching and significant subject, no result should be
+        returned if a subjectIndices argument that excludes it is passed to
+        find.
+        """
+        sequence = 'AFRRRFRRRFASAASA'
+        subject = AARead('subject', sequence)
+        query = AARead('query', sequence)
+        params = Parameters([AlphaHelix], [Peaks], maxDistance=11)
+        db = Database(params)
+        db.addSubject(subject)
+        findParams = FindParameters(significanceFraction=0.0)
+        result = db.find(query, findParams, subjectIndices=set())
+        self.assertEqual({}, result.matches)
 
     def testFindNoneMatchingTooSmallDistance(self):
         """
@@ -470,14 +513,14 @@ class TestDatabase(TestCase):
                 '0': [
                     {
                         'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                        'queryOffsets': [[0, 9, 10]],
-                        'subjectOffsets': [[0, 9, 10]],
+                        'queryOffsets': [[0, 9, 10, 1]],
+                        'subjectOffsets': [[0, 9, 10, 1]],
                         'trigPoint': TrigPoint('Peaks', 'P', 10),
                     },
                     {
                         'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                        'queryOffsets': [[0, 9, 13]],
-                        'subjectOffsets': [[0, 9, 13]],
+                        'queryOffsets': [[0, 9, 13, 1]],
+                        'subjectOffsets': [[0, 9, 13, 1]],
                         'trigPoint': TrigPoint('Peaks', 'P', 13),
                     }
                 ],
@@ -648,11 +691,11 @@ class TestDatabase(TestCase):
             '  Checksum: 20379718\n'
             '  Subjects (with offsets) by hash:\n'
             '    A2:P:10\n'
-            '      0 [[0, 9, 10]]\n'
+            '      0 [[0, 9, 10, 1]]\n'
             '    A2:T:4\n'
-            '      0 [[0, 9, 4]]\n'
+            '      0 [[0, 9, 4, 1]]\n'
             '    A2:T:8\n'
-            '      0 [[0, 9, 8]]\n'
+            '      0 [[0, 9, 8, 1]]\n'
             '  Landmark symbol counts:\n'
             '    AlphaHelix (A2): 3\n'
             '  Trig point symbol counts:\n'

@@ -16,6 +16,7 @@ from light.features import Landmark
 from light.landmarks import ALL_LANDMARK_CLASSES
 from light.parameters import FindParameters
 from light.performance.overlap import CalculateOverlap
+from light.score import ALL_SCORE_CLASSES
 from light.string import MultilineString
 from light.trig import ALL_TRIG_CLASSES
 
@@ -929,7 +930,8 @@ class PlotHashesInSubjectAndRead(object):
             for offsets in hashInfo['offsets']:
                 landmark = copy(lm)
                 trigPoint = copy(tp)
-                landmark.offset, landmark.length, trigPoint.offset = offsets
+                (landmark.offset, landmark.length,
+                 trigPoint.offset, trigPoint.length) = offsets
                 plotFeature(landmark, qyY - missY, 'query')
                 plotFeature(trigPoint, qyY - missY, 'query')
 
@@ -946,7 +948,8 @@ class PlotHashesInSubjectAndRead(object):
             for offsets in hashInfo['offsets']:
                 landmark = copy(lm)
                 trigPoint = copy(tp)
-                landmark.offset, landmark.length, trigPoint.offset = offsets
+                (landmark.offset, landmark.length,
+                 trigPoint.offset, trigPoint.length) = offsets
                 plotFeature(landmark, sjY + missY, 'subject')
                 plotFeature(trigPoint, sjY + missY, 'subject')
 
@@ -1146,8 +1149,8 @@ def featureComparison(ssAARead, print_=True, **kwargs):
     tpNames = [trigPoint.NAME for trigPoint in db.params.trigPointClasses]
     yticks = ['S', 'T', 'E', 'B', 'I', 'G', 'H', ' '] + lmNames + tpNames
     ytickLabels = (['Bend', 'H-bonded turn', 'BetaStrand (?)', 'BetaBridge',
-                    'AlphaHelixPi', 'AlphaHelix_3_10', 'AlphaHelix', ' ']
-                   + lmNames + tpNames)
+                    'AlphaHelixPi', 'AlphaHelix_3_10', 'AlphaHelix', ' '] +
+                   lmNames + tpNames)
     title = aaSequence.id
 
     for i, item in enumerate(ytickLabels):
@@ -1372,3 +1375,83 @@ class SequenceFeatureAnalysis:
             unique[name] = set()
 
         return unique
+
+
+def compareScores(subject, query, scoreMethods=None,
+                  plotHashesInSubjectAndRead=True, showBestBinOnly=True,
+                  showHistogram=True, findParams=None, showInsignificant=False,
+                  showFeatures=False, showScoreAnalysis=True,
+                  showSignificantBinsDetails=False, **kwargs):
+    """
+    Plot the features in two sequences, the hashes in their match, and
+    the scores for the match calculated under different score methods.
+
+    @param subject: An C{AARead} instance.
+    @param query: An C{AARead} instance.
+    @param scoreMethods: A C{list} of score methods to use, or C{None} to
+        use all score methods.
+    @param plotHashesInSubjectAndRead: If C{True}, plot the hashes in the
+        subject and read showing the match.
+    @param showBestBinOnly: If C{True} (and C{PlotHashesInSubjectAndRead} is
+        also C{True}), only show details of the best bin in the match between
+        query and subject.
+    @param showHistogram: If C{True}, plot the delta offset histogram.
+    @param findParams: A C{light.parameters.FindParameters} instance.
+    @param showInsignificant: If C{True}, hashes from insignificant bins will
+        be included in the set of hashes that match query and subject.
+    @param showFeatures: If C{True}, show a separate plot of features in the
+        sequences.
+    @param showScoreAnalysis: If C{True}, print details of the score analysis.
+    @param showSignificantBinsDetails: If C{True}, print information about the
+        contents of the significant bins in the histogram.
+    @param kwargs: See
+        C{database.DatabaseSpecifier.getDatabaseFromKeywords} for
+        additional keywords, all of which are optional.
+    """
+    db = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
+    _, subjectIndex, _ = db.addSubject(subject)
+    scoreMethods = scoreMethods or sorted(
+        cls.__name__ for cls in ALL_SCORE_CLASSES)
+    findParams = findParams or FindParameters()
+
+    # Calculate a score for each score method.
+    for scoreMethod in scoreMethods:
+        print('%s:' % scoreMethod)
+        findParams.scoreMethod = scoreMethod
+        result = db.find(query, findParams, storeFullAnalysis=True).analysis
+        if subjectIndex in result:
+            significantBins = result[subjectIndex]['significantBins']
+            if significantBins:
+                if showScoreAnalysis:
+                    analysis = significantBins[0]['scoreAnalysis']
+                    print(analysis['scoreClass'].printAnalysis(analysis))
+                else:
+                    print('Score:', result[subjectIndex]['bestScore'])
+
+                if showSignificantBinsDetails:
+                    print('There are %d significant bins:\n  %s' % (
+                        len(significantBins),
+                        '\n  '.join(['index=%d score=%.4f binCount=%d' %
+                                    ((b['index'], b['score'], len(b['bin'])))
+                                    for b in significantBins])))
+            else:
+                print('No significant bins.')
+
+        if plotHashesInSubjectAndRead:
+            PlotHashesInSubjectAndRead(
+                query, subject, findParams=findParams,
+                showInsignificant=showInsignificant, showSignificant=True,
+                showBestBinOnly=showBestBinOnly, **kwargs).plotHorizontal(
+                    addJitter=True)
+
+        if showHistogram:
+            plotHistogram(
+                query, subject, showSignificanceCutoff=True,
+                significanceFraction=findParams.significanceFraction, **kwargs)
+        else:
+            print('Subject %r was not matched.', subject.id)
+        print()
+
+    if showFeatures:
+        # Plot landmarks and trig points horizontally.
+        plotLandmarksInSequences([subject, query], **kwargs)

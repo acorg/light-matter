@@ -53,18 +53,16 @@ class TestCalculateOverlap(TestCase):
         """
         Parsing of the pdb file with one read must work correctly.
         """
-        reads = Reads()
         read = SSAARead('seq1', 'REDD', 'HH--')
-        reads.add(read)
         data = '\n'.join(['>seq1', 'REDD', '>str1', 'HH--'])
         mockOpener = mockOpen(read_data=data)
         with patch.object(builtins, 'open', mockOpener):
             co = CalculateOverlap('pdb.fasta')
             self.assertEqual(1, len(co.SSAAReads))
-            self.assertEqual(list(reads)[0].id, list(co.SSAAReads)[0].id)
-            self.assertEqual(list(reads)[0].sequence,
+            self.assertEqual(read.id, list(co.SSAAReads)[0].id)
+            self.assertEqual(read.sequence,
                              list(co.SSAAReads)[0].sequence)
-            self.assertEqual(list(reads)[0].structure,
+            self.assertEqual(read.structure,
                              list(co.SSAAReads)[0].structure)
 
     def testTwoReadsFileParsing(self):
@@ -82,15 +80,15 @@ class TestCalculateOverlap(TestCase):
         with patch.object(builtins, 'open', mockOpener):
             co = CalculateOverlap('pdb.fasta')
             self.assertEqual(2, len(co.SSAAReads))
-            self.assertEqual(list(reads)[0].id, list(co.SSAAReads)[0].id)
-            self.assertEqual(list(reads)[0].sequence,
+            self.assertEqual(read1.id, list(co.SSAAReads)[0].id)
+            self.assertEqual(read1.sequence,
                              list(co.SSAAReads)[0].sequence)
-            self.assertEqual(list(reads)[0].structure,
+            self.assertEqual(read1.structure,
                              list(co.SSAAReads)[0].structure)
-            self.assertEqual(list(reads)[1].id, list(co.SSAAReads)[1].id)
-            self.assertEqual(list(reads)[1].sequence,
+            self.assertEqual(read2.id, list(co.SSAAReads)[1].id)
+            self.assertEqual(read2.sequence,
                              list(co.SSAAReads)[1].sequence)
-            self.assertEqual(list(reads)[1].structure,
+            self.assertEqual(read2.structure,
                              list(co.SSAAReads)[1].structure)
 
     def testGetFeatures(self):

@@ -58,11 +58,11 @@ class CalculateOverlap(object):
             aaSeqFeatures, ssSeqFeatures, intersects = self.getFeatures(
                 read, printAll=printAll)
             for feature, indices in aaSeqFeatures:
-                allAASequenceFeatures.extend(feature[indices])
+                allAASequenceFeatures[feature].extend(feature[indices])
             for feature, indices in ssSeqFeatures:
-                allSSSequenceFeatures.extend(feature[indices])
+                allSSSequenceFeatures[feature].extend(feature[indices])
             for featureIntersect, indices in intersects:
-                allIntersects.extend(feature[indices])
+                allIntersects[feature].extend(feature[indices])
 
         self.calculateFraction(allAASequenceFeatures, allSSSequenceFeatures,
                                allIntersects, print_=printAll)

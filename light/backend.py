@@ -269,10 +269,9 @@ class Backend:
         collect the offsets at which the (landmark, trigPoint) pair occurs.
 
         @param scannedSequence: A C{light.reads.ScannedRead} instance.
-        @return: A C{dict} keyed by (landmark, trigPoint) hash, whose values
-            are C{dict}s containing the first (landmark, trigPoint) pair that
-            generated that hash, and a list of all offsets into the read
-            where the (landmark, trigPoint) pair was found.
+        @return: A C{dict} keyed by (landmark, trigPoint) hash, whose value
+            is a C{list} of C{lists} containing the landmark and trigPoint pair
+            that generated that hash.
         """
         # For testing reasons, use an ordered dict to hold hash information.
         # Our database and result code do not need the dict to be ordered.
@@ -283,19 +282,13 @@ class Backend:
         hashes = OrderedDict()
 
         for (landmark, trigPoint) in self.getScannedPairs(scannedSequence):
-            offsets = [landmark.offset, landmark.length,
-                       trigPoint.offset, trigPoint.length]
             hash_ = self.hash(landmark, trigPoint)
             try:
                 hashInfo = hashes[hash_]
             except KeyError:
-                hashes[hash_] = {
-                    'landmark': landmark,
-                    'offsets': [offsets],
-                    'trigPoint': trigPoint,
-                }
+                hashes[hash_] = [[landmark, trigPoint]]
             else:
-                hashInfo['offsets'].append(offsets)
+                hashInfo.append([landmark, trigPoint])
 
         return hashes
 
@@ -318,7 +311,7 @@ class Backend:
             3. A C{dict} of non-matching hashes, keyed by hash with values as
                returned by self.getHashes.
         """
-        matches = defaultdict(list)
+        matches = {}
         nonMatchingHashes = {}
         readHashCount = 0
         scannedRead = self.scan(read)
@@ -329,7 +322,7 @@ class Backend:
             # on a fraction of that overall read hash count (as is done by
             # HashFraction (see significance.py)), therefore takes into
             # account the fact that some hashes may have been missed.
-            readHashCount += len(hashInfo['offsets'])
+            readHashCount += len(hashInfo)
             try:
                 subjectDict = self.d[readHash]
             except KeyError:
@@ -345,11 +338,10 @@ class Backend:
                 for (subjectIndex, subjectOffsets) in subjectDict.items():
                     if (subjectIndices is None or
                             subjectIndex in subjectIndices):
-                        matches[subjectIndex].append({
-                            'landmark': hashInfo['landmark'],
-                            'queryOffsets': hashInfo['offsets'],
-                            'subjectOffsets': subjectOffsets,
-                            'trigPoint': hashInfo['trigPoint']})
+                        try:
+                            matches[subjectIndex].extend(hashInfo)
+                        except KeyError:
+                            matches[subjectIndex] = hashInfo
 
         return matches, readHashCount, nonMatchingHashes
 

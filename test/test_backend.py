@@ -192,41 +192,13 @@ class TestBackend(TestCase):
         peakAt28 = TrigPoint(Peaks.NAME, Peaks.SYMBOL, 28)
         self.assertEqual(
             {
-                'A2:A2:15': {
-                    'landmark': helixAt0,
-                    'offsets': [[0, 9, 15, 9]],
-                    'trigPoint': helixAt15,
-                },
-                'A2:P:-2': {
-                    'landmark': helixAt15,
-                    'offsets': [[15, 9, 13, 1]],
-                    'trigPoint': peakAt13,
-                },
-                'A2:P:-5': {
-                    'landmark': helixAt15,
-                    'offsets': [[15, 9, 10, 1]],
-                    'trigPoint': peakAt10,
-                },
-                'A2:P:10': {
-                    'landmark': helixAt0,
-                    'offsets': [[0, 9, 10, 1], [15, 9, 25, 1]],
-                    'trigPoint': peakAt10,
-                },
-                'A2:P:13': {
-                    'landmark': helixAt0,
-                    'offsets': [[0, 9, 13, 1], [15, 9, 28, 1]],
-                    'trigPoint': peakAt13,
-                },
-                'A2:P:25': {
-                    'landmark': helixAt0,
-                    'offsets': [[0, 9, 25, 1]],
-                    'trigPoint': peakAt25,
-                },
-                'A2:P:28': {
-                    'landmark': helixAt0,
-                    'offsets': [[0, 9, 28, 1]],
-                    'trigPoint': peakAt28,
-                },
+                'A2:P:28': [[helixAt0, peakAt28]],
+                'A2:P:25': [[helixAt0, peakAt25]],
+                'A2:P:13': [[helixAt0, peakAt13], [helixAt15, peakAt28]],
+                'A2:P:10': [[helixAt0, peakAt10], [helixAt15, peakAt25]],
+                'A2:P:-5': [[helixAt15, peakAt10]],
+                'A2:P:-2': [[helixAt15, peakAt13]],
+                'A2:A2:15': [[helixAt0, helixAt15]],
             }, hashCount)
 
     def testAddSubjectReturnsCorrectResult(self):
@@ -587,14 +559,8 @@ class TestBackend(TestCase):
 
         self.assertEqual(
             {
-                '0': [
-                    {
-                        'landmark': Landmark('AlphaHelix', 'A', 1, 9, 2),
-                        'queryOffsets': [[1, 9, 11, 1]],
-                        'subjectOffsets': [[1, 9, 11, 1]],
-                        'trigPoint': TrigPoint('Peaks', 'P', 11),
-                    },
-                ],
+                '0': [[Landmark('AlphaHelix', 'A', 1, 9, 2),
+                       TrigPoint('Peaks', 'P', 11)]],
             },
             matches)
         self.assertEqual(1, hashCount)
@@ -635,20 +601,10 @@ class TestBackend(TestCase):
 
         self.assertEqual(
             {
-                '0': [
-                    {
-                        'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                        'queryOffsets': [[0, 9, 10, 1]],
-                        'subjectOffsets': [[1, 9, 11, 1]],
-                        'trigPoint': TrigPoint('Peaks', 'P', 10),
-                    },
-                    {
-                        'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                        'queryOffsets': [[0, 9, 13, 1]],
-                        'subjectOffsets': [[1, 9, 14, 1]],
-                        'trigPoint': TrigPoint('Peaks', 'P', 13),
-                    }
-                ]
+                '0': [[Landmark('AlphaHelix', 'A', 0, 9, 2),
+                       TrigPoint('Peaks', 'P', 10)],
+                      [Landmark('AlphaHelix', 'A', 0, 9, 2),
+                       TrigPoint('Peaks', 'P', 13)]]
             }, matches)
         self.assertEqual(14, hashCount)
         self.assertEqual({}, nonMatchingHashes)
@@ -670,18 +626,14 @@ class TestBackend(TestCase):
         self.assertEqual(2, hashCount)
         self.assertEqual(
             {
-                'A2:P:10': {
-                    'landmark': Landmark(
-                        AlphaHelix.NAME, AlphaHelix.SYMBOL, 1, 9, 2),
-                    'offsets': [[1, 9, 11, 1]],
-                    'trigPoint': TrigPoint(Peaks.NAME, Peaks.SYMBOL, 11),
-                },
-                'A2:P:13': {
-                    'landmark': Landmark(
-                        AlphaHelix.NAME, AlphaHelix.SYMBOL, 1, 9, 2),
-                    'offsets': [[1, 9, 14, 1]],
-                    'trigPoint': TrigPoint(Peaks.NAME, Peaks.SYMBOL, 14),
-                }
+                'A2:P:10': [
+                    [Landmark(AlphaHelix.NAME, AlphaHelix.SYMBOL, 1, 9, 2),
+                     TrigPoint(Peaks.NAME, Peaks.SYMBOL, 11)]
+                ],
+                'A2:P:13': [
+                    [Landmark(AlphaHelix.NAME, AlphaHelix.SYMBOL, 1, 9, 2),
+                     TrigPoint(Peaks.NAME, Peaks.SYMBOL, 14)]
+                ],
             },
             nonMatchingHashes)
 
@@ -735,20 +687,10 @@ class TestBackend(TestCase):
 
         self.assertEqual(
             {
-                '0': [
-                    {
-                        'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                        'queryOffsets': [[0, 9, 10, 1]],
-                        'subjectOffsets': [[0, 9, 10, 1]],
-                        'trigPoint': TrigPoint('Peaks', 'P', 10),
-                    },
-                    {
-                        'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                        'queryOffsets': [[0, 9, 13, 1]],
-                        'subjectOffsets': [[0, 9, 13, 1]],
-                        'trigPoint': TrigPoint('Peaks', 'P', 13),
-                    }
-                ],
+                '0': [[Landmark('AlphaHelix', 'A', 0, 9, 2),
+                       TrigPoint('Peaks', 'P', 10)],
+                      [Landmark('AlphaHelix', 'A', 0, 9, 2),
+                       TrigPoint('Peaks', 'P', 13)]],
             },
             matches)
         self.assertEqual(2, hashCount)

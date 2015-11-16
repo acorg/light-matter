@@ -1,5 +1,5 @@
 import sys
-from copy import copy, deepcopy
+from copy import deepcopy
 from json import dumps
 from collections import defaultdict
 from math import log10, ceil

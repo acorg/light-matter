@@ -612,7 +612,9 @@ class TestBackend(TestCase):
                                          TrigPoint('Peaks', 'P', 13)]],
                       'subjectFeatures': [[
                           Landmark('AlphaHelix', 'A', 1, 9, 2),
-                          TrigPoint('Peaks', 'P', 11)]]
+                          TrigPoint('Peaks', 'P', 11)],
+                          [Landmark('AlphaHelix', 'A', 1, 9, 2),
+                           TrigPoint('Peaks', 'P', 14)]]
                       }
             }, matches)
 
@@ -643,6 +645,32 @@ class TestBackend(TestCase):
                 'A2:P:13': [
                     [Landmark(AlphaHelix.NAME, AlphaHelix.SYMBOL, 1, 9, 2),
                      TrigPoint(Peaks.NAME, Peaks.SYMBOL, 14)]
+                ],
+            },
+            nonMatchingHashes)
+
+    def testFindWithIdenticalNonMatchingHashes(self):
+        """
+        Identical on-matching hashes must be found correctly when
+        storeFullAnalysis is passed to find() as True.
+        """
+        subject = AARead('subject', 'F')
+        query = AARead('query', 'AFRRRFRRRFASAAAAAAAAAAAFRRRFRRRFASA')
+        params = Parameters([AlphaHelix, BetaStrand], [Peaks], maxDistance=10)
+        be = Backend()
+        be.configure(params)
+        be.addSubject(subject, '0')
+        matches, hashCount, nonMatchingHashes = be.find(query, True)
+
+        self.assertEqual({}, matches)
+        self.assertEqual(2, hashCount)
+        self.assertEqual(
+            {
+                'A2:P:10': [
+                    [Landmark(AlphaHelix.NAME, AlphaHelix.SYMBOL, 1, 9, 2),
+                     TrigPoint(Peaks.NAME, Peaks.SYMBOL, 11)],
+                    [Landmark(AlphaHelix.NAME, AlphaHelix.SYMBOL, 23, 9, 2),
+                     TrigPoint(Peaks.NAME, Peaks.SYMBOL, 33)]
                 ],
             },
             nonMatchingHashes)

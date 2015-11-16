@@ -336,7 +336,6 @@ class Backend:
                 if storeFullAnalysis:
                     nonMatchingHashes[readHash] = hashInfo
             else:
-                print(subjectDict)
                 for (sI, subjectOffsets) in subjectDict.items():
                     if (subjectIndices is None or
                             sI in subjectIndices):
@@ -346,16 +345,15 @@ class Backend:
                             matches[sI] = {'queryFeatures': hashInfo,
                                            'subjectFeatures': [],
                                            }
-                            for subjectOffset in subjectOffsets:
-                                print('soffset', subjectOffset)
-                                sLm = copy(hashInfo[0][0])
-                                sLm.offset = subjectOffset[0]
-                                sLm.length = subjectOffset[1]
-                                sTp = copy(hashInfo[0][1])
-                                sTp.offset = subjectOffset[2]
-                                sTp.length = subjectOffset[3]
-                                matches[sI]['subjectFeatures'].append(
-                                    [sLm, sTp])
+                        for subjectOffset in subjectOffsets:
+                            sLm = copy(hashInfo[0][0])
+                            sLm.offset = subjectOffset[0]
+                            sLm.length = subjectOffset[1]
+                            sTp = copy(hashInfo[0][1])
+                            sTp.offset = subjectOffset[2]
+                            sTp.length = subjectOffset[3]
+                            matches[sI]['subjectFeatures'].append(
+                                [sLm, sTp])
 
         return matches, readHashCount, nonMatchingHashes
 

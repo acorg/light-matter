@@ -78,31 +78,19 @@ class Result(object):
             # difference between the subject and query.
             negateDeltas = subject.sequence < query.sequence
 
-            queryFeatures = matches[subjectIndex]['queryFeatures']
-            subjectFeatures = matches[subjectIndex]['subjectFeatures']
-
-            for index in range(len(queryFeatures)):
-                queryLandmark = queryFeatures[index][0]
-                queryTrigPoint = queryFeatures[index][1]
-                subjectLandmark = subjectFeatures[index][0]
-                subjectTrigPoint = subjectFeatures[index][1]
-
+            for match in matches[subjectIndex]:
                 # The delta is the difference between the
                 # corresponding landmark offsets
-                delta = subjectLandmark.offset - queryLandmark.offset
+                subjectLandmarkOffset = match['subjectLandmark'].offset
+                queryLandmarkOffset = match['queryLandmark'].offset
+                delta = subjectLandmarkOffset - queryLandmarkOffset
                 if negateDeltas:
                     delta = -delta
 
                 # Add the information about this common landmark /
                 # trig point hash to the histogram bucket for the
                 # query landmark to subject landmark offset delta.
-                add(scale(delta, distanceBase),
-                    {
-                        'queryLandmark': queryLandmark,
-                        'queryTrigPoint': queryTrigPoint,
-                        'subjectLandmark': subjectLandmark,
-                        'subjectTrigPoint': subjectTrigPoint,
-                })
+                add(scale(delta, distanceBase), match)
 
             histogram.finalize()
 

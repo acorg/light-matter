@@ -559,13 +559,12 @@ class TestBackend(TestCase):
 
         self.assertEqual(
             {
-                '0': {'queryFeatures': [[Landmark('AlphaHelix', 'A', 1, 9, 2),
-                                         TrigPoint('Peaks', 'P', 11)]],
-
-                      'subjectFeatures': [[
-                          Landmark('AlphaHelix', 'A', 1, 9, 2),
-                          TrigPoint('Peaks', 'P', 11)]],
-                      }
+                '0': [{
+                    'queryTrigPoint': TrigPoint('Peaks', 'P', 11),
+                    'subjectTrigPoint': TrigPoint('Peaks', 'P', 11),
+                    'subjectLandmark': Landmark('AlphaHelix', 'A', 1, 9, 2),
+                    'queryLandmark': Landmark('AlphaHelix', 'A', 1, 9, 2),
+                }]
             },
             matches)
         self.assertEqual(1, hashCount)
@@ -606,16 +605,17 @@ class TestBackend(TestCase):
 
         self.assertEqual(
             {
-                '0': {'queryFeatures': [[Landmark('AlphaHelix', 'A', 0, 9, 2),
-                                         TrigPoint('Peaks', 'P', 10)],
-                                        [Landmark('AlphaHelix', 'A', 0, 9, 2),
-                                         TrigPoint('Peaks', 'P', 13)]],
-                      'subjectFeatures': [[
-                          Landmark('AlphaHelix', 'A', 1, 9, 2),
-                          TrigPoint('Peaks', 'P', 11)],
-                          [Landmark('AlphaHelix', 'A', 1, 9, 2),
-                           TrigPoint('Peaks', 'P', 14)]]
-                      }
+                '0': [{
+                    'subjectTrigPoint': TrigPoint('Peaks', 'P', 11),
+                    'queryLandmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
+                    'subjectLandmark': Landmark('AlphaHelix', 'A', 1, 9, 2),
+                    'queryTrigPoint': TrigPoint('Peaks', 'P', 10)
+                }, {
+                    'subjectTrigPoint': TrigPoint('Peaks', 'P', 14),
+                    'queryLandmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
+                    'subjectLandmark': Landmark('AlphaHelix', 'A', 1, 9, 2),
+                    'queryTrigPoint': TrigPoint('Peaks', 'P', 13)
+                }]
             }, matches)
 
         self.assertEqual(14, hashCount)
@@ -725,17 +725,18 @@ class TestBackend(TestCase):
 
         self.assertEqual(
             {
-                '0': {'queryFeatures': [[Landmark('AlphaHelix', 'A', 0, 9, 2),
-                                         TrigPoint('Peaks', 'P', 10)],
-                                        [Landmark('AlphaHelix', 'A', 0, 9, 2),
-                                         TrigPoint('Peaks', 'P', 13)]],
-                      'subjectFeatures': [[
-                          Landmark('AlphaHelix', 'A', 0, 9, 2),
-                          TrigPoint('Peaks', 'P', 10)],
-                          [
-                          Landmark('AlphaHelix', 'A', 0, 9, 2),
-                          TrigPoint('Peaks', 'P', 13)]],
-                      }
+                '0': [{
+                    'queryLandmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
+                    'subjectLandmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
+                    'subjectTrigPoint': TrigPoint('Peaks', 'P', 10),
+                    'queryTrigPoint': TrigPoint('Peaks', 'P', 10),
+                },
+                    {
+                    'queryLandmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
+                    'subjectLandmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
+                    'subjectTrigPoint': TrigPoint('Peaks', 'P', 13),
+                    'queryTrigPoint': TrigPoint('Peaks', 'P', 13),
+                }]
             }, matches)
         self.assertEqual(2, hashCount)
         self.assertEqual({}, nonMatchingHashes)

@@ -312,7 +312,7 @@ class Backend:
             3. A C{dict} of non-matching hashes, keyed by hash with values as
                returned by self.getHashes.
         """
-        matches = {}
+        matches = defaultdict(list)
         nonMatchingHashes = {}
         readHashCount = 0
         scannedRead = self.scan(read)
@@ -336,24 +336,26 @@ class Backend:
                 if storeFullAnalysis:
                     nonMatchingHashes[readHash] = hashInfo
             else:
-                for (sI, subjectOffsets) in subjectDict.items():
+                for (subjectIndex, subjectOffsets) in subjectDict.items():
                     if (subjectIndices is None or
-                            sI in subjectIndices):
-                        try:
-                            matches[sI]['queryFeatures'].extend(hashInfo)
-                        except KeyError:
-                            matches[sI] = {'queryFeatures': hashInfo,
-                                           'subjectFeatures': [],
-                                           }
-                        for subjectOffset in subjectOffsets:
-                            sLm = copy(hashInfo[0][0])
-                            sLm.offset = subjectOffset[0]
-                            sLm.length = subjectOffset[1]
-                            sTp = copy(hashInfo[0][1])
-                            sTp.offset = subjectOffset[2]
-                            sTp.length = subjectOffset[3]
-                            matches[sI]['subjectFeatures'].append(
-                                [sLm, sTp])
+                            subjectIndex in subjectIndices):
+                        for qFeatures in hashInfo:
+                            queryLandmark = qFeatures[0]
+                            queryTrigPoint = qFeatures[1]
+                            for subjectOffset in subjectOffsets:
+                                subjectLandmark = copy(qFeatures[0])
+                                subjectLandmark.offset = subjectOffset[0]
+                                subjectLandmark.length = subjectOffset[1]
+                                subjectTrigPoint = copy(qFeatures[1])
+                                subjectTrigPoint.offset = subjectOffset[2]
+                                subjectTrigPoint.length = subjectOffset[3]
+
+                                matches[subjectIndex].append({
+                                    'queryLandmark': queryLandmark,
+                                    'queryTrigPoint': queryTrigPoint,
+                                    'subjectLandmark': subjectLandmark,
+                                    'subjectTrigPoint': subjectTrigPoint,
+                                })
 
         return matches, readHashCount, nonMatchingHashes
 

@@ -339,14 +339,12 @@ class Backend:
                 for (subjectIndex, subjectOffsets) in subjectDict.items():
                     if (subjectIndices is None or
                             subjectIndex in subjectIndices):
-                        for qFeatures in hashInfo:
-                            queryLandmark = qFeatures[0]
-                            queryTrigPoint = qFeatures[1]
+                        for queryLandmark, queryTrigPoint in hashInfo:
                             for subjectOffset in subjectOffsets:
-                                subjectLandmark = copy(qFeatures[0])
+                                subjectLandmark = copy(queryLandmark)
                                 subjectLandmark.offset = subjectOffset[0]
                                 subjectLandmark.length = subjectOffset[1]
-                                subjectTrigPoint = copy(qFeatures[1])
+                                subjectTrigPoint = copy(queryTrigPoint)
                                 subjectTrigPoint.offset = subjectOffset[2]
                                 subjectTrigPoint.length = subjectOffset[3]
 

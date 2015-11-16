@@ -47,7 +47,7 @@ class TestResult(TestCase):
                 {
                     'queryLandmark': Landmark('AlphaHelix', 'A', 0, 9),
                     'queryTrigPoint': TrigPoint('Peaks', 'P', 1),
-                    'subjectLandmark': Landmark('AlphaHelix', 'A', 0, 9),
+                    'subjectLandmark': Landmark('AlphaHelix', 'A', 0, 1),
                     'subjectTrigPoint': TrigPoint('Peaks', 'P', 1),
                 },
             ],
@@ -135,19 +135,19 @@ class TestResult(TestCase):
                     'queryLandmark': Landmark('AlphaHelix', 'A', 0, 9),
                     'queryTrigPoint': TrigPoint('Peaks', 'P', 1),
                     'subjectLandmark': Landmark('AlphaHelix', 'A', 0, 9),
-                    'queryTrigPoint': TrigPoint('Peaks', 'P', 0),
+                    'subjectTrigPoint': TrigPoint('Peaks', 'P', 0),
                 },
                 {
                     'queryLandmark': Landmark('AlphaHelix', 'A', 0, 9),
                     'queryTrigPoint': TrigPoint('Peaks', 'P', 2),
                     'subjectLandmark': Landmark('AlphaHelix', 'A', 0, 9),
-                    'queryTrigPoint': TrigPoint('Peaks', 'P', 0),
+                    'subjectTrigPoint': TrigPoint('Peaks', 'P', 0),
                 },
                 {
                     'queryLandmark': Landmark('AlphaHelix', 'A', 0, 9),
                     'queryTrigPoint': TrigPoint('Peaks', 'P', 3),
-                    'subjectLandmark': Landmark('AlphaHelix', 'A', 0, 9),
-                    'queryTrigPoint': TrigPoint('Peaks', 'P', 0),
+                    'subjectLandmark': Landmark('AlphaHelix', 'A', 10, 9),
+                    'subjectTrigPoint': TrigPoint('Peaks', 'P', 0),
                 },
             ],
         }
@@ -156,7 +156,7 @@ class TestResult(TestCase):
                                     significanceFraction=0.25)
         result = Result(read, database, matches, hashCount, findParams)
         self.assertEqual(['0'], list(result.significantSubjects()))
-        self.assertEqual(0.75, result.analysis['0']['bestScore'])
+        self.assertEqual(0.5, result.analysis['0']['bestScore'])
 
     def testTwoSignificantMatches(self):
         """
@@ -177,7 +177,7 @@ class TestResult(TestCase):
             '0': [
                 {
                     'queryLandmark': Landmark('AlphaHelix', 'A', 0, 9),
-                    'queryTrigPoint': TrigPoint('Peaks', 'P', 1),
+                    'queryTrigPoint': TrigPoint('Peaks', 'P', 0),
                     'subjectLandmark': Landmark('AlphaHelix', 'A', 0, 9),
                     'subjectTrigPoint': TrigPoint('Peaks', 'P', 1),
                 },

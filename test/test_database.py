@@ -516,16 +516,16 @@ class TestDatabase(TestCase):
         self.assertEqual(
             {'0': [
                 {
-                    'subjectTrigPoint': TrigPoint('Peaks', 'P', 10),
+                    'queryLandmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
                     'queryTrigPoint': TrigPoint('Peaks', 'P', 10),
                     'subjectLandmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                    'queryLandmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
+                    'subjectTrigPoint': TrigPoint('Peaks', 'P', 10),
                 },
                 {
-                    'subjectTrigPoint': TrigPoint('Peaks', 'P', 13),
+                    'queryLandmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
                     'queryTrigPoint': TrigPoint('Peaks', 'P', 13),
                     'subjectLandmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                    'queryLandmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
+                    'subjectTrigPoint': TrigPoint('Peaks', 'P', 13),
                 }
             ]
             },

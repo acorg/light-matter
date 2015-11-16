@@ -560,10 +560,10 @@ class TestBackend(TestCase):
         self.assertEqual(
             {
                 '0': [{
-                    'queryTrigPoint': TrigPoint('Peaks', 'P', 11),
-                    'subjectTrigPoint': TrigPoint('Peaks', 'P', 11),
-                    'subjectLandmark': Landmark('AlphaHelix', 'A', 1, 9, 2),
                     'queryLandmark': Landmark('AlphaHelix', 'A', 1, 9, 2),
+                    'queryTrigPoint': TrigPoint('Peaks', 'P', 11),
+                    'subjectLandmark': Landmark('AlphaHelix', 'A', 1, 9, 2),
+                    'subjectTrigPoint': TrigPoint('Peaks', 'P', 11),
                 }]
             },
             matches)
@@ -606,15 +606,15 @@ class TestBackend(TestCase):
         self.assertEqual(
             {
                 '0': [{
+                    'queryLandmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
+                    'queryTrigPoint': TrigPoint('Peaks', 'P', 10),
+                    'subjectLandmark': Landmark('AlphaHelix', 'A', 1, 9, 2),
                     'subjectTrigPoint': TrigPoint('Peaks', 'P', 11),
-                    'queryLandmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                    'subjectLandmark': Landmark('AlphaHelix', 'A', 1, 9, 2),
-                    'queryTrigPoint': TrigPoint('Peaks', 'P', 10)
                 }, {
-                    'subjectTrigPoint': TrigPoint('Peaks', 'P', 14),
                     'queryLandmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
+                    'queryTrigPoint': TrigPoint('Peaks', 'P', 13),
                     'subjectLandmark': Landmark('AlphaHelix', 'A', 1, 9, 2),
-                    'queryTrigPoint': TrigPoint('Peaks', 'P', 13)
+                    'subjectTrigPoint': TrigPoint('Peaks', 'P', 14),
                 }]
             }, matches)
 
@@ -651,7 +651,7 @@ class TestBackend(TestCase):
 
     def testFindWithIdenticalNonMatchingHashes(self):
         """
-        Identical on-matching hashes must be found correctly when
+        Identical non-matching hashes must be found correctly when
         storeFullAnalysis is passed to find() as True.
         """
         subject = AARead('subject', 'F')
@@ -727,15 +727,15 @@ class TestBackend(TestCase):
             {
                 '0': [{
                     'queryLandmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
+                    'queryTrigPoint': TrigPoint('Peaks', 'P', 10),
                     'subjectLandmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
                     'subjectTrigPoint': TrigPoint('Peaks', 'P', 10),
-                    'queryTrigPoint': TrigPoint('Peaks', 'P', 10),
                 },
                     {
                     'queryLandmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
+                    'queryTrigPoint': TrigPoint('Peaks', 'P', 13),
                     'subjectLandmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
                     'subjectTrigPoint': TrigPoint('Peaks', 'P', 13),
-                    'queryTrigPoint': TrigPoint('Peaks', 'P', 13),
                 }]
             }, matches)
         self.assertEqual(2, hashCount)

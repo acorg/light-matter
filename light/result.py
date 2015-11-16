@@ -67,8 +67,8 @@ class Result(object):
             # To ensure the set of query/subject offset deltas is the same
             # no matter which of the sequences is the query and which is
             # the subject, we negate all deltas if the subject sequence
-            # sorts first.  This is just a way of canonicalizing the set of
-            # deltas.  If we don't canonicalize, we get sets of deltas with
+            # sorts first. This is just a way of canonicalizing the set of
+            # deltas. If we don't canonicalize, we get sets of deltas with
             # opposite signs, like {-4, -2, 6} and {-6, 2, 4} depending on
             # which sequence is the subject and which the query. This
             # occasionally leads to hard-to-debug and awkward-to-fix
@@ -78,50 +78,31 @@ class Result(object):
             # difference between the subject and query.
             negateDeltas = subject.sequence < query.sequence
 
-            for match in matches[subjectIndex]:
-                landmark = match['landmark']
-                trigPoint = match['trigPoint']
+            queryFeatures = matches[subjectIndex]['queryFeatures']
+            subjectFeatures = matches[subjectIndex]['subjectFeatures']
 
-                for queryOffsets in match['queryOffsets']:
-                    for subjectOffsets in match['subjectOffsets']:
-                        # queryOffsets and subjectOffsets are both lists of
-                        # length 2, being the landmark offset and the trig
-                        # point offset for the landmark / trig point pair
-                        # involved in the hash that was present in the
-                        # query and subject.
+            for index in range(len(queryFeatures)):
+                queryLandmark = queryFeatures[index][0]
+                queryTrigPoint = queryFeatures[index][1]
+                subjectLandmark = subjectFeatures[index][0]
+                subjectTrigPoint = subjectFeatures[index][1]
 
-                        # Make landmark and trig point instances that have
-                        # the correct offsets for both query and subject.
-                        queryLandmark = copy(landmark)
-                        queryLandmark.offset = queryOffsets[0]
-                        queryLandmark.length = queryOffsets[1]
-                        queryTrigPoint = copy(trigPoint)
-                        queryTrigPoint.offset = queryOffsets[2]
-                        queryTrigPoint.length = queryOffsets[3]
+                # The delta is the difference between the
+                # corresponding landmark offsets
+                delta = subjectLandmark.offset - queryLandmark.offset
+                if negateDeltas:
+                    delta = -delta
 
-                        subjectLandmark = copy(landmark)
-                        subjectLandmark.offset = subjectOffsets[0]
-                        subjectLandmark.length = subjectOffsets[1]
-                        subjectTrigPoint = copy(trigPoint)
-                        subjectTrigPoint.offset = subjectOffsets[2]
-                        subjectTrigPoint.length = subjectOffsets[3]
-
-                        # The delta is the difference between the
-                        # corresponding landmark offsets
-                        delta = subjectLandmark.offset - queryLandmark.offset
-                        if negateDeltas:
-                            delta = -delta
-
-                        # Add the information about this common landmark /
-                        # trig point hash to the histogram bucket for the
-                        # query landmark to subject landmark offset delta.
-                        add(scale(delta, distanceBase),
-                            {
-                                'queryLandmark': queryLandmark,
-                                'queryTrigPoint': queryTrigPoint,
-                                'subjectLandmark': subjectLandmark,
-                                'subjectTrigPoint': subjectTrigPoint,
-                            })
+                # Add the information about this common landmark /
+                # trig point hash to the histogram bucket for the
+                # query landmark to subject landmark offset delta.
+                add(scale(delta, distanceBase),
+                    {
+                        'queryLandmark': queryLandmark,
+                        'queryTrigPoint': queryTrigPoint,
+                        'subjectLandmark': subjectLandmark,
+                        'subjectTrigPoint': subjectTrigPoint,
+                })
 
             histogram.finalize()
 

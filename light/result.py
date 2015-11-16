@@ -23,16 +23,15 @@ class Result(object):
         connector) instance.
     @param matches: A C{dict} of match information. Keys are the C{str}
         database subject indices of subjects that the scanned read had some
-        hashes in common with. Each value is a C{list} of C{dicts}. Each
-        of those C{dict}s corresponds to one hash that occurs in both the
-        query and the subject, and contains keys: 'landmark', 'readOffsets',
-        'subjectOffsets', and 'trigPoint'.
+        hashes in common with. The value is a dictionary which contains two
+        keys, 'queryFeatures', and 'subjectFeatures'. Each key has a list of
+        lists, where each list contains a (landmark, trigPoint) pair.
     @param queryHashCount: The C{int} number of hashes that the query has
         (including those that were not found in the database).
     @param findParams: An instance of C{light.parameters.FindParameters}.
     @param nonMatchingHashes: A C{dict} whose keys are hashes that were found
         in the scanned C{query} but that did not match any subject. Each value
-        is a C{dict} with keys: 'landmark', 'readOffsets', and 'trigPoint'.
+        is a list of lists which contains (landmark, trigPoint) pairs.
     @param storeFullAnalysis: A C{bool}. If C{True} the full significance
         analysis of each matched subject will be stored.
     @raises ValueError: If a non-existent significanceMethod is specified.

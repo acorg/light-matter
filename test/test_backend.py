@@ -703,7 +703,10 @@ class TestBackend(TestCase):
                                          TrigPoint('Peaks', 'P', 13)]],
                       'subjectFeatures': [[
                           Landmark('AlphaHelix', 'A', 0, 9, 2),
-                          TrigPoint('Peaks', 'P', 10)]],
+                          TrigPoint('Peaks', 'P', 10)],
+                          [
+                          Landmark('AlphaHelix', 'A', 0, 9, 2),
+                          TrigPoint('Peaks', 'P', 13)]],
                       }
             }, matches)
         self.assertEqual(2, hashCount)

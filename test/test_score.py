@@ -372,11 +372,7 @@ class TestGetHashFeatures(TestCase):
         peakAt10 = TrigPoint(Peaks.NAME, Peaks.SYMBOL, 10)
 
         hashes = {
-            'A2:P:15': {
-                'landmark': helixAt0,
-                'offsets': [[0, 9, 10, 1]],
-                'trigPoint': peakAt10,
-            }
+            'A2:P:15': [[helixAt0, peakAt10]],
         }
 
         result = getHashFeatures(hashes)
@@ -393,11 +389,7 @@ class TestGetHashFeatures(TestCase):
         peakAt40 = TrigPoint(Peaks.NAME, Peaks.SYMBOL, 40)
 
         hashes = {
-            'A2:A2:15': {
-                'landmark': helixAt0,
-                'offsets': [[0, 9, 10, 1], [30, 9, 40, 1]],
-                'trigPoint': peakAt10,
-            }
+            'A2:A2:15': [[helixAt0, peakAt10], [helixAt30, peakAt40]]
         }
 
         result = getHashFeatures(hashes)
@@ -415,16 +407,8 @@ class TestGetHashFeatures(TestCase):
         peakAt13 = TrigPoint(Peaks.NAME, Peaks.SYMBOL, 13)
 
         hashes = {
-            'A2:A2:15': {
-                'landmark': helixAt0,
-                'offsets': [[0, 9, 10, 1]],
-                'trigPoint': peakAt10,
-            },
-            'A2:P:-2': {
-                'landmark': helixAt15,
-                'offsets': [[15, 9, 13, 1]],
-                'trigPoint': peakAt13,
-            },
+            'A2:A2:15': [[helixAt0, peakAt10]],
+            'A2:P:-2': [[helixAt15, peakAt13]],
         }
 
         result = getHashFeatures(hashes)
@@ -444,16 +428,8 @@ class TestGetHashFeatures(TestCase):
         peakAt13 = TrigPoint(Peaks.NAME, Peaks.SYMBOL, 13)
 
         hashes = {
-            'A2:A2:15': {
-                'landmark': helixAt0,
-                'offsets': [[0, 9, 10, 1], [30, 9, 40, 1]],
-                'trigPoint': peakAt10,
-            },
-            'A2:P:-2': {
-                'landmark': helixAt15,
-                'offsets': [[15, 9, 13, 1]],
-                'trigPoint': peakAt13,
-            },
+            'A2:A2:15': [[helixAt0, peakAt10], [helixAt30, peakAt40]],
+            'A2:P:-2': [[helixAt15, peakAt13]],
         }
 
         result = getHashFeatures(hashes)

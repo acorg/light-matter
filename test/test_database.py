@@ -350,16 +350,16 @@ class TestDatabase(TestCase):
         expected = {
             '0': [
                 {
-                    'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                    'queryOffsets': [[0, 9, 10, 1]],
-                    'subjectOffsets': [[1, 9, 11, 1]],
-                    'trigPoint': TrigPoint('Peaks', 'P', 10),
+                    'queryLandmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
+                    'queryTrigPoint': TrigPoint('Peaks', 'P', 10),
+                    'subjectLandmark': Landmark('AlphaHelix', 'A', 1, 9, 2),
+                    'subjectTrigPoint': TrigPoint('Peaks', 'P', 11),
                 },
                 {
-                    'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                    'queryOffsets': [[0, 9, 13, 1]],
-                    'subjectOffsets': [[1, 9, 14, 1]],
-                    'trigPoint': TrigPoint('Peaks', 'P', 13),
+                    'queryLandmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
+                    'queryTrigPoint': TrigPoint('Peaks', 'P', 13),
+                    'subjectLandmark': Landmark('AlphaHelix', 'A', 1, 9, 2),
+                    'subjectTrigPoint': TrigPoint('Peaks', 'P', 14),
                 }
             ]
         }
@@ -386,16 +386,18 @@ class TestDatabase(TestCase):
             {
                 '0': [
                     {
-                        'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                        'queryOffsets': [[0, 9, 10, 1]],
-                        'subjectOffsets': [[1, 9, 11, 1]],
-                        'trigPoint': TrigPoint('Peaks', 'P', 10),
+                        'queryLandmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
+                        'queryTrigPoint': TrigPoint('Peaks', 'P', 10),
+                        'subjectLandmark': Landmark(
+                            'AlphaHelix', 'A', 1, 9, 2),
+                        'subjectTrigPoint': TrigPoint('Peaks', 'P', 11),
                     },
                     {
-                        'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                        'queryOffsets': [[0, 9, 13, 1]],
-                        'subjectOffsets': [[1, 9, 14, 1]],
-                        'trigPoint': TrigPoint('Peaks', 'P', 13),
+                        'queryLandmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
+                        'queryTrigPoint': TrigPoint('Peaks', 'P', 13),
+                        'subjectLandmark': Landmark(
+                            'AlphaHelix', 'A', 1, 9, 2),
+                        'subjectTrigPoint': TrigPoint('Peaks', 'P', 14),
                     }
                 ]
             }, result.matches)
@@ -418,10 +420,11 @@ class TestDatabase(TestCase):
             {
                 '0': [
                     {
-                        'landmark': Landmark('AlphaHelix', 'A', 1, 9, 2),
-                        'queryOffsets': [[1, 9, 11, 1]],
-                        'subjectOffsets': [[1, 9, 11, 1]],
-                        'trigPoint': TrigPoint('Peaks', 'P', 11),
+                        'queryLandmark': Landmark('AlphaHelix', 'A', 1, 9, 2),
+                        'queryTrigPoint': TrigPoint('Peaks', 'P', 11),
+                        'subjectLandmark': Landmark(
+                            'AlphaHelix', 'A', 1, 9, 2),
+                        'subjectTrigPoint': TrigPoint('Peaks', 'P', 11),
                     },
                 ],
             },
@@ -445,10 +448,11 @@ class TestDatabase(TestCase):
             {
                 '0': [
                     {
-                        'landmark': Landmark('AlphaHelix', 'A', 1, 9, 2),
-                        'queryOffsets': [[1, 9, 11, 1]],
-                        'subjectOffsets': [[1, 9, 11, 1]],
-                        'trigPoint': TrigPoint('Peaks', 'P', 11),
+                        'queryLandmark': Landmark('AlphaHelix', 'A', 1, 9, 2),
+                        'queryTrigPoint': TrigPoint('Peaks', 'P', 11),
+                        'subjectLandmark': Landmark(
+                            'AlphaHelix', 'A', 1, 9, 2),
+                        'subjectTrigPoint': TrigPoint('Peaks', 'P', 11),
                     },
                 ],
             },
@@ -508,22 +512,22 @@ class TestDatabase(TestCase):
         db = Database(params)
         db.addSubject(subject)
         result = db.find(query)
+
         self.assertEqual(
-            {
-                '0': [
-                    {
-                        'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                        'queryOffsets': [[0, 9, 10, 1]],
-                        'subjectOffsets': [[0, 9, 10, 1]],
-                        'trigPoint': TrigPoint('Peaks', 'P', 10),
-                    },
-                    {
-                        'landmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
-                        'queryOffsets': [[0, 9, 13, 1]],
-                        'subjectOffsets': [[0, 9, 13, 1]],
-                        'trigPoint': TrigPoint('Peaks', 'P', 13),
-                    }
-                ],
+            {'0': [
+                {
+                    'queryLandmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
+                    'queryTrigPoint': TrigPoint('Peaks', 'P', 10),
+                    'subjectLandmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
+                    'subjectTrigPoint': TrigPoint('Peaks', 'P', 10),
+                },
+                {
+                    'queryLandmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
+                    'queryTrigPoint': TrigPoint('Peaks', 'P', 13),
+                    'subjectLandmark': Landmark('AlphaHelix', 'A', 0, 9, 2),
+                    'subjectTrigPoint': TrigPoint('Peaks', 'P', 13),
+                }
+            ]
             },
             result.matches)
 

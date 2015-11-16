@@ -1,5 +1,5 @@
 import sys
-from copy import copy, deepcopy
+from copy import deepcopy
 from json import dumps
 from collections import defaultdict
 from math import log10, ceil
@@ -23,16 +23,15 @@ class Result(object):
         connector) instance.
     @param matches: A C{dict} of match information. Keys are the C{str}
         database subject indices of subjects that the scanned read had some
-        hashes in common with. Each value is a C{list} of C{dicts}. Each
-        of those C{dict}s corresponds to one hash that occurs in both the
-        query and the subject, and contains keys: 'landmark', 'readOffsets',
-        'subjectOffsets', and 'trigPoint'.
+        hashes in common with. The value is a list of dictionaries each of
+        which contains four keys, 'queryLandmark', 'queryTrigPoint',
+        'subjectLandmark', and 'subjectTrigPoint'.
     @param queryHashCount: The C{int} number of hashes that the query has
         (including those that were not found in the database).
     @param findParams: An instance of C{light.parameters.FindParameters}.
     @param nonMatchingHashes: A C{dict} whose keys are hashes that were found
         in the scanned C{query} but that did not match any subject. Each value
-        is a C{dict} with keys: 'landmark', 'readOffsets', and 'trigPoint'.
+        is a list of lists which contains [landmark, trigPoint] pairs.
     @param storeFullAnalysis: A C{bool}. If C{True} the full significance
         analysis of each matched subject will be stored.
     @raises ValueError: If a non-existent significanceMethod is specified.
@@ -68,8 +67,8 @@ class Result(object):
             # To ensure the set of query/subject offset deltas is the same
             # no matter which of the sequences is the query and which is
             # the subject, we negate all deltas if the subject sequence
-            # sorts first.  This is just a way of canonicalizing the set of
-            # deltas.  If we don't canonicalize, we get sets of deltas with
+            # sorts first. This is just a way of canonicalizing the set of
+            # deltas. If we don't canonicalize, we get sets of deltas with
             # opposite signs, like {-4, -2, 6} and {-6, 2, 4} depending on
             # which sequence is the subject and which the query. This
             # occasionally leads to hard-to-debug and awkward-to-fix
@@ -80,49 +79,18 @@ class Result(object):
             negateDeltas = subject.sequence < query.sequence
 
             for match in matches[subjectIndex]:
-                landmark = match['landmark']
-                trigPoint = match['trigPoint']
+                # The delta is the difference between the
+                # corresponding landmark offsets
+                subjectLandmarkOffset = match['subjectLandmark'].offset
+                queryLandmarkOffset = match['queryLandmark'].offset
+                delta = subjectLandmarkOffset - queryLandmarkOffset
+                if negateDeltas:
+                    delta = -delta
 
-                for queryOffsets in match['queryOffsets']:
-                    for subjectOffsets in match['subjectOffsets']:
-                        # queryOffsets and subjectOffsets are both lists of
-                        # length 2, being the landmark offset and the trig
-                        # point offset for the landmark / trig point pair
-                        # involved in the hash that was present in the
-                        # query and subject.
-
-                        # Make landmark and trig point instances that have
-                        # the correct offsets for both query and subject.
-                        queryLandmark = copy(landmark)
-                        queryLandmark.offset = queryOffsets[0]
-                        queryLandmark.length = queryOffsets[1]
-                        queryTrigPoint = copy(trigPoint)
-                        queryTrigPoint.offset = queryOffsets[2]
-                        queryTrigPoint.length = queryOffsets[3]
-
-                        subjectLandmark = copy(landmark)
-                        subjectLandmark.offset = subjectOffsets[0]
-                        subjectLandmark.length = subjectOffsets[1]
-                        subjectTrigPoint = copy(trigPoint)
-                        subjectTrigPoint.offset = subjectOffsets[2]
-                        subjectTrigPoint.length = subjectOffsets[3]
-
-                        # The delta is the difference between the
-                        # corresponding landmark offsets
-                        delta = subjectLandmark.offset - queryLandmark.offset
-                        if negateDeltas:
-                            delta = -delta
-
-                        # Add the information about this common landmark /
-                        # trig point hash to the histogram bucket for the
-                        # query landmark to subject landmark offset delta.
-                        add(scale(delta, distanceBase),
-                            {
-                                'queryLandmark': queryLandmark,
-                                'queryTrigPoint': queryTrigPoint,
-                                'subjectLandmark': subjectLandmark,
-                                'subjectTrigPoint': subjectTrigPoint,
-                            })
+                # Add the information about this common landmark /
+                # trig point hash to the histogram bucket for the
+                # query landmark to subject landmark offset delta.
+                add(scale(delta, distanceBase), match)
 
             histogram.finalize()
 

@@ -1108,7 +1108,6 @@ def featureComparison(ssAARead, print_=True, **kwargs):
         'S': '#848484',
     }
 
-    aaSequence = ssAARead.sequence
     ssStructure = ssAARead.structure
 
     # parse the ssStructure so that it can be plotted easily.
@@ -1141,7 +1140,7 @@ def featureComparison(ssAARead, print_=True, **kwargs):
     db = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
     backend = Backend()
     backend.configure(db.params)
-    scannedRead = backend.scan(aaSequence)
+    scannedRead = backend.scan(ssAARead)
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -1151,10 +1150,10 @@ def featureComparison(ssAARead, print_=True, **kwargs):
     ytickLabels = (['Bend', 'H-bonded turn', 'BetaStrand (?)', 'BetaBridge',
                     'AlphaHelixPi', 'AlphaHelix_3_10', 'AlphaHelix', ' '] +
                    lmNames + tpNames)
-    title = aaSequence.id
+    title = ssAARead.id
 
     for i, item in enumerate(ytickLabels):
-        plt.plot([0, len(aaSequence.sequence)], [i, i], '-', linewidth=0.5,
+        plt.plot([0, len(ssAARead.sequence)], [i, i], '-', linewidth=0.5,
                  color='grey')
 
     for landmark in scannedRead.landmarks:
@@ -1171,7 +1170,7 @@ def featureComparison(ssAARead, print_=True, **kwargs):
         plt.plot([trigPoint.offset, trigPoint.offset], [y - 0.125, y + 0.125],
                  '-', color=COLORS[trigPoint.symbol], linewidth=2)
 
-    plt.plot([0, len(aaSequence.sequence)], [7, 7], '-', linewidth=3,
+    plt.plot([0, len(ssAARead.sequence)], [7, 7], '-', linewidth=3,
              color='black')
 
     for feature, offsets in all_.items():
@@ -1190,7 +1189,7 @@ def featureComparison(ssAARead, print_=True, **kwargs):
     ax.spines['left'].set_linewidth(0)
     ax.xaxis.grid()
     ax.set_ylim(-0.1, len(yticks) - 1 + 0.1)
-    ax.set_xlim(0, len(aaSequence.sequence))
+    ax.set_xlim(0, len(ssAARead.sequence))
 
     if print_:
         aaSeqF, ssSeqF, intersects = CalculateOverlap.getFeatures(ssAARead,

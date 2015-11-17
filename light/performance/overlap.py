@@ -39,8 +39,8 @@ class CalculateOverlap(object):
         records = [record for record in SeqIO.parse(pdbFile, 'fasta')]
         for i in range(0, len(records), 2):
             record = records[i]
-            read = SSAARead(record.id, record.seq,
-                            records[i + 1].seq)
+            read = SSAARead(record.id, str(record.seq),
+                            str(records[i + 1].seq))
             self.SSAAReads.add(read)
 
     def calculateOverlap(self, printAll=False):
@@ -57,15 +57,15 @@ class CalculateOverlap(object):
         for read in self.SSAAReads:
             aaSeqFeatures, ssSeqFeatures, intersects = self.getFeatures(
                 read, printAll=printAll)
-            for feature, indices in aaSeqFeatures:
-                allAASequenceFeatures[feature].extend(feature[indices])
-            for feature, indices in ssSeqFeatures:
-                allSSSequenceFeatures[feature].extend(feature[indices])
-            for featureIntersect, indices in intersects:
-                allIntersects[feature].extend(feature[indices])
+            for feature, indices in aaSeqFeatures.items():
+                allAASequenceFeatures[feature].extend(indices)
+            for feature, indices in ssSeqFeatures.items():
+                allSSSequenceFeatures[feature].extend(indices)
+            for featureIntersect, indices in intersects.items():
+                allIntersects[featureIntersect].extend(indices)
 
         self.calculateFraction(allAASequenceFeatures, allSSSequenceFeatures,
-                               allIntersects, print_=printAll)
+                               allIntersects, print_=True)
 
     @staticmethod
     def getFeatures(ssAARead, printAll=False, **kwargs):
@@ -202,10 +202,10 @@ class CalculateOverlap(object):
                       len(aaSequenceFeatureDict['GOR4AlphaHelix']),
                       len(aaSequenceFeatureDict['BetaStrand']),
                       len(aaSequenceFeatureDict['GOR4BetaStrand']),
-                      len(aaSequenceFeatureDict['H']),
-                      len(aaSequenceFeatureDict['G']),
-                      len(aaSequenceFeatureDict['I']),
-                      len(aaSequenceFeatureDict['E'])))
+                      len(ssSequenceFeatureDict['H']),
+                      len(ssSequenceFeatureDict['G']),
+                      len(ssSequenceFeatureDict['I']),
+                      len(ssSequenceFeatureDict['E'])))
 
         return (alphaHelix, alphaHelix_pi, alphaHelix_3_10, gor4AlphaHelix,
                 betaStrand, gor4BetaStrand)

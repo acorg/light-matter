@@ -1476,19 +1476,23 @@ def scoreHeatmap(sequenceFileOrMatrix, labels, labelColors, findParams=None,
         C{database.DatabaseSpecifier.getDatabaseFromKeywords} for
         additional keywords, all of which are optional.
     """
-    if isinstance(sequenceFileOrMatrix, str):
+    if isinstance(sequenceFileOrMatrix, np.ndarray):
+        matrix = sequenceFileOrMatrix
+
+    else:
         matrix = affinity.affinityMatrix(sequenceFileOrMatrix, findParams,
                                          **kwargs)
-    else:
-        matrix = sequenceFileOrMatrix
 
     a = plt.imshow(np.array(matrix), interpolation='nearest', cmap=plt.cm.GnBu,
                    origin='bottom')
+
+    left, right, bottom, top = a.get_extent()
+
     for y, label in enumerate(labels):
-        plt.text(-11, y - 0.25, label, fontsize=15,
+        plt.text(left - 2, y, label, fontsize=15,
                  color=labelColors.get(label, 'black'))
-        plt.text(y - 0.25, -3, label, fontsize=15, rotation='vertical',
-                 color=labelColors.get(label, 'black'))
+        plt.text(left + y + 0.3, bottom - 1, label, fontsize=15,
+                 rotation='vertical', color=labelColors.get(label, 'black'))
     plt.xticks([])
     plt.yticks([])
     plt.colorbar(a)

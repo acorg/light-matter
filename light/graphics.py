@@ -16,6 +16,7 @@ from light.features import Landmark
 from light.landmarks import ALL_LANDMARK_CLASSES
 from light.parameters import FindParameters
 from light.performance.overlap import CalculateOverlap
+from light.performance import affinity
 from light.score import ALL_SCORE_CLASSES
 from light.string import MultilineString
 from light.trig import ALL_TRIG_CLASSES
@@ -1454,3 +1455,47 @@ def compareScores(subject, query, scoreMethods=None,
     if showFeatures:
         # Plot landmarks and trig points horizontally.
         plotLandmarksInSequences([subject, query], **kwargs)
+
+
+def scoreHeatmap(sequenceFileOrMatrix, labels, labelColors, findParams=None,
+                 figureTitle=False, fileTitle=False, **kwargs):
+    """
+    A function to make a score heatmap.
+
+    @param sequenceFileOrMatrix: Either a C{str} file name of a file
+        containing sequences or a distance matrix as returned from
+        C{light.performance.affinity}.
+    @param labels: A C{list} of C{str} label names.
+    @param labelColors: A C{dict} mapping each label in labels to a label
+        color.
+    @param findParams: A C{light.parameters.FindParameters} instance.
+    @param figureTitle: If not False, a C{str} title for the figure.
+    @param fileTitle: If the figure should be saved to a file, the title of the
+        file where the figure is saved to.
+    @param kwargs: See
+        C{database.DatabaseSpecifier.getDatabaseFromKeywords} for
+        additional keywords, all of which are optional.
+    """
+    if isinstance(sequenceFileOrMatrix, str):
+        matrix = affinity.affinityMatrix(sequenceFileOrMatrix, findParams,
+                                         **kwargs)
+    else:
+        matrix = sequenceFileOrMatrix
+
+    a = plt.imshow(np.array(matrix), interpolation='nearest', cmap=plt.cm.GnBu,
+                   origin='bottom')
+    for y, label in enumerate(labels):
+        plt.text(-11, y - 0.25, label, fontsize=15,
+                 color=labelColors.get(label, 'black'))
+        plt.text(y - 0.25, -3, label, fontsize=15, rotation='vertical',
+                 color=labelColors.get(label, 'black'))
+    plt.xticks([])
+    plt.yticks([])
+    plt.colorbar(a)
+    if figureTitle:
+        plt.title(figureTitle, fontsize=18)
+    plt.gcf().set_size_inches(13, 10)
+    if fileTitle:
+        plt.savefig(fileTitle, bbox_inches='tight')
+    else:
+        plt.show()

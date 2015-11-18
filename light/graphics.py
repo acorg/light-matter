@@ -16,6 +16,7 @@ from light.features import Landmark
 from light.landmarks import ALL_LANDMARK_CLASSES
 from light.parameters import FindParameters
 from light.performance.overlap import CalculateOverlap
+from light.performance import affinity
 from light.score import ALL_SCORE_CLASSES
 from light.string import MultilineString
 from light.trig import ALL_TRIG_CLASSES
@@ -1108,7 +1109,6 @@ def featureComparison(ssAARead, print_=True, **kwargs):
         'S': '#848484',
     }
 
-    aaSequence = ssAARead.sequence
     ssStructure = ssAARead.structure
 
     # parse the ssStructure so that it can be plotted easily.
@@ -1141,7 +1141,7 @@ def featureComparison(ssAARead, print_=True, **kwargs):
     db = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
     backend = Backend()
     backend.configure(db.params)
-    scannedRead = backend.scan(aaSequence)
+    scannedRead = backend.scan(ssAARead)
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -1151,10 +1151,10 @@ def featureComparison(ssAARead, print_=True, **kwargs):
     ytickLabels = (['Bend', 'H-bonded turn', 'BetaStrand (?)', 'BetaBridge',
                     'AlphaHelixPi', 'AlphaHelix_3_10', 'AlphaHelix', ' '] +
                    lmNames + tpNames)
-    title = aaSequence.id
+    title = ssAARead.id
 
     for i, item in enumerate(ytickLabels):
-        plt.plot([0, len(aaSequence.sequence)], [i, i], '-', linewidth=0.5,
+        plt.plot([0, len(ssAARead.sequence)], [i, i], '-', linewidth=0.5,
                  color='grey')
 
     for landmark in scannedRead.landmarks:
@@ -1171,7 +1171,7 @@ def featureComparison(ssAARead, print_=True, **kwargs):
         plt.plot([trigPoint.offset, trigPoint.offset], [y - 0.125, y + 0.125],
                  '-', color=COLORS[trigPoint.symbol], linewidth=2)
 
-    plt.plot([0, len(aaSequence.sequence)], [7, 7], '-', linewidth=3,
+    plt.plot([0, len(ssAARead.sequence)], [7, 7], '-', linewidth=3,
              color='black')
 
     for feature, offsets in all_.items():
@@ -1190,7 +1190,7 @@ def featureComparison(ssAARead, print_=True, **kwargs):
     ax.spines['left'].set_linewidth(0)
     ax.xaxis.grid()
     ax.set_ylim(-0.1, len(yticks) - 1 + 0.1)
-    ax.set_xlim(0, len(aaSequence.sequence))
+    ax.set_xlim(0, len(ssAARead.sequence))
 
     if print_:
         aaSeqF, ssSeqF, intersects = CalculateOverlap.getFeatures(ssAARead,
@@ -1455,3 +1455,51 @@ def compareScores(subject, query, scoreMethods=None,
     if showFeatures:
         # Plot landmarks and trig points horizontally.
         plotLandmarksInSequences([subject, query], **kwargs)
+
+
+def scoreHeatmap(sequenceFileOrMatrix, labels, labelColors, findParams=None,
+                 figureTitle=False, fileTitle=False, **kwargs):
+    """
+    A function to make a score heatmap.
+
+    @param sequenceFileOrMatrix: Either a C{str} file name of a file
+        containing sequences or a distance matrix as returned from
+        C{light.performance.affinity}.
+    @param labels: A C{list} of C{str} label names.
+    @param labelColors: A C{dict} mapping each label in labels to a label
+        color.
+    @param findParams: A C{light.parameters.FindParameters} instance.
+    @param figureTitle: If not False, a C{str} title for the figure.
+    @param fileTitle: If the figure should be saved to a file, the title of the
+        file where the figure is saved to.
+    @param kwargs: See
+        C{database.DatabaseSpecifier.getDatabaseFromKeywords} for
+        additional keywords, all of which are optional.
+    """
+    if isinstance(sequenceFileOrMatrix, np.ndarray):
+        matrix = sequenceFileOrMatrix
+
+    else:
+        matrix = affinity.affinityMatrix(sequenceFileOrMatrix, findParams,
+                                         **kwargs)
+
+    a = plt.imshow(np.array(matrix), interpolation='nearest', cmap=plt.cm.GnBu,
+                   origin='bottom')
+
+    left, right, bottom, top = a.get_extent()
+
+    for y, label in enumerate(labels):
+        plt.text(left - 2, y, label, fontsize=15,
+                 color=labelColors.get(label, 'black'))
+        plt.text(left + y + 0.3, bottom - 1, label, fontsize=15,
+                 rotation='vertical', color=labelColors.get(label, 'black'))
+    plt.xticks([])
+    plt.yticks([])
+    plt.colorbar(a)
+    if figureTitle:
+        plt.title(figureTitle, fontsize=18)
+    plt.gcf().set_size_inches(13, 10)
+    if fileTitle:
+        plt.savefig(fileTitle, bbox_inches='tight')
+    else:
+        plt.show()

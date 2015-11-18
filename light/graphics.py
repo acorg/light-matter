@@ -8,6 +8,9 @@ from operator import attrgetter
 from textwrap import fill
 from collections import defaultdict
 from math import log10
+from io import StringIO
+
+from Bio import Phylo
 
 from light.backend import Backend
 from light.colors import colors
@@ -15,6 +18,7 @@ from light.database import DatabaseSpecifier
 from light.features import Landmark
 from light.landmarks import ALL_LANDMARK_CLASSES
 from light.parameters import FindParameters
+from light.performance.nj import NJTree
 from light.performance.overlap import CalculateOverlap
 from light.score import ALL_SCORE_CLASSES
 from light.string import MultilineString
@@ -1455,3 +1459,39 @@ def compareScores(subject, query, scoreMethods=None,
     if showFeatures:
         # Plot landmarks and trig points horizontally.
         plotLandmarksInSequences([subject, query], **kwargs)
+
+
+def plotNJTree(labels, sequences=None, distance=None, findParams=None,
+               **kwargs):
+    """
+    Plot an NJTree instance, given a distance matrix.
+
+    @param labels: An iterable producing C{str} labels for the sequences or
+        for the rows (equivalently, columns) of the distance matrix.
+    @param sequences: Either A C{str} filename of sequences to consider, or
+        a C{light.reads.Reads} instance, or C{None}. If C{None}, C{distances}
+        must not also be C{None}.
+    @param distance: A square matrix of numeric distances, or C{None}. If
+        C{None}, C{sequences} must not also be C{None}.
+    @param findParams: An instance of C{FindParameters}.
+    @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
+        for additional keywords, all of which are optional.
+    """
+    if sequences is not None and distance is not None:
+        raise ValueError('You cannot supply both a distance matrix and '
+                         'also sequences.')
+    if sequences is not None:
+        njtree = NJTree.fromSequences(labels, sequences,
+                                      findParams=findParams, **kwargs)
+    elif distance is not None:
+        njtree = NJTree.fromDistanceMatrix(labels, distance,
+                                           findParams=findParams, **kwargs)
+    else:
+        raise ValueError('You must supply either a distance matrix or '
+                         'some sequences.')
+
+    fp = StringIO()
+    njtree.tree.write(fp)
+    fp.seek(0)
+    tree = Phylo.read(fp, 'newick')
+    Phylo.draw(tree)

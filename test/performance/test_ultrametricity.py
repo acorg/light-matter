@@ -8,24 +8,22 @@ class TestUltrametricity(TestCase):
     """
     Tests for the light.performance.ultrametricity function.
     """
-    def testYieldsAllPermutations(self):
+    def testYieldsNoPermutations(self):
         """
-        If a matrix isn't ultrametric, all triplets must be returned.
+        If a matrix is ultrametric, no triplets must be returned.
         """
-        matrix = np.array([[1, 1, 1, 1],
-                           [1, 1, 1, 1],
-                           [1, 1, 1, 1],
-                           [1, 1, 1, 1]])
-        result = len(list(ultrametric(matrix)))
-        self.assertEqual(24, result)
+        matrix = np.array([[0, 1, 1],
+                           [1, 0, 1],
+                           [1, 1, 0]])
+        result = list(ultrametric(matrix))
+        self.assertEqual([], result)
 
     def testYieldsAllNonUltrametric(self):
         """
         All non-ultrametric triplets must be returned.
         """
-        matrix = np.array([[1, 2, 1, 1],
-                           [1, 1, 1, 1],
-                           [1, 1, 1, 1],
-                           [1, 1, 1, 1]])
-        result = len(list(ultrametric(matrix)))
-        self.assertEqual(22, result)
+        matrix = np.array([[0, 1, 2],
+                           [1, 0, 1],
+                           [2, 1, 0]])
+        result = list(ultrametric(matrix))
+        self.assertEqual([(0, 2, 1), (1, 0, 2), (1, 2, 0), (2, 0, 1)], result)

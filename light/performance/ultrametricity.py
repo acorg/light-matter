@@ -18,7 +18,7 @@ def ultrametric(sequenceFileOrMatrix, findParams=None, **kwargs):
         C{database.DatabaseSpecifier.getDatabaseFromKeywords} for
         additional keywords, all of which are optional.
 
-    @yield: A generator which returns non-ultrametric triplets.
+    @return: A generator which returns non-ultrametric triplets.
     """
     if isinstance(sequenceFileOrMatrix, np.ndarray):
         matrix = sequenceFileOrMatrix
@@ -28,5 +28,5 @@ def ultrametric(sequenceFileOrMatrix, findParams=None, **kwargs):
                                          **kwargs)
 
     for a, b, c in permutations(range(len(matrix)), 3):
-        if matrix[a][c] <= max(matrix[a][b], matrix[b][c]):
+        if matrix[a][c] < max(matrix[a][b], matrix[b][c]):
             yield a, b, c

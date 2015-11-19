@@ -1,6 +1,7 @@
 from collections import Counter
 from io import StringIO
 
+import matplotlib.pyplot as plt
 import numpy as np
 
 from Bio import Phylo
@@ -35,17 +36,17 @@ def perturbDistanceMatrix(matrix, stddev=None):
     """
     stddev = _DEFAULT_STDDEV if stddev is None else stddev
     normal = np.random.normal
-    matrix = np.copy(matrix)
-    n = matrix.shape[0]
+    newMatrix = np.copy(matrix)
+    n = newMatrix.shape[0]
     for i in range(n):
         for j in range(i + 1, n):
-            new = matrix[i, j] + normal(loc=0.0, scale=stddev)
-            if new < 0.0:
-                new = 0.0
-            elif new > 1.0:
-                new = 1.0
-            matrix[i, j] = matrix[j, i] = new
-    return matrix
+            value = newMatrix[i, j] + normal(loc=0.0, scale=stddev)
+            if value < 0.0:
+                value = 0.0
+            elif value > 1.0:
+                value = 1.0
+            newMatrix[i, j] = newMatrix[j, i] = value
+    return newMatrix
 
 
 class NJTree:
@@ -169,6 +170,7 @@ class NJTree:
         """
         Get the support level for the clade beneath a node.
 
+        @param node: A C{TreeNode} instance.
         @return: The C{float} support, ranging from 0.0 to 1.0.
         """
         count = self.cladeSupportCounts.get(node.subset(), 0)
@@ -189,7 +191,7 @@ class NJTree:
             """
             See docstring for C{newick} above.
 
-            @param: A C{TreeNode} instance.
+            @param node: A C{TreeNode} instance.
             """
             if node.is_tip():
                 return '%s:%f' % (node.name, node.length)
@@ -226,9 +228,21 @@ class NJTree:
             self.cladeSupportCounts.update(new.countClades())
         self.supportIterations += iterations
 
-    def plot(self):
+    def plot(self, filename=None, show=True, **kwargs):
         """
-        Use the Phylo package to plot the NJ, showing branch support.
+        Use the Phylo package to plot the NJ tree, showing branch support.
+
+        @param filename: A C{str} file name to which to write the tree image.
+        @param show: If C{True} the image will be displayed. This is only
+            useful when C{filename} is not C{None}.
+        @param kwargs: Additional (optional) arguments to be passed to savefig.
+            For available options, see:
+            http://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.savefig
         """
         fp = StringIO(self.newick())
-        Phylo.draw(Phylo.read(fp, 'newick', comments_are_confidence=True))
+        Phylo.draw(Phylo.read(fp, 'newick', comments_are_confidence=True),
+                   do_show=show)
+        if filename:
+            plt.gcf().savefig(filename, **kwargs)
+        if not show:
+            plt.close()

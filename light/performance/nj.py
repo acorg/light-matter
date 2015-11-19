@@ -1,5 +1,9 @@
 from collections import Counter
+from io import StringIO
+
 import numpy as np
+
+from Bio import Phylo
 
 from skbio.tree import nj
 from skbio import DistanceMatrix, TreeNode
@@ -11,6 +15,39 @@ from light.performance.affinity import affinityMatrix
 from light.parameters import FindParameters
 
 
+# The default standard deviataion for use in perturbDistanceMatrix.
+_DEFAULT_STDDEV = 0.05
+
+
+def perturbDistanceMatrix(matrix, stddev=None):
+    """
+    Add a small amount of symmetric off-diagonal noise to a square distance
+    matrix.
+
+    @param matrix: either a square matrix of numeric values or a square
+        C{np.array}.
+    @param stddev: The C{float} standard deviation of the noise to add to
+        off-diagonal elements. If C{None}, use _DEFAULT_STDDEV.
+    @return: An C{np.array} containing the same diagonal values as C{matrix}
+        and with some normally distribued noise added (symmetrically) to the
+        off-diagonal elements. Off diagonal values in the return result will
+        not be less than zero or greater than one.
+    """
+    stddev = _DEFAULT_STDDEV if stddev is None else stddev
+    normal = np.random.normal
+    matrix = np.copy(matrix)
+    n = matrix.shape[0]
+    for i in range(n):
+        for j in range(i + 1, n):
+            new = matrix[i, j] + normal(loc=0.0, scale=stddev)
+            if new < 0.0:
+                new = 0.0
+            elif new > 1.0:
+                new = 1.0
+            matrix[i, j] = matrix[j, i] = new
+    return matrix
+
+
 class NJTree:
 
     def __init__(self):
@@ -18,6 +55,8 @@ class NJTree:
         # instance by using either NJTree.fromSequences or
         # NJTree.fromDistanceMatrix.
         self.sequences = self.distance = self.tree = self.labels = None
+        self.supportIterations = 0
+        self.cladeSupportCounts = Counter()
 
     @classmethod
     def fromSequences(cls, labels, sequences, findParams=None, **kwargs):
@@ -32,6 +71,7 @@ class NJTree:
         @param kwargs: See
             C{database.DatabaseSpecifier.getDatabaseFromKeywords} for
             additional keywords, all of which are optional.
+        @return: An C{NJTree} instance.
         """
         if isinstance(sequences, str):
             sequences = FastaReads(sequences, readClass=AARead, upperCase=True)
@@ -47,7 +87,7 @@ class NJTree:
         return new
 
     @classmethod
-    def fromDistanceMatrix(cls, labels, distance, findParams=None, **kwargs):
+    def fromDistanceMatrix(cls, labels, distance):
         """
         Construct an NJTree instance, given a distance matrix.
 
@@ -55,14 +95,10 @@ class NJTree:
         @param labels: An iterable producing C{str} labels corresponding to the
             rows (equivalently, columns) of the distance matrix.
         @param distance: A square matrix of numeric distances.
-        @param findParams: An instance of C{FindParameters}.
-        @param kwargs: See
-            C{database.DatabaseSpecifier.getDatabaseFromKeywords} for
-            additional keywords, all of which are optional.
+        @return: An C{NJTree} instance.
         """
         new = cls()
         new.labels = labels
-        findParams = findParams or FindParameters()
         new.distance = distance
         new.tree = nj(DistanceMatrix(distance, labels))
         return new
@@ -117,7 +153,7 @@ class NJTree:
         Count all the clades in our tree.
 
         @return: A C{Counter} instance, whose keys are C{frozenset} instances
-            of tip names, corresponding to the clades found under the internal
+            of tip names, corresponding to the clades decendant from internal
             nodes of the tree.
         """
         counts = Counter()
@@ -128,3 +164,71 @@ class NJTree:
         for node in self.tree.non_tips(include_self=True):
             counts[node.subset()] += 1
         return counts
+
+    def supportForNode(self, node):
+        """
+        Get the support level for the clade beneath a node.
+
+        @return: The C{float} support, ranging from 0.0 to 1.0.
+        """
+        count = self.cladeSupportCounts.get(node.subset(), 0)
+        try:
+            return count / self.supportIterations
+        except ZeroDivisionError:
+            return 0.0
+
+    def newick(self):
+        """
+        Get our tree in Newick format, with clade support in comment fields.
+
+        @return: A Newick format C{str} with clade support in square bracketed
+            comment fields if support has been added.
+        """
+
+        def _newick(node):
+            """
+            See docstring for C{newick} above.
+
+            @param: A C{TreeNode} instance.
+            """
+            if node.is_tip():
+                return '%s:%f' % (node.name, node.length)
+            else:
+                children = ','.join(_newick(child) for child in node.children)
+                support = ('[%d]' % int(self.supportForNode(node) * 100)
+                           if self.supportIterations else '')
+                suffix = '' if node.length is None else ':%s' % node.length
+                return '(%s)%s%s' % (children, support, suffix)
+
+        result = _newick(self.tree)
+        if self.supportIterations:
+            # Remove the final [100] support which is always present because
+            # the root of all topologies has all tips as descendants.
+            assert result.endswith('[100]')
+            result = result[:-5]
+
+        return result + ';\n'
+
+    def addSupport(self, iterations, stddev=None):
+        """
+        Make new perturbed distance matrices, create NJ trees from them, and
+        add their clade counts to the clade counts for this tree.
+
+        @param iterations: The C{int} number of times to create new NJ trees
+            via a perturbed distance matrix.
+        @param stddev: The C{float} standard deviation of the noise to add to
+            off-diagonal distance matrix elements before creating a new NJ
+            tree to add to the support.
+        """
+        for _ in range(iterations):
+            distance = perturbDistanceMatrix(self.distance, stddev)
+            new = NJTree.fromDistanceMatrix(self.labels, distance)
+            self.cladeSupportCounts.update(new.countClades())
+        self.supportIterations += iterations
+
+    def plot(self):
+        """
+        Use the Phylo package to plot the NJ, showing branch support.
+        """
+        fp = StringIO(self.newick())
+        Phylo.draw(Phylo.read(fp, 'newick', comments_are_confidence=True))

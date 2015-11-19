@@ -3,8 +3,7 @@ from unittest import TestCase
 import numpy as np
 
 from light.parameters import FindParameters
-from light.graphics import (
-    PlotHashesInSubjectAndRead, SequenceFeatureAnalysis, plotNJTree)
+from light.graphics import PlotHashesInSubjectAndRead, SequenceFeatureAnalysis
 
 from dark.reads import AARead
 
@@ -338,27 +337,3 @@ class TestSequenceFeatureAnalysis(TestCase):
                 'feature.'
             ),
             s.printDensities())
-
-
-class TestPlotNJTree(TestCase):
-    """
-    Tests for the light.graphics.plotNJTree function.
-    """
-    def testNoDistanceNoSequences(self):
-        """
-        If no distance matrix or sequences are passed to plotNJTree, it must
-        raise a ValueError.
-        """
-        error = ('^You must supply either a distance matrix or some '
-                 'sequences\.$')
-        self.assertRaisesRegexp(ValueError, error, plotNJTree, ['a', 'b'])
-
-    def testDistanceAndSequences(self):
-        """
-        If a distance matrix and some sequences are passed to plotNJTree, it
-        must raise a ValueError.
-        """
-        error = ('^You cannot supply both a distance matrix and also '
-                 'sequences\.$')
-        self.assertRaisesRegexp(ValueError, error, plotNJTree, ['a', 'b'],
-                                distance=[0], sequences=[AARead('id', 'AA')])

@@ -7,13 +7,25 @@ from skbio import TreeNode
 
 from dark.reads import Reads, AARead
 
-from light.performance.nj import NJTree
+from light.performance.nj import NJTree, perturbDistanceMatrix
 
 
 class TestNJTree(TestCase):
     """
     Tests for the light.performance.nj.NJTree class.
     """
+
+    def newTreeHasExpectedAttributes(self):
+        """
+        A new NJTree instance must have the expected attributes.
+        """
+        njtree = NJTree()
+        self.assertEqual(0, njtree.supportIterations)
+        self.assertEqual(Counter(), njtree.cladeSupportCounts)
+        self.assertIs(None, njtree.sequences)
+        self.assertIs(None, njtree.distance)
+        self.assertIs(None, njtree.tree)
+        self.assertIs(None, njtree.labels)
 
     def testFromSequencesWithNoSequencesRaisesDissimilarityMatrixError(self):
         """
@@ -440,3 +452,151 @@ class TestNJTree(TestCase):
             },
             njtree.countClades()
         )
+
+    def testSupportForNodeWhenNoSuppportAdded(self):
+        """
+        If no support has been added to a tree, supportForNode must return
+        zero for all nodes.
+        """
+        distance = [
+            [0, 1, 1],
+            [1, 0, 1],
+            [1, 1, 0]
+        ]
+        labels = ['x', 'y', 'z']
+        njtree = NJTree.fromDistanceMatrix(labels, distance)
+        self.assertEqual(0, njtree.supportForNode(njtree.tree))
+        self.assertEqual([0, 0, 0],
+                         [njtree.supportForNode(child)
+                          for child in njtree.tree.children])
+
+    def testAddSupportIncrementsSupportIterations(self):
+        """
+        When support has been added to a tree, its supportIterations attribute
+        must be incremented correctly.
+        """
+        distance = [
+            [0, 1, 1],
+            [1, 0, 1],
+            [1, 1, 0]
+        ]
+        labels = ['x', 'y', 'z']
+        njtree = NJTree.fromDistanceMatrix(labels, distance)
+        njtree.addSupport(2)
+        self.assertEqual(2, njtree.supportIterations)
+
+    def testSupportForNodeIsOneAtRoot(self):
+        """
+        When support has been added to a tree, the root node must have support
+        of 1.0. This is because all trees will have all tips under their root,
+        regardless of their topologies.
+        """
+        distance = [
+            [0.0, 0.5, 0.4],
+            [0.5, 0.0, 0.1],
+            [0.4, 0.1, 0.0],
+        ]
+        labels = ['x', 'y', 'z']
+        njtree = NJTree.fromDistanceMatrix(labels, distance)
+        njtree.addSupport(10)
+        self.assertEqual(1.0, njtree.supportForNode(njtree.tree))
+
+    def xxx_testAddSupportIdenticalTrees(self):
+        """
+        When support has been added to a tree with quite distinct distances
+        using a very low standard deviation for the distance matrix noise, the
+        same tree will be generated repeatedly and support for all nodes
+        will be 1.0.
+        """
+        distance = [
+            [0.0, 0.1, 0.9, 0.9],
+            [0.1, 0.0, 0.9, 0.9],
+            [0.9, 0.9, 0.0, 0.1],
+            [0.9, 0.9, 0.1, 0.0],
+        ]
+        labels = ['w', 'x', 'y', 'z']
+        njtree = NJTree.fromDistanceMatrix(labels, distance)
+        print(njtree.newick())
+        njtree.addSupport(10, 0.01)
+        print(njtree.newick())
+        self.assertEqual([0.0, 1.0, 0.0],
+                         [njtree.supportForNode(child)
+                          for child in njtree.tree.children])
+
+    def testNewickWithNoSuppportAdded(self):
+        """
+        If no support has been added to a tree, newick must return the expected
+        string (with no support values).
+        """
+        distance = [
+            [0, 1, 1],
+            [1, 0, 1],
+            [1, 1, 0]
+        ]
+        labels = ['x', 'y', 'z']
+        njtree = NJTree.fromDistanceMatrix(labels, distance)
+        # The order in the Newick string seems deterministic, and according
+        # to the skbio docs this is the case.
+        self.assertEqual('(y:0.500000,x:0.500000,z:0.500000);\n',
+                         njtree.newick())
+
+
+class TestPerturbDistanceMatrix(TestCase):
+    """
+    Tests for the light.performance.nj.perturbDistanceMatrix function.
+    """
+
+    def testZeroStandardDeviation(self):
+        """
+        If zero is passed to perturbDistanceMatrix as the standard deviation
+        of the noise, ValueError must be raised.
+        """
+        distance = [
+            [0.0, 0.7, 0.3],
+            [0.7, 0.0, 0.1],
+            [0.3, 0.1, 0.0],
+        ]
+        error = '^scale <= 0$'
+        self.assertRaisesRegex(ValueError, error, perturbDistanceMatrix,
+                               distance, 0.0)
+
+    def testZeroStandardDeviationx(self):
+        """
+        If zero is passed to perturbDistanceMatrix as the standard deviation
+        of the noise, ValueError must be raised.
+        """
+        distance = [
+            [0.0, 0.7],
+            [0.7, 0.0],
+        ]
+        error = '^scale <= 0$'
+        self.assertRaisesRegex(ValueError, error, perturbDistanceMatrix,
+                               distance, 0.0)
+
+    def testResultTypeAndShape(self):
+        """
+        perturbDistanceMatrix must return an np.ndarray of same shape as
+        its matrix argument.
+        """
+        distance = [
+            [0.0, 0.7, 0.1],
+            [0.7, 0.0, 0.4],
+            [0.1, 0.4, 0.0],
+        ]
+        result = perturbDistanceMatrix(distance)
+        self.assertEqual((3, 3), result.shape)
+        self.assertTrue(isinstance(result, np.ndarray))
+
+    def testDiagonalUntouched(self):
+        """
+        perturbDistanceMatrix must not change any values on the diagonal.
+        """
+        # Use non-zero diagonal values to get more confidence that those
+        # values are not being altered.
+        distance = [
+            [0.2, 0.7, 0.1],
+            [0.7, 0.5, 0.4],
+            [0.1, 0.4, 0.9],
+        ]
+        result = perturbDistanceMatrix(distance, 0.3)
+        self.assertEqual([0.2, 0.5, 0.9], [result[i][i] for i in range(3)])

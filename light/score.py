@@ -1,7 +1,27 @@
+from collections import defaultdict
 from itertools import filterfalse
 from warnings import warn
 
 from light.string import MultilineString
+
+
+DEFAULT_WEIGHT = {
+    'AlphaHelix': 1,
+    'AlphaHelix_3_10': 1,
+    'AlphaHelix_pi': 1,
+    'BetaStrand': 1,
+    'BetaTurn': 1,
+    'AminoAcidsLm': 1,
+    'GOR4AlphaHelix': 1,
+    'GOR4BetaStrand': 1,
+    'GOR4Coil': 1,
+    'Prosite': 1,
+    'Peaks': 1,
+    'Troughs': 1,
+    'AminoAcids': 1,
+    'IndividualPeaks': 1,
+    'IndividualTroughs': 1,
+}
 
 
 class MinHashesScore(object):
@@ -102,6 +122,40 @@ def histogramBinFeatures(bin_, queryOrSubject):
             feature = hashInfo[queryOrSubject + suffix]
             allFeatures.add(feature)
             allOffsets.update(feature.coveredOffsets())
+
+    return allFeatures, allOffsets
+
+
+def weightedHistogramBinFeatures(bin_, queryOrSubject, weights):
+    """
+    Extract all features of type C{queryOrSubject} (a C{str}, either
+    'query' or 'subject') from a bin and return them as a set. Also returned is
+    a dictionary, where each key is an offset and the values is a list of
+    weights associated with that position (it has to be a list, because if
+    landmarks overlap, an offset may have two weights).
+
+    @param bin_: A C{light.histogram.Histogram} bin.
+    @param queryOrSubject: A C{str}, to indicate which features to extract,
+        either 'query' or 'subject'.
+    @param weights: A C{dict} specifying the weight that should be give to
+        each landmark.
+    @raise KeyError: If C{queryOrSubject} is not 'query' or 'subject'.
+    @return: A 2-tuple, containing 1) a C{set} of all features (landmarks and
+        trig points) in the hashes in C{bin_}, 2) a C{set} of all offsets of
+        all features (of type C{queryOrSubject}) in the bin.
+    """
+    allFeatures = set()
+    allOffsets = defaultdict(list)
+    # There is no error checking that queryOrSubject is 'query' or
+    # 'subject' as the following will raise a KeyError if it cannot access
+    # the dict key in the bin element.
+    for hashInfo in bin_:
+        for suffix in 'Landmark', 'TrigPoint':
+            feature = hashInfo[queryOrSubject + suffix]
+            weight = weights[feature.name]
+            allFeatures.add(feature)
+            for offset in feature.coveredOffsets():
+                allOffsets[offset].append(weight)
 
     return allFeatures, allOffsets
 
@@ -387,6 +441,210 @@ class FeatureAAScore:
             'matchedOffsetCount': matchedOffsetCount,
             'matchedSubjectOffsetCount': len(matchedSubjectOffsets),
             'matchedQueryOffsetCount': len(matchedQueryOffsets),
+            'matchedRegionScore': matchedRegionScore,
+            'maxQueryOffset': maxQueryOffset,
+            'maxSubjectOffset': maxSubjectOffset,
+            'minQueryOffset': minQueryOffset,
+            'minSubjectOffset': minSubjectOffset,
+            'numeratorQuery': numeratorQuery,
+            'numeratorSubject': numeratorSubject,
+            'normaliserQuery': normaliserQuery,
+            'normaliserSubject': normaliserSubject,
+            'score': score,
+            'scoreClass': self.__class__,
+            'totalOffsetCount': totalOffsetCount,
+        }
+
+        return score, analysis
+
+    @staticmethod
+    def printAnalysis(analysis, margin=''):
+        """
+        Convert an analysis to a nicely formatted string.
+
+        @param margin: A C{str} that should be inserted at the start of each
+            line of output.
+        @return: A C{str} human-readable version of the last analysis.
+        """
+        result = MultilineString(margin=margin)
+
+        result.extend([
+            'Score method: %s' % analysis['scoreClass'].__name__,
+            ('Matched offset range in query: %(minQueryOffset)d to '
+             '%(maxQueryOffset)d' % analysis),
+            ('Matched offset range in subject: %(minSubjectOffset)d to '
+             '%(maxSubjectOffset)d' % analysis),
+            ('Total (query+subject) AA offsets in matched hashes: '
+             '%(matchedOffsetCount)d' % analysis),
+            ('Subject AA offsets in matched hashes: '
+             '%(matchedSubjectOffsetCount)d' % analysis),
+            ('Query AA offsets in matched hashes: '
+             '%(matchedQueryOffsetCount)d' % analysis),
+            ('Total (query+subject) AA offsets in hashes in matched region: '
+             '%(totalOffsetCount)d' % analysis),
+            ('Matched region score %(matchedRegionScore).4f '
+             '(%(matchedOffsetCount)d / %(totalOffsetCount)d)' % analysis),
+            ('Query normalizer: %(normaliserQuery).4f (%(numeratorQuery)d / '
+             '%(denominatorQuery)d)' % analysis),
+            ('Subject normalizer: %(normaliserSubject).4f '
+             '(%(numeratorSubject)d / %(denominatorSubject)d)' % analysis),
+            'Score: %(score).4f' % analysis,
+        ])
+
+        return str(result)
+
+ALL_SCORE_CLASSES = (MinHashesScore, FeatureMatchingScore, FeatureAAScore)
+
+
+class WeightedFeatureAAScore:
+    """
+    Calculates the score for histogram bins based on the count of amino acids
+    present in the regions of the query and subject that had a significant
+    alignment (i.e., caused a histogram bin to be considered significant).
+    Weight the score by importance of the feature.
+
+    @param histogram: A C{light.histogram} instance.
+    @param query: A C{dark.reads.AARead} instance.
+    @param subject: A C{light.subject.Subject} instance (a subclass of
+        C{dark.reads.AARead}).
+    @param params: A C{Parameters} instance.
+    @param weight: If not C{None}, a C{float} weight to be given to Prosite.
+    """
+    def __init__(self, histogram, query, subject, params, weights=None):
+        self._histogram = histogram
+        self._queryLen = len(query)
+        self._subjectLen = len(subject)
+
+        self._weight = DEFAULT_WEIGHT if weights is None else weights
+
+        from light.backend import Backend
+        backend = Backend()
+        backend.configure(params)
+
+        scannedQuery = backend.scan(query)
+        allQueryHashes = backend.getHashes(scannedQuery)
+        self._allQueryFeatures = getHashFeatures(allQueryHashes)
+
+        scannedSubject = backend.scan(subject)
+        allSubjectHashes = backend.getHashes(scannedSubject)
+        self._allSubjectFeatures = getHashFeatures(allSubjectHashes)
+
+    def calculateScore(self, binIndex):
+        """
+        Calculates the score for a given histogram bin.
+
+        The score is a quotient. In the numerator, we have the number of AA
+        locations that are in features that are in hashes that match between
+        the subject and the query. The denominator is the number of AA
+        locations that are in features which are in all hashes in the matching
+        regions of the query and subject.
+        Leaving the score like this would mean that a short match can have the
+        same score as a long match. To account for this, the quotient from
+        above is multiplied by the matched fraction of the shorter sequence.
+
+        @param binIndex: The C{int} index of the bin to examine.
+        @return: A 2-tuple, containing the C{float} score of the bin and a
+            C{dict} with the analysis leading to the score.
+        """
+        # Get the features and their offsets which match in subject and query.
+        # These will be used to calculate the numerator of the score.
+        matchedQFeatures, matchedQOffsets = weightedHistogramBinFeatures(
+            self._histogram[binIndex], 'query')
+
+        matchedSFeatures, matchedSOffsets = weightedHistogramBinFeatures(
+            self._histogram[binIndex], 'subject')
+
+        # Get the extreme offsets in the matched region of query and subject.
+        minQueryOffset = min(matchedQOffsets, default=None)
+        maxQueryOffset = max(matchedQOffsets, default=None)
+        minSubjectOffset = min(matchedSOffsets, default=None)
+        maxSubjectOffset = max(matchedSOffsets, default=None)
+
+        # Get all features and their offsets which are present in the subject
+        # and the query within the matched region. These will be used to
+        # calculate the denominator.
+        unmatchedQueryOffsets = defaultdict(list)
+        for feature in filter(
+                lambda f: featureInRange(f, minQueryOffset, maxQueryOffset),
+                self._allQueryFeatures - matchedQFeatures):
+            for offset in feature.coveredOffsets():
+                unmatchedQueryOffsets[offset].append(self.weights[feature])
+
+        # The unmatched offsets shouldn't contain any offsets that were
+        # matched. This can occur if an unmatched feature overlaps with a
+        # matched feature.
+        unmatchedQueryOffsets -= matchedQOffsets
+
+        unmatchedSubjectOffsets = defaultdict(list)
+        for feature in filter(
+                lambda f: featureInRange(f, minSubjectOffset,
+                                         maxSubjectOffset),
+                self._allSubjectFeatures - matchedSFeatures):
+            for offset in feature.coveredOffsets():
+                unmatchedSubjectOffsets[offset].append(self.weights[feature])
+        # The unmatched offsets shouldn't contain any offsets that were
+        # matched. This can occur if an unmatched feature overlaps with a
+        # matched feature.
+        unmatchedSubjectOffsets -= matchedSOffsets
+
+        matchedOffsetCount = (
+            len(matchedQOffsets) + len(matchedSOffsets))
+
+        totalOffsetCount = matchedOffsetCount + (
+            len(unmatchedQueryOffsets) + len(unmatchedSubjectOffsets))
+
+        try:
+            matchedRegionScore = matchedOffsetCount / totalOffsetCount
+        except ZeroDivisionError:
+            matchedRegionScore = 0.0
+
+        # The calculation of the fraction to normalise by length consists of
+        # three parts: the numerator is the matchedOffsetCount + either the
+        # unmatchedQueryOffsets or the unmatchedSubjectOffsets. The denominator
+        # is the numerator + the length of hashes in either subject or query
+        # which are outside the matched region. The sequence with less covered
+        # indices is used to do the normalisation.
+
+        offsetsNotInMatchQuery = set()
+        for feature in filterfalse(
+                lambda f: featureInRange(f, minQueryOffset,
+                                         maxQueryOffset),
+                self._allQueryFeatures - matchedQFeatures):
+            offsetsNotInMatchQuery.update(feature.coveredOffsets())
+        offsetsNotInMatchQuery -= matchedQOffsets
+        numeratorQuery = (len(matchedQOffsets) +
+                          len(unmatchedQueryOffsets))
+        denominatorQuery = numeratorQuery + len(offsetsNotInMatchQuery)
+
+        offsetsNotInMatchSubject = set()
+        for feature in filterfalse(
+                lambda f: featureInRange(f, minSubjectOffset,
+                                         maxSubjectOffset),
+                self._allSubjectFeatures - matchedSFeatures):
+            offsetsNotInMatchSubject.update(feature.coveredOffsets())
+        offsetsNotInMatchSubject -= matchedSOffsets
+        numeratorSubject = (len(matchedSOffsets) +
+                            len(unmatchedSubjectOffsets))
+        denominatorSubject = numeratorSubject + len(offsetsNotInMatchSubject)
+
+        try:
+            normaliserQuery = numeratorQuery / denominatorQuery
+        except ZeroDivisionError:
+            normaliserQuery = 1.0
+
+        try:
+            normaliserSubject = numeratorSubject / denominatorSubject
+        except ZeroDivisionError:
+            normaliserSubject = 1.0
+
+        score = matchedRegionScore * max(normaliserQuery, normaliserSubject)
+
+        analysis = {
+            'denominatorQuery': denominatorQuery,
+            'denominatorSubject': denominatorSubject,
+            'matchedOffsetCount': matchedOffsetCount,
+            'matchedSubjectOffsetCount': len(matchedSOffsets),
+            'matchedQueryOffsetCount': len(matchedQOffsets),
             'matchedRegionScore': matchedRegionScore,
             'maxQueryOffset': maxQueryOffset,
             'maxSubjectOffset': maxSubjectOffset,

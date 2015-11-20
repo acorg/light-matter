@@ -9,7 +9,8 @@ from light.distance import scale
 from light.histogram import Histogram
 from light.significance import (
     Always, HashFraction, MaxBinHeight, MeanBinHeight)
-from light.score import MinHashesScore, FeatureMatchingScore, FeatureAAScore
+from light.score import (MinHashesScore, FeatureMatchingScore, FeatureAAScore,
+                         WeightedFeatureAAScore)
 from light.backend import Backend
 from light.string import MultilineString
 
@@ -118,6 +119,9 @@ class Result(object):
                     histogram, query, subject, connector.params, findParams)
             elif scoreMethod == 'FeatureAAScore':
                 scorer = FeatureAAScore(
+                    histogram, query, subject, connector.params)
+            elif scoreMethod == 'WeightedFeatureAAScore':
+                scorer = WeightedFeatureAAScore(
                     histogram, query, subject, connector.params)
             else:
                 raise ValueError('Unknown score method %r' % scoreMethod)

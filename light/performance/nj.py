@@ -149,6 +149,31 @@ class NJTree:
         new.tree = _canonicalize(self.tree)
         return new
 
+    def root(self, nodes):
+        """
+        Root a tree by one tip or the common ancestor of multiple tips.
+
+        @return: A new C{NJTree} instance rooted at the specified node(s).
+        """
+        def _root(tree, nodes):
+            """
+            Root tree. See docstring for C{root}, above.
+            """
+            if len(nodes) == 1:
+                # root tree at that node
+                return self.tree.root_at(nodes[0])
+            else:
+                # find the most recent common ancestor of that node.
+                mrca = self.tree.lowest_common_ancestor(nodes)
+                return self.tree.root_at(mrca)
+
+        new = NJTree()
+        new.labels = self.labels
+        new.sequences = self.sequences
+        new.distance = self.distance
+        new.tree = _root(self.tree, nodes)
+        return new
+
     def countClades(self):
         """
         Count all the clades in our tree.

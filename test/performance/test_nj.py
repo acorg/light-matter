@@ -15,13 +15,12 @@ class TestNJTree(TestCase):
     Tests for the light.performance.nj.NJTree class.
     """
 
-    def newTreeHasExpectedAttributes(self):
+    def testNewTreeHasExpectedAttributes(self):
         """
         A new NJTree instance must have the expected attributes.
         """
         njtree = NJTree()
         self.assertEqual(0, njtree.supportIterations)
-        self.assertEqual(Counter(), njtree.cladeSupportCounts)
         self.assertIs(None, njtree.sequences)
         self.assertIs(None, njtree.distance)
         self.assertIs(None, njtree.tree)
@@ -175,6 +174,18 @@ class TestNJTree(TestCase):
         self.assertEqual(['x:0.5;\n', 'y:0.5;\n', 'z:0.5;\n'],
                          sorted(str(child) for child in njtree.tree.children))
         self.assertIs(None, njtree.sequences)
+
+    def testWithNoSupportAllNodesHaveSupportOfZero(self):
+        """
+        If three sequences with no features are used to create an NJTree
+        the child nodes in the resulting tree must all have support of 0.0.
+        """
+        distance = [[0, 1, 1], [1, 0, 1], [1, 1, 0]]
+        labels = ['x', 'y', 'z']
+        njtree = NJTree.fromDistanceMatrix(labels, distance)
+        self.assertEqual(
+            [0.0, 0.0, 0.0],
+            [njtree.supportForNode(child) for child in njtree.tree.children])
 
     def testCanonicalizeByNodeLength(self):
         """
@@ -517,6 +528,38 @@ class TestNJTree(TestCase):
         # to the skbio docs this is the case.
         self.assertEqual('(y:0.500000,x:0.500000,z:0.500000);\n',
                          njtree.newick())
+
+    def testOnlyOneConsensusTreeWithZeroIterations(self):
+        """
+        When consensusTrees is passed an iteration count of zero, only one
+        consensus tree must be returned.
+        """
+        distance = [
+            [0, 1, 1],
+            [1, 0, 1],
+            [1, 1, 0]
+        ]
+        labels = ['x', 'y', 'z']
+        njtree = NJTree.fromDistanceMatrix(labels, distance)
+        consensusTrees = njtree.consensusTrees(0)
+        self.assertEqual(1, len(consensusTrees))
+
+    def testConsensusTreeWithZeroIterationsHasSupportOneForAllChildren(self):
+        """
+        When consensusTrees is passed an iteration count of zero, all children
+        in the consensus tree must have support of zero.
+        """
+        distance = [
+            [0, 1, 1],
+            [1, 0, 1],
+            [1, 1, 0]
+        ]
+        labels = ['x', 'y', 'z']
+        njtree = NJTree.fromDistanceMatrix(labels, distance)
+        consensusTrees = njtree.consensusTrees(0)
+        self.assertEqual([0, 0, 0],
+                         [njtree.supportForNode(child)
+                          for child in consensusTrees[0].tree.children])
 
 
 class TestPerturbDistanceMatrix(TestCase):

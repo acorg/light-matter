@@ -6,7 +6,7 @@ import numpy as np
 
 from Bio import Phylo
 
-from skbio.tree import nj
+from skbio.tree import nj, majority_rule
 from skbio import DistanceMatrix, TreeNode
 
 from dark.reads import AARead
@@ -57,7 +57,6 @@ class NJTree:
         # NJTree.fromDistanceMatrix.
         self.sequences = self.distance = self.tree = self.labels = None
         self.supportIterations = 0
-        self.cladeSupportCounts = Counter()
 
     @classmethod
     def fromSequences(cls, labels, sequences, findParams=None, **kwargs):
@@ -166,18 +165,40 @@ class NJTree:
             counts[node.subset()] += 1
         return counts
 
+    @staticmethod
+    def addSupportToNode(node, support):
+        """
+        Increment the support level for the clade beneath a node.
+
+        @param node: A C{TreeNode} instance.
+        @param support: The numeric support value to add to the existing
+            support.
+        """
+        try:
+            node.support += support
+        except AttributeError:
+            node.support = support
+
     def supportForNode(self, node):
         """
-        Get the support level for the clade beneath a node.
+        Get the support level for a node.
 
         @param node: A C{TreeNode} instance.
         @return: The C{float} support, ranging from 0.0 to 1.0.
         """
-        count = self.cladeSupportCounts.get(node.subset(), 0)
-        try:
-            return count / self.supportIterations
-        except ZeroDivisionError:
-            return 0.0
+        # Explicitly check if supportIterations non-zero rather than
+        # dividing by it and also catching ZeroDivisionError because
+        # node.support is sometimes a numpy.float64 on return from
+        # majority_rule (called by self.consensusTrees, below). I don't
+        # know why that happens. Anyway, if you divide a numpy.float64 by
+        # zero you don't get a ZeroDivisionError, you get 'inf' and a
+        # warning.
+        if self.supportIterations:
+            try:
+                return node.support / self.supportIterations
+            except AttributeError:
+                pass
+        return 0.0
 
     def newick(self):
         """
@@ -214,7 +235,7 @@ class NJTree:
     def addSupport(self, iterations, stddev=None):
         """
         Make new perturbed distance matrices, create NJ trees from them, and
-        add their clade counts to the clade counts for this tree.
+        add their clade counts to the internal nodes of this tree.
 
         @param iterations: The C{int} number of times to create new NJ trees
             via a perturbed distance matrix.
@@ -222,10 +243,17 @@ class NJTree:
             off-diagonal distance matrix elements before creating a new NJ
             tree to add to the support.
         """
+        cladeCounts = Counter()
         for _ in range(iterations):
             distance = perturbDistanceMatrix(self.distance, stddev)
             new = NJTree.fromDistanceMatrix(self.labels, distance)
-            self.cladeSupportCounts.update(new.countClades())
+            cladeCounts.update(new.countClades())
+
+        # Visit each non-tip node and increment its support based on
+        # the clade counts just computed.
+        for node in self.tree.non_tips(include_self=True):
+            self.addSupportToNode(node, cladeCounts[node.subset()])
+
         self.supportIterations += iterations
 
     def plot(self, filename=None, show=True, **kwargs):
@@ -246,3 +274,34 @@ class NJTree:
             plt.gcf().savefig(filename, **kwargs)
         if not show:
             plt.close()
+
+    def consensusTrees(self, iterations, stddev=None):
+        """
+        Make new perturbed distance matrices, create NJ trees from them, and
+        calculate consensus trees based on our original tree and the new ones.
+
+        @param iterations: The C{int} number of times to create a new NJ tree
+            via a perturbed distance matrix.
+        @param stddev: The C{float} standard deviation of the noise to add to
+            off-diagonal distance matrix elements before creating a new NJ
+            tree to add to the support.
+        @return: A C{list} of new C{NJTree} instances, holding the consensus
+            trees produced by C{skbio.tree.majority_rule}.
+        """
+        trees = [self.tree]
+        for _ in range(iterations):
+            distance = perturbDistanceMatrix(self.distance, stddev)
+            new = NJTree.fromDistanceMatrix(self.labels, distance)
+            trees.append(new.tree)
+
+        result = []
+        for tree in majority_rule(trees):
+            new = NJTree()
+            new.labels = self.labels
+            new.sequences = self.sequences
+            new.distance = self.distance
+            new.supportIterations += iterations + 1
+            new.tree = tree
+            result.append(new)
+
+        return result

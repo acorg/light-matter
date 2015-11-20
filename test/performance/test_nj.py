@@ -501,28 +501,6 @@ class TestNJTree(TestCase):
         njtree.addSupport(10)
         self.assertEqual(1.0, njtree.supportForNode(njtree.tree))
 
-    def xxx_testAddSupportIdenticalTrees(self):
-        """
-        When support has been added to a tree with quite distinct distances
-        using a very low standard deviation for the distance matrix noise, the
-        same tree will be generated repeatedly and support for all nodes
-        will be 1.0.
-        """
-        distance = [
-            [0.0, 0.1, 0.9, 0.9],
-            [0.1, 0.0, 0.9, 0.9],
-            [0.9, 0.9, 0.0, 0.1],
-            [0.9, 0.9, 0.1, 0.0],
-        ]
-        labels = ['w', 'x', 'y', 'z']
-        njtree = NJTree.fromDistanceMatrix(labels, distance)
-        print(njtree.newick())
-        njtree.addSupport(10, 0.01)
-        print(njtree.newick())
-        self.assertEqual([0.0, 1.0, 0.0],
-                         [njtree.supportForNode(child)
-                          for child in njtree.tree.children])
-
     def testNewickWithNoSuppportAdded(self):
         """
         If no support has been added to a tree, newick must return the expected

@@ -138,14 +138,20 @@ class NJTree:
             else:
                 children = list(map(_canonicalize, node.children))
                 children.sort(key=_key)
-                return TreeNode(children=children, length=node.length,
-                                name=node.name)
+                new = TreeNode(children=children, length=node.length,
+                               name=node.name)
+                try:
+                    new.support = node.support
+                except AttributeError:
+                    pass
+                return new
 
         new = NJTree()
         new.labels = self.labels
         new.sequences = self.sequences
         new.distance = self.distance
         new.tree = _canonicalize(self.tree)
+        new.supportIterations = self.supportIterations
         return new
 
     def countClades(self):

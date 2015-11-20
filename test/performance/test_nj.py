@@ -384,6 +384,21 @@ class TestNJTree(TestCase):
             ['a', 'b', 'c'],
             [child.name for child in njtree.canonicalize().tree.children])
 
+    def testRootByNodeNames(self):
+        """
+        Rooting by node name must work.
+        """
+        njtree = NJTree()
+        njtree.tree = TreeNode(children=[
+            TreeNode(name='c'),
+            TreeNode(name='d'),
+            TreeNode(name='b'),
+            TreeNode(name='a')])
+
+        self.assertEqual(
+            ['c', 'd', 'b', 'a'],
+            [child.name for child in njtree.root(['a', 'b']).tree.children])
+
     def testCountCladesEmptyTree(self):
         """
         In a tree with no children, there are no clades.

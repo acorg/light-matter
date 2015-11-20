@@ -153,19 +153,16 @@ class NJTree:
         """
         Root a tree by one tip or the common ancestor of multiple tips.
 
+        @param nodes: Either a C{str} name of the nodes or a C{TreeNode}
+            instance where the tree should be rooted.
         @return: A new C{NJTree} instance rooted at the specified node(s).
         """
         def _root(tree, nodes):
             """
             Root tree. See docstring for C{root}, above.
             """
-            if len(nodes) == 1:
-                # root tree at that node
-                return self.tree.root_at(nodes[0])
-            else:
-                # find the most recent common ancestor of that node.
-                mrca = self.tree.lowest_common_ancestor(nodes)
-                return self.tree.root_at(mrca)
+            mrca = self.tree.lowest_common_ancestor(nodes)
+            return self.tree.root_at(mrca)
 
         new = NJTree()
         new.labels = self.labels

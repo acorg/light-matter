@@ -220,7 +220,7 @@ class NJTree:
         @param node: A C{TreeNode} instance.
         @return: The C{float} support, ranging from 0.0 to 1.0.
         """
-        # Explicitly check if supportIterations non-zero rather than
+        # Explicitly check if supportIterations is non-zero rather than
         # dividing by it and also catching ZeroDivisionError because
         # node.support is sometimes a numpy.float64 on return from
         # majority_rule (called by self.consensusTrees, below). I don't

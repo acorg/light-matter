@@ -261,7 +261,8 @@ class NJTree:
         if self.supportIterations:
             # Remove the final [100] support which is always present because
             # the root of all topologies has all tips as descendants.
-            assert result.endswith('[100]')
+            assert result.endswith('[100]'), (
+                'Newick string does not end with "[100]": %s' % result)
             result = result[:-5]
 
         return result + ';\n'

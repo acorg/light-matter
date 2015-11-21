@@ -173,6 +173,7 @@ class NJTree:
         new.labels = self.labels
         new.sequences = self.sequences
         new.distance = self.distance
+        new.supportIterations = self.supportIterations
         new.tree = self.tree.root_at(lca)
         return new
 

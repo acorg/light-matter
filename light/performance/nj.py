@@ -153,8 +153,8 @@ class NJTree:
         """
         Root a tree by the lowest common ancestor of a list of nodes.
 
-        @param nodes: Either a C{list} of C{str} name of the nodes or
-            C{TreeNode} instance where the tree should be rooted.
+        @param nodes: Either a C{list} of C{str} tree tip names or a C{list} of
+            C{TreeNode} instances.
         @raise MissingNodeError: If a non-existent node name is present in
             C{nodes}.
         @return: A new C{NJTree} instance rooted at lowest common ancestor of

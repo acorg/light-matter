@@ -384,9 +384,9 @@ class TestNJTree(TestCase):
             ['a', 'b', 'c'],
             [child.name for child in njtree.canonicalize().tree.children])
 
-    def testRootByNodeNames(self):
+    def testRootByMultipleNodeNames(self):
         """
-        Rooting by node name must work.
+        Rooting by multiple node names must work.
         """
         njtree = NJTree()
         njtree.tree = TreeNode(children=[
@@ -398,6 +398,57 @@ class TestNJTree(TestCase):
         self.assertEqual(
             ['c', 'd', 'b', 'a'],
             [child.name for child in njtree.root(['a', 'b']).tree.children])
+
+    def testRootByOneNodeName(self):
+        """
+        Rooting by one node name must work.
+        """
+        njtree = NJTree()
+        njtree.tree = TreeNode(children=[
+            TreeNode(name='c'),
+            TreeNode(name='d'),
+            TreeNode(name='b'),
+            TreeNode(name='a')])
+
+        self.assertEqual(
+            ['c', 'd', 'b', 'a'],
+            [child.name for child in njtree.root(['a']).tree.children])
+
+    def testRootByOneTreeNode(self):
+        """
+        Rooting by one TreeNode must work.
+        """
+        njtree = NJTree()
+        njtree.tree = TreeNode(children=[
+            TreeNode(name='c'),
+            TreeNode(name='d'),
+            TreeNode(name='b'),
+            TreeNode(name='a')])
+
+        node = TreeNode(children=[TreeNode(name='a')])
+
+        self.assertEqual(
+            ['c', 'd', 'b', 'a'],
+            [child.name for child in njtree.root([node]).tree.children])
+
+    def testRootByTwoTreeNodes(self):
+        """
+        Rooting by two TreeNodes must work.
+        """
+        njtree = NJTree()
+        njtree.tree = TreeNode(children=[
+            TreeNode(name='c'),
+            TreeNode(name='d'),
+            TreeNode(name='b'),
+            TreeNode(name='a')])
+
+        node1 = TreeNode(children=[TreeNode(name='c')])
+        node2 = TreeNode(children=[TreeNode(name='d')])
+
+        self.assertEqual(
+            ['c', 'd', 'b', 'a'],
+            [child.name for child in
+             njtree.root([node1, node2]).tree.children])
 
     def testCountCladesEmptyTree(self):
         """

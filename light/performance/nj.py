@@ -151,24 +151,29 @@ class NJTree:
 
     def root(self, nodes):
         """
-        Root a tree by one tip or the common ancestor of multiple tips.
+        Root a tree by the lowest common ancestor of a list of nodes.
 
-        @param nodes: Either a C{str} name of the nodes or a C{TreeNode}
-            instance where the tree should be rooted.
-        @return: A new C{NJTree} instance rooted at the specified node(s).
+        @param nodes: Either a C{list} of C{str} name of the nodes or
+            C{TreeNode} instance where the tree should be rooted.
+        @raise MissingNodeError: If a non-existent node name is present in
+            C{nodes}.
+        @return: A new C{NJTree} instance rooted at lowest common ancestor of
+            the specified node.
         """
-        def _root(tree, nodes):
-            """
-            Root tree. See docstring for C{root}, above.
-            """
-            mrca = self.tree.lowest_common_ancestor(nodes)
-            return self.tree.root_at(mrca)
+        lca = self.tree.lca(nodes)
+        if lca.is_tip():
+            # Can't root at a tip, let's use its parent.
+            lca = lca.parent
+
+        if lca.parent is None:
+            # The lca is the root of the tree. Nothing to do.
+            return self
 
         new = NJTree()
         new.labels = self.labels
         new.sequences = self.sequences
         new.distance = self.distance
-        new.tree = _root(self.tree, nodes)
+        new.tree = self.tree.root_at(lca)
         return new
 
     def countClades(self):

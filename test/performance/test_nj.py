@@ -1,6 +1,7 @@
 from collections import Counter
 from unittest import TestCase
 import numpy as np
+from skbio.tree._exception import MissingNodeError
 
 from skbio.stats.distance import DissimilarityMatrixError
 from skbio import TreeNode
@@ -383,6 +384,87 @@ class TestNJTree(TestCase):
         self.assertEqual(
             ['a', 'b', 'c'],
             [child.name for child in njtree.canonicalize().tree.children])
+
+    def testRootByMultipleNodeNames(self):
+        """
+        Rooting by multiple node names must work.
+        """
+        njtree = NJTree()
+        njtree.tree = TreeNode(children=[
+            TreeNode(name='c'),
+            TreeNode(name='d'),
+            TreeNode(name='b'),
+            TreeNode(name='a')])
+
+        self.assertEqual(
+            ['c', 'd', 'b', 'a'],
+            [child.name for child in njtree.root(['a', 'b']).tree.children])
+
+    def testRootByOneNodeName(self):
+        """
+        Rooting by one node name must work.
+        """
+        njtree = NJTree()
+        njtree.tree = TreeNode(children=[
+            TreeNode(name='c'),
+            TreeNode(name='d'),
+            TreeNode(name='b'),
+            TreeNode(name='a')])
+
+        self.assertEqual(
+            ['c', 'd', 'b', 'a'],
+            [child.name for child in njtree.root(['a']).tree.children])
+
+    def testRootByInexistentNodeNameMustRaiseError(self):
+        """
+        Rooting by an inexistent node name must raise an exception.
+        """
+        njtree = NJTree()
+        njtree.tree = TreeNode(children=[
+            TreeNode(name='c'),
+            TreeNode(name='d'),
+            TreeNode(name='b'),
+            TreeNode(name='a')])
+
+        error = 'Node f is not in self'
+
+        self.assertRaisesRegex(MissingNodeError, error, njtree.root, ['f'])
+
+    def testRootByOneTreeNode(self):
+        """
+        Rooting by one TreeNode must work.
+        """
+        njtree = NJTree()
+        njtree.tree = TreeNode(children=[
+            TreeNode(name='c'),
+            TreeNode(name='d'),
+            TreeNode(name='b'),
+            TreeNode(name='a')])
+
+        node = njtree.tree.find('a')
+
+        self.assertEqual(
+            ['c', 'd', 'b', 'a'],
+            [child.name for child in njtree.root([node]).tree.children])
+
+    def testRootByTwoTreeNodes(self):
+        """
+        Rooting by two TreeNodes must work.
+        """
+        njtree = NJTree()
+        njtree.tree = TreeNode(children=[
+            TreeNode(name='c'),
+            TreeNode(name='d'),
+            TreeNode(name='b'),
+            TreeNode(name='a')])
+
+        node1 = njtree.tree.find('a')
+        node2 = njtree.tree.find('b')
+
+        self.assertEqual(
+            ['c', 'd', 'b', 'a'],
+            [child.name for child in
+             njtree.root([node1, node2]).tree.children])
 
     def testCountCladesEmptyTree(self):
         """

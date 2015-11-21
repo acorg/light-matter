@@ -149,6 +149,34 @@ class NJTree:
         new.tree = _canonicalize(self.tree)
         return new
 
+    def root(self, nodes):
+        """
+        Root a tree by the lowest common ancestor of a list of nodes.
+
+        @param nodes: Either a C{list} of C{str} tree tip names or a C{list} of
+            C{TreeNode} instances.
+        @raise MissingNodeError: If a non-existent node name is present in
+            C{nodes}.
+        @return: A new C{NJTree} instance rooted at lowest common ancestor of
+            the specified node.
+        """
+        lca = self.tree.lca(nodes)
+        if lca.is_tip():
+            # Can't root at a tip, let's use its parent.
+            lca = lca.parent
+
+        if lca.parent is None:
+            # The lca is the root of the tree. Nothing to do.
+            return self
+
+        new = NJTree()
+        new.labels = self.labels
+        new.sequences = self.sequences
+        new.distance = self.distance
+        new.supportIterations = self.supportIterations
+        new.tree = self.tree.root_at(lca)
+        return new
+
     def countClades(self):
         """
         Count all the clades in our tree.

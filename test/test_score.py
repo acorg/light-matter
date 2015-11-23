@@ -10,11 +10,28 @@ from light.subject import Subject
 from light.score import (
     MinHashesScore, FeatureMatchingScore, FeatureAAScore, histogramBinFeatures,
     featureInRange, getHashFeatures, weightedHistogramBinFeatures,
-    DEFAULT_WEIGHTS, getWeightedOffsets, WeightedFeatureAAScore)
+    getWeightedOffsets, WeightedFeatureAAScore)
 from light.histogram import Histogram
 from light.landmarks import AlphaHelix, AminoAcids as AminoAcidsLm
 from light.trig import Peaks, AminoAcids
 
+DEFAULT_WEIGHTS = {
+    'AlphaHelix': 1,
+    'AlphaHelix_3_10': 1,
+    'AlphaHelix_pi': 1,
+    'BetaStrand': 1,
+    'BetaTurn': 1,
+    'AminoAcidsLm': 1,
+    'GOR4AlphaHelix': 1,
+    'GOR4BetaStrand': 1,
+    'GOR4Coil': 1,
+    'Prosite': 1,
+    'Peaks': 1,
+    'Troughs': 1,
+    'AminoAcids': 1,
+    'IndividualPeaks': 1,
+    'IndividualTroughs': 1,
+}
 
 TEST_WEIGHTS = {
     'AlphaHelix': 1.5,

@@ -5,25 +5,6 @@ from warnings import warn
 from light.string import MultilineString
 
 
-DEFAULT_WEIGHTS = {
-    'AlphaHelix': 1,
-    'AlphaHelix_3_10': 1,
-    'AlphaHelix_pi': 1,
-    'BetaStrand': 1,
-    'BetaTurn': 1,
-    'AminoAcidsLm': 1,
-    'GOR4AlphaHelix': 1,
-    'GOR4BetaStrand': 1,
-    'GOR4Coil': 1,
-    'Prosite': 1,
-    'Peaks': 1,
-    'Troughs': 1,
-    'AminoAcids': 1,
-    'IndividualPeaks': 1,
-    'IndividualTroughs': 1,
-}
-
-
 class MinHashesScore(object):
     """
     Calculates the score for a bin based on the minimum hashes of either
@@ -505,11 +486,8 @@ def getWeightedOffsets(offsetDict):
     @return: A C{float} weighted offset count.
     """
     count = 0
-    for offset, weight in offsetDict.items():
-        if len(weight) == 1:
-            count += weight[0]
-        else:
-            count += max(weight)
+    for weights in offsetDict.values():
+        count += max(weights)
 
     return count
 
@@ -534,7 +512,7 @@ class WeightedFeatureAAScore:
         self._queryLen = len(query)
         self._subjectLen = len(subject)
 
-        self._weights = DEFAULT_WEIGHTS if weights is None else weights
+        self._weights = self.DEFAULT_WEIGHTS if weights is None else weights
 
         from light.backend import Backend
         backend = Backend()
@@ -604,26 +582,24 @@ class WeightedFeatureAAScore:
         # The unmatched offsets in the query and the subject shouldn't contain
         # any offsets that were matched. This can occur if an unmatched feature
         # overlaps with a matched feature.
-        for item in matchedQOffsets.keys():
-            if item in unmatchedQueryOffsets.keys():
-                del unmatchedQueryOffsets[item]
+        for offset in matchedQOffsets.keys():
+            unmatchedQueryOffsets.pop(offset, None)
 
-        for item in matchedSOffsets.keys():
-            if item in unmatchedSubjectOffsets.keys():
-                del unmatchedSubjectOffsets[item]
+        for offset in matchedSOffsets.keys():
+            unmatchedSubjectOffsets.pop(offset, None)
 
-        matchedOffsetCount = (
+        matchedWeightsCount = (
             getWeightedOffsets(matchedQOffsets) +
             getWeightedOffsets(matchedSOffsets))
 
-        totalOffsetCount = matchedOffsetCount + (
+        totalWeightsCount = matchedWeightsCount + (
             getWeightedOffsets(unmatchedQueryOffsets) +
             getWeightedOffsets(unmatchedSubjectOffsets))
 
         # Calculate the weighted score of the features within the matched
         # region.
         try:
-            matchedRegionScore = matchedOffsetCount / totalOffsetCount
+            matchedRegionScore = matchedWeightsCount / totalWeightsCount
         except ZeroDivisionError:
             matchedRegionScore = 0.0
 
@@ -680,7 +656,7 @@ class WeightedFeatureAAScore:
         analysis = {
             'denominatorQuery': denominatorQuery,
             'denominatorSubject': denominatorSubject,
-            'matchedOffsetCount': matchedOffsetCount,
+            'matchedOffsetCount': matchedWeightsCount,
             'matchedSubjectOffsetCount': len(matchedSOffsets),
             'matchedQueryOffsetCount': len(matchedQOffsets),
             'weightedMatchedQueryOffsetCount':
@@ -698,7 +674,7 @@ class WeightedFeatureAAScore:
             'normaliserSubject': normaliserSubject,
             'score': score,
             'scoreClass': self.__class__,
-            'totalOffsetCount': totalOffsetCount,
+            'totalOffsetCount': totalWeightsCount,
         }
 
         return score, analysis

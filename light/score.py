@@ -5,7 +5,7 @@ from warnings import warn
 from light.string import MultilineString
 
 
-DEFAULT_WEIGHT = {
+DEFAULT_WEIGHTS = {
     'AlphaHelix': 1,
     'AlphaHelix_3_10': 1,
     'AlphaHelix_pi': 1,
@@ -496,26 +496,45 @@ class FeatureAAScore:
 ALL_SCORE_CLASSES = (MinHashesScore, FeatureMatchingScore, FeatureAAScore)
 
 
+def getWeightedOffsets(offsetDict):
+    """
+    Calculate the weighted offsets.
+
+    @param offsetDict: A C{dict} where the key is an offset and the value is
+        the weight associated with that offset.
+    @return: A C{float} weighted offset count.
+    """
+    count = 0
+    for offset, weight in offsetDict.items():
+        if len(weight) == 1:
+            count += weight[0]
+        else:
+            count += max(weight)
+
+    return count
+
+
 class WeightedFeatureAAScore:
     """
     Calculates the score for histogram bins based on the count of amino acids
     present in the regions of the query and subject that had a significant
     alignment (i.e., caused a histogram bin to be considered significant).
-    Weight the score by importance of the feature.
+    Weight the score by importance of the features in the matched region.
 
     @param histogram: A C{light.histogram} instance.
     @param query: A C{dark.reads.AARead} instance.
     @param subject: A C{light.subject.Subject} instance (a subclass of
         C{dark.reads.AARead}).
     @param params: A C{Parameters} instance.
-    @param weight: If not C{None}, a C{float} weight to be given to Prosite.
+    @param weights: If not C{None}, a C{dict} of weights to be given to each
+        feature.
     """
     def __init__(self, histogram, query, subject, params, weights=None):
         self._histogram = histogram
         self._queryLen = len(query)
         self._subjectLen = len(subject)
 
-        self._weight = DEFAULT_WEIGHT if weights is None else weights
+        self._weights = DEFAULT_WEIGHTS if weights is None else weights
 
         from light.backend import Backend
         backend = Backend()
@@ -533,11 +552,11 @@ class WeightedFeatureAAScore:
         """
         Calculates the score for a given histogram bin.
 
-        The score is a quotient. In the numerator, we have the number of AA
-        locations that are in features that are in hashes that match between
-        the subject and the query. The denominator is the number of AA
-        locations that are in features which are in all hashes in the matching
-        regions of the query and subject.
+        The score is a quotient. In the numerator, we have the weighted number
+        of AA locations that are in features that are in hashes that match
+        between the subject and the query. The denominator is the weighted
+        number of AA locations that are in features which are in all hashes in
+        the matching regions of the query and subject.
         Leaving the score like this would mean that a short match can have the
         same score as a long match. To account for this, the quotient from
         above is multiplied by the matched fraction of the shorter sequence.
@@ -546,13 +565,14 @@ class WeightedFeatureAAScore:
         @return: A 2-tuple, containing the C{float} score of the bin and a
             C{dict} with the analysis leading to the score.
         """
-        # Get the features and their offsets which match in subject and query.
+        # Get the features and their offsets with associated weights which
+        # match in subject and query.
         # These will be used to calculate the numerator of the score.
         matchedQFeatures, matchedQOffsets = weightedHistogramBinFeatures(
-            self._histogram[binIndex], 'query')
+            self._histogram[binIndex], 'query', self._weights)
 
         matchedSFeatures, matchedSOffsets = weightedHistogramBinFeatures(
-            self._histogram[binIndex], 'subject')
+            self._histogram[binIndex], 'subject', self._weights)
 
         # Get the extreme offsets in the matched region of query and subject.
         minQueryOffset = min(matchedQOffsets, default=None)
@@ -560,20 +580,17 @@ class WeightedFeatureAAScore:
         minSubjectOffset = min(matchedSOffsets, default=None)
         maxSubjectOffset = max(matchedSOffsets, default=None)
 
-        # Get all features and their offsets which are present in the subject
-        # and the query within the matched region. These will be used to
-        # calculate the denominator.
+        # Get all features and their offsets with their associated weights
+        # which are present in the subject and the query within the matched
+        # region.
+        # These will be used to calculate the denominator of the score.
         unmatchedQueryOffsets = defaultdict(list)
         for feature in filter(
                 lambda f: featureInRange(f, minQueryOffset, maxQueryOffset),
                 self._allQueryFeatures - matchedQFeatures):
             for offset in feature.coveredOffsets():
-                unmatchedQueryOffsets[offset].append(self.weights[feature])
-
-        # The unmatched offsets shouldn't contain any offsets that were
-        # matched. This can occur if an unmatched feature overlaps with a
-        # matched feature.
-        unmatchedQueryOffsets -= matchedQOffsets
+                unmatchedQueryOffsets[offset].append(
+                    self._weights[feature.name])
 
         unmatchedSubjectOffsets = defaultdict(list)
         for feature in filter(
@@ -581,18 +598,30 @@ class WeightedFeatureAAScore:
                                          maxSubjectOffset),
                 self._allSubjectFeatures - matchedSFeatures):
             for offset in feature.coveredOffsets():
-                unmatchedSubjectOffsets[offset].append(self.weights[feature])
-        # The unmatched offsets shouldn't contain any offsets that were
-        # matched. This can occur if an unmatched feature overlaps with a
-        # matched feature.
-        unmatchedSubjectOffsets -= matchedSOffsets
+                unmatchedSubjectOffsets[offset].append(
+                    self._weights[feature.name])
+
+        # The unmatched offsets in the query and the subject shouldn't contain
+        # any offsets that were matched. This can occur if an unmatched feature
+        # overlaps with a matched feature.
+        for item in matchedQOffsets.keys():
+            if item in unmatchedQueryOffsets.keys():
+                del unmatchedQueryOffsets[item]
+
+        for item in matchedSOffsets.keys():
+            if item in unmatchedSubjectOffsets.keys():
+                del unmatchedSubjectOffsets[item]
 
         matchedOffsetCount = (
-            len(matchedQOffsets) + len(matchedSOffsets))
+            getWeightedOffsets(matchedQOffsets) +
+            getWeightedOffsets(matchedSOffsets))
 
         totalOffsetCount = matchedOffsetCount + (
-            len(unmatchedQueryOffsets) + len(unmatchedSubjectOffsets))
+            getWeightedOffsets(unmatchedQueryOffsets) +
+            getWeightedOffsets(unmatchedSubjectOffsets))
 
+        # Calculate the weighted score of the features within the matched
+        # region.
         try:
             matchedRegionScore = matchedOffsetCount / totalOffsetCount
         except ZeroDivisionError:
@@ -604,6 +633,7 @@ class WeightedFeatureAAScore:
         # is the numerator + the length of hashes in either subject or query
         # which are outside the matched region. The sequence with less covered
         # indices is used to do the normalisation.
+        # Note that the fraction to normalise by length is not weighted.
 
         offsetsNotInMatchQuery = set()
         for feature in filterfalse(
@@ -611,7 +641,10 @@ class WeightedFeatureAAScore:
                                          maxQueryOffset),
                 self._allQueryFeatures - matchedQFeatures):
             offsetsNotInMatchQuery.update(feature.coveredOffsets())
-        offsetsNotInMatchQuery -= matchedQOffsets
+
+        matchedQOffsetsSet = set(matchedQOffsets.keys())
+        offsetsNotInMatchQuery -= matchedQOffsetsSet
+
         numeratorQuery = (len(matchedQOffsets) +
                           len(unmatchedQueryOffsets))
         denominatorQuery = numeratorQuery + len(offsetsNotInMatchQuery)
@@ -622,11 +655,15 @@ class WeightedFeatureAAScore:
                                          maxSubjectOffset),
                 self._allSubjectFeatures - matchedSFeatures):
             offsetsNotInMatchSubject.update(feature.coveredOffsets())
-        offsetsNotInMatchSubject -= matchedSOffsets
+
+        matchedSOffsetsSet = set(matchedSOffsets.keys())
+        offsetsNotInMatchSubject -= matchedSOffsetsSet
+
         numeratorSubject = (len(matchedSOffsets) +
                             len(unmatchedSubjectOffsets))
         denominatorSubject = numeratorSubject + len(offsetsNotInMatchSubject)
 
+        # Calculate the fraction to normalise by length.
         try:
             normaliserQuery = numeratorQuery / denominatorQuery
         except ZeroDivisionError:
@@ -637,6 +674,7 @@ class WeightedFeatureAAScore:
         except ZeroDivisionError:
             normaliserSubject = 1.0
 
+        # Calculate the final score.
         score = matchedRegionScore * max(normaliserQuery, normaliserSubject)
 
         analysis = {
@@ -645,6 +683,10 @@ class WeightedFeatureAAScore:
             'matchedOffsetCount': matchedOffsetCount,
             'matchedSubjectOffsetCount': len(matchedSOffsets),
             'matchedQueryOffsetCount': len(matchedQOffsets),
+            'weightedMatchedQueryOffsetCount':
+                getWeightedOffsets(matchedQOffsets),
+            'weightedMatchedSubjectOffsetCount':
+                getWeightedOffsets(matchedSOffsets),
             'matchedRegionScore': matchedRegionScore,
             'maxQueryOffset': maxQueryOffset,
             'maxSubjectOffset': maxSubjectOffset,
@@ -686,6 +728,10 @@ class WeightedFeatureAAScore:
              '%(matchedQueryOffsetCount)d' % analysis),
             ('Total (query+subject) AA offsets in hashes in matched region: '
              '%(totalOffsetCount)d' % analysis),
+            ('Weighted Subject AA offsets in matched hashes: '
+             '%(weightedMatchedSubjectOffsetCount)d' % analysis),
+            ('Weighted Query AA offsets in matched hashes: '
+             '%(weightedMatchedQueryOffsetCount)d' % analysis),
             ('Matched region score %(matchedRegionScore).4f '
              '(%(matchedOffsetCount)d / %(totalOffsetCount)d)' % analysis),
             ('Query normalizer: %(normaliserQuery).4f (%(numeratorQuery)d / '
@@ -697,4 +743,5 @@ class WeightedFeatureAAScore:
 
         return str(result)
 
-ALL_SCORE_CLASSES = (MinHashesScore, FeatureMatchingScore, FeatureAAScore)
+ALL_SCORE_CLASSES = (MinHashesScore, FeatureMatchingScore, FeatureAAScore,
+                     WeightedFeatureAAScore)

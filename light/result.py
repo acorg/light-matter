@@ -122,7 +122,8 @@ class Result(object):
                     histogram, query, subject, connector.params)
             elif scoreMethod == 'WeightedFeatureAAScore':
                 scorer = WeightedFeatureAAScore(
-                    histogram, query, subject, connector.params)
+                    histogram, query, subject, connector.params,
+                    findParams.weights)
             else:
                 raise ValueError('Unknown score method %r' % scoreMethod)
 

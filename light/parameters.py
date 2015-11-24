@@ -19,18 +19,15 @@ def parseWeights(weights):
     Parse feature weights specification.
 
     @param weights: A C{list} of C{str}s. Each item is of the form
-    'landmark 2'.
+        'landmark 2'.
     @return: A C{dict} whose keys are landmark or trigPoint names and whose
         values are weights.
     """
     allWeights = FindParameters.DEFAULT_WEIGHTS.copy()
 
-    parsedWeights = {}
     for featureWeight in weights:
         feature, weight = featureWeight.split()
-        parsedWeights[feature] = int(weight)
-
-    allWeights.update(parsedWeights)
+        allWeights[feature] = float(weight)
 
     return allWeights
 
@@ -167,8 +164,7 @@ class FindParameters(object):
                    scoreMethod=args.scoreMethod,
                    featureMatchScore=args.featureMatchScore,
                    featureMismatchScore=args.featureMismatchScore,
-                   weights=parseWeights(args.weights) if args.weights else
-                   FindParameters.DEFAULT_WEIGHTS)
+                   weights=parseWeights(args.weights or {}))
 
     def print_(self, margin=''):
         """
@@ -191,7 +187,7 @@ class FindParameters(object):
         ])
         result.indent()
         for key in sorted(self.weights.keys()):
-            result.extend(['%s: %s' % (key, self.weights[key])])
+            result.append('%s: %s' % (key, self.weights[key]))
         return str(result)
 
 

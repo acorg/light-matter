@@ -485,11 +485,7 @@ def getWeightedOffsets(offsetDict):
         the weight associated with that offset.
     @return: A C{float} weighted offset count.
     """
-    count = 0
-    for weights in offsetDict.values():
-        count += max(weights)
-
-    return count
+    return sum(max(weights) for weights in offsetDict.values())
 
 
 class WeightedFeatureAAScore:

@@ -815,7 +815,6 @@ class TestResult(TestCase):
         findParams = FindParameters(significanceFraction=0.1,
                                     scoreMethod='MinHashesScore')
         result = database.find(query, findParams)
-        result.print_(printQuery=False, printFeatures=False)
 
         expected = ('Find parameters:\n'
                     '  Significance method: HashFraction\n'

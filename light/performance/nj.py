@@ -302,7 +302,7 @@ class NJTree:
             the tip label. If a dictionary is used, its keys should be strings
             of sequence ids and its values strings of color names. If a
             function is used, it will be called with a string of a sequence id
-            and should return it's corresponding color. If labelColors is None
+            and should return its corresponding color. If labelColors is None
             the label will be shown in black.
         @param kwargs: Additional (optional) arguments to be passed to savefig.
             For available options, see:

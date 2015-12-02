@@ -291,20 +291,23 @@ class NJTree:
 
         self.supportIterations += iterations
 
-    def plot(self, filename=None, show=True, **kwargs):
+    def plot(self, filename=None, show=True, labelColors=None, **kwargs):
         """
         Use the Phylo package to plot the NJ tree, showing branch support.
 
         @param filename: A C{str} file name to which to write the tree image.
         @param show: If C{True} the image will be displayed. This is only
             useful when C{filename} is not C{None}.
+        @param labelColors: A function or a dictionary specifying the color of
+            the tip label. If the tip label can't be found in the dict or
+            label_colors is None, the label will be shown in black.
         @param kwargs: Additional (optional) arguments to be passed to savefig.
             For available options, see:
             http://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.savefig
         """
         fp = StringIO(self.newick())
         Phylo.draw(Phylo.read(fp, 'newick', comments_are_confidence=True),
-                   do_show=show)
+                   do_show=show, label_colors=labelColors)
         if filename:
             plt.gcf().savefig(filename, **kwargs)
         if not show:

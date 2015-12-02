@@ -9,7 +9,7 @@ from Bio import Phylo
 from skbio.tree import nj, majority_rule
 from skbio import DistanceMatrix, TreeNode
 
-from dark.reads import AARead
+from dark.reads import AAReadWithX
 from dark.fasta import FastaReads
 
 from light.performance.affinity import affinityMatrix
@@ -74,7 +74,8 @@ class NJTree:
         @return: An C{NJTree} instance.
         """
         if isinstance(sequences, str):
-            sequences = FastaReads(sequences, readClass=AARead, upperCase=True)
+            sequences = FastaReads(sequences, readClass=AAReadWithX,
+                                   upperCase=True)
 
         new = cls()
         new.sequences = list(sequences)

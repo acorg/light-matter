@@ -1,7 +1,7 @@
 # Import and make available things that are convenient to have around in
 # iPythonNotebook following 'from light.ipynb import *'.
 
-from dark.reads import AARead
+from dark.reads import AARead, AAReadWithX
 from dark.fasta import FastaReads
 from dark.titles import titleCounts, TitlesAlignments
 from dark.html import (
@@ -21,8 +21,8 @@ _ = (AARead, FastaReads, LightReadsAlignments, titleCounts, TitlesAlignments,
      DatabaseSpecifier)
 
 __all__ = [
-    'AARead', 'FastaReads', 'LightReadsAlignments', 'titleCounts',
-    'TitlesAlignments', 'summarizeTitlesByLength', 'summarizeTitlesByMaxScore',
-    'summarizeTitlesByMedianScore', 'summarizeTitlesByCount',
-    'summarizeTitlesByTitle', 'plotHistogram', 'plotFeatureSquare', 'Database',
-    'DatabaseSpecifier']
+    'AARead', 'AAReadWithX', 'FastaReads', 'LightReadsAlignments',
+    'titleCounts', 'TitlesAlignments', 'summarizeTitlesByLength',
+    'summarizeTitlesByMaxScore', 'summarizeTitlesByMedianScore',
+    'summarizeTitlesByCount', 'summarizeTitlesByTitle', 'plotHistogram',
+    'plotFeatureSquare', 'Database', 'DatabaseSpecifier']

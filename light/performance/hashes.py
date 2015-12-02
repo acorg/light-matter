@@ -1,4 +1,4 @@
-from dark.reads import AARead
+from dark.reads import AAReadWithX
 from dark.fasta import FastaReads
 
 from light.backend import Backend
@@ -25,7 +25,8 @@ class HashesString(object):
             additional keywords, all of which are optional.
         """
         if isinstance(sequences, str):
-            reads = FastaReads(sequences, readClass=AARead, upperCase=True)
+            reads = FastaReads(sequences, readClass=AAReadWithX,
+                               upperCase=True)
         else:
             reads = sequences
 

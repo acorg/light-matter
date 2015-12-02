@@ -7,7 +7,7 @@ from sklearn.metrics import (
     adjusted_rand_score, adjusted_mutual_info_score, silhouette_score,
     confusion_matrix)
 
-from dark.reads import AARead
+from dark.reads import AAReadWithX
 from dark.fasta import FastaReads
 
 from light.distance import scale
@@ -38,7 +38,8 @@ class ClusterAnalysis(object):
             label has been set, or if there are no reads in C{sequences}.
         """
         if isinstance(sequences, str):
-            reads = FastaReads(sequences, readClass=AARead, upperCase=True)
+            reads = FastaReads(sequences, readClass=AAReadWithX,
+                               upperCase=True)
         else:
             reads = sequences
         database = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)

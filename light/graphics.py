@@ -23,7 +23,7 @@ from light.trig import ALL_TRIG_CLASSES
 
 from dark.dimension import dimensionalIterator
 from dark.fasta import FastaReads
-from dark.reads import AARead
+from dark.reads import AAReadWithX
 
 # Number of characters at which to wrap long lines in titles.
 FILL_WIDTH = 120
@@ -185,7 +185,8 @@ def plotHistogramPanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
     @return: The C{light.result.Result} from running the database find.
     """
     if isinstance(sequences, str):
-        reads = list(FastaReads(sequences, readClass=AARead, upperCase=True))
+        reads = list(FastaReads(sequences, readClass=AAReadWithX,
+                     upperCase=True))
     else:
         reads = list(sequences)
     nReads = len(reads)
@@ -224,9 +225,9 @@ def plotHistogram(query, subject, significanceMethod=None,
     Plot a histogram of matching hash offset deltas between a query and a
     subject.
 
-    @param query: an AARead instance of the sequence of the query.
-    @param subject: either an AARead instance of the sequence of the subject
-        or a C{str} subject index in the database.
+    @param query: an AAReadWithX instance of the sequence of the query.
+    @param subject: either an AAReadWithX instance of the sequence of the
+        subject or a C{str} subject index in the database.
     @param significanceMethod: The name of the method used to calculate
         which histogram bins are considered significant.
     @param significanceFraction: The C{float} fraction of all (landmark,
@@ -345,7 +346,8 @@ def plotHistogramLinePanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
     @return: The C{light.result.Result} from running the database find.
     """
     if isinstance(sequences, str):
-        reads = list(FastaReads(sequences, readClass=AARead, upperCase=True))
+        reads = list(FastaReads(sequences, readClass=AAReadWithX,
+                     upperCase=True))
     else:
         reads = list(sequences)
     nReads = len(reads)
@@ -384,9 +386,9 @@ def plotHistogramLine(query, subject, significanceMethod=False,
     Plot a line where the height corresponds to the number of hashes in a
     histogram bin, but sorted by height.
 
-    @param query: an AARead instance of the sequence of the query.
-    @param subject: either an AARead instance of the sequence of the subject
-        or an C{int} subject index in the database.
+    @param query: an AAReadWithX instance of the sequence of the query.
+    @param subject: either an AAReadWithX instance of the sequence of the
+        subject or an C{int} subject index in the database.
     @param significanceMethod: The name of the method used to calculate
         which histogram bins are considered significant.
     @param significanceFraction: The C{float} fraction of all (landmark,
@@ -479,7 +481,8 @@ def plotHistogramLines(sequences, significanceFraction=None, **kwargs):
     fig = plt.figure(figsize=(15, 10))
     readsAx = fig.add_subplot(111)
     if isinstance(sequences, str):
-        reads = list(FastaReads(sequences, readClass=AARead, upperCase=True))
+        reads = list(FastaReads(sequences, readClass=AAReadWithX,
+                     upperCase=True))
     else:
         reads = list(sequences)
     # Make a new database. For now we don't allow an existing database to
@@ -614,7 +617,8 @@ def plotHorizontalPairPanel(sequences, findParams=None, equalizeXAxes=True,
     @return: The C{light.result.Result} from running the database find.
     """
     if isinstance(sequences, str):
-        reads = list(FastaReads(sequences, readClass=AARead, upperCase=True))
+        reads = list(FastaReads(sequences, readClass=AAReadWithX,
+                     upperCase=True))
     else:
         reads = list(sequences)
     nReads = len(reads)
@@ -652,8 +656,8 @@ class PlotHashesInSubjectAndRead(object):
     query. 3) Hashes that match in subject and query. These can subsequently
     be plotted.
 
-    @param query: An AARead instance of the sequence of the query.
-    @param subject: An AARead instance of the sequence of the subject.
+    @param query: An AAReadWithX instance of the sequence of the query.
+    @param subject: An AAReadWithX instance of the sequence of the subject.
     @param findParams: An instance of C{FindParameters}.
     @param significanceFraction: The C{float} fraction of all (landmark,
         trig point) pairs for a scannedRead that need to fall into the
@@ -995,7 +999,8 @@ def plotLandmarksInSequences(sequences, maxTickLabelLength=None, **kwargs):
         additional keywords, all of which are optional.
     """
     if isinstance(sequences, str):
-        reads = list(FastaReads(sequences, readClass=AARead, upperCase=True))
+        reads = list(FastaReads(sequences, readClass=AAReadWithX,
+                     upperCase=True))
     else:
         reads = list(sequences)
 
@@ -1204,13 +1209,13 @@ class SequenceFeatureAnalysis:
     Analyze a sequence for its features and provide methods to plot and
     print useful summaries.
 
-    @param sequence: Either a C{str} AA sequence or an C{AARead} instance.
+    @param sequence: Either a C{str} AA sequence or an C{AAReadWithX} instance.
     @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
         for additional keywords, all of which are optional.
     """
     def __init__(self, sequence, **kwargs):
         if isinstance(sequence, str):
-            sequence = AARead('id', sequence)
+            sequence = AAReadWithX('id', sequence)
 
         self.sequence = sequence
 
@@ -1386,8 +1391,8 @@ def compareScores(subject, query, scoreMethods=None,
     Plot the features in two sequences, the hashes in their match, and
     the scores for the match calculated under different score methods.
 
-    @param subject: An C{AARead} instance.
-    @param query: An C{AARead} instance.
+    @param subject: An C{AAReadWithX} instance.
+    @param query: An C{AAReadWithX} instance.
     @param scoreMethods: A C{list} of score methods to use, or C{None} to
         use all score methods.
     @param plotHashesInSubjectAndRead: If C{True}, plot the hashes in the

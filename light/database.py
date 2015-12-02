@@ -11,7 +11,7 @@ import logging
 from Bio.File import as_handle
 
 from dark.fasta import combineReads, FastaReads
-from dark.reads import AARead
+from dark.reads import AAReadWithX
 
 from light.connector import SimpleConnector, WampServerConnector
 from light.backend import Backend
@@ -278,9 +278,9 @@ class WampDatabaseClient:
         Examine a sequence for features and add its (landmark, trig point)
         pairs to the search dictionary.
 
-        @param subject: A C{dark.read.AARead} instance. The subject sequence
-            is passed as a read instance even though in many cases it will not
-            be an actual read from a sequencing run.
+        @param subject: A C{dark.read.AAReadWithX} instance. The subject
+            sequence is passed as a read instance even though in many cases it
+            will not be an actual read from a sequencing run.
         @param subjectIndex: A C{str} representing the index of the subject as
             known by the database front end. If C{None} the SubjectStore we
             call addSubject on will assign an index.
@@ -490,7 +490,8 @@ class DatabaseSpecifier:
 
         if self._allowPopulation:
             for read in combineReads(args.databaseFasta,
-                                     args.databaseSequences, readClass=AARead):
+                                     args.databaseSequences,
+                                     readClass=AAReadWithX):
                 database.addSubject(read)
 
         return database
@@ -543,7 +544,8 @@ class DatabaseSpecifier:
                 'In-memory database specification not enabled')
             if self._allowPopulation:
                 if databaseFasta is not None:
-                    for read in FastaReads(databaseFasta, readClass=AARead,
+                    for read in FastaReads(databaseFasta,
+                                           readClass=AAReadWithX,
                                            upperCase=True):
                         database.addSubject(read)
                 if subjects is not None:

@@ -1,6 +1,6 @@
 import numpy as np
 
-from dark.reads import AARead
+from dark.reads import AAReadWithX
 from dark.fasta import FastaReads
 
 from light.database import DatabaseSpecifier
@@ -37,13 +37,14 @@ def affinityMatrix(queries, findParams=None, subjects=None, symmetric=True,
         the read number, the second is the database subject index.
     """
     if isinstance(queries, str):
-        queries = list(FastaReads(queries, readClass=AARead, upperCase=True))
+        queries = list(FastaReads(queries, readClass=AAReadWithX,
+                       upperCase=True))
 
     if subjects is None:
         subjects = queries
     else:
         if isinstance(subjects, str):
-            subjects = list(FastaReads(subjects, readClass=AARead,
+            subjects = list(FastaReads(subjects, readClass=AAReadWithX,
                                        upperCase=True))
 
     findParams = findParams or FindParameters()

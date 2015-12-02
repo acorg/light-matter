@@ -299,8 +299,11 @@ class NJTree:
         @param show: If C{True} the image will be displayed. This is only
             useful when C{filename} is not C{None}.
         @param labelColors: A function or a dictionary specifying the color of
-            the tip label. If the tip label can't be found in the dict or
-            label_colors is None, the label will be shown in black.
+            the tip label. If a dictionary is used, its keys should be strings
+            of sequence ids and its values strings of color names. If a
+            function is used, it will be called with a string of a sequence id
+            and should return it's corresponding color. If labelColors is None
+            the label will be shown in black.
         @param kwargs: Additional (optional) arguments to be passed to savefig.
             For available options, see:
             http://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.savefig

@@ -65,21 +65,21 @@ class FindParameters(object):
     DEFAULT_FEATURE_MATCH_SCORE = 1.0
     DEFAULT_FEATURE_MISMATCH_SCORE = -1.0
     DEFAULT_WEIGHTS = {
-        'AlphaHelix': 1,
-        'AlphaHelix_3_10': 1,
-        'AlphaHelix_pi': 1,
-        'BetaStrand': 1,
-        'BetaTurn': 1,
-        'AminoAcidsLm': 1,
-        'GOR4AlphaHelix': 1,
-        'GOR4BetaStrand': 1,
-        'GOR4Coil': 1,
-        'Prosite': 1,
-        'Peaks': 1,
-        'Troughs': 1,
-        'AminoAcids': 1,
-        'IndividualPeaks': 1,
-        'IndividualTroughs': 1,
+        'AlphaHelix': 1.0,
+        'AlphaHelix_3_10': 1.0,
+        'AlphaHelix_pi': 1.0,
+        'BetaStrand': 1.0,
+        'BetaTurn': 1.0,
+        'AminoAcidsLm': 1.0,
+        'GOR4AlphaHelix': 1.0,
+        'GOR4BetaStrand': 1.0,
+        'GOR4Coil': 1.0,
+        'Prosite': 1.0,
+        'Peaks': 1.0,
+        'Troughs': 1.0,
+        'AminoAcids': 1.0,
+        'IndividualPeaks': 1.0,
+        'IndividualTroughs': 1.0,
     }
 
     def __init__(self, significanceMethod=None, significanceFraction=None,
@@ -147,9 +147,9 @@ class FindParameters(object):
                   'feature in a query and subject are part of a match.'))
 
         parser.add_argument(
-            '--weights', type=str, action='append',
+            '--weights', action='append',
             help=('A string with the landmark name as the first element and '
-                  'the weight as the second.'))
+                  'the weight as the second, separated by a space.'))
 
     @classmethod
     def fromArgs(cls, args):
@@ -187,7 +187,7 @@ class FindParameters(object):
         ])
         result.indent()
         for key in sorted(self.weights.keys()):
-            result.append('%s: %s' % (key, self.weights[key]))
+            result.append('%s: %f' % (key, self.weights[key]))
         return str(result)
 
 

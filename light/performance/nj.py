@@ -377,9 +377,9 @@ class NJTree:
     def treeSample(self, iterations, stddev=None):
         """
         Make new perturbed distance matrices, create NJ trees from them,
-        canonicalize them, and count them.
+        and count them.
 
-        @param iterations: The C{int} number of times to create new NJ trees
+        @param iterations: The C{int} number of times to create a new NJ tree
             via a perturbed distance matrix.
         @param stddev: The C{float} standard deviation of the noise to add to
             off-diagonal distance matrix elements before creating a new NJ

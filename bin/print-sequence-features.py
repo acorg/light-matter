@@ -2,7 +2,7 @@
 
 import argparse
 
-from dark.reads import AARead
+from dark.reads import AAReadWithX
 
 from light.database import DatabaseSpecifier
 
@@ -25,7 +25,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     database = databaseSpecifier.getDatabaseFromArgs(args)
 
-    scannedRead = database.scan(AARead('id', args.sequence))
+    scannedRead = database.scan(AAReadWithX('id', args.sequence))
 
     if scannedRead.landmarks:
         print('All %d landmarks:' % len(scannedRead.landmarks))

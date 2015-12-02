@@ -5,7 +5,7 @@ import argparse
 from os.path import basename
 
 from dark.fasta import combineReads
-from dark.reads import AARead
+from dark.reads import AAReadWithX
 
 from light.database import DatabaseSpecifier
 from light.performance.cluster import (
@@ -78,7 +78,7 @@ if __name__ == '__main__':
             sys.exit(1)
 
     database = databaseSpecifier.getDatabaseFromArgs(args)
-    reads = combineReads(args.fastaFile, args.sequences, readClass=AARead)
+    reads = combineReads(args.fastaFile, args.sequences, readClass=AAReadWithX)
     labels = {}
 
     # Process labels from --label arguments.

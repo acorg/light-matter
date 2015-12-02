@@ -14,6 +14,24 @@ from light.significance import HashFraction, ALL_SIGNIFICANCE_CLASSES
 from light.string import MultilineString
 
 
+def parseWeights(weights):
+    """
+    Parse feature weights specification.
+
+    @param weights: A C{list} of C{str}s. Each item is of the form
+        'landmark 2'.
+    @return: A C{dict} whose keys are landmark or trigPoint names and whose
+        values are weights.
+    """
+    allWeights = FindParameters.DEFAULT_WEIGHTS.copy()
+
+    for featureWeight in weights:
+        feature, weight = featureWeight.split()
+        allWeights[feature] = float(weight)
+
+    return allWeights
+
+
 class FindParameters(object):
     """
     Hold a collection of parameter settings used by the database find command.
@@ -46,10 +64,27 @@ class FindParameters(object):
     # FeatureMatchingScore scoring (see light/score.py).
     DEFAULT_FEATURE_MATCH_SCORE = 1.0
     DEFAULT_FEATURE_MISMATCH_SCORE = -1.0
+    DEFAULT_WEIGHTS = {
+        'AlphaHelix': 1.0,
+        'AlphaHelix_3_10': 1.0,
+        'AlphaHelix_pi': 1.0,
+        'BetaStrand': 1.0,
+        'BetaTurn': 1.0,
+        'AminoAcidsLm': 1.0,
+        'GOR4AlphaHelix': 1.0,
+        'GOR4BetaStrand': 1.0,
+        'GOR4Coil': 1.0,
+        'Prosite': 1.0,
+        'Peaks': 1.0,
+        'Troughs': 1.0,
+        'AminoAcids': 1.0,
+        'IndividualPeaks': 1.0,
+        'IndividualTroughs': 1.0,
+    }
 
     def __init__(self, significanceMethod=None, significanceFraction=None,
                  scoreMethod=None, featureMatchScore=None,
-                 featureMismatchScore=None):
+                 featureMismatchScore=None, weights=None):
         self.significanceMethod = (
             self.DEFAULT_SIGNIFICANCE_METHOD if significanceMethod is None
             else significanceMethod)
@@ -68,6 +103,8 @@ class FindParameters(object):
         self.featureMismatchScore = (
             self.DEFAULT_FEATURE_MISMATCH_SCORE if featureMismatchScore is None
             else featureMismatchScore)
+
+        self.weights = self.DEFAULT_WEIGHTS if weights is None else weights
 
     @staticmethod
     def addArgsToParser(parser):
@@ -109,6 +146,11 @@ class FindParameters(object):
             help=('The contribution (usually negative) to a score when a '
                   'feature in a query and subject are part of a match.'))
 
+        parser.add_argument(
+            '--weights', action='append',
+            help=('A string with the landmark name as the first element and '
+                  'the weight as the second, separated by a space.'))
+
     @classmethod
     def fromArgs(cls, args):
         """
@@ -121,7 +163,8 @@ class FindParameters(object):
                    significanceFraction=args.significanceFraction,
                    scoreMethod=args.scoreMethod,
                    featureMatchScore=args.featureMatchScore,
-                   featureMismatchScore=args.featureMismatchScore)
+                   featureMismatchScore=args.featureMismatchScore,
+                   weights=parseWeights(args.weights or {}))
 
     def print_(self, margin=''):
         """
@@ -140,7 +183,11 @@ class FindParameters(object):
             'Score method: %s' % self.scoreMethod,
             'Feature match score: %f' % self.featureMatchScore,
             'Feature mismatch score: %f' % self.featureMismatchScore,
+            'Weights: ',
         ])
+        result.indent()
+        for key in sorted(self.weights.keys()):
+            result.append('%s: %f' % (key, self.weights[key]))
         return str(result)
 
 

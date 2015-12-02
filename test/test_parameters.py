@@ -46,6 +46,7 @@ class TestFindParameters(TestCase):
             '--scoreMethod', 'MinHashesScore',
             '--featureMatchScore', '5',
             '--featureMismatchScore', '6',
+            '--weights', 'AlphaHelix 2',
         ])
 
         # Parsing must do the expected thing.

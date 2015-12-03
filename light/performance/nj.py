@@ -1,5 +1,6 @@
 from collections import Counter
 from io import StringIO
+from operator import itemgetter
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -103,6 +104,24 @@ class NJTree:
         new.distance = distance
         new.tree = nj(DistanceMatrix(distance, labels))
         return new
+
+    def __eq__(self, other):
+        """
+        Test two NJ trees for equality, ignoring support.
+
+        @return: A C{bool}, C{True} if the trees are equal, C{False} otherwise.
+        """
+        return (self.canonicalize().newick(includeSupport=False) ==
+                other.canonicalize().newick(includeSupport=False))
+
+    def __hash__(self):
+        """
+        Return a unique value for the tree for hashing.
+
+        @return: An C{int} hash value based on the newick representation
+            of our (canonicalized) tree.
+        """
+        return hash(self.canonicalize().newick(includeSupport=False))
 
     def canonicalize(self):
         """
@@ -235,13 +254,20 @@ class NJTree:
                 pass
         return 0.0
 
-    def newick(self):
+    def newick(self, includeSupport=True):
         """
-        Get our tree in Newick format, with clade support in comment fields.
+        Get our tree in Newick format.
 
+        @param includeSupport; If C{True}, support information, when known,
+            will be included in the Newick comment field.
         @return: A Newick format C{str} with clade support in square bracketed
-            comment fields if support has been added.
+            comment fields if support has been added and C{includeSupport} is
+            C{True}.
         """
+
+        # Only add support to the tree if we've been asked to and we actually
+        # have support information.
+        addSupport = includeSupport and self.supportIterations
 
         def _newick(node):
             """
@@ -254,12 +280,12 @@ class NJTree:
             else:
                 children = ','.join(_newick(child) for child in node.children)
                 support = ('[%d]' % int(self.supportForNode(node) * 100)
-                           if self.supportIterations else '')
+                           if addSupport else '')
                 suffix = '' if node.length is None else ':%s' % node.length
                 return '(%s)%s%s' % (children, support, suffix)
 
         result = _newick(self.tree)
-        if self.supportIterations:
+        if addSupport:
             # Remove the final [100] support which is always present because
             # the root of all topologies has all tips as descendants.
             assert result.endswith('[100]'), (
@@ -267,6 +293,20 @@ class NJTree:
             result = result[:-5]
 
         return result + ';\n'
+
+    def generateTrees(self, count, stddev=None):
+        """
+        Perturb our distance matrix and use the result to create an NJ tree.
+
+        @param count: The C{int} number of new NJ trees to generate.
+        @param stddev: The C{float} standard deviation of the noise to add to
+            off-diagonal distance matrix elements before creating a new NJ
+            tree.
+        @return: A generator that yields C{NJTree} instances.
+        """
+        for _ in range(count):
+            distance = perturbDistanceMatrix(self.distance, stddev)
+            yield NJTree.fromDistanceMatrix(self.labels, distance)
 
     def addSupport(self, iterations, stddev=None):
         """
@@ -280,10 +320,8 @@ class NJTree:
             tree to add to the support.
         """
         cladeCounts = Counter()
-        for _ in range(iterations):
-            distance = perturbDistanceMatrix(self.distance, stddev)
-            new = NJTree.fromDistanceMatrix(self.labels, distance)
-            cladeCounts.update(new.countClades())
+        for tree in self.generateTrees(iterations, stddev):
+            cladeCounts.update(tree.countClades())
 
         # Visit each non-tip node and increment its support based on
         # the clade counts just computed.
@@ -330,12 +368,7 @@ class NJTree:
         @return: A C{list} of new C{NJTree} instances, holding the consensus
             trees produced by C{skbio.tree.majority_rule}.
         """
-        trees = [self.tree]
-        for _ in range(iterations):
-            distance = perturbDistanceMatrix(self.distance, stddev)
-            new = NJTree.fromDistanceMatrix(self.labels, distance)
-            trees.append(new.tree)
-
+        trees = [self.tree] + list(self.generateTrees(iterations, stddev))
         result = []
         for tree in majority_rule(trees):
             new = NJTree()
@@ -347,3 +380,24 @@ class NJTree:
             result.append(new)
 
         return result
+
+    def treeSample(self, iterations, stddev=None):
+        """
+        Make new perturbed distance matrices, create NJ trees from them,
+        and count them.
+
+        @param iterations: The C{int} number of times to create a new NJ tree
+            via a perturbed distance matrix.
+        @param stddev: The C{float} standard deviation of the noise to add to
+            off-diagonal distance matrix elements before creating a new NJ
+            tree to add to the support.
+        @return: A C{list} of (tree, count) tuples, where 'tree' is an
+            C{NJTree} instance and 'count' is the C{int} number of times that
+            tree was produced. The list is sorted by count, from highest to
+            lowest.
+        """
+        trees = Counter()
+        for tree in self.generateTrees(iterations, stddev):
+            trees[tree] += 1
+
+        return sorted(trees.items(), key=itemgetter(1), reverse=True)

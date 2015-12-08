@@ -3,6 +3,8 @@ from Bio import SeqIO
 
 from light.backend import Backend
 from light.database import DatabaseSpecifier
+from light.landmarks import ALL_LANDMARK_CLASSES
+from light.trig import ALL_TRIG_CLASSES
 
 from dark.reads import Reads, AARead
 
@@ -83,12 +85,11 @@ class CalculateOverlap(object):
                  'GOR4AlphaHelix', 'GOR4BetaStrand', 'GOR4Coil', 'Prosite',
                  'AminoAcids', 'IndividualPeaks', 'IndividualTroughs', 'Peaks',
                  'Troughs', 'H', 'G', 'I', 'E']
-        kwargs['landmarkNames'] = ['AlphaHelix', 'AlphaHelix_3_10',
-                                   'AlphaHelix_pi', 'AminoAcidsLm',
-                                   'BetaStrand', 'BetaTurn', 'GOR4AlphaHelix',
-                                   'GOR4BetaStrand', 'GOR4Coil', 'Prosite']
-        kwargs['trigPointNames'] = ['AminoAcids', 'IndividualPeaks',
-                                    'IndividualTroughs', 'Peaks', 'Troughs']
+        if 'landmarkNames' not in kwargs:
+            kwargs['landmarkNames'] = [c.NAME for c in ALL_LANDMARK_CLASSES]
+        if 'trigPointNames' not in kwargs:
+            kwargs['trigPointNames'] = [c.NAME for c in ALL_TRIG_CLASSES]
+
         db = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
         backend = Backend()
         backend.configure(db.params)
@@ -109,9 +110,7 @@ class CalculateOverlap(object):
 
         for i, name1 in enumerate(names):
             for j, name2 in enumerate(names):
-                if i == j:
-                    pass
-                else:
+                if i != j:
                     common = sequenceFeatures[name1] & sequenceFeatures[name2]
                     total = sequenceFeatures[name1] | sequenceFeatures[name2]
 

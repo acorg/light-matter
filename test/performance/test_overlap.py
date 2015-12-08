@@ -99,52 +99,34 @@ class TestCalculateOverlap(TestCase):
         structure = '-HHHHHHHHHHHHHHHHHHHHHHHHHHT-TT-TTSS---TTT-TTHHHH-SS---'
 
         ssAARead = SSAARead('5AMF', sequence, structure)
-        aa, ss, int_ = CalculateOverlap.getFeatures(ssAARead)
-        self.assertEqual({
-            'AlphaHelix_pi': set(),
-            'Betastrand': set(),
-            'AlphaHelix': set(),
-            'GOR4AlphaHelix': {5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
-                               18, 19, 20, 21, 22, 23, 24, 29, 30, 31, 32, 33},
-            'AlphaHelix_3_10': {21, 22, 23, 24, 25, 26, 27, 28, 29, 30},
-            'GOR4BetaStrand': {53, 54}}, aa)
+        seqF, commons, totals = CalculateOverlap.getFeatures(ssAARead)
+
         self.assertEqual({
             '-': {0, 36, 37, 38, 42, 49, 52, 53, 54, 28, 31},
+            'GOR4AlphaHelix': {5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
+                               18, 19, 20, 21, 22, 23, 24, 29, 30, 31, 32, 33},
+            'AminoAcidsLm': set(),
+            'E': set(),
+            'GOR4Coil': {0, 1, 2, 3, 4, 25, 26, 27, 28, 34, 35, 36, 37, 38, 39,
+                         40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52},
+            'Peaks': set(),
+            'AlphaHelix_3_10': {21, 22, 23, 24, 25, 26, 27, 28, 29, 30},
+            'S': {51, 34, 35, 50},
+            'Troughs': set(),
+            'BetaTurn': set(),
+            'Prosite': {32, 38, 39, 40, 41, 14, 15, 16, 19, 20, 21, 22, 30,
+                        31},
+            'I': set(),
+            'IndividualPeaks': set(),
             'H': {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
                   18, 19, 20, 21, 22, 23, 24, 25, 26, 45, 46, 47, 48},
-            'I': set(),
+            'T': {32, 33, 39, 40, 41, 43, 44, 27, 29, 30},
             'G': set(),
-            'E': set(),
-            'S': {51, 34, 35, 50},
-            'T': {32, 33, 39, 40, 41, 43, 44, 27, 29, 30}}, ss)
-        self.assertEqual({
-            'GOR4AlphaHelix_HGI': {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
-                                   14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
-                                   25, 26, 29, 30, 31, 32, 33, 45, 46, 47, 48},
-            'Betastrand_E': set(),
-            'AlphaHelix_H': {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
-                             16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 45,
-                             46, 47, 48},
-            'GOR4BetaStrand_E': {53, 54},
-            'AlphaHelix_3_10_G': {21, 22, 23, 24, 25, 26, 27, 28, 29, 30},
-            'AlphaHelix_pi_I': set()}, int_)
-
-    def testCorrectFractionsMustBeCalculated(self):
-        """
-        Test that the correct fractions are calculated.
-        """
-        sequence = 'SMEQVAMELRLTELTRLLRSVLDQLQDKDPARIFAQPVSLKEVPDYLDHIKHPMD'
-        structure = ' HHHHHHHHHHHHHHHHHHHHHHHHHHT TT TTSS   TTT TTHHHH SS   '
-
-        ssAARead = SSAARead('5AMF', sequence, structure)
-        aa, ss, int_ = CalculateOverlap.getFeatures(ssAARead)
-        (alphaHelix, alphaHelix_pi, alphaHelix_3_10, gor4AlphaHelix,
-         betaStrand, gor4BetaStrand) = CalculateOverlap.calculateFraction(aa,
-                                                                          ss,
-                                                                          int_)
-        self.assertEqual(0.0, alphaHelix)
-        self.assertEqual(0.0, alphaHelix_pi)
-        self.assertEqual(1.0, alphaHelix_3_10)
-        self.assertEqual(5 / 7, gor4AlphaHelix)
-        self.assertEqual(0.0, betaStrand)
-        self.assertEqual(1.0, gor4BetaStrand)
+            'AlphaHelix': set(),
+            'AlphaHelix_pi': set(),
+            'IndividualTroughs': set(),
+            'BetaStrand': set(),
+            'AminoAcids': set(),
+            'GOR4BetaStrand': {53, 54}}, seqF)
+        self.assertEqual(342, len(commons))
+        self.assertEqual(342, len(totals))

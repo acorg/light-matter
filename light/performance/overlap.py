@@ -3,6 +3,8 @@ from Bio import SeqIO
 
 from light.backend import Backend
 from light.database import DatabaseSpecifier
+from light.landmarks import ALL_LANDMARK_CLASSES
+from light.trig import ALL_TRIG_CLASSES
 
 from dark.reads import Reads, AARead
 
@@ -50,22 +52,21 @@ class CalculateOverlap(object):
         @param printAll: A C{bool} saying whether the information about the
             overlap in each read should be printed out.
         """
-        allAASequenceFeatures = defaultdict(list)
-        allSSSequenceFeatures = defaultdict(list)
-        allIntersects = defaultdict(list)
+        allSequenceFeatures = defaultdict(list)
+        allCommons = defaultdict(list)
+        allTotals = defaultdict(list)
 
         for read in self.SSAAReads:
-            aaSeqFeatures, ssSeqFeatures, intersects = self.getFeatures(
+            sequenceFeatures, commons, totals = self.getFeatures(
                 read, printAll=printAll)
-            for feature, indices in aaSeqFeatures.items():
-                allAASequenceFeatures[feature].extend(indices)
-            for feature, indices in ssSeqFeatures.items():
-                allSSSequenceFeatures[feature].extend(indices)
-            for featureIntersect, indices in intersects.items():
-                allIntersects[featureIntersect].extend(indices)
+            for feature, indices in sequenceFeatures.items():
+                allSequenceFeatures[feature].extend(indices)
+            for name, indices in commons.items():
+                allCommons[name].extend(indices)
+            for name, indices in totals.items():
+                allTotals[name].extend(indices)
 
-        self.calculateFraction(allAASequenceFeatures, allSSSequenceFeatures,
-                               allIntersects, print_=True)
+        return allSequenceFeatures, allCommons, allTotals
 
     @staticmethod
     def getFeatures(ssAARead, printAll=False, **kwargs):
@@ -79,133 +80,42 @@ class CalculateOverlap(object):
             C{database.DatabaseSpecifier.getDatabaseFromKeywords} for
             additional keywords, all of which are optional.
         """
+        names = ['AlphaHelix', 'AlphaHelix_3_10', 'AlphaHelix_pi',
+                 'AminoAcidsLm', 'BetaStrand', 'BetaTurn',
+                 'GOR4AlphaHelix', 'GOR4BetaStrand', 'GOR4Coil', 'Prosite',
+                 'AminoAcids', 'IndividualPeaks', 'IndividualTroughs', 'Peaks',
+                 'Troughs', 'H', 'G', 'I', 'E']
         if 'landmarkNames' not in kwargs:
-            kwargs['landmarkNames'] = ['AlphaHelix', 'AlphaHelix_pi',
-                                       'AlphaHelix_3_10', 'BetaStrand',
-                                       'GOR4AlphaHelix', 'GOR4BetaStrand']
+            kwargs['landmarkNames'] = [c.NAME for c in ALL_LANDMARK_CLASSES]
         if 'trigPointNames' not in kwargs:
-            kwargs['trigPointNames'] = []
+            kwargs['trigPointNames'] = [c.NAME for c in ALL_TRIG_CLASSES]
 
         db = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
         backend = Backend()
         backend.configure(db.params)
 
-        aaSequenceFeatures = defaultdict(set)
-        ssSequenceFeatures = defaultdict(set)
-        intersects = defaultdict(set)
+        sequenceFeatures = defaultdict(set)
+        totals = defaultdict(set)
+        commons = defaultdict(set)
 
         scannedAaSequence = backend.scan(ssAARead)
 
         # Get all offsets for each landmark separately.
         for landmark in scannedAaSequence.landmarks:
-            aaSequenceFeatures[landmark.name].update(landmark.coveredOffsets())
+            sequenceFeatures[landmark.name].update(landmark.coveredOffsets())
 
         # Get all offsets for each secondary structure feature separately.
         for offset, structure in enumerate(ssAARead.structure):
-            ssSequenceFeatures[structure].add(offset)
+            sequenceFeatures[structure].add(offset)
 
-        # Keep a record of the intersects for each read, so we can later do the
-        # calculation on the whole dataset.
-        intersects['AlphaHelix_H'] = (
-            aaSequenceFeatures['AlphaHelix'] | ssSequenceFeatures['H'])
+        for i, name1 in enumerate(names):
+            for j, name2 in enumerate(names):
+                if i != j:
+                    common = sequenceFeatures[name1] & sequenceFeatures[name2]
+                    total = sequenceFeatures[name1] | sequenceFeatures[name2]
 
-        intersects['AlphaHelix_3_10_G'] = (
-            aaSequenceFeatures['AlphaHelix_3_10'] |
-            ssSequenceFeatures['G'])
+                    name = name1 + name2
+                    totals[name] = total
+                    commons[name] = common
 
-        intersects['AlphaHelix_pi_I'] = (
-            aaSequenceFeatures['AlphaHelix_pi'] | ssSequenceFeatures['I'])
-
-        intersects['GOR4AlphaHelix_HGI'] = (
-            aaSequenceFeatures['GOR4AlphaHelix'] | ssSequenceFeatures['H'] |
-            ssSequenceFeatures['G'] | ssSequenceFeatures['I'])
-
-        intersects['Betastrand_E'] = (
-            aaSequenceFeatures['Betastrand'] | ssSequenceFeatures['E'])
-
-        intersects['GOR4BetaStrand_E'] = (
-            aaSequenceFeatures['GOR4BetaStrand'] | ssSequenceFeatures['E'])
-
-        if printAll:
-            CalculateOverlap.calculateFraction(aaSequenceFeatures,
-                                               ssSequenceFeatures, intersects,
-                                               print_=True)
-
-        return aaSequenceFeatures, ssSequenceFeatures, intersects
-
-    @staticmethod
-    def calculateFraction(aaSequenceFeatureDict, ssSequenceFeatureDict,
-                          intersectDict, print_=False):
-        """
-        Calculate the fraction of covered residues in features.
-
-        @param aaSequenceFeatureDict: A C{dict} which for each feature contains
-            the offsets that are covered by it.
-        @param ssSequenceFeatureDict: A C{dict} which for each secondary
-            structure feature contains the offsets that are covered by it.
-        @param intersectDict: A C{dict} which contains the intersects of
-            secondary structure features and the features from our finders.
-        @param print_: A C{bool} indicating whether the results of the
-            calculation should be printed.
-        """
-        try:
-            alphaHelix = (len(aaSequenceFeatureDict['AlphaHelix']) /
-                          len(intersectDict['AlphaHelix_H']))
-        except ZeroDivisionError:
-            alphaHelix = 0.0
-        try:
-            alphaHelix_3_10 = (len(aaSequenceFeatureDict['AlphaHelix_3_10']) /
-                               len(intersectDict['AlphaHelix_3_10_G']))
-        except ZeroDivisionError:
-            alphaHelix_3_10 = 0.0
-        try:
-            alphaHelix_pi = (len(aaSequenceFeatureDict['AlphaHelix_pi']) /
-                             len(intersectDict['AlphaHelix_pi_I']))
-        except ZeroDivisionError:
-            alphaHelix_pi = 0.0
-        try:
-            gor4AlphaHelix = (len(aaSequenceFeatureDict['GOR4AlphaHelix']) /
-                              len(intersectDict['GOR4AlphaHelix_HGI']))
-        except ZeroDivisionError:
-            gor4AlphaHelix = 0.0
-        try:
-            betaStrand = (len(aaSequenceFeatureDict['Betastrand']) /
-                          len(intersectDict['Betastrand_E']))
-        except ZeroDivisionError:
-            betaStrand = 0.0
-        try:
-            gor4BetaStrand = (len(aaSequenceFeatureDict['GOR4BetaStrand']) /
-                              len(intersectDict['GOR4BetaStrand_E']))
-        except ZeroDivisionError:
-            gor4BetaStrand = 0.0
-
-        if print_:
-            print('Overlap in percent:\n'
-                  'AlphaHelix with H_AlphaHelix: %f\n'
-                  'AlphaHelix_3_10 with G_AlphaHelix_3_10: %f\n'
-                  'AlphaHelix_pi with I_AlphaHelix_pi: %f\n'
-                  'GOR4AlphaHelix with H_AlphaHelix, G_AlphaHelix_3_10, '
-                  'I_AlphaHelix_pi: %f\n'
-                  'BetaStrand with E_BetaStrand: %f\n'
-                  'GOR4BetaStrand E_BetaStrand: %f\n' %
-                  (alphaHelix, alphaHelix_3_10, alphaHelix_pi, gor4AlphaHelix,
-                   betaStrand, gor4BetaStrand))
-            print('Number of covered residues per finder:\n'
-                  'AlphaHelix: %i\nAlphaHelix_3_10: %i\nAlphaHelix_pi: %i\n'
-                  'GOR4AlphaHelix: %i\nBetaStrand: %i\nGOR4BetaStrand: %i\n'
-                  'H_AlphaHelix: %i\nG_AlphaHelix_3_10: %i\n'
-                  'I_AlphaHelix_pi: %i\n'
-                  'E_BetaStrand: %i' % (
-                      len(aaSequenceFeatureDict['AlphaHelix']),
-                      len(aaSequenceFeatureDict['AlphaHelix_3_10']),
-                      len(aaSequenceFeatureDict['AlphaHelix_pi']),
-                      len(aaSequenceFeatureDict['GOR4AlphaHelix']),
-                      len(aaSequenceFeatureDict['BetaStrand']),
-                      len(aaSequenceFeatureDict['GOR4BetaStrand']),
-                      len(ssSequenceFeatureDict['H']),
-                      len(ssSequenceFeatureDict['G']),
-                      len(ssSequenceFeatureDict['I']),
-                      len(ssSequenceFeatureDict['E'])))
-
-        return (alphaHelix, alphaHelix_pi, alphaHelix_3_10, gor4AlphaHelix,
-                betaStrand, gor4BetaStrand)
+        return sequenceFeatures, commons, totals

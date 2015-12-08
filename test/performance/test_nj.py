@@ -547,6 +547,30 @@ class TestNJTree(TestCase):
             njtree.countClades()
         )
 
+    def testDictCanonicalizes(self):
+        """
+        When hashing NJTrees, the hash function must canonicalize the trees.
+        So, adding the same tree (modulo canonicalization) twice to a dict must
+        result in a dict of size one.
+        """
+        njtree1 = NJTree()
+        njtree1.tree = TreeNode.read(['((b:0.4,a:0.9):0.7);'])
+        njtree2 = NJTree()
+        njtree2.tree = TreeNode.read(['((a:0.9,b:0.4):0.7);'])
+        self.assertEqual(1, len(dict.fromkeys([njtree1, njtree2])))
+
+    def testSetCanonicalizes(self):
+        """
+        When putting NJTrees into sets, the hash function must canonicalize
+        the trees. So, adding the same tree (modulo canonicalization) twice to
+        a set must result in a set of size one.
+        """
+        njtree1 = NJTree()
+        njtree1.tree = TreeNode.read(['((a:1,b:2)c);'])
+        njtree2 = NJTree()
+        njtree2.tree = TreeNode.read(['((b:2,a:1)c);'])
+        self.assertEqual(1, len({njtree1, njtree2}))
+
     def testSupportForNodeWhenNoSuppportAdded(self):
         """
         If no support has been added to a tree, supportForNode must return
@@ -611,6 +635,42 @@ class TestNJTree(TestCase):
         # to the skbio docs this is the case.
         self.assertEqual('(y:0.500000,x:0.500000,z:0.500000);\n',
                          njtree.newick())
+
+    def testNewickWithSupportAdded(self):
+        """
+        If support has been added to a tree, the Newick string must contain
+        square brackets (Newick comment fields in which support is shown).
+        """
+        distance = [
+            [0, 5, 5, 5],
+            [5, 0, 5, 1],
+            [5, 5, 0, 5],
+            [5, 1, 5, 0],
+        ]
+        labels = ['w', 'x', 'y', 'z']
+        njtree = NJTree.fromDistanceMatrix(labels, distance)
+        njtree.addSupport(2)
+        newick = njtree.newick(includeSupport=True)
+        self.assertNotEqual(-1, newick.find('['))
+        self.assertNotEqual(-1, newick.find(']'))
+
+    def testNewickWithNoSupportIncludedWhenSupportHasBeenAdded(self):
+        """
+        If support has been added to a tree, but includeSupport is passed to
+        newick() as False, the Newick string must not contain any square
+        brackets (Newick comment fields in which support is shown).
+        """
+        distance = [
+            [0, 1, 1],
+            [1, 0, 1],
+            [1, 1, 0]
+        ]
+        labels = ['x', 'y', 'z']
+        njtree = NJTree.fromDistanceMatrix(labels, distance)
+        njtree.addSupport(2)
+        newick = njtree.newick(includeSupport=False)
+        self.assertEqual(-1, newick.find('['))
+        self.assertEqual(-1, newick.find(']'))
 
     def testOnlyOneConsensusTreeWithZeroIterations(self):
         """
@@ -702,6 +762,101 @@ class TestNJTree(TestCase):
         njtree2.tree = TreeNode.read(StringIO("((a,b),(c,d));"))
         distance = njtree1.robinsonFoulds(njtree2)
         self.assertEqual(0.0, distance)
+
+    def testGenerateTreesZero(self):
+        """
+        When generateTrees is called with a zero argument, it should return an
+        empty list.
+        """
+        distance = [
+            [0, 1, 1],
+            [1, 0, 1],
+            [1, 1, 0]
+        ]
+        labels = ['x', 'y', 'z']
+        njtree = NJTree.fromDistanceMatrix(labels, distance)
+        self.assertEqual([], list(njtree.generateTrees(0)))
+
+    def testGenerateTreesMultiple(self):
+        """
+        When generateTrees is called with a non-zero argument, it should
+        return a list with the expected number of items, which must all
+        be instances of NJTree.
+        """
+        distance = [
+            [0, 1, 1],
+            [1, 0, 1],
+            [1, 1, 0]
+        ]
+        labels = ['x', 'y', 'z']
+        njtree = NJTree.fromDistanceMatrix(labels, distance)
+        result = list(njtree.generateTrees(5))
+        self.assertEqual(5, len(result))
+        self. assertTrue(all(isinstance(t, NJTree) for t in result))
+
+    def testTreeSampleZero(self):
+        """
+        When treeSample is called with a zero argument, it should return an
+        empty list.
+        """
+        distance = [
+            [0, 1, 1],
+            [1, 0, 1],
+            [1, 1, 0]
+        ]
+        labels = ['x', 'y', 'z']
+        njtree = NJTree.fromDistanceMatrix(labels, distance)
+        self.assertEqual([], njtree.treeSample(0))
+
+    def testTreeSampleReturnType(self):
+        """
+        The treeSample method must return a list of tuples, each containing
+        an NJTree and a count.
+        """
+        distance = [
+            [0, 1, 1],
+            [1, 0, 1],
+            [1, 1, 0]
+        ]
+        labels = ['x', 'y', 'z']
+        njtree = NJTree.fromDistanceMatrix(labels, distance)
+        result = njtree.treeSample(10)
+        for tree, count in result:
+            self.assertTrue(isinstance(tree, NJTree))
+            self.assertTrue(isinstance(count, int))
+
+    def testTreeSampleSortedCounts(self):
+        """
+        The treeSample method returns a list of tuples, the second element of
+        which is a count. The counts must be sorted from highest to lowest.
+        """
+        distance = [
+            [0, 1, 1, 1, 1],
+            [1, 0, 1, 1, 1],
+            [1, 1, 0, 1, 1],
+            [1, 1, 1, 0, 1],
+            [1, 1, 1, 1, 0],
+        ]
+        labels = ['a', 'b', 'c', 'd', 'e']
+        njtree = NJTree.fromDistanceMatrix(labels, distance)
+        # This test is not 100% reliable because there is a tiny chance the
+        # treeSample method will repeatedly generate the same tree, even
+        # though we make 50 trees and pass a high (0.3) standard deviation.
+        # It is also possible that the counts come back sorted just by
+        # chance even if the treeSample method does not sort them (in which
+        # case the test will pass even though the treeSample code is wrong).
+        #
+        # To make these errors even more unlikely, I have put in an assert
+        # on the number of trees that come back and I do the test multiple
+        # times. If the assert fails it doesn't mean that treeSample is
+        # broken, but it's highly likely that it is! It's also extremely
+        # unlikely that the counts could be sorted correctly by chance on
+        # every run. So if the test passes it doesn't mean that treeSample
+        # isn't broken, but it's highly unlikely that it is! Phew.
+        for _ in range(10):
+            counts = [count for (tree, count) in njtree.treeSample(50, 0.3)]
+            self.assertTrue(len(counts) > 2)
+            self.assertEqual(sorted(counts, reverse=True), counts)
 
 
 class TestPerturbDistanceMatrix(TestCase):

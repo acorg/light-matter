@@ -1,8 +1,9 @@
 from collections import Counter
 from unittest import TestCase
 import numpy as np
-from skbio.tree._exception import MissingNodeError
+from io import StringIO
 
+from skbio.tree._exception import MissingNodeError
 from skbio.stats.distance import DissimilarityMatrixError
 from skbio import TreeNode
 
@@ -642,6 +643,17 @@ class TestNJTree(TestCase):
         self.assertEqual([0, 0, 0],
                          [njtree.supportForNode(child)
                           for child in consensusTrees[0].tree.children])
+
+    def testRobinsonFoulds(self):
+        """
+        The correct robinson foulds distance must be calculated.
+        """
+        njtree1 = NJTree()
+        njtree2 = NJTree()
+        njtree1.tree = TreeNode.read(StringIO("((a,b),(c,d));"))
+        njtree2.tree = TreeNode.read(StringIO("(((a,b),c),d);"))
+        distance = njtree1.robinsonFoulds(njtree2)
+        self.assertEqual(2.0, distance)
 
 
 class TestPerturbDistanceMatrix(TestCase):

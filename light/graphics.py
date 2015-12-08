@@ -1,4 +1,3 @@
-from copy import copy
 from warnings import warn
 from random import uniform
 import matplotlib.pyplot as plt
@@ -755,22 +754,22 @@ class PlotHashesInSubjectAndRead(object):
         readsAx = readsAx or fig.add_subplot(111)
 
         for hashInfo in self.queryHashes.values():
-            for landmarkOffset, trigPointOffset in hashInfo['offsets']:
-                readsAx.plot(landmarkOffset + uniform(-0.4, 0.4), 0, 'o',
-                             markerfacecolor='black', markeredgecolor='white')
+            landmarkOffset = hashInfo[0][0].offset
+            readsAx.plot(landmarkOffset + uniform(-0.4, 0.4), 0, 'o',
+                         markerfacecolor='black', markeredgecolor='white')
 
         for hashInfo in self.subjectHashes.values():
-            for landmarkOffset, trigPointOffset in hashInfo['offsets']:
-                readsAx.plot(0, landmarkOffset + uniform(-0.4, 0.4), 'o',
-                             markerfacecolor='black', markeredgecolor='white')
+            landmarkOffset = hashInfo[0][0].offset
+            readsAx.plot(0, landmarkOffset + uniform(-0.4, 0.4), 'o',
+                         markerfacecolor='black', markeredgecolor='white')
 
         nonEmptyBins = [b for b in self.bins if len(b)]
         binColors = colors.color_palette('hls', len(nonEmptyBins))
         for bin_, binColor in zip(nonEmptyBins, binColors):
             for match in bin_:
                 readsAx.plot(
-                    match['subjectOffsets'][0] + uniform(-0.4, 0.4),
-                    match['queryOffsets'][0] + uniform(-0.4, 0.4),
+                    match['subjectLandmark'].offset + uniform(-0.4, 0.4),
+                    match['queryLandmark'].offset + uniform(-0.4, 0.4),
                     'o', markerfacecolor=binColor, markeredgecolor='white')
 
         firstTitleLine = fill('Hashes from matching %s against %s' % (
@@ -929,16 +928,11 @@ class PlotHashesInSubjectAndRead(object):
         # those in the histogram bins (processed above) as these hashes are
         # the result of calling getHashes in a backend.
         for hashInfo in self.queryHashes.values():
-            lm = hashInfo['landmark']
-            tp = hashInfo['trigPoint']
+            lm = hashInfo[0][0]
+            tp = hashInfo[0][1]
             namesSeen.update([lm.name, tp.name])
-            for offsets in hashInfo['offsets']:
-                landmark = copy(lm)
-                trigPoint = copy(tp)
-                (landmark.offset, landmark.length,
-                 trigPoint.offset, trigPoint.length) = offsets
-                plotFeature(landmark, qyY - missY, 'query')
-                plotFeature(trigPoint, qyY - missY, 'query')
+            plotFeature(lm, qyY - missY, 'query')
+            plotFeature(tp, qyY - missY, 'query')
 
         # Subject-only hashes, plotted just above (+missY) the subject line.
         #
@@ -947,16 +941,11 @@ class PlotHashesInSubjectAndRead(object):
         # (processed above) as these hashes are the result of calling
         # getHashes in a backend.
         for hashInfo in self.subjectHashes.values():
-            lm = hashInfo['landmark']
-            tp = hashInfo['trigPoint']
+            lm = hashInfo[0][0]
+            tp = hashInfo[0][1]
             namesSeen.update([lm.name, tp.name])
-            for offsets in hashInfo['offsets']:
-                landmark = copy(lm)
-                trigPoint = copy(tp)
-                (landmark.offset, landmark.length,
-                 trigPoint.offset, trigPoint.length) = offsets
-                plotFeature(landmark, sjY + missY, 'subject')
-                plotFeature(trigPoint, sjY + missY, 'subject')
+            plotFeature(lm, sjY + missY, 'subject')
+            plotFeature(tp, sjY + missY, 'subject')
 
         if createdAx:
             if namesSeen:

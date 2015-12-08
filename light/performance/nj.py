@@ -155,6 +155,17 @@ class NJTree:
         new.supportIterations = self.supportIterations
         return new
 
+    def robinsonFoulds(self, other, proportion=False):
+        """
+        Calculate the robinson foulds distance between two trees.
+
+        @param other: An C{NJTree} instance that will be compared to
+            self.
+        @param proportion: A C{bool}, denoting whether a proportional
+            difference should be returned.
+        """
+        return self.tree.compare_rfd(other.tree, proportion=proportion)
+
     def root(self, nodes):
         """
         Root a tree by the lowest common ancestor of a list of nodes.

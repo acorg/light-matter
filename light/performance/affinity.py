@@ -62,6 +62,7 @@ def affinityMatrix(queries, findParams=None, subjects=None, symmetric=True,
     affinity = np.zeros((nQueries, nSubjects))
 
     for i, query in enumerate(queries):
+        print(i, query.id)
         if symmetric:
             # We don't have to consider all subjects in the find, so pass a
             # restricted set of subject indices to restrict the search to.

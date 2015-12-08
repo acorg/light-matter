@@ -157,7 +157,7 @@ class NJTree:
 
     def robinsonFoulds(self, other, proportion=False):
         """
-        Calculate the robinson foulds distance between two trees.
+        Calculate the Robinson Foulds distance between two trees.
 
         @param other: An C{NJTree} instance that will be compared to
             self.

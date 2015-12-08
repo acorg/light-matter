@@ -646,7 +646,7 @@ class TestNJTree(TestCase):
 
     def testRobinsonFoulds(self):
         """
-        The correct robinson foulds distance must be calculated.
+        The correct Robinson Foulds distance must be calculated.
         """
         njtree1 = NJTree()
         njtree2 = NJTree()
@@ -654,6 +654,54 @@ class TestNJTree(TestCase):
         njtree2.tree = TreeNode.read(StringIO("(((a,b),c),d);"))
         distance = njtree1.robinsonFoulds(njtree2)
         self.assertEqual(2.0, distance)
+
+    def testRobinsonFouldsReversed(self):
+        """
+        The correct Robinson Foulds distance must be calculated if the trees
+        are passed in reverse order.
+        """
+        njtree1 = NJTree()
+        njtree2 = NJTree()
+        njtree1.tree = TreeNode.read(StringIO("((a,b),(c,d));"))
+        njtree2.tree = TreeNode.read(StringIO("(((a,b),c),d);"))
+        distance = njtree2.robinsonFoulds(njtree1)
+        self.assertEqual(2.0, distance)
+
+    def testRobinsonFouldsProportionTrue(self):
+        """
+        The correct Robinson Foulds distance must be calculated with
+        proportion=True.
+        """
+        njtree1 = NJTree()
+        njtree2 = NJTree()
+        njtree1.tree = TreeNode.read(StringIO("((a,b),(c,d));"))
+        njtree2.tree = TreeNode.read(StringIO("(((a,b),c),d);"))
+        distance = njtree1.robinsonFoulds(njtree2, proportion=True)
+        self.assertEqual(0.5, distance)
+
+    def testRobinsonFouldsProportionTrueReversed(self):
+        """
+        The correct Robinson Foulds distance must be calculated with
+        proportion=True, if the trees are passed in reverse order.
+        """
+        njtree1 = NJTree()
+        njtree2 = NJTree()
+        njtree1.tree = TreeNode.read(StringIO("((a,b),(c,d));"))
+        njtree2.tree = TreeNode.read(StringIO("(((a,b),c),d);"))
+        distance = njtree2.robinsonFoulds(njtree1, proportion=True)
+        self.assertEqual(0.5, distance)
+
+    def testRobinsonFouldsCompareAgainstItself(self):
+        """
+        If a tree is compared against itself, the Robinson Foulds distance must
+        be 0.0.
+        """
+        njtree1 = NJTree()
+        njtree2 = NJTree()
+        njtree1.tree = TreeNode.read(StringIO("((a,b),(c,d));"))
+        njtree2.tree = TreeNode.read(StringIO("((a,b),(c,d));"))
+        distance = njtree1.robinsonFoulds(njtree2)
+        self.assertEqual(0.0, distance)
 
 
 class TestPerturbDistanceMatrix(TestCase):

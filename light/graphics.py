@@ -931,8 +931,7 @@ class PlotHashesInSubjectAndRead(object):
         # the result of calling getHashes in a backend.
         for hashInfoList in self.queryHashes.values():
             for hashInfo in hashInfoList:
-                lm = hashInfo[0]
-                tp = hashInfo[1]
+                lm, tp = hashInfo
                 namesSeen.update([lm.name, tp.name])
                 plotFeature(lm, qyY - missY, 'query')
                 plotFeature(tp, qyY - missY, 'query')
@@ -945,8 +944,7 @@ class PlotHashesInSubjectAndRead(object):
         # getHashes in a backend.
         for hashInfoList in self.subjectHashes.values():
             for hashInfo in hashInfoList:
-                lm = hashInfo[0]
-                tp = hashInfo[1]
+                lm, tp = hashInfo
                 namesSeen.update([lm.name, tp.name])
                 plotFeature(lm, sjY + missY, 'subject')
                 plotFeature(tp, sjY + missY, 'subject')

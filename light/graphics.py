@@ -943,7 +943,7 @@ class PlotHashesInSubjectAndRead(object):
         # subjectHashes are different from those in the histogram bins
         # (processed above) as these hashes are the result of calling
         # getHashes in a backend.
-        for hashInfo in self.subjectHashes.values():
+        for hashInfoList in self.subjectHashes.values():
             for hashInfo in hashInfoList:
                 lm = hashInfo[0]
                 tp = hashInfo[1]

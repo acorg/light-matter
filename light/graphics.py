@@ -753,15 +753,17 @@ class PlotHashesInSubjectAndRead(object):
         fig = plt.figure(figsize=(15, height))
         readsAx = readsAx or fig.add_subplot(111)
 
-        for hashInfo in self.queryHashes.values():
-            landmarkOffset = hashInfo[0][0].offset
-            readsAx.plot(landmarkOffset + uniform(-0.4, 0.4), 0, 'o',
-                         markerfacecolor='black', markeredgecolor='white')
+        for hashInfoList in self.queryHashes.values():
+            for hashInfo in hashInfoList:
+                landmarkOffset = hashInfo[0].offset
+                readsAx.plot(landmarkOffset + uniform(-0.4, 0.4), 0, 'o',
+                             markerfacecolor='black', markeredgecolor='white')
 
-        for hashInfo in self.subjectHashes.values():
-            landmarkOffset = hashInfo[0][0].offset
-            readsAx.plot(0, landmarkOffset + uniform(-0.4, 0.4), 'o',
-                         markerfacecolor='black', markeredgecolor='white')
+        for hashInfoList in self.subjectHashes.values():
+            for hashInfo in hashInfoList:
+                landmarkOffset = hashInfo[0].offset
+                readsAx.plot(0, landmarkOffset + uniform(-0.4, 0.4), 'o',
+                             markerfacecolor='black', markeredgecolor='white')
 
         nonEmptyBins = [b for b in self.bins if len(b)]
         binColors = colors.color_palette('hls', len(nonEmptyBins))
@@ -927,12 +929,13 @@ class PlotHashesInSubjectAndRead(object):
         # Note that the keys of the items in queryHashes are different from
         # those in the histogram bins (processed above) as these hashes are
         # the result of calling getHashes in a backend.
-        for hashInfo in self.queryHashes.values():
-            lm = hashInfo[0][0]
-            tp = hashInfo[0][1]
-            namesSeen.update([lm.name, tp.name])
-            plotFeature(lm, qyY - missY, 'query')
-            plotFeature(tp, qyY - missY, 'query')
+        for hashInfoList in self.queryHashes.values():
+            for hashInfo in hashInfoList:
+                lm = hashInfo[0]
+                tp = hashInfo[1]
+                namesSeen.update([lm.name, tp.name])
+                plotFeature(lm, qyY - missY, 'query')
+                plotFeature(tp, qyY - missY, 'query')
 
         # Subject-only hashes, plotted just above (+missY) the subject line.
         #
@@ -941,11 +944,12 @@ class PlotHashesInSubjectAndRead(object):
         # (processed above) as these hashes are the result of calling
         # getHashes in a backend.
         for hashInfo in self.subjectHashes.values():
-            lm = hashInfo[0][0]
-            tp = hashInfo[0][1]
-            namesSeen.update([lm.name, tp.name])
-            plotFeature(lm, sjY + missY, 'subject')
-            plotFeature(tp, sjY + missY, 'subject')
+            for hashInfo in hashInfoList:
+                lm = hashInfo[0]
+                tp = hashInfo[1]
+                namesSeen.update([lm.name, tp.name])
+                plotFeature(lm, sjY + missY, 'subject')
+                plotFeature(tp, sjY + missY, 'subject')
 
         if createdAx:
             if namesSeen:

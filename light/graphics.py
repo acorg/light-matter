@@ -1,4 +1,3 @@
-from copy import copy
 from warnings import warn
 from random import uniform
 import matplotlib.pyplot as plt
@@ -754,13 +753,15 @@ class PlotHashesInSubjectAndRead(object):
         fig = plt.figure(figsize=(15, height))
         readsAx = readsAx or fig.add_subplot(111)
 
-        for hashInfo in self.queryHashes.values():
-            for landmarkOffset, trigPointOffset in hashInfo['offsets']:
+        for hashInfoList in self.queryHashes.values():
+            for hashInfo in hashInfoList:
+                landmarkOffset = hashInfo[0].offset
                 readsAx.plot(landmarkOffset + uniform(-0.4, 0.4), 0, 'o',
                              markerfacecolor='black', markeredgecolor='white')
 
-        for hashInfo in self.subjectHashes.values():
-            for landmarkOffset, trigPointOffset in hashInfo['offsets']:
+        for hashInfoList in self.subjectHashes.values():
+            for hashInfo in hashInfoList:
+                landmarkOffset = hashInfo[0].offset
                 readsAx.plot(0, landmarkOffset + uniform(-0.4, 0.4), 'o',
                              markerfacecolor='black', markeredgecolor='white')
 
@@ -769,8 +770,8 @@ class PlotHashesInSubjectAndRead(object):
         for bin_, binColor in zip(nonEmptyBins, binColors):
             for match in bin_:
                 readsAx.plot(
-                    match['subjectOffsets'][0] + uniform(-0.4, 0.4),
-                    match['queryOffsets'][0] + uniform(-0.4, 0.4),
+                    match['subjectLandmark'].offset + uniform(-0.4, 0.4),
+                    match['queryLandmark'].offset + uniform(-0.4, 0.4),
                     'o', markerfacecolor=binColor, markeredgecolor='white')
 
         firstTitleLine = fill('Hashes from matching %s against %s' % (
@@ -928,17 +929,12 @@ class PlotHashesInSubjectAndRead(object):
         # Note that the keys of the items in queryHashes are different from
         # those in the histogram bins (processed above) as these hashes are
         # the result of calling getHashes in a backend.
-        for hashInfo in self.queryHashes.values():
-            lm = hashInfo['landmark']
-            tp = hashInfo['trigPoint']
-            namesSeen.update([lm.name, tp.name])
-            for offsets in hashInfo['offsets']:
-                landmark = copy(lm)
-                trigPoint = copy(tp)
-                (landmark.offset, landmark.length,
-                 trigPoint.offset, trigPoint.length) = offsets
-                plotFeature(landmark, qyY - missY, 'query')
-                plotFeature(trigPoint, qyY - missY, 'query')
+        for hashInfoList in self.queryHashes.values():
+            for hashInfo in hashInfoList:
+                lm, tp = hashInfo
+                namesSeen.update([lm.name, tp.name])
+                plotFeature(lm, qyY - missY, 'query')
+                plotFeature(tp, qyY - missY, 'query')
 
         # Subject-only hashes, plotted just above (+missY) the subject line.
         #
@@ -946,17 +942,12 @@ class PlotHashesInSubjectAndRead(object):
         # subjectHashes are different from those in the histogram bins
         # (processed above) as these hashes are the result of calling
         # getHashes in a backend.
-        for hashInfo in self.subjectHashes.values():
-            lm = hashInfo['landmark']
-            tp = hashInfo['trigPoint']
-            namesSeen.update([lm.name, tp.name])
-            for offsets in hashInfo['offsets']:
-                landmark = copy(lm)
-                trigPoint = copy(tp)
-                (landmark.offset, landmark.length,
-                 trigPoint.offset, trigPoint.length) = offsets
-                plotFeature(landmark, sjY + missY, 'subject')
-                plotFeature(trigPoint, sjY + missY, 'subject')
+        for hashInfoList in self.subjectHashes.values():
+            for hashInfo in hashInfoList:
+                lm, tp = hashInfo
+                namesSeen.update([lm.name, tp.name])
+                plotFeature(lm, sjY + missY, 'subject')
+                plotFeature(tp, sjY + missY, 'subject')
 
         if createdAx:
             if namesSeen:

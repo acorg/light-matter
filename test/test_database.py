@@ -1,5 +1,6 @@
+import six
 from unittest import TestCase
-from io import StringIO
+from six import StringIO
 try:
     from ujson import loads
 except ImportError:
@@ -110,7 +111,8 @@ class TestDatabase(TestCase):
         params = Parameters([AlphaHelix], [])
         db = Database(params)
         error = "^'xxx'$"
-        self.assertRaisesRegex(KeyError, error, db.getSubjectByIndex, 'xxx')
+        six.assertRaisesRegex(self, KeyError, error, db.getSubjectByIndex,
+                              'xxx')
 
     def testGetIndexBySubjectKeyError(self):
         """
@@ -120,8 +122,8 @@ class TestDatabase(TestCase):
         params = Parameters([AlphaHelix], [])
         db = Database(params)
         error = "^'id'$"
-        self.assertRaisesRegex(KeyError, error, db.getIndexBySubject,
-                               Subject('id', 'FF', 5))
+        six.assertRaisesRegex(self, KeyError, error, db.getIndexBySubject,
+                              Subject('id', 'FF', 5))
 
     def testGetSubjectByIndex(self):
         """
@@ -278,7 +280,8 @@ class TestDatabase(TestCase):
         params = Parameters([], [Peaks])
         db = Database(params)
         error = '^Expected object or value$'
-        self.assertRaisesRegex(ValueError, error, db.restore, StringIO('xxx'))
+        six.assertRaisesRegex(self, ValueError, error, db.restore,
+                              StringIO('xxx'))
 
     def testSaveRestoreNonEmpty(self):
         """

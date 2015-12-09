@@ -1,5 +1,6 @@
+import six
 from unittest import TestCase
-from io import StringIO
+from six import StringIO
 
 from dark.reads import AARead
 
@@ -119,8 +120,8 @@ class TestSubjectStore(TestCase):
         ss.add(subject, '3')
         error = ("^Already stored index \(3\) for subject 'id' does not match "
                  "subsequently passed index \(4\) for the subject\.$")
-        self.assertRaisesRegex(SubjectStoreException, error, ss.add, subject,
-                               '4')
+        six.assertRaisesRegex(self, SubjectStoreException, error, ss.add,
+                              subject, '4')
 
     def testGetSubjects(self):
         """

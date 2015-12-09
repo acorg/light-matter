@@ -2,7 +2,7 @@ import os
 import logging
 
 import asyncio
-from io import StringIO
+from six import StringIO
 
 from light.autobahn.component import Component
 from light.backend import Backend

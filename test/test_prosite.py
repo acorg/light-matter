@@ -1,7 +1,12 @@
-import builtins
-from io import StringIO
+from six.moves import builtins
+from six import StringIO
 from unittest import TestCase
-from unittest.mock import patch
+
+try:
+    from unittest.mock import patch
+except ImportError:
+    from mock import patch
+
 from .mocking import mockOpen
 from json import load
 

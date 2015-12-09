@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import sys
 from json import dumps
 from Bio.ExPASy import Prosite

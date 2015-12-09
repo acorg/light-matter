@@ -1,8 +1,11 @@
+from __future__ import division
+
 from collections import defaultdict
-from itertools import filterfalse
+from six.moves import filterfalse
 from warnings import warn
 
 from light.string import MultilineString
+from light.utils import maxWithDefault, minWithDefault
 
 
 class MinHashesScore(object):
@@ -219,10 +222,10 @@ class FeatureMatchingScore:
         matchScore = self._findParams.featureMatchScore * (
             len(queryFeatures) + len(subjectFeatures))
 
-        minQueryOffset = min(queryOffsets, default=None)
-        maxQueryOffset = max(queryOffsets, default=None)
-        minSubjectOffset = min(subjectOffsets, default=None)
-        maxSubjectOffset = max(subjectOffsets, default=None)
+        minQueryOffset = minWithDefault(queryOffsets, default=None)
+        maxQueryOffset = maxWithDefault(queryOffsets, default=None)
+        minSubjectOffset = minWithDefault(subjectOffsets, default=None)
+        maxSubjectOffset = maxWithDefault(subjectOffsets, default=None)
 
         # The mismatch score is applied to all features that are not
         # among those in the bin and which fall inside the max and min
@@ -335,10 +338,10 @@ class FeatureAAScore:
             self._histogram[binIndex], 'subject')
 
         # Get the extreme offsets in the matched region of query and subject.
-        minQueryOffset = min(matchedQueryOffsets, default=None)
-        maxQueryOffset = max(matchedQueryOffsets, default=None)
-        minSubjectOffset = min(matchedSubjectOffsets, default=None)
-        maxSubjectOffset = max(matchedSubjectOffsets, default=None)
+        minQueryOffset = minWithDefault(matchedQueryOffsets, default=None)
+        maxQueryOffset = maxWithDefault(matchedQueryOffsets, default=None)
+        minSubjectOffset = minWithDefault(matchedSubjectOffsets, default=None)
+        maxSubjectOffset = maxWithDefault(matchedSubjectOffsets, default=None)
 
         # Get all features and their offsets which are present in the subject
         # and the query within the matched region. These will be used to
@@ -549,10 +552,10 @@ class WeightedFeatureAAScore:
             self._histogram[binIndex], 'subject', self._weights)
 
         # Get the extreme offsets in the matched region of query and subject.
-        minQueryOffset = min(matchedQOffsets, default=None)
-        maxQueryOffset = max(matchedQOffsets, default=None)
-        minSubjectOffset = min(matchedSOffsets, default=None)
-        maxSubjectOffset = max(matchedSOffsets, default=None)
+        minQueryOffset = minWithDefault(matchedQOffsets, default=None)
+        maxQueryOffset = maxWithDefault(matchedQOffsets, default=None)
+        minSubjectOffset = minWithDefault(matchedSOffsets, default=None)
+        maxSubjectOffset = maxWithDefault(matchedSOffsets, default=None)
 
         # Get all features and their offsets with their associated weights
         # which are present in the subject and the query within the matched

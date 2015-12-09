@@ -1,3 +1,4 @@
+import six
 from unittest import TestCase
 
 from light.histogram import Histogram
@@ -40,7 +41,7 @@ class TestHistogram(TestCase):
         must be raised.
         """
         error = '^Number of bins must be at least one\.$'
-        self.assertRaisesRegex(ValueError, error, Histogram, 0)
+        six.assertRaisesRegex(self, ValueError, error, Histogram, 0)
 
     def testEvenNumberOfBins(self):
         """
@@ -48,7 +49,7 @@ class TestHistogram(TestCase):
         must be raised.
         """
         error = '^Number of bins must be odd\.$'
-        self.assertRaisesRegex(ValueError, error, Histogram, 6)
+        six.assertRaisesRegex(self, ValueError, error, Histogram, 6)
 
     def testNegativeBins(self):
         """
@@ -56,7 +57,7 @@ class TestHistogram(TestCase):
         must be raised.
         """
         error = '^Number of bins must be at least one\.$'
-        self.assertRaisesRegex(ValueError, error, Histogram, -1)
+        six.assertRaisesRegex(self, ValueError, error, Histogram, -1)
 
     def testAddDataAfterFinalized(self):
         """
@@ -68,7 +69,7 @@ class TestHistogram(TestCase):
                  'finalized$')
         h.add(3)
         h.finalize()
-        self.assertRaisesRegex(RuntimeError, error, h.add, 3)
+        six.assertRaisesRegex(self, RuntimeError, error, h.add, 3)
 
     def testRepeatedFinalize(self):
         """
@@ -78,7 +79,7 @@ class TestHistogram(TestCase):
         error = ('^Histogram already finalized$')
         h.add(3)
         h.finalize()
-        self.assertRaisesRegex(RuntimeError, error, h.finalize)
+        six.assertRaisesRegex(self, RuntimeError, error, h.finalize)
 
     def testDefaultNumberOfBins(self):
         """
@@ -462,5 +463,5 @@ class TestHistogram(TestCase):
         h = Histogram(3)
         list(map(h.add, range(9)))
         h.finalize()
-        self.assertRaisesRegex(IndexError, '^list index out of range$',
-                               h.__getitem__, 4)
+        six.assertRaisesRegex(self, IndexError, '^list index out of range$',
+                              h.__getitem__, 4)

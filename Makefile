@@ -10,7 +10,7 @@ pep8:
 	find . -name '*.py' -print0 | xargs -0 pep8
 
 pyflakes:
-	find . -path './light/colors/six.py' -prune -o -name '*.py' -print0 | xargs -0 pyflakes
+	find . -path './light/colors/six.py' -prune -o -name '*.py' -print0 | xargs -0 pyflakes 2>&1 | bin/check-pyflakes-output.sh
 
 lint: pep8 pyflakes
 

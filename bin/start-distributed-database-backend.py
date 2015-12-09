@@ -1,11 +1,16 @@
 #!/usr/bin/env python
 
+import sys
 import argparse
 
 from autobahn.asyncio.wamp import ApplicationRunner
 
 from light.autobahn.backend import BackendComponent
 from light.database import DatabaseSpecifier
+
+if sys.version_info < (3, 3):
+    raise Exception('The light matter autobahn code needs Python 3.3 or '
+                    'later.')
 
 
 if __name__ == '__main__':

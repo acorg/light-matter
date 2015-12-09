@@ -1,7 +1,8 @@
+import six
 from collections import Counter
 from unittest import TestCase
 import numpy as np
-from io import StringIO
+from six import StringIO
 
 from skbio.tree._exception import MissingNodeError
 from skbio.stats.distance import DissimilarityMatrixError
@@ -35,9 +36,9 @@ class TestNJTree(TestCase):
         """
         sequences = Reads()
         error = '^Data must be at least 1x1 in size\.$'
-        self.assertRaisesRegex(DissimilarityMatrixError, error,
-                               NJTree.fromSequences, [], sequences,
-                               landmarkNames=['AlphaHelix'])
+        six.assertRaisesRegex(self, DissimilarityMatrixError, error,
+                              NJTree.fromSequences, [], sequences,
+                              landmarkNames=['AlphaHelix'])
 
     def testFromSequencesWithNoLabels(self):
         """
@@ -49,9 +50,9 @@ class TestNJTree(TestCase):
         sequences.add(AARead('id', 'A'))
         error = ('^The number of IDs \(0\) must match the number of '
                  'rows/columns in the data \(1\)\.$')
-        self.assertRaisesRegex(DissimilarityMatrixError, error,
-                               NJTree.fromSequences, [], sequences,
-                               landmarkNames=['AlphaHelix'])
+        six.assertRaisesRegex(self, DissimilarityMatrixError, error,
+                              NJTree.fromSequences, [], sequences,
+                              landmarkNames=['AlphaHelix'])
 
     def testFromSequencesWithOneSequenceRaisesValueError(self):
         """
@@ -62,9 +63,9 @@ class TestNJTree(TestCase):
         sequences.add(AARead('id', 'A'))
         error = ('^Distance matrix must be at least 3x3 to generate a '
                  'neighbor joining tree\.$')
-        self.assertRaisesRegex(ValueError, error,
-                               NJTree.fromSequences, ['x'], sequences,
-                               landmarkNames=['AlphaHelix'])
+        six.assertRaisesRegex(self, ValueError, error,
+                              NJTree.fromSequences, ['x'], sequences,
+                              landmarkNames=['AlphaHelix'])
 
     def testFromSequencesWithTwoSequencesRaisesValueError(self):
         """
@@ -76,9 +77,9 @@ class TestNJTree(TestCase):
         sequences.add(AARead('id2', 'B'))
         error = ('^Distance matrix must be at least 3x3 to generate a '
                  'neighbor joining tree\.$')
-        self.assertRaisesRegex(ValueError, error,
-                               NJTree.fromSequences, ['x', 'y'], sequences,
-                               landmarkNames=['AlphaHelix'])
+        six.assertRaisesRegex(self, ValueError, error,
+                              NJTree.fromSequences, ['x', 'y'], sequences,
+                              landmarkNames=['AlphaHelix'])
 
     def testFromThreeSequences(self):
         """
@@ -112,8 +113,8 @@ class TestNJTree(TestCase):
         distance matrix, a DissimilarityMatrixError must be raised.
         """
         error = '^Data must be at least 1x1 in size\.$'
-        self.assertRaisesRegex(DissimilarityMatrixError, error,
-                               NJTree.fromDistanceMatrix, [], [])
+        six.assertRaisesRegex(self, DissimilarityMatrixError, error,
+                              NJTree.fromDistanceMatrix, [], [])
 
     def testFromDistanceMatrixOneByOne(self):
         """
@@ -121,8 +122,8 @@ class TestNJTree(TestCase):
         matrix of size 1x1, an assertion error must be raised.
         """
         error = '^Data must have exactly two dimensions\.$'
-        self.assertRaisesRegex(DissimilarityMatrixError, error,
-                               NJTree.fromDistanceMatrix, [], [1.0])
+        six.assertRaisesRegex(self, DissimilarityMatrixError, error,
+                              NJTree.fromDistanceMatrix, [], [1.0])
 
     def testFromDistanceMatrixTwoByTwo(self):
         """
@@ -132,9 +133,9 @@ class TestNJTree(TestCase):
         """
         error = ('^Distance matrix must be at least 3x3 to generate a '
                  'neighbor joining tree\.$')
-        self.assertRaisesRegex(ValueError, error,
-                               NJTree.fromDistanceMatrix,
-                               ['a', 'b'], [[0, 1], [1, 0]])
+        six.assertRaisesRegex(self, ValueError, error,
+                              NJTree.fromDistanceMatrix,
+                              ['a', 'b'], [[0, 1], [1, 0]])
 
     def testFromDistanceMatrixWithNoLabels(self):
         """
@@ -144,9 +145,9 @@ class TestNJTree(TestCase):
         """
         error = ('^The number of IDs \(0\) must match the number of '
                  'rows/columns in the data \(3\)\.$')
-        self.assertRaisesRegex(DissimilarityMatrixError, error,
-                               NJTree.fromDistanceMatrix,
-                               [], [[0, 1, 1], [1, 0, 1], [1, 1, 0]])
+        six.assertRaisesRegex(self, DissimilarityMatrixError, error,
+                              NJTree.fromDistanceMatrix,
+                              [], [[0, 1, 1], [1, 0, 1], [1, 1, 0]])
 
     def testFromNonHollowDistanceMatrix(self):
         """
@@ -156,9 +157,9 @@ class TestNJTree(TestCase):
         """
         error = ('^Data must be hollow \(i.e., the diagonal can only contain '
                  'zeros\)\.$')
-        self.assertRaisesRegex(DissimilarityMatrixError, error,
-                               NJTree.fromDistanceMatrix,
-                               [], [[1, 1], [1, 1]])
+        six.assertRaisesRegex(self, DissimilarityMatrixError, error,
+                              NJTree.fromDistanceMatrix,
+                              [], [[1, 1], [1, 1]])
 
     def testFromDistanceMatrixThreeByThree(self):
         """
@@ -440,7 +441,8 @@ class TestNJTree(TestCase):
 
         error = 'Node f is not in self'
 
-        self.assertRaisesRegex(MissingNodeError, error, njtree.root, ['f'])
+        six.assertRaisesRegex(self, MissingNodeError, error, njtree.root,
+                              ['f'])
 
     def testRootByOneTreeNode(self):
         """
@@ -554,9 +556,9 @@ class TestNJTree(TestCase):
         result in a dict of size one.
         """
         njtree1 = NJTree()
-        njtree1.tree = TreeNode.read(['((b:0.4,a:0.9):0.7);'])
+        njtree1.tree = TreeNode.read(StringIO('((b:0.4,a:0.9):0.7);'))
         njtree2 = NJTree()
-        njtree2.tree = TreeNode.read(['((a:0.9,b:0.4):0.7);'])
+        njtree2.tree = TreeNode.read(StringIO('((a:0.9,b:0.4):0.7);'))
         self.assertEqual(1, len(dict.fromkeys([njtree1, njtree2])))
 
     def testSetCanonicalizes(self):
@@ -566,9 +568,9 @@ class TestNJTree(TestCase):
         a set must result in a set of size one.
         """
         njtree1 = NJTree()
-        njtree1.tree = TreeNode.read(['((a:1,b:2)c);'])
+        njtree1.tree = TreeNode.read(StringIO('((a:1,b:2)c);'))
         njtree2 = NJTree()
-        njtree2.tree = TreeNode.read(['((b:2,a:1)c);'])
+        njtree2.tree = TreeNode.read(StringIO('((b:2,a:1)c);'))
         self.assertEqual(1, len({njtree1, njtree2}))
 
     def testSupportForNodeWhenNoSuppportAdded(self):
@@ -710,8 +712,8 @@ class TestNJTree(TestCase):
         """
         njtree1 = NJTree()
         njtree2 = NJTree()
-        njtree1.tree = TreeNode.read(StringIO("((a,b),(c,d));"))
-        njtree2.tree = TreeNode.read(StringIO("(((a,b),c),d);"))
+        njtree1.tree = TreeNode.read(StringIO('((a,b),(c,d));'))
+        njtree2.tree = TreeNode.read(StringIO('(((a,b),c),d);'))
         distance = njtree1.robinsonFoulds(njtree2)
         self.assertEqual(2.0, distance)
 
@@ -722,8 +724,8 @@ class TestNJTree(TestCase):
         """
         njtree1 = NJTree()
         njtree2 = NJTree()
-        njtree1.tree = TreeNode.read(StringIO("((a,b),(c,d));"))
-        njtree2.tree = TreeNode.read(StringIO("(((a,b),c),d);"))
+        njtree1.tree = TreeNode.read(StringIO('((a,b),(c,d));'))
+        njtree2.tree = TreeNode.read(StringIO('(((a,b),c),d);'))
         distance = njtree2.robinsonFoulds(njtree1)
         self.assertEqual(2.0, distance)
 
@@ -734,8 +736,8 @@ class TestNJTree(TestCase):
         """
         njtree1 = NJTree()
         njtree2 = NJTree()
-        njtree1.tree = TreeNode.read(StringIO("((a,b),(c,d));"))
-        njtree2.tree = TreeNode.read(StringIO("(((a,b),c),d);"))
+        njtree1.tree = TreeNode.read(StringIO('((a,b),(c,d));'))
+        njtree2.tree = TreeNode.read(StringIO('(((a,b),c),d);'))
         distance = njtree1.robinsonFoulds(njtree2, proportion=True)
         self.assertEqual(0.5, distance)
 
@@ -746,8 +748,8 @@ class TestNJTree(TestCase):
         """
         njtree1 = NJTree()
         njtree2 = NJTree()
-        njtree1.tree = TreeNode.read(StringIO("((a,b),(c,d));"))
-        njtree2.tree = TreeNode.read(StringIO("(((a,b),c),d);"))
+        njtree1.tree = TreeNode.read(StringIO('((a,b),(c,d));'))
+        njtree2.tree = TreeNode.read(StringIO('(((a,b),c),d);'))
         distance = njtree2.robinsonFoulds(njtree1, proportion=True)
         self.assertEqual(0.5, distance)
 
@@ -758,8 +760,8 @@ class TestNJTree(TestCase):
         """
         njtree1 = NJTree()
         njtree2 = NJTree()
-        njtree1.tree = TreeNode.read(StringIO("((a,b),(c,d));"))
-        njtree2.tree = TreeNode.read(StringIO("((a,b),(c,d));"))
+        njtree1.tree = TreeNode.read(StringIO('((a,b),(c,d));'))
+        njtree2.tree = TreeNode.read(StringIO('((a,b),(c,d));'))
         distance = njtree1.robinsonFoulds(njtree2)
         self.assertEqual(0.0, distance)
 
@@ -875,8 +877,8 @@ class TestPerturbDistanceMatrix(TestCase):
             [0.3, 0.1, 0.0],
         ]
         error = '^scale <= 0$'
-        self.assertRaisesRegex(ValueError, error, perturbDistanceMatrix,
-                               distance, 0.0)
+        six.assertRaisesRegex(self, ValueError, error, perturbDistanceMatrix,
+                              distance, 0.0)
 
     def testZeroStandardDeviationx(self):
         """
@@ -888,8 +890,8 @@ class TestPerturbDistanceMatrix(TestCase):
             [0.7, 0.0],
         ]
         error = '^scale <= 0$'
-        self.assertRaisesRegex(ValueError, error, perturbDistanceMatrix,
-                               distance, 0.0)
+        six.assertRaisesRegex(self, ValueError, error, perturbDistanceMatrix,
+                              distance, 0.0)
 
     def testResultTypeAndShape(self):
         """

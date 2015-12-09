@@ -1,3 +1,4 @@
+import six
 from unittest import TestCase
 
 from light.landmarks import (
@@ -38,7 +39,8 @@ class TestFindLandmarks(TestCase):
         classes.
         """
         error = '^Unknown landmark finders: x, y\.$'
-        self.assertRaisesRegex(ValueError, error, findLandmarks, ['x', 'y'])
+        six.assertRaisesRegex(self, ValueError, error, findLandmarks,
+                              ['x', 'y'])
 
     def testFindNone(self):
         """

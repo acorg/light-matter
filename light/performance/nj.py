@@ -1,5 +1,5 @@
 from collections import Counter
-from io import StringIO
+from six import StringIO
 from operator import itemgetter
 
 import matplotlib.pyplot as plt

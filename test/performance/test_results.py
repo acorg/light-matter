@@ -1,6 +1,12 @@
-import builtins
+import six
+from six.moves import builtins
 from unittest import TestCase
-from unittest.mock import patch
+
+try:
+    from unittest.mock import patch
+except ImportError:
+    from mock import patch
+
 from json import dumps
 import bz2
 
@@ -42,8 +48,8 @@ class TestPerformanceResults(TestCase):
         mockOpener = mockOpen()
         with patch.object(builtins, 'open', mockOpener):
             error = "^Result JSON file 'file\\.json' was empty\\.$"
-            self.assertRaisesRegex(
-                ValueError, error, PerformanceResults, ['file.json'])
+            six.assertRaisesRegex(
+                self, ValueError, error, PerformanceResults, ['file.json'])
 
     def testNonJSONInput(self):
         """
@@ -52,11 +58,16 @@ class TestPerformanceResults(TestCase):
         """
         mockOpener = mockOpen(read_data='not JSON\n')
         with patch.object(builtins, 'open', mockOpener):
-            error = ("^Content of file 'file\.json' could not be converted "
-                     "to JSON \(Expecting value: line 1 column 1 \(char "
-                     "0\)\)\.$")
-            self.assertRaisesRegex(
-                ValueError, error, PerformanceResults, ['file.json'])
+            if six.PY3:
+                error = ("^Content of file 'file\.json' could not be "
+                         "converted to JSON \(Expecting value: line 1 column "
+                         "1 \(char 0\)\)\.$")
+            else:
+                error = ("^Content of file 'file\.json' could not be "
+                         "converted to JSON \(No JSON object could be "
+                         "decoded\)\.$")
+            six.assertRaisesRegex(
+                self, ValueError, error, PerformanceResults, ['file.json'])
 
     def testCorrectJSONDictOneFile(self):
         """

@@ -1,3 +1,4 @@
+import six
 from unittest import TestCase
 
 from dark.reads import AARead
@@ -68,7 +69,8 @@ class UnusedConnectorTests:
         params = Parameters([AlphaHelix], [])
         db = Database(params)
         error = "^Unknown backend 'name'\.$"
-        self.assertRaisesRegex(BackendException, error, db.addBackend, 'name')
+        six.assertRaisesRegex(self, BackendException, error, db.addBackend,
+                              'name')
 
     def testReconnectSameNameBackend(self):
         """
@@ -79,7 +81,8 @@ class UnusedConnectorTests:
         db = Database(params)
         name, checksum, params = db.addBackend()
         error = "^Backend %r is already connected\.$" % name
-        self.assertRaisesRegex(BackendException, error, db.addBackend, name)
+        six.assertRaisesRegex(self, BackendException, error, db.addBackend,
+                              name)
 
     def testAddNewBackend(self):
         """
@@ -109,7 +112,7 @@ class UnusedConnectorTests:
         db = Database(params, NoBackendConnector)
         query = AARead('id', 'AAA')
         error = "^No backends available\.$"
-        self.assertRaisesRegex(BackendException, error, db.find, query)
+        six.assertRaisesRegex(self, BackendException, error, db.find, query)
 
     def testFindWithOneUnreconnectedBackend(self):
         """
@@ -121,7 +124,7 @@ class UnusedConnectorTests:
         db.disconnectedBackends['dummy'] = None
         query = AARead('id', 'AAA')
         error = "^Backend 'dummy' has not reconnected\.$"
-        self.assertRaisesRegex(BackendException, error, db.find, query)
+        six.assertRaisesRegex(self, BackendException, error, db.find, query)
 
     def testFindWithTwoUnreconnectedBackends(self):
         """
@@ -134,7 +137,7 @@ class UnusedConnectorTests:
         db.disconnectedBackends['dummy2'] = None
         query = AARead('id', 'AAA')
         error = "^2 backends \(dummy1, dummy2\) have not reconnected\.$"
-        self.assertRaisesRegex(BackendException, error, db.find, query)
+        six.assertRaisesRegex(self, BackendException, error, db.find, query)
 
     def testAddSubjectWithNoBackends(self):
         """
@@ -153,7 +156,8 @@ class UnusedConnectorTests:
         params = Parameters([AlphaHelix], [])
         db = Database(params, NoBackendConnector)
         error = "^Database has no backends\.$"
-        self.assertRaisesRegex(BackendException, error, db.addSubject, None)
+        six.assertRaisesRegex(self, BackendException, error, db.addSubject,
+                              None)
 
     def testTwoBackends(self):
         """

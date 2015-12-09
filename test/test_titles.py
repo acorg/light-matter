@@ -1,6 +1,11 @@
-import builtins
+import six
+from six.moves import builtins
 from unittest import TestCase, skip
-from unittest.mock import patch
+
+try:
+    from unittest.mock import patch
+except ImportError:
+    from mock import patch
 
 from .mocking import mockOpen
 from .sample_data import (
@@ -169,8 +174,9 @@ class TestTitlesAlignments(TestCase):
             titleAlignments = TitleAlignments(title, 55)
             error = ("Title 'Squirrelpox' already present in "
                      "TitlesAlignments instance\.")
-            self.assertRaisesRegex(KeyError, error, titlesAlignments.addTitle,
-                                   title, titleAlignments)
+            six.assertRaisesRegex(
+                self, KeyError, error, titlesAlignments.addTitle,
+                title, titleAlignments)
 
     def testAddTitle(self):
         """

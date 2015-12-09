@@ -1,0 +1,20 @@
+autobahn==0.10.9
+biopython==1.65
+crossbar[all]
+dark-matter
+discover==0.4.0
+matplotlib==1.4.3
+--allow-external mysql-connector-python
+mock==1.0.1
+mysql-connector-python==2.0.4
+numpy==1.10.1
+pandas==0.16.2
+pep8==1.6.2
+pyflakes==1.0.0
+pyOpenSSL==0.15.1
+scipy==0.16.0
+scikit-learn==0.16.1
+scikit-bio==0.4.0
+trollius==2.0
+twisted==15.4.0
+ujson==1.33

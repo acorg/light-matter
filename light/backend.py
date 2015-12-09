@@ -1,6 +1,6 @@
 from copy import copy
 import logging
-from io import StringIO
+from six import StringIO
 from collections import defaultdict, OrderedDict
 try:
     from ujson import dump, loads

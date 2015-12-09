@@ -1,3 +1,6 @@
+from __future__ import division
+
+import six
 import warnings
 from unittest import TestCase
 
@@ -218,8 +221,8 @@ class TestHistogramBinFeatures(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        self.assertRaisesRegexp(KeyError, 'xxxLandmark', histogramBinFeatures,
-                                histogram[0], 'xxx')
+        six.assertRaisesRegex(self, KeyError, 'xxxLandmark',
+                              histogramBinFeatures, histogram[0], 'xxx')
 
     def testEmptyBin(self):
         """
@@ -1964,9 +1967,9 @@ class TestWeightedHistogramBinFeatures(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        self.assertRaisesRegexp(KeyError, 'xxxLandmark',
-                                weightedHistogramBinFeatures, histogram[0],
-                                'xxx', DEFAULT_WEIGHTS)
+        six.assertRaisesRegex(self, KeyError, 'xxxLandmark',
+                              weightedHistogramBinFeatures, histogram[0],
+                              'xxx', DEFAULT_WEIGHTS)
 
     def testWeightedEmptyBin(self):
         """

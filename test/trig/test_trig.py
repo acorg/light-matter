@@ -1,3 +1,4 @@
+import six
 from unittest import TestCase
 
 from light.trig import (
@@ -38,7 +39,8 @@ class TestFindTrigPoints(TestCase):
         classes.
         """
         error = '^Unknown trig point finders: x, y\.$'
-        self.assertRaisesRegex(ValueError, error, findTrigPoints, ['x', 'y'])
+        six.assertRaisesRegex(self, ValueError, error, findTrigPoints,
+                              ['x', 'y'])
 
     def testFindNone(self):
         """

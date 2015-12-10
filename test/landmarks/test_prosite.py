@@ -1,6 +1,11 @@
-import builtins
+from six.moves import builtins
 from unittest import TestCase
-from unittest.mock import patch
+
+try:
+    from unittest.mock import patch
+except ImportError:
+    from mock import patch
+
 from test.mocking import mockOpen
 
 from dark.reads import AARead

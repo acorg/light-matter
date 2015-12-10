@@ -1,4 +1,4 @@
-from io import StringIO
+from six import StringIO
 
 import asyncio
 
@@ -20,7 +20,7 @@ class ClientComponent(Component):
 
         @param details: A C{dict} of WAMP connection details.
         """
-        from light.database import WampDatabaseClient
+        from light.database_wamp import WampDatabaseClient
         future = self.config.extra['future']
         try:
             paramsStr = yield from self.call('parameters')

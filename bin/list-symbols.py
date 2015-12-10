@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+
 from operator import attrgetter
 
 from light.landmarks import ALL_LANDMARK_CLASSES

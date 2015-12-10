@@ -1,7 +1,8 @@
+import six
 import argparse
 from unittest import TestCase
 from json import loads
-from io import StringIO
+from six import StringIO
 
 from light.parameters import Parameters, FindParameters
 from light.landmarks import DEFAULT_LANDMARK_CLASSES, AlphaHelix, BetaStrand
@@ -117,16 +118,16 @@ class TestParameters(TestCase):
         If the distanceBase is zero, a ValueError must be raised.
         """
         error = 'distanceBase must be > 0\\.'
-        self.assertRaisesRegex(ValueError, error, Parameters, [], [],
-                               distanceBase=0.0)
+        six.assertRaisesRegex(self, ValueError, error, Parameters, [], [],
+                              distanceBase=0.0)
 
     def testDistanceBaseLessThanZeroValueError(self):
         """
         If the distanceBase is < 0, a ValueError must be raised.
         """
         error = 'distanceBase must be > 0\\.'
-        self.assertRaisesRegex(ValueError, error, Parameters, [], [],
-                               distanceBase=-1.0)
+        six.assertRaisesRegex(self, ValueError, error, Parameters, [], [],
+                              distanceBase=-1.0)
 
     def testSaveReturnsItsArgument(self):
         """
@@ -197,8 +198,8 @@ class TestParameters(TestCase):
         newSave = fp.getvalue().replace('AlphaHelix', 'Non-existent')
         error = ('^Could not find landscape finder class Non-existent. '
                  'Has that class been renamed or removed\?$')
-        self.assertRaisesRegex(ValueError, error, Parameters.restore,
-                               StringIO(newSave))
+        six.assertRaisesRegex(self, ValueError, error, Parameters.restore,
+                              StringIO(newSave))
 
     def testSaveLoadMissingTrigPoint(self):
         """
@@ -212,8 +213,8 @@ class TestParameters(TestCase):
         newSave = fp.getvalue().replace('Peaks', 'Non-existent')
         error = ('^Could not find trig point finder class Non-existent. '
                  'Has that class been renamed or removed\?$')
-        self.assertRaisesRegex(ValueError, error, Parameters.restore,
-                               StringIO(newSave))
+        six.assertRaisesRegex(self, ValueError, error, Parameters.restore,
+                              StringIO(newSave))
 
     def testRestoreInvalidJSON(self):
         """
@@ -221,8 +222,8 @@ class TestParameters(TestCase):
         valid JSON, a ValueError error must be raised.
         """
         error = '^Expected object or value$'
-        self.assertRaisesRegex(ValueError, error, Parameters.restore,
-                               StringIO('xxx'))
+        six.assertRaisesRegex(self, ValueError, error, Parameters.restore,
+                              StringIO('xxx'))
 
     def testCompareIdentical(self):
         """

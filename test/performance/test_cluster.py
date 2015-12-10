@@ -1,3 +1,4 @@
+import six
 from unittest import TestCase
 import numpy as np
 from collections import Counter
@@ -21,8 +22,8 @@ class TestClusterAnalysis(TestCase):
         """
         reads = Reads()
         error = 'No sequences were found in'
-        self.assertRaisesRegex(ValueError, error, ClusterAnalysis, reads, {},
-                               landmarkNames=['AlphaHelix'])
+        six.assertRaisesRegex(self, ValueError, error, ClusterAnalysis, reads,
+                              {}, landmarkNames=['AlphaHelix'])
 
     def testMissingLabelNoDefault(self):
         """
@@ -32,8 +33,8 @@ class TestClusterAnalysis(TestCase):
         reads = Reads()
         reads.add(AARead('id', 'MMM'))
         error = "Read 'id' has no corresponding label"
-        self.assertRaisesRegex(ValueError, error, ClusterAnalysis, reads, {},
-                               landmarkNames=['AlphaHelix'])
+        six.assertRaisesRegex(self, ValueError, error, ClusterAnalysis, reads,
+                              {}, landmarkNames=['AlphaHelix'])
 
     def testDefaultLabel(self):
         """
@@ -355,7 +356,7 @@ class TestKMeansAnalysis(TestCase):
         reads.add(AARead('id4', 'MMM'))
         km = KMeansAnalysis(reads, {}, defaultLabel=0,
                             landmarkNames=['AlphaHelix'])
-        self.assertRaisesRegex(RuntimeError, '', km.print_)
+        six.assertRaisesRegex(self, RuntimeError, '', km.print_)
 
     def testFourReadsTwoIdenticalPrint(self):
         """

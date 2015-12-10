@@ -1,5 +1,6 @@
+import six
 from unittest import TestCase
-from io import StringIO
+from six import StringIO
 from json import loads
 import warnings
 
@@ -57,8 +58,8 @@ class TestResult(TestCase):
         findParams = FindParameters(significanceMethod='xxx',
                                     scoreMethod='MinHashesScore',
                                     significanceFraction=0.1)
-        self.assertRaisesRegex(
-            ValueError, error, Result, read, database._connector,
+        six.assertRaisesRegex(
+            self, ValueError, error, Result, read, database._connector,
             matches, hashCount, findParams)
 
     def testAddOneMatch(self):

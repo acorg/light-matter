@@ -1,3 +1,4 @@
+import six
 from collections import defaultdict
 from Bio import SeqIO
 
@@ -19,7 +20,10 @@ class SSAARead(AARead):
     @param structure: A C{str} of structure information.
     """
     def __init__(self, id, sequence, structure):
-        super().__init__(id, sequence)
+        if six.PY3:
+            super().__init__(id, sequence)
+        else:
+            AARead.__init__(self, id, sequence)
         self.structure = structure
 
 

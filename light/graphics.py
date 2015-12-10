@@ -1,3 +1,5 @@
+from __future__ import division
+
 from warnings import warn
 from random import uniform
 import matplotlib.pyplot as plt
@@ -1080,11 +1082,11 @@ def featureComparison(ssAARead, print_=True, **kwargs):
     predicted secondary structures from PDB and our features.
 
     Abbreviations in the pdb secondary structures:
-    H = α-helix
-    B = residue in isolated β-bridge
-    E = extended strand, participates in β ladder
+    H = alpha-helix
+    B = residue in isolated beta-bridge
+    E = extended strand, participates in beta ladder
     G = 3-helix (310 helix)
-    I = 5-helix (π-helix)
+    I = 5-helix (pi-helix)
     T = hydrogen bonded turn
     S = bend
 

@@ -1,4 +1,4 @@
-from io import StringIO
+from six import StringIO
 import logging
 import asyncio
 

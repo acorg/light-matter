@@ -1,9 +1,14 @@
-import builtins
+import six
+from six.moves import builtins
 from json import dumps, loads
 import bz2
-from io import StringIO
+from six import StringIO
 from unittest import TestCase, skip
-from unittest.mock import patch
+
+try:
+    from unittest.mock import patch
+except ImportError:
+    from mock import patch
 
 from .mocking import mockOpen
 from .sample_data import (
@@ -61,8 +66,9 @@ class TestLightReadsAlignments(TestCase):
         with patch.object(builtins, 'open', mockOpener):
             error = ("^Could not convert first line of 'file.json' to "
                      "JSON \(Expected object or value\)\.$")
-            self.assertRaisesRegex(
-                ValueError, error, LightReadsAlignments, 'file.json', DB)
+            six.assertRaisesRegex(
+                self,  ValueError, error, LightReadsAlignments, 'file.json',
+                DB)
 
     def testNonJSONInput(self):
         """
@@ -73,8 +79,8 @@ class TestLightReadsAlignments(TestCase):
         with patch.object(builtins, 'open', mockOpener):
             error = ("^Could not convert first line of 'file\.json' to JSON "
                      "\(Unexpected character found when decoding 'null'\)\.$")
-            self.assertRaisesRegex(
-                ValueError, error, LightReadsAlignments, 'file.json', DB)
+            six.assertRaisesRegex(
+                self, ValueError, error, LightReadsAlignments, 'file.json', DB)
 
     def testScoreTitle(self):
         """
@@ -232,7 +238,8 @@ class TestLightReadsAlignments(TestCase):
                      "and 100 differ\.$")
             readsAlignments = LightReadsAlignments(
                 ['file1.json.bz2', 'file2.json.bz2'], DB)
-            self.assertRaisesRegex(ValueError, error, list, readsAlignments)
+            six.assertRaisesRegex(self, ValueError, error, list,
+                                  readsAlignments)
 
     def testGetSubjectSequence(self):
         """

@@ -1,5 +1,6 @@
+import six
 from unittest import TestCase
-from io import StringIO
+from six import StringIO
 try:
     from ujson import loads
 except ImportError:
@@ -775,8 +776,8 @@ class TestBackend(TestCase):
         valid JSON, a ValueError error must be raised.
         """
         error = '^Expected object or value$'
-        self.assertRaisesRegex(ValueError, error, Backend.restore,
-                               StringIO('xxx'))
+        six.assertRaisesRegex(self, ValueError, error, Backend.restore,
+                              StringIO('xxx'))
 
     def testSaveContentIncludesExpectedKeysAndValues(self):
         """

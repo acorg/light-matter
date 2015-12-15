@@ -7,7 +7,10 @@ from Bio.ExPASy import Prosite
 
 def patternToRegex(pattern):
     """
-    Translates the pattern of a prosite entry into a regex.
+    Translate the pattern of a prosite entry into a regex.
+
+    The syntax of a prosite pattern is described in section III.C.5 of
+    http://prosite.expasy.org/prosuser.html
 
     @param pattern: the C{str} pattern of a prosite entry.
     @return: A C{str} that can be used as a regex to match C{pattern}.
@@ -43,12 +46,12 @@ def prositeToJSON(prositeDb, fp=sys.stdout):
         start with "PS" or if the database contains a duplicate accession
         string.
     """
-    seen = {}
+    seen = set()
     for record in Prosite.parse(open(prositeDb)):
         accession = record.accession
         assert accession not in seen
         assert accession.startswith('PS')
-        seen[accession] = None
+        seen.add(accession)
         pattern = patternToRegex(record.pattern[:-1])
         if pattern:
             print(dumps(

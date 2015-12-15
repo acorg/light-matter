@@ -16,9 +16,18 @@ class TestDistance(TestCase):
 
     def testBaseZero(self):
         """
-        If the base is 0.0, the scale function must raise ValueError.
+        If the base is 0.0, the scale function must raise ValueError using the
+        pure Python version of scale, and return 0.0 if using the C version.
+
+        We shouldn't ever be using a base of zero, and we'll know if we do
+        (when using the C scale function) because all distances will be scaled
+        to zero. Also, we check for distance base <= 0 in parameters.py and
+        raise a C{ValueError} there.
         """
-        self.assertRaises(ValueError, scale, 27, 0.0)
+        if scale.__doc__ == 'direct call to the C function of the same name':
+            self.assertEqual(0.0, scale(27, 0.0))
+        else:
+            self.assertRaises(ValueError, scale, 27, 0.0)
 
     def testBaseOne(self):
         """

@@ -1,10 +1,13 @@
 .PHONY: check, tcheck, pep8, pyflakes, lint, wc, clean, update-prosite
 
-check:
+check: light/_distance.so
 	python -m discover -v
 
-tcheck:
+tcheck: light/_distance.so
 	trial --rterrors test
+
+light/_distance.so: src/distance.py
+	python setup.py build_ext -i
 
 pep8:
 	find . -name '*.py' -print0 | xargs -0 pep8
@@ -21,6 +24,8 @@ clean:
 	find . \( -name '*.pyc' -o -name '*~' \) -print0 | xargs -0 rm
 	find . -name '__pycache__' -type d -print0 | xargs -0 rmdir
 	find . -name '_trial_temp' -type d -print0 | xargs -0 rm -r
+	rm -f light/*.so
+	rm -fr build
 
 update-prosite:
 	@echo "Downloading Prosite database... this may take a while."

@@ -1,9 +1,10 @@
 from __future__ import division
 
 from math import log
+from warnings import warn
 
 
-def scale(dist, base):
+def _pp_scale(dist, base):
     """
     Use a log scale to adjust a distance.
 
@@ -24,6 +25,7 @@ def scale(dist, base):
     @param dist: An C{int} distance, usually a distance between two
         features in an AA sequence.
     @param base: The C{float} logarithmic base to use in scaling.
+    @raise ValueError: If C{base} is zero.
     @return: An C{int} scaled distance.
     """
     if dist > 0:
@@ -34,3 +36,24 @@ def scale(dist, base):
         return max([result, dist])
     else:
         return 0
+
+try:
+    from light._distance import lib
+except ImportError as e:
+    warn('Could not import cffi scale function (%s). Using pure Python '
+         'version.' % e)
+    # Use the pure Python version.
+    scale = _pp_scale
+else:
+    # Use the C version (see ../src/distance.py).
+    #
+    # Note that this function will return 0.0 if base is 0.0. This is
+    # undesirable but fixing it would require writing a Python function to
+    # test for it happening and raising ValueError if so. That partly
+    # defeats the point of using a C extension. Seeing as it's unlikely
+    # that we'll ever use a distance base of zero (and not get tripped up
+    # by the test for that in parameters.py), and that the results of doing
+    # so would be so spectacularly weird (all distances would be scaled to
+    # zero), I thought it better to just call the C function directly. See
+    # also the tests in ../test/test_distance.py
+    scale = lib.scale

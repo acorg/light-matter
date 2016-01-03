@@ -203,7 +203,8 @@ class TestAffinityMatrix(TestCase):
         findParams = FindParameters(significanceFraction=0.05)
         self._checkSymmetry(
             sequences, findParams, distanceBase=1.0,
-            landmarkNames=[cls.NAME for cls in ALL_LANDMARK_CLASSES],
+            landmarkNames=[cls.NAME for cls in ALL_LANDMARK_CLASSES if
+                           cls.NAME != 'PredictedStructure'],
             trigPointNames=[cls.NAME for cls in ALL_TRIG_CLASSES],
             limitPerLandmark=50, minDistance=1, maxDistance=100,
             symmetric=False)
@@ -250,7 +251,8 @@ class TestAffinityMatrix(TestCase):
         findParams = FindParameters(significanceFraction=0.05)
         self._checkSymmetry(
             sequences, findParams, distanceBase=1.0,
-            landmarkNames=[cls.NAME for cls in ALL_LANDMARK_CLASSES],
+            landmarkNames=[cls.NAME for cls in ALL_LANDMARK_CLASSES if
+                           cls.NAME != 'PredictedStructure'],
             trigPointNames=[cls.NAME for cls in ALL_TRIG_CLASSES],
             limitPerLandmark=50, minDistance=1, maxDistance=100)
 

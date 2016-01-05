@@ -49,20 +49,18 @@ class CalculateOverlap(object):
                             str(records[i + 1].seq))
             self.SSAAReads.add(read)
 
-    def calculateOverlap(self, printAll=False):
+    def calculateOverlap(self):
         """
         Calculate the feature overlap for a set of features.
 
-        @param printAll: A C{bool} saying whether the information about the
-            overlap in each read should be printed out.
         """
         allSequenceFeatures = defaultdict(list)
         allCommons = defaultdict(list)
         allTotals = defaultdict(list)
 
-        for read in self.SSAAReads:
+        for i, read in enumerate(self.SSAAReads):
             sequenceFeatures, commons, totals = self.getFeatures(
-                read, printAll=printAll)
+                read)
             for feature, indices in sequenceFeatures.items():
                 allSequenceFeatures[feature].extend(indices)
             for name, indices in commons.items():
@@ -73,13 +71,14 @@ class CalculateOverlap(object):
         return allSequenceFeatures, allCommons, allTotals
 
     @staticmethod
-    def getFeatures(ssAARead, printAll=False, **kwargs):
+    def getFeatures(ssAARead, **kwargs):
         """
         Extract the features from the sequence and the structural information.
+        For each finder return the offsets covered by that finder and for
+        each finder combination, return the offsets in common and the offsets
+        in total.
 
         @param ssAARead: An C{SSAARead} instance.
-        @param printAll: A C{bool} saying whether the information about the
-            overlap in the ssAARead should be printed out.
         @param kwargs: See
             C{database.DatabaseSpecifier.getDatabaseFromKeywords} for
             additional keywords, all of which are optional.
@@ -104,22 +103,27 @@ class CalculateOverlap(object):
 
         scannedAaSequence = backend.scan(ssAARead)
 
-        # Get all offsets for each landmark separately.
+        # Get all offsets for each landmark and trig point separately.
         for landmark in scannedAaSequence.landmarks:
             sequenceFeatures[landmark.name].update(landmark.coveredOffsets())
+        for trigPoint in scannedAaSequence.trigPoints:
+            sequenceFeatures[trigPoint.name].update(trigPoint.coveredOffsets())
 
         # Get all offsets for each secondary structure feature separately.
         for offset, structure in enumerate(ssAARead.structure):
             sequenceFeatures[structure].add(offset)
 
+        # Get the overlap between all features
+        seen = set()
         for i, name1 in enumerate(names):
             for j, name2 in enumerate(names):
-                if i != j:
+                if name2 not in seen:
                     common = sequenceFeatures[name1] & sequenceFeatures[name2]
                     total = sequenceFeatures[name1] | sequenceFeatures[name2]
 
-                    name = name1 + name2
+                    name = name1 + '-' + name2
                     totals[name] = total
                     commons[name] = common
+                    seen.add(name1)
 
         return sequenceFeatures, commons, totals

@@ -5,7 +5,7 @@ from light.landmarks import (
     findLandmark, findLandmarks, landmarkNameFromHashkey,
     ALL_LANDMARK_CLASSES, DEFAULT_LANDMARK_CLASSES, AlphaHelix,
     AlphaHelix_3_10, AlphaHelix_pi, AminoAcids, BetaStrand, BetaTurn,
-    GOR4AlphaHelix, GOR4BetaStrand, GOR4Coil, Prosite)
+    GOR4AlphaHelix, GOR4BetaStrand, GOR4Coil, PredictedStructure, Prosite)
 
 
 class TestFindLandmark(TestCase):
@@ -107,7 +107,7 @@ class TestAllLandmarkClasses(TestCase):
         self.assertEqual(
             [AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, AminoAcids,
              BetaStrand, BetaTurn, GOR4AlphaHelix, GOR4BetaStrand, GOR4Coil,
-             Prosite],
+             PredictedStructure, Prosite],
             ALL_LANDMARK_CLASSES)
 
 

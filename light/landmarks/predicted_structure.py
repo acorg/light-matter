@@ -38,7 +38,7 @@ class PredictedStructure(Finder):
             consecutive sets of structures.
         """
         previous = None
-        for offset, symbol in enumerate(chain(ssSequence, 'X')):
+        for offset, symbol in enumerate(chain(ssSequence, [object()])):
             if previous is None:  # Start of string.
                 previous = symbol
                 startOffset = 0

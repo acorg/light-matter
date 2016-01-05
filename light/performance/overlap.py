@@ -110,7 +110,7 @@ class CalculateOverlap(object):
             sequenceFeatures[structure].add(offset)
 
         # Get the overlap between all features
-        seen = []
+        seen = set()
         for i, name1 in enumerate(names):
             for j, name2 in enumerate(names):
                 if name2 not in seen:
@@ -120,6 +120,6 @@ class CalculateOverlap(object):
                     name = name1 + '-' + name2
                     totals[name] = total
                     commons[name] = common
-                    seen.append(name1)
+                    seen.add(name1)
 
         return sequenceFeatures, commons, totals

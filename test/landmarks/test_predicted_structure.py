@@ -16,7 +16,7 @@ class TestGetStructureOffsets(TestCase):
         """
         landmark = PredictedStructure()
         result = landmark.getStructureOffsets('')
-        self.assertEqual({}, result)
+        self.assertEqual([], list(result))
 
     def testIdenticalStructure(self):
         """
@@ -25,7 +25,7 @@ class TestGetStructureOffsets(TestCase):
         """
         landmark = PredictedStructure()
         result = landmark.getStructureOffsets('GGGGGGGGG')
-        self.assertEqual({'G': [[0, 8]]}, result)
+        self.assertEqual([('G', 0, 9)], list(result))
 
     def testFirstItemDifferent(self):
         """
@@ -34,8 +34,7 @@ class TestGetStructureOffsets(TestCase):
         """
         landmark = PredictedStructure()
         result = landmark.getStructureOffsets('HGGGGGGGG')
-        self.assertEqual({'G': [[1, 8]],
-                          'H': [[0, 0]]}, result)
+        self.assertEqual([('H', 0, 1), ('G', 1, 9)], list(result))
 
     def testLastItemDifferent(self):
         """
@@ -44,8 +43,7 @@ class TestGetStructureOffsets(TestCase):
         """
         landmark = PredictedStructure()
         result = landmark.getStructureOffsets('GGGGGGGGH')
-        self.assertEqual({'G': [[0, 7]],
-                          'H': [[8, 8]]}, result)
+        self.assertEqual([('G', 0, 8), ('H', 8, 9)], list(result))
 
     def testLongStructureSequence(self):
         """
@@ -55,12 +53,12 @@ class TestGetStructureOffsets(TestCase):
         structure = '-HHHHHHHHHHHHHHHHHHHHHHHHHHT-TT-TTSS---TTT-TTHHHH-SS---'
         landmark = PredictedStructure()
         result = landmark.getStructureOffsets(structure)
-        self.assertEqual({'-': [[0, 0], [28, 28], [31, 31], [36, 38], [42, 42],
-                                [49, 49], [52, 54]],
-                          'H': [[1, 26], [45, 48]],
-                          'S': [[34, 35], [50, 51]],
-                          'T': [[27, 27], [29, 30], [32, 33], [39, 41],
-                                [43, 44]]}, result)
+        self.assertEqual([('-', 0, 1), ('H', 1, 27), ('T', 27, 28),
+                          ('-', 28, 29), ('T', 29, 31), ('-', 31, 32),
+                          ('T', 32, 34), ('S', 34, 36), ('-', 36, 39),
+                          ('T', 39, 42), ('-', 42, 43), ('T', 43, 45),
+                          ('H', 45, 49), ('-', 49, 50), ('S', 50, 52),
+                          ('-', 52, 55)], list(result))
 
 
 class TestPredictedStructureFind(TestCase):

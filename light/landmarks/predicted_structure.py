@@ -1,11 +1,11 @@
-from collections import defaultdict
+from itertools import chain
 
 from light.features import Landmark, Finder
 
 
 class PredictedStructure(Finder):
     """
-    A class for computing statistics based on predicted secondary structures.
+    A class for computing landmarks based on predicted secondary structures.
     The predicted secondary structure sequences were downloaded from
     http://www.rcsb.org/pdb/files/ss.txt on the 11/11/2015. The predictions are
     made using the DSSP algorithm.
@@ -19,52 +19,44 @@ class PredictedStructure(Finder):
         """
         Takes a structure sequence, and returns a dictionary that contains the
         offsets for each structure.
+        Possible structures are:
+        H = α-helix
+        B = residue in isolated β-bridge (part of a strand)
+        E = extended strand, participates in β ladder (set of one or more
+                consecutive bridges of identical type, continuous stretches of
+                E are beta strands)
+        G = 3-helix (Alpha helix 3 10)
+        I = 5 helix (Alpha helix pi)
+        T = hydrogen bonded turn (pieces of helix too short to be helix or
+                turn)
+        S = bend (region of high curvature)
 
         @param ssSequence: A C{str} structure sequence.
-        """
-        result = defaultdict(list)
 
+        @return: A C{dict} which for each structure contains a list of lists,
+            where each of the lists has the start and stop offset of
+            consecutive sets of structures.
+        """
         previous = None
-        start = 0
-        for i, item in enumerate(ssSequence):
-            # item is the last item of the sequence
-            try:
-                ssSequence[i + 1]
-            except IndexError:
-                if item == previous:
-                    result[item].append([start, i])
-                else:
-                    result[item].append([i, i])
-                break
-            if item == previous and ssSequence[i + 1] != item:
-                result[item].append([start, i])
-            # item is the only item of the sequence
-            elif item != previous and ssSequence[i + 1] != item:
-                previous = item
-                result[item].append([i, i])
-            # item is the first one in the sequence:
-            elif item != previous and ssSequence[i + 1] == item:
-                previous = item
-                start = i
-        return result
+        for offset, symbol in enumerate(chain(ssSequence, 'X')):
+            if previous is None:  # Start of string.
+                previous = symbol
+                startOffset = 0
+            elif symbol != previous:
+                yield (previous, startOffset, offset)
+                previous = symbol
+                startOffset = offset
 
     def find(self, read, structureNames=None):
         """
-        A function that checks if and where an alpha helix in a sequence
-        occurs.
+        A function that returns landmarks based on known secondary structures.
 
         @param read: An instance of C{light.performance.overlap.SSAARead}.
-        @param structureNames: A C{list} of structure names that should be used
-            as finders.
+        @param structureNames: A C{set} of structure names that should be
+            considered.
         """
-        structureNames = structureNames or ['H', 'G', 'I', 'E']
+        structureNames = structureNames or {'H', 'G', 'I', 'E'}
 
-        structureOffsets = self.getStructureOffsets(read.structure)
-
-        for structureName, offsets in structureOffsets.items():
-            if structureName in structureNames:
-                for offsetPair in offsets:
-                    start = offsetPair[0]
-                    end = offsetPair[1]
-                    yield Landmark(structureName, self.SYMBOL, start,
-                                   end - start + 1)
+        for symbol, start, end in self.getStructureOffsets(read.structure):
+            if symbol in structureNames:
+                yield Landmark(symbol, self.SYMBOL, start, end - start)

@@ -8,7 +8,7 @@ from light.trig.volume import Volume
 
 class TestVolume(TestCase):
     """
-    Tests for the TrigPoint.Volume class.
+    Tests for the trig.Volume class.
     """
     def testConversion(self):
         """

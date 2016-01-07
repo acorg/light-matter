@@ -93,7 +93,7 @@ class TestAllTrigClasses(TestCase):
 
     def testAllClasses(self):
         """
-        The ALL_TRIG_CLASSES set must be as expected.
+        The ALL_TRIG_CLASSES list must be as expected.
         """
         self.assertEqual(
             [AminoAcids, IndividualPeaks, IndividualTroughs, Peaks, Troughs,

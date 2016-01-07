@@ -15,6 +15,9 @@ class Volume(Finder):
         corresponding to the cluster an amino acid volume is in.
 
         @param sequence: an amino acid sequence.
+
+        @return: A C{list} that for each amino acid contains the number of the
+            cluster that amino acid is in.
         """
         return [PROPERTY_CLUSTERS[aa]['volume'] if aa in PROPERTY_CLUSTERS
                 else 0 for aa in sequence]
@@ -31,5 +34,5 @@ class Volume(Finder):
             before = propertySequence[i - 1]
             middle = propertySequence[i]
             after = propertySequence[i + 1]
-            if before != middle and after != middle and before == after:
+            if before == after and before != middle:
                 yield TrigPoint(self.NAME, self.SYMBOL, i)

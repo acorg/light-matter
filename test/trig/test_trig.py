@@ -4,7 +4,7 @@ from unittest import TestCase
 from light.trig import (
     findTrigPoint, findTrigPoints, trigNameFromHashkey,
     ALL_TRIG_CLASSES, DEFAULT_TRIG_CLASSES, AminoAcids, IndividualPeaks,
-    IndividualTroughs, Peaks, Troughs)
+    IndividualTroughs, Peaks, Troughs, Volume)
 
 
 class TestFindTrigPoint(TestCase):
@@ -96,7 +96,8 @@ class TestAllTrigClasses(TestCase):
         The ALL_TRIG_CLASSES set must be as expected.
         """
         self.assertEqual(
-            [AminoAcids, IndividualPeaks, IndividualTroughs, Peaks, Troughs],
+            [AminoAcids, IndividualPeaks, IndividualTroughs, Peaks, Troughs,
+             Volume],
             ALL_TRIG_CLASSES)
 
 

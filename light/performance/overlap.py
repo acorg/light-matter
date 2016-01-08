@@ -91,7 +91,8 @@ class CalculateOverlap(object):
         if 'landmarkNames' not in kwargs:
             kwargs['landmarkNames'] = [c.NAME for c in ALL_LANDMARK_CLASSES]
         if 'trigPointNames' not in kwargs:
-            kwargs['trigPointNames'] = [c.NAME for c in ALL_TRIG_CLASSES]
+            kwargs['trigPointNames'] = ([c.NAME for c in ALL_TRIG_CLASSES if
+                                         c.NAME != 'Volume'])
 
         db = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
         backend = Backend()

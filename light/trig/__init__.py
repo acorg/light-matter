@@ -3,9 +3,10 @@ from light.trig.troughs import Troughs
 from light.trig.amino_acids import AminoAcids
 from light.trig.individual_peaks import IndividualPeaks
 from light.trig.individual_troughs import IndividualTroughs
+from light.trig.volume import Volume
 
 ALL_TRIG_CLASSES = [
-    AminoAcids, IndividualPeaks, IndividualTroughs, Peaks, Troughs]
+    AminoAcids, IndividualPeaks, IndividualTroughs, Peaks, Troughs, Volume]
 
 DEFAULT_TRIG_CLASSES = [AminoAcids]
 

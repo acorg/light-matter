@@ -1,12 +1,22 @@
-from light.trig.peaks import Peaks
-from light.trig.troughs import Troughs
 from light.trig.amino_acids import AminoAcids
+from light.trig.aromaticity import Aromaticity
+from light.trig.composition import Composition
+from light.trig.hydropathy import Hydropathy
+from light.trig.hydroxythiolation import Hydroxythiolation
 from light.trig.individual_peaks import IndividualPeaks
 from light.trig.individual_troughs import IndividualTroughs
+from light.trig.isoelectric_point import IsoelectricPoint
+from light.trig.peaks import Peaks
+from light.trig.polarity import Polarity
+from light.trig.polar_requirement import PolarRequirement
+from light.trig.troughs import Troughs
 from light.trig.volume import Volume
 
+
 ALL_TRIG_CLASSES = [
-    AminoAcids, IndividualPeaks, IndividualTroughs, Peaks, Troughs, Volume]
+    AminoAcids, Aromaticity, Composition, Hydropathy, Hydroxythiolation,
+    IndividualPeaks, IndividualTroughs, IsoelectricPoint, Peaks, Polarity,
+    PolarRequirement, Troughs, Volume]
 
 DEFAULT_TRIG_CLASSES = [AminoAcids]
 

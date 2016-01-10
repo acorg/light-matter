@@ -8,7 +8,8 @@ from light.parameters import FindParameters
 
 
 def affinityMatrix(queries, findParams=None, subjects=None, symmetric=True,
-                   computeDiagonal=False, diagonalValue=1.0, **kwargs):
+                   computeDiagonal=False, diagonalValue=1.0, progressFunc=None,
+                   **kwargs):
     """
     Produce an affinity matrix containing scores for a set of reads matched
     against a set of subjects.
@@ -30,6 +31,10 @@ def affinityMatrix(queries, findParams=None, subjects=None, symmetric=True,
         to C{diagonalValue}.
     @param diagonalValue: The result that diagonal values will all be set to if
         C{computeDiagonal} is False.
+    @param progressFunc: If not C{None}, a function that takes two arguments.
+        The function will be called before each query sequence is processed.
+        The arguments will be the C{int} (zero-based) number of the query and
+        the query (an AAReadWithX instance) itself.
     @param kwargs: See
         C{database.DatabaseSpecifier.getDatabaseFromKeywords} for
         additional keywords, all of which are optional.
@@ -62,7 +67,8 @@ def affinityMatrix(queries, findParams=None, subjects=None, symmetric=True,
     affinity = np.zeros((nQueries, nSubjects))
 
     for i, query in enumerate(queries):
-        print(i, query.id)
+        if progressFunc:
+            progressFunc(i, query)
         if symmetric:
             # We don't have to consider all subjects in the find, so pass a
             # restricted set of subject indices to restrict the search to.

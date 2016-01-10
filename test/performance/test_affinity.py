@@ -104,6 +104,30 @@ class TestAffinityMatrix(TestCase):
                                 subjects=subjects, computeDiagonal=True)
         self.assertTrue(np.array_equal([[1.0, 1.0, 1.0]], matrix))
 
+    def testTwoByTwoWithProgressFunction(self):
+        """
+        If affinityMatrix is called with two reads and the database has two
+        subjects, and a progress function is passed, the progress function
+        must be called as expected.
+        """
+        reads = Reads()
+        reads.add(AARead('id1', 'FRRRFRRRFAAAFRRRFRRRF'))
+        reads.add(AARead('id2', 'FRRRFRRRFAAAFRRRFRRRF'))
+        subjects = Reads()
+        subjects.add(AARead('id3', 'FRRRFRRRFAAAFRRRFRRRF'))
+        subjects.add(AARead('id4', 'FRRRFRRRFAAAFRRRFRRRF'))
+
+        output = []
+
+        def progress(i, query):
+            output.append((i, query.id))
+
+        affinityMatrix(reads, landmarkNames=['AlphaHelix'],
+                       subjects=subjects, computeDiagonal=True,
+                       progressFunc=progress)
+
+        self.assertEqual([(0, 'id1'), (1, 'id2')], output)
+
     def testTwoByThree(self):
         """
         If affinityMatrix is called with two reads and the database has three

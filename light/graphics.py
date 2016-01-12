@@ -564,7 +564,7 @@ def plotFeatureSquare(read, significanceFraction=None, readsAx=None, **kwargs):
         # Add jitter to the landmark offset so we can see landmarks that
         # might otherwise overlap.
         offset += uniform(-0.4, 0.4)
-        readsAx.plot([offset, offset + length], [offset, offset], '-',
+        readsAx.plot([offset, offset + length - 1], [offset, offset], '-',
                      color=COLORS[symbol], linewidth=2)
 
     # Show trig points for all landmarks using a scatter plot.
@@ -869,7 +869,7 @@ class PlotHashesInSubjectAndRead(object):
             color = COLORS[feature.symbol]
 
             if isinstance(feature, Landmark):
-                ax.plot([feature.offset, feature.offset + feature.length],
+                ax.plot([feature.offset, feature.offset + feature.length - 1],
                         [y, y], '-', color=color, linewidth=3)
             else:
                 ax.plot([feature.offset, feature.offset], [y + tpY, y - tpY],
@@ -1020,7 +1020,7 @@ def plotLandmarksInSequences(sequences, maxTickLabelLength=None, **kwargs):
         # Landmarks are drawn as colored horizontal lines.
         for landmark in scannedRead.landmarks:
             namesSeen.add(landmark.name)
-            plt.plot([landmark.offset, landmark.offset + landmark.length],
+            plt.plot([landmark.offset, landmark.offset + landmark.length - 1],
                      [y, y], '-', color=COLORS[landmark.symbol], linewidth=2)
         # Trig points are drawn as small colored vertical lines.
         for trigPoint in scannedRead.trigPoints:
@@ -1158,7 +1158,7 @@ def featureComparison(ssAARead, print_=True, **kwargs):
     for landmark in scannedRead.landmarks:
         y = yticks.index(landmark.name)
         if landmark.name != 'AminoAcidsLm':
-            plt.plot([landmark.offset, landmark.offset + landmark.length],
+            plt.plot([landmark.offset, landmark.offset + landmark.length - 1],
                      [y, y], '-', color=COLORS[landmark.symbol], linewidth=4)
         else:
             plt.plot([landmark.offset, landmark.offset + landmark.length],

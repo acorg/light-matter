@@ -45,8 +45,8 @@ class TestGOR4AlphaHelix(TestCase):
         len11 = scale(11, Parameters.DEFAULT_DISTANCE_BASE)
         # The GOR IV secondary structure prediction is
         # 'CCCCCCCCCCHHHHHHHCCHHHHHHHHHHHCCCCEEEEECCEEEEEEEEC'
-        self.assertEqual([Landmark('GOR4AlphaHelix', 'GA', 10, len7, len7),
-                          Landmark('GOR4AlphaHelix', 'GA', 19, len11, len11)],
+        self.assertEqual([Landmark('GOR4AlphaHelix', 'GA', 10, 7, len7),
+                          Landmark('GOR4AlphaHelix', 'GA', 19, 11, len11)],
                          result)
 
     def testApoamicyaninTwoAlphaHelixsWithNonDefaultDistanceBase(self):
@@ -65,8 +65,21 @@ class TestGOR4AlphaHelix(TestCase):
         len11 = scale(11, distanceBase)
         # The GOR IV secondary structure prediction is
         # 'CCCCCCCCCCHHHHHHHCCHHHHHHHHHHHCCCCEEEEECCEEEEEEEEC'
-        self.assertEqual([Landmark('GOR4AlphaHelix', 'GA', 10, len7, len7),
-                          Landmark('GOR4AlphaHelix', 'GA', 19, len11, len11)],
+        self.assertEqual([Landmark('GOR4AlphaHelix', 'GA', 10, 7, len7),
+                          Landmark('GOR4AlphaHelix', 'GA', 19, 11, len11)],
+                         result)
+
+    def testStoreLengthCorrectly(self):
+        """
+        The length of a GOR4BetaStrand must be stored correctly (not scaled).
+        """
+        seq = 'DKATIPSESPFAAAEVAAIVFAAAEVAAIVVFAAAEVAAIVVDIAKMKYFAAAEVAAIVVDI'
+        read = AARead('id', seq)
+        distanceBase = 1.5
+        landmark = GOR4AlphaHelix(distanceBase=distanceBase)
+        result = list(landmark.find(read))
+        len47 = scale(47, distanceBase)
+        self.assertEqual([Landmark('GOR4AlphaHelix', 'GA', 10, 47, len47)],
                          result)
 
 

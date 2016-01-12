@@ -92,6 +92,6 @@ class TestGOR4BetaStrand(TestCase):
         len8 = scale(8, distanceBase)
         # The GOR IV secondary structure prediction is
         # 'CCCCCCCCCCHHHHHHHCCHHHHHHHHHHHCCCCEEEEECCEEEEEEEEC'
-        self.assertEqual([Landmark('GOR4BetaStrand', 'GB', 34, len5, len5),
-                          Landmark('GOR4BetaStrand', 'GB', 41, len8, len8)],
+        self.assertEqual([Landmark('GOR4BetaStrand', 'GB', 34, 5, len5),
+                          Landmark('GOR4BetaStrand', 'GB', 41, 8, len8)],
                          result)

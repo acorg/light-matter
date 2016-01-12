@@ -79,7 +79,6 @@ class TestGOR4AlphaHelix(TestCase):
         landmark = GOR4AlphaHelix(distanceBase=distanceBase)
         result = list(landmark.find(read))
         len47 = scale(47, distanceBase)
-        print(len47)
         self.assertEqual([Landmark('GOR4AlphaHelix', 'GA', 10, 47, len47)],
                          result)
 

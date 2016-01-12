@@ -29,8 +29,8 @@ class TestGOR4Coil(TestCase):
         result = list(landmark.find(read))
         len1 = scale(1, Parameters.DEFAULT_DISTANCE_BASE)
         # The GOR IV secondary structure prediction is 'EECEEC'.
-        self.assertEqual([Landmark('GOR4Coil', 'GC', 2, len1, len1),
-                          Landmark('GOR4Coil', 'GC', 5, len1, len1)],
+        self.assertEqual([Landmark('GOR4Coil', 'GC', 2, 1, len1),
+                          Landmark('GOR4Coil', 'GC', 5, 1, len1)],
                          result)
 
     def testAllCoil(self):
@@ -62,11 +62,11 @@ class TestGOR4Coil(TestCase):
         len10 = scale(10, Parameters.DEFAULT_DISTANCE_BASE)
         # The GOR IV secondary structure prediction is
         # 'CCCCCCCCCCHHHHHHHCCHHHHHHHHHHHCCCCEEEEECCEEEEEEEEC'.
-        self.assertEqual([Landmark('GOR4Coil', 'GC', 0, len10, len10),
-                          Landmark('GOR4Coil', 'GC', 17, len2, len2),
-                          Landmark('GOR4Coil', 'GC', 30, len4, len4),
-                          Landmark('GOR4Coil', 'GC', 39, len2, len2),
-                          Landmark('GOR4Coil', 'GC', 49, len1, len1)],
+        self.assertEqual([Landmark('GOR4Coil', 'GC', 0, 10, len10),
+                          Landmark('GOR4Coil', 'GC', 17, 2, len2),
+                          Landmark('GOR4Coil', 'GC', 30, 4, len4),
+                          Landmark('GOR4Coil', 'GC', 39, 2, len2),
+                          Landmark('GOR4Coil', 'GC', 49, 1, len1)],
                          result)
 
     def testApoamicyaninFiveCoilsWithNonDefaultDistanceBase(self):
@@ -88,9 +88,22 @@ class TestGOR4Coil(TestCase):
         # The GOR IV secondary structure prediction is
         # 'CCCCCCCCCCHHHHHHHCCHHHHHHHHHHHCCCCEEEEECCEEEEEEEEC'.
         self.maxDiff = None
-        self.assertEqual([Landmark('GOR4Coil', 'GC', 0, len10, len10),
-                          Landmark('GOR4Coil', 'GC', 17, len2, len2),
-                          Landmark('GOR4Coil', 'GC', 30, len4, len4),
-                          Landmark('GOR4Coil', 'GC', 39, len2, len2),
-                          Landmark('GOR4Coil', 'GC', 49, len1, len1)],
+        self.assertEqual([Landmark('GOR4Coil', 'GC', 0, 10, len10),
+                          Landmark('GOR4Coil', 'GC', 17, 2, len2),
+                          Landmark('GOR4Coil', 'GC', 30, 4, len4),
+                          Landmark('GOR4Coil', 'GC', 39, 2, len2),
+                          Landmark('GOR4Coil', 'GC', 49, 1, len1)],
+                         result)
+
+    def testLengthMustBeStoredCorrectly(self):
+        """
+        The length of a GOR4BetaStrand must be stored correctly (not scaled).
+        """
+        read = AARead('id', 'DKATIPSESP')
+        landmark = GOR4Coil()
+        result = list(landmark.find(read))
+        len6 = scale(6, Parameters.DEFAULT_DISTANCE_BASE)
+        len1 = scale(1, Parameters.DEFAULT_DISTANCE_BASE)
+        self.assertEqual([Landmark('GOR4Coil', 'GC', 0, 6, len6),
+                          Landmark('GOR4Coil', 'GC', 9, 1, len1)],
                          result)

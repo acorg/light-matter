@@ -36,11 +36,11 @@ class GOR4BetaStrand(Finder):
                 if count:
                     # We were in a string of E's, but it has just ended.
                     length = scale(count, self._distanceBase)
-                    yield Landmark(self.NAME, self.SYMBOL, start, length,
+                    yield Landmark(self.NAME, self.SYMBOL, start, count,
                                    length)
                     count = 0
 
         if count:
             length = scale(count, self._distanceBase)
             # We reached the end of the string still in a beta strand.
-            yield Landmark(self.NAME, self.SYMBOL, start, length, length)
+            yield Landmark(self.NAME, self.SYMBOL, start, count, length)

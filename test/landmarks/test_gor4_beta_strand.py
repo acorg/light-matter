@@ -92,6 +92,23 @@ class TestGOR4BetaStrand(TestCase):
         len8 = scale(8, distanceBase)
         # The GOR IV secondary structure prediction is
         # 'CCCCCCCCCCHHHHHHHCCHHHHHHHHHHHCCCCEEEEECCEEEEEEEEC'
-        self.assertEqual([Landmark('GOR4BetaStrand', 'GB', 34, len5, len5),
-                          Landmark('GOR4BetaStrand', 'GB', 41, len8, len8)],
+        self.assertEqual([Landmark('GOR4BetaStrand', 'GB', 34, 5, len5),
+                          Landmark('GOR4BetaStrand', 'GB', 41, 8, len8)],
+                         result)
+
+    def testLengthMustBeStoredCorrectly(self):
+        """
+        The length of a GOR4BetaStrand must be stored correctly (not scaled).
+        """
+        seq = 'DKATIPSESPFAAAEVADGAIVVDIAKMKYETPELHVHVHVHVHVHVHVKVGDTVTWINREA'
+        read = AARead('id', seq)
+        distanceBase = 1.01
+        landmark = GOR4BetaStrand(distanceBase=distanceBase)
+        result = list(landmark.find(read))
+        len5 = scale(16, distanceBase)
+        len8 = scale(8, distanceBase)
+        # The GOR IV secondary structure prediction is
+        # 'CCCCCCCCCCHHHHHHHCCHHHHHHHHHHHCCCCEEEEECCEEEEEEEEC'
+        self.assertEqual([Landmark('GOR4BetaStrand', 'GB', 34, 16, len5),
+                          Landmark('GOR4BetaStrand', 'GB', 53, 8, len8)],
                          result)

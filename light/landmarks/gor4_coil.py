@@ -23,23 +23,23 @@ class GOR4Coil(Finder):
         @return: A generator that yields C{Landmark} instances.
         """
         predictions = read.gor4()['predictions']
-        count = 0
+        length = 0
         for offset, prediction in enumerate(predictions):
             if prediction == 'C':
-                if count:
+                if length:
                     # We're already in a string of C's. Keep counting.
-                    count += 1
+                    length += 1
                 else:
                     start = offset
-                    count = 1
+                    length = 1
             else:
-                if count:
+                if length:
                     # We were in a string of C's, but it has just ended.
-                    yield Landmark(self.NAME, self.SYMBOL, start, count,
-                                   scale(count, self._featureLengthBase))
-                    count = 0
+                    yield Landmark(self.NAME, self.SYMBOL, start, length,
+                                   scale(length, self._featureLengthBase))
+                    length = 0
 
-        if count:
+        if length:
             # We reached the end of the string still in a coil.
-            yield Landmark(self.NAME, self.SYMBOL, start, count,
-                           scale(count, self._featureLengthBase))
+            yield Landmark(self.NAME, self.SYMBOL, start, length,
+                           scale(length, self._featureLengthBase))

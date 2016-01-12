@@ -69,6 +69,19 @@ class TestGOR4AlphaHelix(TestCase):
                           Landmark('GOR4AlphaHelix', 'GA', 19, 11, scaled11)],
                          result)
 
+    def testStoreLengthCorrectly(self):
+        """
+        The length of a GOR4BetaStrand must be stored correctly (not scaled).
+        """
+        seq = 'DKATIPSESPFAAAEVAAIVFAAAEVAAIVVFAAAEVAAIVVDIAKMKYFAAAEVAAIVVDI'
+        read = AARead('id', seq)
+        featureLengthBase = 1.5
+        landmark = GOR4AlphaHelix(featureLengthBase)
+        result = list(landmark.find(read))
+        scaled47 = scale(47, featureLengthBase)
+        self.assertEqual([Landmark('GOR4AlphaHelix', 'GA', 10, 47, scaled47)],
+                         result)
+
 
 class TestGOR4BetaStrandOverlap(TestCase):
     """

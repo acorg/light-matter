@@ -7,7 +7,7 @@ from matplotlib import patches
 import numpy as np
 from operator import attrgetter
 from textwrap import fill
-from collections import defaultdict
+from collections import defaultdict, Counter
 from math import log10
 
 from light.backend import Backend
@@ -1379,7 +1379,8 @@ def compareScores(subject, query, scoreMethods=None,
                   plotHashesInSubjectAndRead=True, showBestBinOnly=True,
                   showHistogram=True, findParams=None, showInsignificant=False,
                   showFeatures=False, showScoreAnalysis=True,
-                  showSignificantBinsDetails=False, **kwargs):
+                  showSignificantBinsDetails=False,
+                  showBestBinFeatureInfo=False, **kwargs):
     """
     Plot the features in two sequences, the hashes in their match, and
     the scores for the match calculated under different score methods.
@@ -1402,6 +1403,8 @@ def compareScores(subject, query, scoreMethods=None,
     @param showScoreAnalysis: If C{True}, print details of the score analysis.
     @param showSignificantBinsDetails: If C{True}, print information about the
         contents of the significant bins in the histogram.
+    @param showBestBinFeatureInfo: If C{true} print which features are found
+        in the best bin.
     @param kwargs: See
         C{database.DatabaseSpecifier.getDatabaseFromKeywords} for
         additional keywords, all of which are optional.
@@ -1432,6 +1435,16 @@ def compareScores(subject, query, scoreMethods=None,
                         '\n  '.join(['index=%d score=%.4f binCount=%d' %
                                     ((b['index'], b['score'], len(b['bin'])))
                                     for b in significantBins])))
+                if showBestBinFeatureInfo:
+                    bestBinInfo = significantBins[0]['bin']
+                    features = []
+                    for hash_ in bestBinInfo:
+                        features.append(hash_['subjectLandmark'].name)
+                        features.append(hash_['subjectTrigPoint'].name)
+                    countedFeatures = Counter(features)
+                    for feature in countedFeatures:
+                        print('Feature: %s; count: %s' % (
+                              feature, countedFeatures[feature]))
             else:
                 print('No significant bins.')
 

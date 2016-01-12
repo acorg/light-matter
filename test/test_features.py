@@ -474,17 +474,17 @@ class TestFinder(TestCase):
     """
     Tests for the light.features.Finder class.
     """
-    def testDefaultBucketFactor(self):
+    def testDefaultFeatureLengthBase(self):
         """
-        An instance must have the right default distanceBase.
+        An instance must have the right default feature length base.
         """
         finder = Finder()
-        self.assertEqual(1.1, finder._distanceBase)
+        self.assertEqual(1.35, finder._featureLengthBase)
 
-    def testNonDefaultBucketFactor(self):
+    def testNonDefaultFeatureLengthBase(self):
         """
-        An instance made with a non-default distanceBase must have the right
-        distanceBase set.
+        An instance made with a non-default feature length base must have the
+        right featureLengthBase set.
         """
-        finder = Finder(distanceBase=1.5)
-        self.assertEqual(1.5, finder._distanceBase)
+        finder = Finder(featureLengthBase=1.5)
+        self.assertEqual(1.5, finder._featureLengthBase)

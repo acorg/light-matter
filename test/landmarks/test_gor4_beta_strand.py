@@ -38,11 +38,11 @@ class TestGOR4BetaStrand(TestCase):
         read = AARead('id', 'VICVICV')
         landmark = GOR4BetaStrand()
         result = list(landmark.find(read))
-        len2 = scale(2, Parameters.DEFAULT_DISTANCE_BASE)
-        len3 = scale(3, Parameters.DEFAULT_DISTANCE_BASE)
+        scaled2 = scale(2, Parameters.DEFAULT_FEATURE_LENGTH_BASE)
+        scaled3 = scale(3, Parameters.DEFAULT_FEATURE_LENGTH_BASE)
         # The GOR IV secondary structure prediction is 'EECEEEC'.
-        self.assertEqual([Landmark('GOR4BetaStrand', 'GB', 0, len2, len2),
-                          Landmark('GOR4BetaStrand', 'GB', 3, len3, len3)],
+        self.assertEqual([Landmark('GOR4BetaStrand', 'GB', 0, 2, scaled2),
+                          Landmark('GOR4BetaStrand', 'GB', 3, 3, scaled3)],
                          result)
 
     def testBetaStrandAtEnd(self):
@@ -53,9 +53,9 @@ class TestGOR4BetaStrand(TestCase):
         read = AARead('id', 'LHV')
         landmark = GOR4BetaStrand()
         result = list(landmark.find(read))
-        len2 = scale(2, Parameters.DEFAULT_DISTANCE_BASE)
+        scaled2 = scale(2, Parameters.DEFAULT_FEATURE_LENGTH_BASE)
         # The GOR IV secondary structure prediction is 'CEE'.
-        self.assertEqual([Landmark('GOR4BetaStrand', 'GB', 1, len2, len2)],
+        self.assertEqual([Landmark('GOR4BetaStrand', 'GB', 1, 2, scaled2)],
                          result)
 
     def testApoamicyaninTwoBetaStrands(self):
@@ -68,30 +68,30 @@ class TestGOR4BetaStrand(TestCase):
         read = AARead('id', seq)
         landmark = GOR4BetaStrand()
         result = list(landmark.find(read))
-        len5 = scale(5, Parameters.DEFAULT_DISTANCE_BASE)
-        len8 = scale(8, Parameters.DEFAULT_DISTANCE_BASE)
+        scaled5 = scale(5, Parameters.DEFAULT_FEATURE_LENGTH_BASE)
+        scaled8 = scale(8, Parameters.DEFAULT_FEATURE_LENGTH_BASE)
         # The GOR IV secondary structure prediction is
         # 'CCCCCCCCCCHHHHHHHCCHHHHHHHHHHHCCCCEEEEECCEEEEEEEEC'
-        self.assertEqual([Landmark('GOR4BetaStrand', 'GB', 34, len5, len5),
-                          Landmark('GOR4BetaStrand', 'GB', 41, len8, len8)],
+        self.assertEqual([Landmark('GOR4BetaStrand', 'GB', 34, 5, scaled5),
+                          Landmark('GOR4BetaStrand', 'GB', 41, 8, scaled8)],
                          result)
 
-    def testApoamicyaninTwoBetaStrandsWithNonDefaultDistanceBase(self):
+    def testApoamicyaninTwoBetaStrandsWithNonDefaultFeatureLengthBase(self):
         """
         The GOR4BetaStrand landmark finder must find the two expected landmarks
         in a fragment of the APOAMICYANIN sequence from the GOR IV reference
-        database. It must return the right length of the landmark, after a
-        non-default distanceBase was applied.
+        database. It must have the right scaled length of the landmark, when a
+        non-default featureLengthBase is used.
         """
         seq = 'DKATIPSESPFAAAEVADGAIVVDIAKMKYETPELHVKVGDTVTWINREA'
         read = AARead('id', seq)
-        distanceBase = 1.5
-        landmark = GOR4BetaStrand(distanceBase=distanceBase)
+        featureLengthBase = 1.5
+        landmark = GOR4BetaStrand(featureLengthBase)
         result = list(landmark.find(read))
-        len5 = scale(5, distanceBase)
-        len8 = scale(8, distanceBase)
+        scaled5 = scale(5, featureLengthBase)
+        scaled8 = scale(8, featureLengthBase)
         # The GOR IV secondary structure prediction is
         # 'CCCCCCCCCCHHHHHHHCCHHHHHHHHHHHCCCCEEEEECCEEEEEEEEC'
-        self.assertEqual([Landmark('GOR4BetaStrand', 'GB', 34, len5, len5),
-                          Landmark('GOR4BetaStrand', 'GB', 41, len8, len8)],
+        self.assertEqual([Landmark('GOR4BetaStrand', 'GB', 34, 5, scaled5),
+                          Landmark('GOR4BetaStrand', 'GB', 41, 8, scaled8)],
                          result)

@@ -17,15 +17,16 @@ class Prosite(Finder):
     An explanation about the fields and structure of the database is available
     at: http://prosite.expasy.org/prosuser.html
 
-    @param distanceBase: A C{float} by which the length of the landmark or
-        trigPoint will be divided. The default of 1.0 set below is only used by
-        the tests. Otherwise, it is set by the light.database.Database class.
+    @param featureLengthBase: See the light.features.Finder class for
+        documentation of this parameter. It is unused in the Prosite finder
+        but we need it in our signature because all finders must be able to
+        accept a featureLengthBase argument.
     """
     NAME = 'Prosite'
     SYMBOL = 'PS'
 
-    def __init__(self, distanceBase=1.0):
-        Finder.__init__(self, distanceBase)
+    def __init__(self, featureLengthBase=1.35):
+        Finder.__init__(self, featureLengthBase)
         self.database = []
         with open(_DB_FILE) as fp:
             for line in fp:

@@ -35,12 +35,11 @@ class GOR4AlphaHelix(Finder):
             else:
                 if count:
                     # We were in a string of H's, but it has just ended.
-                    length = scale(count, self._distanceBase)
-                    yield Landmark(self.NAME, self.SYMBOL, start, length,
-                                   length)
+                    yield Landmark(self.NAME, self.SYMBOL, start, count,
+                                   scale(count, self._featureLengthBase))
                     count = 0
 
         if count:
             # We reached the end of the string still in an alpha helix.
-            length = scale(count, self._distanceBase)
-            yield Landmark(self.NAME, self.SYMBOL, start, length, length)
+            yield Landmark(self.NAME, self.SYMBOL, start, count,
+                           scale(count, self._featureLengthBase))

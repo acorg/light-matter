@@ -308,7 +308,8 @@ class DatabaseSpecifier:
                               limitPerLandmark=args.limitPerLandmark,
                               maxDistance=args.maxDistance,
                               minDistance=args.minDistance,
-                              distanceBase=args.distanceBase)
+                              distanceBase=args.distanceBase,
+                              featureLengthBase=args.featureLengthBase)
 
         database = None
         filePrefix = args.filePrefix
@@ -392,6 +393,7 @@ class DatabaseSpecifier:
             maxDistance=Parameters.DEFAULT_MAX_DISTANCE,
             minDistance=Parameters.DEFAULT_MIN_DISTANCE,
             distanceBase=Parameters.DEFAULT_DISTANCE_BASE,
+            featureLengthBase=Parameters.DEFAULT_FEATURE_LENGTH_BASE,
             database=None, databaseFasta=None, subjects=None, filePrefix=None):
         """
         Use Python function keywords to build an argument parser that can
@@ -411,6 +413,10 @@ class DatabaseSpecifier:
         @param distanceBase: The distance between a landmark and a trig point
             is scaled to be its logarithm using this C{float} base. This
             reduces sensitivity to relatively small differences in distance.
+        @param featureLengthBase: The length of a landmark is scaled to be its
+            logarithm using this C{float} base, for the purpose of matching
+            landmarks via hashes. This reduces sensitivity to relatively small
+            differences in lengths.
         @param database: An instance of C{light.database.Database}.
         @param databaseFasta: The name of a FASTA file containing subject
             sequences that should be added to the database.
@@ -462,7 +468,8 @@ class DatabaseSpecifier:
         commandLine.extend(['--limitPerLandmark', str(limitPerLandmark),
                             '--maxDistance', str(maxDistance),
                             '--minDistance', str(minDistance),
-                            '--distanceBase', str(distanceBase)])
+                            '--distanceBase', str(distanceBase),
+                            '--featureLengthBase', str(featureLengthBase)])
 
         if self._allowPopulation and databaseFasta is not None:
             commandLine.extend(['--databaseFasta', databaseFasta])

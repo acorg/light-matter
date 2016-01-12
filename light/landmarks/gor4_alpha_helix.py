@@ -23,24 +23,23 @@ class GOR4AlphaHelix(Finder):
         @return: A generator that yields C{Landmark} instances.
         """
         predictions = read.gor4()['predictions']
-        count = 0
+        length = 0
         for offset, prediction in enumerate(predictions):
             if prediction == 'H':
-                if count:
+                if length:
                     # We're already in a string of H's. Keep counting.
-                    count += 1
+                    length += 1
                 else:
                     start = offset
-                    count = 1
+                    length = 1
             else:
-                if count:
+                if length:
                     # We were in a string of H's, but it has just ended.
-                    length = scale(count, self._distanceBase)
-                    yield Landmark(self.NAME, self.SYMBOL, start, count,
-                                   length)
-                    count = 0
+                    yield Landmark(self.NAME, self.SYMBOL, start, length,
+                                   scale(length, self._featureLengthBase))
+                    length = 0
 
-        if count:
+        if length:
             # We reached the end of the string still in an alpha helix.
-            length = scale(count, self._distanceBase)
-            yield Landmark(self.NAME, self.SYMBOL, start, count, length)
+            yield Landmark(self.NAME, self.SYMBOL, start, length,
+                           scale(length, self._featureLengthBase))

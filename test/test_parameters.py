@@ -78,6 +78,8 @@ class TestParameters(TestCase):
         self.assertEqual([], params.landmarkClasses)
         self.assertEqual([], params.trigPointClasses)
         self.assertEqual(Parameters.DEFAULT_DISTANCE_BASE, params.distanceBase)
+        self.assertEqual(Parameters.DEFAULT_FEATURE_LENGTH_BASE,
+                         params.featureLengthBase)
         self.assertEqual(Parameters.DEFAULT_LIMIT_PER_LANDMARK,
                          params.limitPerLandmark)
         self.assertEqual(Parameters.DEFAULT_MAX_DISTANCE, params.maxDistance)
@@ -88,11 +90,13 @@ class TestParameters(TestCase):
         If specific parameter values are given, the passed values must be set.
         """
         params = Parameters([AlphaHelix, BetaStrand], [Peaks, Troughs],
-                            distanceBase=3.0, limitPerLandmark=10,
-                            maxDistance=77, minDistance=66)
+                            distanceBase=3.0, featureLengthBase=1.7,
+                            limitPerLandmark=10, maxDistance=77,
+                            minDistance=66)
         self.assertEqual([AlphaHelix, BetaStrand], params.landmarkClasses)
         self.assertEqual([Peaks, Troughs], params.trigPointClasses)
         self.assertEqual(3.0, params.distanceBase)
+        self.assertEqual(1.7, params.featureLengthBase)
         self.assertEqual(10, params.limitPerLandmark)
         self.assertEqual(77, params.maxDistance)
         self.assertEqual(66, params.minDistance)
@@ -129,6 +133,22 @@ class TestParameters(TestCase):
         six.assertRaisesRegex(self, ValueError, error, Parameters, [], [],
                               distanceBase=-1.0)
 
+    def testFeatureLengthBaseZeroValueError(self):
+        """
+        If the featureLengthBase is zero, a ValueError must be raised.
+        """
+        error = 'featureLengthBase must be > 0\\.'
+        six.assertRaisesRegex(self, ValueError, error, Parameters, [], [],
+                              featureLengthBase=0.0)
+
+    def testFeatureLengthBaseLessThanZeroValueError(self):
+        """
+        If the featureLengthBase is < 0, a ValueError must be raised.
+        """
+        error = 'featureLengthBase must be > 0\\.'
+        six.assertRaisesRegex(self, ValueError, error, Parameters, [], [],
+                              featureLengthBase=-1.0)
+
     def testSaveReturnsItsArgument(self):
         """
         The save function must return its (fp) argument.
@@ -143,7 +163,8 @@ class TestParameters(TestCase):
         Saving parameters as JSON must work correctly.
         """
         params = Parameters([AlphaHelix], [Peaks], limitPerLandmark=3,
-                            maxDistance=19, minDistance=5, distanceBase=1.2)
+                            maxDistance=19, minDistance=5, distanceBase=1.2,
+                            featureLengthBase=1.7)
 
         fp = StringIO()
         params.save(fp)
@@ -154,6 +175,7 @@ class TestParameters(TestCase):
             'maxDistance': 19,
             'minDistance': 5,
             'distanceBase': 1.2,
+            'featureLengthBase': 1.7,
         }
         self.assertEqual(expected, loads(fp.getvalue()))
 
@@ -163,8 +185,9 @@ class TestParameters(TestCase):
         present in a Parameters instance when it is saved.
         """
         params = Parameters([AlphaHelix, BetaStrand], [Peaks, Troughs],
-                            distanceBase=3.0, limitPerLandmark=10,
-                            maxDistance=77, minDistance=66)
+                            distanceBase=3.0, featureLengthBase=3.9,
+                            limitPerLandmark=10, maxDistance=77,
+                            minDistance=66)
         fp = StringIO()
         params.save(fp)
         fp.seek(0)
@@ -173,6 +196,7 @@ class TestParameters(TestCase):
         self.assertEqual([AlphaHelix, BetaStrand], result.landmarkClasses)
         self.assertEqual([Peaks, Troughs], result.trigPointClasses)
         self.assertEqual(3.0, result.distanceBase)
+        self.assertEqual(3.9, result.featureLengthBase)
         self.assertEqual(10, result.limitPerLandmark)
         self.assertEqual(77, result.maxDistance)
         self.assertEqual(66, result.minDistance)
@@ -231,11 +255,13 @@ class TestParameters(TestCase):
         have the same values.
         """
         params1 = Parameters([AlphaHelix, BetaStrand], [Peaks, Troughs],
-                             distanceBase=3.0, limitPerLandmark=10,
-                             maxDistance=77, minDistance=66)
+                             distanceBase=3.0, featureLengthBase=3.9,
+                             limitPerLandmark=10, maxDistance=77,
+                             minDistance=66)
         params2 = Parameters([AlphaHelix, BetaStrand], [Peaks, Troughs],
-                             distanceBase=3.0, limitPerLandmark=10,
-                             maxDistance=77, minDistance=66)
+                             distanceBase=3.0, featureLengthBase=3.9,
+                             limitPerLandmark=10, maxDistance=77,
+                             minDistance=66)
         self.assertIs(None, params1.compare(params2))
 
     def testCompareDifferentLandmarkFinders(self):
@@ -277,6 +303,17 @@ class TestParameters(TestCase):
         params2 = Parameters([], [], distanceBase=2.0)
         expected = ("Summary of differences:\n"
                     "\tParam 'distanceBase' values 1.0 and 2.0 differ.")
+        self.assertEqual(expected, params1.compare(params2))
+
+    def testCompareDifferentFeatureLengthBase(self):
+        """
+        The compare method must return a description of parameter differences
+        when two parameter instances have different featureLength bases.
+        """
+        params1 = Parameters([], [], featureLengthBase=1.0)
+        params2 = Parameters([], [], featureLengthBase=2.0)
+        expected = ("Summary of differences:\n"
+                    "\tParam 'featureLengthBase' values 1.0 and 2.0 differ.")
         self.assertEqual(expected, params1.compare(params2))
 
     def testCompareDifferentLimitPerLandmark(self):

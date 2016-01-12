@@ -70,31 +70,78 @@ class TestDistanceMixin(object):
 
     def testOnePointOneRange81to88(self):
         """
-        With base is 1.1, distances 81-88 are all mapped to 46.
+        With base 1.1, distances 81-88 are all mapped to 46.
         """
         for distance in range(81, 89):
             self.assertEqual(46, self.scale(distance, 1.1))
 
     def testOnePointOneRange200to207(self):
         """
-        With base is 1.1, distances 200-207 are all mapped to 55.
+        With base 1.1, distances 200-207 are all mapped to 55.
         """
         for distance in range(200, 208):
             self.assertEqual(55, self.scale(distance, 1.1))
 
     def testOnePointOneRange208to228(self):
         """
-        With base is 1.1, distances 208-228 are all mapped to 56.
+        With base 1.1, distances 208-228 are all mapped to 56.
         """
         for distance in range(208, 229):
             self.assertEqual(56, self.scale(distance, 1.1))
 
     def testOnePointOneRange229to250(self):
         """
-        With base is 1.1, distances 229-250 are all mapped to 57.
+        With base 1.1, distances 229-250 are all mapped to 57.
         """
         for distance in range(229, 251):
             self.assertEqual(57, self.scale(distance, 1.1))
+
+    def testFeatureLengthScaling(self):
+        """
+        With base 1.35, lengths must be scaled as expected.
+        """
+        # This test is present just so we have an idea of how small values
+        # are scaled with a base that's (currently) the default feature
+        # length base.
+        for (length, scaled) in ((1, 0),
+                                 (2, 2),
+                                 (3, 3),
+                                 (4, 4),
+                                 (5, 5),
+                                 (6, 5),
+                                 (7, 6),
+                                 (8, 6),
+                                 (9, 7),
+                                 (10, 7),
+                                 (11, 7),
+                                 (12, 8),
+                                 (13, 8),
+                                 (14, 8),
+                                 (15, 9),
+                                 (16, 9),
+                                 (17, 9),
+                                 (18, 9),
+                                 (19, 9),
+                                 (20, 9),
+                                 (21, 10),
+                                 (22, 10),
+                                 (23, 10),
+                                 (24, 10),
+                                 (25, 10),
+                                 (26, 10),
+                                 (27, 10),
+                                 (28, 11),
+                                 (29, 11),
+                                 (30, 11),
+                                 (31, 11),
+                                 (32, 11),
+                                 (33, 11),
+                                 (34, 11),
+                                 (35, 11),
+                                 (36, 11),
+                                 (37, 12),
+                                 (38, 12)):
+            self.assertEqual(scaled, self.scale(length, 1.35))
 
 
 class TestDistanceDefault(TestDistanceMixin, TestCase):

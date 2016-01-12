@@ -210,20 +210,26 @@ class Parameters(object):
     @param distanceBase: The distance between a landmark and a trig point is
         scaled to be its logarithm using this C{float} base. This reduces
         sensitivity to relatively small differences in distance.
+    @param featureLengthBase: The length of a landmark is scaled to be its
+        logarithm using this C{float} base, for the purpose of matching
+        landmarks via hashes. This reduces sensitivity to relatively small
+        differences in lengths.
     """
 
     PARAMS = ('landmarkClasses', 'trigPointClasses', 'limitPerLandmark',
-              'maxDistance', 'minDistance', 'distanceBase')
+              'maxDistance', 'minDistance', 'distanceBase',
+              'featureLengthBase')
 
     # Database defaults (see explanations in the above docstring).
     DEFAULT_LIMIT_PER_LANDMARK = 10
     DEFAULT_MAX_DISTANCE = 200
     DEFAULT_MIN_DISTANCE = 1
     DEFAULT_DISTANCE_BASE = 1.1
+    DEFAULT_FEATURE_LENGTH_BASE = 1.35
 
     def __init__(self, landmarkClasses, trigPointClasses,
                  limitPerLandmark=None, maxDistance=None, minDistance=None,
-                 distanceBase=None):
+                 distanceBase=None, featureLengthBase=None):
 
         self.distanceBase = (
             self.DEFAULT_DISTANCE_BASE if distanceBase is None
@@ -232,18 +238,25 @@ class Parameters(object):
         if self.distanceBase <= 0:
             raise ValueError('distanceBase must be > 0.')
 
+        self.featureLengthBase = (
+            self.DEFAULT_FEATURE_LENGTH_BASE if featureLengthBase is None
+            else featureLengthBase)
+
+        if self.featureLengthBase <= 0:
+            raise ValueError('featureLengthBase must be > 0.')
+
         self.landmarkClasses = (
             DEFAULT_LANDMARK_CLASSES if landmarkClasses is None
             else landmarkClasses)
 
-        self.landmarkFinders = [landmarkClass(self.distanceBase)
+        self.landmarkFinders = [landmarkClass(self.featureLengthBase)
                                 for landmarkClass in self.landmarkClasses]
 
         self.trigPointClasses = (
             DEFAULT_TRIG_CLASSES if trigPointClasses is None
             else trigPointClasses)
 
-        self.trigPointFinders = [trigPointClass(self.distanceBase)
+        self.trigPointFinders = [trigPointClass(self.featureLengthBase)
                                  for trigPointClass in self.trigPointClasses]
 
         self.limitPerLandmark = (
@@ -275,7 +288,8 @@ class Parameters(object):
             [f.NAME for f in trigPointFinders] +
             [f.SYMBOL for f in trigPointFinders] +
             list(map(str, (self.limitPerLandmark, self.maxDistance,
-                           self.minDistance, self.distanceBase))))
+                           self.minDistance, self.distanceBase,
+                           self.featureLengthBase))))
         return checksum.value
 
     @staticmethod
@@ -332,6 +346,14 @@ class Parameters(object):
                   'reduces sensitivity to relatively small differences in '
                   'distance.'))
 
+        parser.add_argument(
+            '--featureLengthBase', type=float,
+            default=Parameters.DEFAULT_FEATURE_LENGTH_BASE,
+            help=('The length of landmarks, for the purpose of matching '
+                  'hashes, is scaled to be the logarithm of the landmark '
+                  'length using this base. This reduces sensitivity to '
+                  'relatively small differences in landmark length.'))
+
     def save(self, fp=sys.stdout):
         """
         Save the parameters in JSON format.
@@ -346,6 +368,7 @@ class Parameters(object):
             'maxDistance': self.maxDistance,
             'minDistance': self.minDistance,
             'distanceBase': self.distanceBase,
+            'featureLengthBase': self.featureLengthBase,
         }), file=fp)
 
         return fp
@@ -388,7 +411,8 @@ class Parameters(object):
             limitPerLandmark=state['limitPerLandmark'],
             maxDistance=state['maxDistance'],
             minDistance=state['minDistance'],
-            distanceBase=state['distanceBase'])
+            distanceBase=state['distanceBase'],
+            featureLengthBase=state['featureLengthBase'])
 
     def print_(self, margin=''):
         """
@@ -426,6 +450,7 @@ class Parameters(object):
             'Max distance: %d' % self.maxDistance,
             'Min distance: %d' % self.minDistance,
             'Distance base: %f' % self.distanceBase,
+            'Feature length base: %f' % self.featureLengthBase,
         ])
 
         return str(result)

@@ -42,7 +42,7 @@ class CalculateOverlap(object):
         # amino acid sequence on one line and the predicted secondary structure
         # sequence on the other.
         self.SSAAReads = Reads()
-        records = [record for record in SeqIO.parse(pdbFile, 'fasta')]
+        records = list(SeqIO.parse(pdbFile, 'fasta'))
         for i in range(0, len(records), 2):
             record = records[i]
             read = SSAARead(record.id, str(record.seq),
@@ -52,7 +52,6 @@ class CalculateOverlap(object):
     def calculateOverlap(self):
         """
         Calculate the feature overlap for a set of features.
-
         """
         allSequenceFeatures = defaultdict(list)
         allCommons = defaultdict(list)

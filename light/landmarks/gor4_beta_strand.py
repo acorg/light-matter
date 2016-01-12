@@ -23,24 +23,23 @@ class GOR4BetaStrand(Finder):
         @return: A generator that yields C{Landmark} instances.
         """
         predictions = read.gor4()['predictions']
-        count = 0
+        length = 0
         for offset, prediction in enumerate(predictions):
             if prediction == 'E':
-                if count:
+                if length:
                     # We're already in a string of E's. Keep counting.
-                    count += 1
+                    length += 1
                 else:
                     start = offset
-                    count = 1
+                    length = 1
             else:
-                if count:
+                if length:
                     # We were in a string of E's, but it has just ended.
-                    length = scale(count, self._distanceBase)
-                    yield Landmark(self.NAME, self.SYMBOL, start, count,
-                                   length)
-                    count = 0
+                    yield Landmark(self.NAME, self.SYMBOL, start, length,
+                                   scale(length, self._featureLengthBase))
+                    length = 0
 
-        if count:
-            length = scale(count, self._distanceBase)
+        if length:
             # We reached the end of the string still in a beta strand.
-            yield Landmark(self.NAME, self.SYMBOL, start, count, length)
+            yield Landmark(self.NAME, self.SYMBOL, start, length,
+                           scale(length, self._featureLengthBase))

@@ -1403,7 +1403,7 @@ def compareScores(subject, query, scoreMethods=None,
     @param showScoreAnalysis: If C{True}, print details of the score analysis.
     @param showSignificantBinsDetails: If C{True}, print information about the
         contents of the significant bins in the histogram.
-    @param showBestBinFeatureInfo: If C{true} print which features are found
+    @param showBestBinFeatureInfo: If C{True} print which features are found
         in the best bin.
     @param kwargs: See
         C{database.DatabaseSpecifier.getDatabaseFromKeywords} for
@@ -1439,12 +1439,11 @@ def compareScores(subject, query, scoreMethods=None,
                     bestBinInfo = significantBins[0]['bin']
                     features = []
                     for hash_ in bestBinInfo:
-                        features.append(hash_['subjectLandmark'].name)
-                        features.append(hash_['subjectTrigPoint'].name)
+                        features.extend([hash_['subjectLandmark'].name,
+                                         hash_['subjectTrigPoint'].name])
                     countedFeatures = Counter(features)
-                    for feature in countedFeatures:
-                        print('Feature: %s; count: %s' % (
-                              feature, countedFeatures[feature]))
+                    for feature, count in countedFeatures.items():
+                        print('Feature: %s; count: %d' % (feature, count))
             else:
                 print('No significant bins.')
 

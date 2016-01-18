@@ -39,4 +39,4 @@ class TestRandomTrigPoint(TestCase):
         self.assertEqual('RandomTrigPoint', result.name)
         self.assertEqual('RT', result.symbol)
         self.assertEqual(1, result.length)
-        self.assertIn(result.offset, list(range(20)))
+        self.assertTrue(0 <= result.offset < len(read))

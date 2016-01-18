@@ -1,4 +1,4 @@
-from random import randint
+from random import sample
 
 from light.features import TrigPoint, Finder
 
@@ -23,6 +23,6 @@ class RandomTrigPoint(Finder):
         """
         density = density or 0.1
         landmarkNumber = int(len(read) * density)
-        offsets = [randint(0, len(read)) for i in range(landmarkNumber)]
+        offsets = sample(range(len(read)), landmarkNumber)
         for offset in offsets:
             yield TrigPoint(self.NAME, self.SYMBOL, offset)

@@ -39,4 +39,4 @@ class TestRandomLandmark(TestCase):
         self.assertEqual('RandomLandmark', result.name)
         self.assertEqual('RL', result.symbol)
         self.assertEqual(1, result.length)
-        self.assertIn(result.offset, list(range(20)))
+        self.assertTrue(0 <= result.offset < len(read))

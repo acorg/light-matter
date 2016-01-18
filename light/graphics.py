@@ -1487,7 +1487,7 @@ def scoreHeatmap(sequenceFileOrMatrix, labels, labelColors, findParams=None,
     left, right, bottom, top = a.get_extent()
 
     for y, label in enumerate(labels):
-        plt.text(left - 2, y, label, fontsize=15,
+        plt.text(left - 3, y, label, fontsize=15,
                  color=labelColors.get(label, 'black'))
         plt.text(left + y + 0.3, bottom - 1, label, fontsize=15,
                  rotation='vertical', color=labelColors.get(label, 'black'))

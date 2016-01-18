@@ -70,8 +70,8 @@ class PerformanceTestResult(TestResult):
                 'results': self.results,
                 'startTestRunTime': self.startTestRunTime,
                 'elapsed': self.stopTestRunTime - self.startTestRunTime,
-                'testCount': self.testsRun,
-                }, fp)
+                'testCount': self.testsRun},
+                fp)
 
     def stopTest(self, test):
         super(PerformanceTestResult, self).stopTest(test)

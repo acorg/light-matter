@@ -10,7 +10,7 @@ light/_distance.so: src/distance.py
 	python setup.py build_ext -i
 
 pep8:
-	find . -name '*.py' -print0 | xargs -0 pep8
+	find . -path './light/colors' -prune -o -name '*.py' -print0 | xargs -0 pep8 --ignore=E402
 
 pyflakes:
 	find . -path './light/colors/six.py' -prune -o -name '*.py' -print0 | xargs -0 pyflakes 2>&1 | bin/check-pyflakes-output.sh

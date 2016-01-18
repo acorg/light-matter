@@ -1379,7 +1379,8 @@ def compareScores(subject, query, scoreMethods=None,
                   plotHashesInSubjectAndRead=True, showBestBinOnly=True,
                   showHistogram=True, findParams=None, showInsignificant=False,
                   showFeatures=False, showScoreAnalysis=True,
-                  showSignificantBinsDetails=False, **kwargs):
+                  showSignificantBinsDetails=False,
+                  showBestBinFeatureInfo=False, **kwargs):
     """
     Plot the features in two sequences, the hashes in their match, and
     the scores for the match calculated under different score methods.
@@ -1402,6 +1403,8 @@ def compareScores(subject, query, scoreMethods=None,
     @param showScoreAnalysis: If C{True}, print details of the score analysis.
     @param showSignificantBinsDetails: If C{True}, print information about the
         contents of the significant bins in the histogram.
+    @param showBestBinFeatureInfo: If C{True} print which features are found
+        in the best bin.
     @param kwargs: See
         C{database.DatabaseSpecifier.getDatabaseFromKeywords} for
         additional keywords, all of which are optional.
@@ -1432,6 +1435,14 @@ def compareScores(subject, query, scoreMethods=None,
                         '\n  '.join(['index=%d score=%.4f binCount=%d' %
                                     ((b['index'], b['score'], len(b['bin'])))
                                     for b in significantBins])))
+                if showBestBinFeatureInfo:
+                    bestBinInfo = significantBins[0]['bin']
+                    features = defaultdict(int)
+                    for hash_ in bestBinInfo:
+                        features[hash_['subjectLandmark'].name] += 1
+                        features[hash_['subjectTrigPoint'].name] += 1
+                    for featureName, count in features.items():
+                        print('Feature: %s; count: %d' % (featureName, count))
             else:
                 print('No significant bins.')
 

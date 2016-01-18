@@ -7,7 +7,7 @@ from matplotlib import patches
 import numpy as np
 from operator import attrgetter
 from textwrap import fill
-from collections import defaultdict, Counter
+from collections import defaultdict
 from math import log10
 
 from light.backend import Backend
@@ -1437,13 +1437,12 @@ def compareScores(subject, query, scoreMethods=None,
                                     for b in significantBins])))
                 if showBestBinFeatureInfo:
                     bestBinInfo = significantBins[0]['bin']
-                    features = []
+                    features = defaultdict(int)
                     for hash_ in bestBinInfo:
-                        features.extend([hash_['subjectLandmark'].name,
-                                         hash_['subjectTrigPoint'].name])
-                    countedFeatures = Counter(features)
-                    for feature, count in countedFeatures.items():
-                        print('Feature: %s; count: %d' % (feature, count))
+                        features[hash_['subjectLandmark'].name] += 1
+                        features[hash_['subjectTrigPoint'].name] += 1
+                    for featureName, count in features.items():
+                        print('Feature: %s; count: %d' % (featureName, count))
             else:
                 print('No significant bins.')
 

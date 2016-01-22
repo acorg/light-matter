@@ -11,8 +11,9 @@ from light.checksum import Checksum
 from light.landmarks import (
     findLandmark, DEFAULT_LANDMARK_CLASSES, ALL_LANDMARK_CLASSES)
 from light.trig import findTrigPoint, DEFAULT_TRIG_CLASSES, ALL_TRIG_CLASSES
-from light.bin_score import MinHashesScore, ALL_SCORE_CLASSES
+from light.bin_score import MinHashesScore, ALL_BIN_SCORE_CLASSES
 from light.significance import HashFraction, ALL_SIGNIFICANCE_CLASSES
+from light.overall_score import BestBinScore, ALL_OVERALL_SCORE_CLASSES
 from light.string import MultilineString
 
 
@@ -55,7 +56,7 @@ class FindParameters(object):
     # are significant (i.e., worth reporting).
     DEFAULT_SCORE_METHOD = MinHashesScore.__name__
     DEFAULT_SIGNIFICANCE_METHOD = HashFraction.__name__
-    DEFAULT_CALCULATE_OVERALL_SCORE = False
+    DEFAULT_CALCULATE_OVERALL_SCORE = BestBinScore.__name__
 
     # The default fraction of all (landmark, trig point) pairs for a
     # scannedRead that need to fall into the same offset delta histogram
@@ -138,7 +139,7 @@ class FindParameters(object):
 
         parser.add_argument(
             '--scoreMethod', default=FindParameters.DEFAULT_SCORE_METHOD,
-            choices=[cls.__name__ for cls in ALL_SCORE_CLASSES],
+            choices=[cls.__name__ for cls in ALL_BIN_SCORE_CLASSES],
             help=('The name of the method used to calculate the score of a '
                   'histogram bin which is considered significant.'))
 
@@ -162,7 +163,10 @@ class FindParameters(object):
         parser.add_argument(
             '--calculateOverallScore',
             default=FindParameters.DEFAULT_CALCULATE_OVERALL_SCORE,
-            help=('Whether an overall score should be calculated or not.'))
+            choices=[cls.__name__ for cls in ALL_OVERALL_SCORE_CLASSES],
+            help=('The name of the method used to calculate the overall '
+                  'score of all histogram bins which are considered '
+                  'significant.'))
 
     @classmethod
     def fromArgs(cls, args):

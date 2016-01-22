@@ -1,12 +1,12 @@
 from unittest import TestCase
 
 from light.histogram import Histogram
-from light.overall_score import OverallScore
+from light.overall_score import BestBinScore
 
 
-class TestOverallScore(TestCase):
+class TestBestBinScore(TestCase):
     """
-    Tests for the light.overall_score.OverallScore class.
+    Tests for the light.overall_score.BestBinScore class.
     """
     def testEmptyHistogram(self):
         """
@@ -14,12 +14,13 @@ class TestOverallScore(TestCase):
         """
         histogram = Histogram()
         histogram.finalize()
-        os = OverallScore(histogram, [])
-        score, analysis = os.calculateScore()
-        self.assertEqual(0.0, score)
+        bestBinScore = BestBinScore(histogram, [])
+        score, analysis = bestBinScore.calculateScore()
+        self.assertEqual(None, score)
         self.assertEqual(
             {
                 'score': score,
+                'scoreClass': bestBinScore.__class__,
             },
             analysis)
 
@@ -29,10 +30,10 @@ class TestOverallScore(TestCase):
         """
         histogram = Histogram()
         histogram.finalize()
-        os = OverallScore(histogram, [])
-        score, analysis = os.calculateScore()
+        bestBinScore = BestBinScore(histogram, [])
+        score, analysis = bestBinScore.calculateScore()
 
         expected = (
-            'Overall score\nScore: %.4f' % score)
+            'Overall score method: BestBinScore\nOverall score: %s' % score)
 
-        self.assertEqual(expected, OverallScore.printAnalysis(analysis))
+        self.assertEqual(expected, BestBinScore.printAnalysis(analysis))

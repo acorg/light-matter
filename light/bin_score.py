@@ -718,5 +718,5 @@ class WeightedFeatureAAScore:
 
         return str(result)
 
-ALL_SCORE_CLASSES = (MinHashesScore, FeatureMatchingScore, FeatureAAScore,
-                     WeightedFeatureAAScore)
+ALL_BIN_SCORE_CLASSES = (MinHashesScore, FeatureMatchingScore, FeatureAAScore,
+                         WeightedFeatureAAScore)

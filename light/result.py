@@ -13,7 +13,7 @@ from light.significance import (
     Always, HashFraction, MaxBinHeight, MeanBinHeight)
 from light.bin_score import (MinHashesScore, FeatureMatchingScore,
                              FeatureAAScore, WeightedFeatureAAScore)
-from light.overall_score import OverallScore
+from light.overall_score import BestBinScore
 from light.backend import Backend
 from light.string import MultilineString
 
@@ -151,8 +151,8 @@ class Result(object):
                 bestScore = None
 
             calculateOverallScore = findParams.calculateOverallScore
-            if calculateOverallScore:
-                scorer = OverallScore(histogram, significantBins)
+            if calculateOverallScore == 'BestBinScore':
+                scorer = BestBinScore(histogram, significantBins)
                 overallScore = scorer.calculateScore()
             else:
                 overallScore = None

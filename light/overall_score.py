@@ -25,8 +25,9 @@ class BestBinScore(object):
         """
         Calculates the overall score for all histogram bins.
 
-        @return: a C{float} score for the best significant bin and a C{dict}
-            with information about the score.
+        @return: a C{float} score for the best significant bin (or C{None} if
+            there are no significant bins) and a C{dict} with information about
+            the score.
         """
         return self._score, self._analysis
 
@@ -35,6 +36,8 @@ class BestBinScore(object):
         """
         Convert an analysis to a nicely formatted string.
 
+        @param analysis: A C{dict} with information about the score and its
+            calculation.
         @param margin: A C{str} that should be inserted at the start of each
             line of output.
         @return: A C{str} human-readable version of the last analysis.

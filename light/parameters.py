@@ -200,7 +200,7 @@ class FindParameters(object):
             'Score method: %s' % self.scoreMethod,
             'Feature match score: %f' % self.featureMatchScore,
             'Feature mismatch score: %f' % self.featureMismatchScore,
-            'overallScoreMethod: %s' % self.overallScoreMethod,
+            'OverallScoreMethod: %s' % self.overallScoreMethod,
             'Weights: ',
         ])
         result.indent()

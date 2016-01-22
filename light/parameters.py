@@ -56,7 +56,7 @@ class FindParameters(object):
     # are significant (i.e., worth reporting).
     DEFAULT_SCORE_METHOD = MinHashesScore.__name__
     DEFAULT_SIGNIFICANCE_METHOD = HashFraction.__name__
-    DEFAULT_CALCULATE_OVERALL_SCORE = BestBinScore.__name__
+    DEFAULT_OVERALL_SCORE_METHOD = BestBinScore.__name__
 
     # The default fraction of all (landmark, trig point) pairs for a
     # scannedRead that need to fall into the same offset delta histogram
@@ -87,7 +87,7 @@ class FindParameters(object):
     }
 
     def __init__(self, significanceMethod=None, significanceFraction=None,
-                 scoreMethod=None, calculateOverallScore=None,
+                 scoreMethod=None, overallScoreMethod=None,
                  featureMatchScore=None, featureMismatchScore=None,
                  weights=None):
         self.significanceMethod = (
@@ -111,9 +111,9 @@ class FindParameters(object):
 
         self.weights = self.DEFAULT_WEIGHTS if weights is None else weights
 
-        self.calculateOverallScore = (
-            self.DEFAULT_CALCULATE_OVERALL_SCORE if calculateOverallScore is
-            None else calculateOverallScore)
+        self.overallScoreMethod = (
+            self.DEFAULT_OVERALL_SCORE_METHOD if overallScoreMethod is
+            None else overallScoreMethod)
 
     @staticmethod
     def addArgsToParser(parser):
@@ -161,12 +161,11 @@ class FindParameters(object):
                   'the weight as the second, separated by a space.'))
 
         parser.add_argument(
-            '--calculateOverallScore',
-            default=FindParameters.DEFAULT_CALCULATE_OVERALL_SCORE,
+            '--overallScoreMethod',
+            default=FindParameters.DEFAULT_OVERALL_SCORE_METHOD,
             choices=[cls.__name__ for cls in ALL_OVERALL_SCORE_CLASSES],
             help=('The name of the method used to calculate the overall '
-                  'score of all histogram bins which are considered '
-                  'significant.'))
+                  'score of all histogram bins.'))
 
     @classmethod
     def fromArgs(cls, args):
@@ -182,7 +181,7 @@ class FindParameters(object):
                    featureMatchScore=args.featureMatchScore,
                    featureMismatchScore=args.featureMismatchScore,
                    weights=parseWeights(args.weights or {}),
-                   calculateOverallScore=args.calculateOverallScore)
+                   overallScoreMethod=args.overallScoreMethod)
 
     def print_(self, margin=''):
         """
@@ -201,7 +200,7 @@ class FindParameters(object):
             'Score method: %s' % self.scoreMethod,
             'Feature match score: %f' % self.featureMatchScore,
             'Feature mismatch score: %f' % self.featureMismatchScore,
-            'calculateOverallScore: %s' % self.calculateOverallScore,
+            'overallScoreMethod: %s' % self.overallScoreMethod,
             'Weights: ',
         ])
         result.indent()

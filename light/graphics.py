@@ -690,7 +690,7 @@ class PlotHashesInSubjectAndRead(object):
         # just be created and no KeyError occurs.
         if subjectIndex in self.result.analysis:
             analysis = self.result.analysis[subjectIndex]
-            self.score = analysis['bestScore']
+            self.score = analysis['bestBinScore']
             self.significantBinCount = len(analysis['significantBins'])
 
             # If showBestBinOnly is true, we need significantBins to be

@@ -146,28 +146,29 @@ class Result(object):
 
             if significantBins:
                 significantBins.sort(key=scoreGetter, reverse=True)
-                bestScore = significantBins[0]['score']
+                bestBinScore = significantBins[0]['score']
             else:
-                bestScore = None
+                bestBinScore = None
 
-            calculateOverallScore = findParams.calculateOverallScore
-            if calculateOverallScore == 'BestBinScore':
+            overallScoreMethod = findParams.overallScoreMethod
+            if overallScoreMethod == 'BestBinScore':
                 scorer = BestBinScore(histogram, significantBins)
                 overallScore = scorer.calculateScore()
             else:
-                overallScore = None
+                raise ValueError('Unknown overall score method %r' %
+                                 overallScoreMethod)
 
             if storeFullAnalysis:
                 self.analysis[subjectIndex] = {
                     'histogram': histogram,
-                    'bestScore': bestScore,
+                    'bestBinScore': bestBinScore,
                     'overallScore': overallScore,
                     'significantBins': significantBins,
                     'significanceAnalysis': significance.analysis,
                 }
             elif significantBins:
                 self.analysis[subjectIndex] = {
-                    'bestScore': bestScore,
+                    'bestBinScore': bestBinScore,
                     'significantBins': significantBins,
                 }
 
@@ -232,7 +233,7 @@ class Result(object):
 
             alignments.append({
                 'hsps': hsps,
-                'matchScore': analysis['bestScore'],
+                'matchScore': analysis['bestBinScore'],
                 'subjectIndex': subjectIndex,
             })
 
@@ -296,7 +297,7 @@ class Result(object):
         # matches (which can happen when self._storeFullAnalysis is True).
         subjectIndices = sorted(
             iter(self.analysis.keys()), reverse=True,
-            key=lambda index: self.analysis[index]['bestScore'])
+            key=lambda index: self.analysis[index]['bestBinScore'])
 
         if not sortHSPsByScore:
             indexGetter = itemgetter('index')
@@ -323,7 +324,7 @@ class Result(object):
 
             extend([
                 'Title: %s' % subject.id,
-                'Best HSP score: %s' % analysis['bestScore'],
+                'Best HSP score: %s' % analysis['bestBinScore'],
             ])
 
             if printSequences:

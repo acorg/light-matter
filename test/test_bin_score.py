@@ -1832,7 +1832,7 @@ class TestFeatureAAScore(TestCase):
         findParams = FindParameters(significanceFraction=0.01,
                                     scoreMethod='FeatureAAScore')
         result = db.find(pichninde, findParams, storeFullAnalysis=True)
-        self.assertEqual(1.0, result.analysis[subjectIndex]['bestScore'])
+        self.assertEqual(1.0, result.analysis[subjectIndex]['bestBinScore'])
 
         scoreAnalysis = result.analysis[
             subjectIndex]['significantBins'][0]['scoreAnalysis']
@@ -1899,8 +1899,8 @@ class TestFeatureAAScore(TestCase):
         _, subjectIndex2, _ = db2.addSubject(akav)
         result2 = db2.find(golv, findParams, storeFullAnalysis=True)
 
-        self.assertEqual(result1.analysis[subjectIndex1]['bestScore'],
-                         result2.analysis[subjectIndex2]['bestScore'])
+        self.assertEqual(result1.analysis[subjectIndex1]['bestBinScore'],
+                         result2.analysis[subjectIndex2]['bestBinScore'])
 
     def testPrintAnalysis(self):
         """
@@ -2993,7 +2993,7 @@ class TestWeightedFeatureAAScore(TestCase):
         findParams = FindParameters(significanceFraction=0.01,
                                     scoreMethod='WeightedFeatureAAScore')
         result = db.find(pichninde, findParams, storeFullAnalysis=True)
-        self.assertEqual(1.0, result.analysis[subjectIndex]['bestScore'])
+        self.assertEqual(1.0, result.analysis[subjectIndex]['bestBinScore'])
 
         scoreAnalysis = result.analysis[
             subjectIndex]['significantBins'][0]['scoreAnalysis']
@@ -3062,8 +3062,8 @@ class TestWeightedFeatureAAScore(TestCase):
         _, subjectIndex2, _ = db2.addSubject(akav)
         result2 = db2.find(golv, findParams, storeFullAnalysis=True)
 
-        self.assertEqual(result1.analysis[subjectIndex1]['bestScore'],
-                         result2.analysis[subjectIndex2]['bestScore'])
+        self.assertEqual(result1.analysis[subjectIndex1]['bestBinScore'],
+                         result2.analysis[subjectIndex2]['bestBinScore'])
 
     def testPrintAnalysis(self):
         """

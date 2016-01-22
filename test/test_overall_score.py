@@ -10,7 +10,7 @@ class TestBestBinScore(TestCase):
     """
     def testEmptyHistogram(self):
         """
-        An empty histogram must return a score of 0.0.
+        An empty histogram must return a score of C{bool} None.
         """
         histogram = Histogram()
         histogram.finalize()

@@ -10,7 +10,7 @@ from light.database import DatabaseSpecifier
 from light.features import Landmark, TrigPoint
 from light.parameters import Parameters, FindParameters
 from light.subject import Subject
-from light.score import (
+from light.bin_score import (
     MinHashesScore, FeatureMatchingScore, FeatureAAScore, histogramBinFeatures,
     featureInRange, getHashFeatures, weightedHistogramBinFeatures,
     getWeightedOffsets, WeightedFeatureAAScore)
@@ -57,7 +57,7 @@ TEST_WEIGHTS = {
 
 class TestMinHashesScore(TestCase):
     """
-    Tests for the light.score.MinHashesScore class.
+    Tests for the light.bin_score.MinHashesScore class.
     """
     def testEmptyBin(self):
         """
@@ -201,7 +201,7 @@ class TestMinHashesScore(TestCase):
 
 class TestHistogramBinFeatures(TestCase):
     """
-    Tests for the light.score.histogramBinFeatures function.
+    Tests for the light.bin_score.histogramBinFeatures function.
     """
     def testInvalidQueryOrSubjectSpecifier(self):
         """
@@ -317,7 +317,7 @@ class TestHistogramBinFeatures(TestCase):
 
 class TestFeatureInRange(TestCase):
     """
-    Tests for the light.score.featureInRange function.
+    Tests for the light.bin_score.featureInRange function.
     """
     def testNoMatchWithNoneMinOffset(self):
         """
@@ -393,7 +393,7 @@ class TestFeatureInRange(TestCase):
 
 class TestGetHashFeatures(TestCase):
     """
-    Tests for the light.score.getHashFeatures function.
+    Tests for the light.bin_score.getHashFeatures function.
     """
     def testNoHashes(self):
         """
@@ -480,7 +480,7 @@ class TestGetHashFeatures(TestCase):
 
 class TestFeatureMatchingScore(TestCase):
     """
-    Tests for the light.score.FeatureMatchingScore class.
+    Tests for the light.bin_score.FeatureMatchingScore class.
     """
     def testEmptyBin(self):
         """
@@ -1066,7 +1066,7 @@ class TestFeatureMatchingScore(TestCase):
 
 class TestFeatureAAScore(TestCase):
     """
-    Tests for the light.score.FeatureAAScore class.
+    Tests for the light.bin_score.FeatureAAScore class.
     """
 
     def testEmptyBin(self):
@@ -1947,7 +1947,7 @@ class TestFeatureAAScore(TestCase):
 
 class TestWeightedHistogramBinFeatures(TestCase):
     """
-    Tests for the light.score.weightedHistogramBinFeatures function.
+    Tests for the light.bin_score.weightedHistogramBinFeatures function.
     """
     def testWeightedInvalidQueryOrSubjectSpecifier(self):
         """
@@ -2152,7 +2152,7 @@ class TestWeightedHistogramBinFeatures(TestCase):
 
 class TestGetWeightedOffsets(TestCase):
     """
-    Tests for the light.score.getWeightedOffsets function.
+    Tests for the light.bin_score.getWeightedOffsets function.
     """
     def testEmptyDict(self):
         """
@@ -2179,7 +2179,7 @@ class TestGetWeightedOffsets(TestCase):
 
 class TestWeightedFeatureAAScore(TestCase):
     """
-    Tests for the light.score.WeightedFeatureAAScore class.
+    Tests for the light.bin_score.WeightedFeatureAAScore class.
     """
 
     def testEmptyBin(self):

@@ -11,8 +11,9 @@ from light.distance import scale
 from light.histogram import Histogram
 from light.significance import (
     Always, HashFraction, MaxBinHeight, MeanBinHeight)
-from light.score import (MinHashesScore, FeatureMatchingScore, FeatureAAScore,
-                         WeightedFeatureAAScore)
+from light.bin_score import (MinHashesScore, FeatureMatchingScore,
+                             FeatureAAScore, WeightedFeatureAAScore)
+from light.overall_score import OverallScore
 from light.backend import Backend
 from light.string import MultilineString
 
@@ -149,10 +150,18 @@ class Result(object):
             else:
                 bestScore = None
 
+            calculateOverallScore = findParams.calculateOverallScore
+            if calculateOverallScore:
+                scorer = OverallScore(histogram, significantBins)
+                overallScore = scorer.calculateScore()
+            else:
+                overallScore = None
+
             if storeFullAnalysis:
                 self.analysis[subjectIndex] = {
                     'histogram': histogram,
                     'bestScore': bestScore,
+                    'overallScore': overallScore,
                     'significantBins': significantBins,
                     'significanceAnalysis': significance.analysis,
                 }

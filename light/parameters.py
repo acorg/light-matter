@@ -11,7 +11,7 @@ from light.checksum import Checksum
 from light.landmarks import (
     findLandmark, DEFAULT_LANDMARK_CLASSES, ALL_LANDMARK_CLASSES)
 from light.trig import findTrigPoint, DEFAULT_TRIG_CLASSES, ALL_TRIG_CLASSES
-from light.score import MinHashesScore, ALL_SCORE_CLASSES
+from light.bin_score import MinHashesScore, ALL_SCORE_CLASSES
 from light.significance import HashFraction, ALL_SIGNIFICANCE_CLASSES
 from light.string import MultilineString
 
@@ -55,6 +55,7 @@ class FindParameters(object):
     # are significant (i.e., worth reporting).
     DEFAULT_SCORE_METHOD = MinHashesScore.__name__
     DEFAULT_SIGNIFICANCE_METHOD = HashFraction.__name__
+    DEFAULT_CALCULATE_OVERALL_SCORE = False
 
     # The default fraction of all (landmark, trig point) pairs for a
     # scannedRead that need to fall into the same offset delta histogram
@@ -85,8 +86,9 @@ class FindParameters(object):
     }
 
     def __init__(self, significanceMethod=None, significanceFraction=None,
-                 scoreMethod=None, featureMatchScore=None,
-                 featureMismatchScore=None, weights=None):
+                 scoreMethod=None, calculateOverallScore=None,
+                 featureMatchScore=None, featureMismatchScore=None,
+                 weights=None):
         self.significanceMethod = (
             self.DEFAULT_SIGNIFICANCE_METHOD if significanceMethod is None
             else significanceMethod)
@@ -107,6 +109,10 @@ class FindParameters(object):
             else featureMismatchScore)
 
         self.weights = self.DEFAULT_WEIGHTS if weights is None else weights
+
+        self.calculateOverallScore = (
+            self.DEFAULT_CALCULATE_OVERALL_SCORE if calculateOverallScore is
+            None else calculateOverallScore)
 
     @staticmethod
     def addArgsToParser(parser):
@@ -153,6 +159,11 @@ class FindParameters(object):
             help=('A string with the landmark name as the first element and '
                   'the weight as the second, separated by a space.'))
 
+        parser.add_argument(
+            '--calculateOverallScore',
+            default=FindParameters.DEFAULT_CALCULATE_OVERALL_SCORE,
+            help=('Whether an overall score should be calculated or not.'))
+
     @classmethod
     def fromArgs(cls, args):
         """
@@ -166,7 +177,8 @@ class FindParameters(object):
                    scoreMethod=args.scoreMethod,
                    featureMatchScore=args.featureMatchScore,
                    featureMismatchScore=args.featureMismatchScore,
-                   weights=parseWeights(args.weights or {}))
+                   weights=parseWeights(args.weights or {}),
+                   calculateOverallScore=args.calculateOverallScore)
 
     def print_(self, margin=''):
         """
@@ -185,6 +197,7 @@ class FindParameters(object):
             'Score method: %s' % self.scoreMethod,
             'Feature match score: %f' % self.featureMatchScore,
             'Feature mismatch score: %f' % self.featureMismatchScore,
+            'calculateOverallScore: %s' % self.calculateOverallScore,
             'Weights: ',
         ])
         result.indent()

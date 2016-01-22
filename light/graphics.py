@@ -18,7 +18,7 @@ from light.landmarks import ALL_LANDMARK_CLASSES
 from light.parameters import FindParameters
 from light.performance.overlap import CalculateOverlap
 from light.performance import affinity
-from light.score import ALL_SCORE_CLASSES
+from light.bin_score import ALL_SCORE_CLASSES
 from light.string import MultilineString
 from light.trig import ALL_TRIG_CLASSES
 

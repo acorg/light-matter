@@ -548,13 +548,13 @@ class TestDatabase(TestCase):
         db.addSubject(subject)
         findParams = FindParameters(significanceFraction=0.0)
         result = db.find(query, findParams)
-        score1 = result.analysis['0']['bestScore']
+        score1 = result.analysis['0']['bestBinScore']
 
         params = Parameters([AlphaHelix, BetaStrand], [Peaks])
         db = Database(params)
         db.addSubject(query)
         result = db.find(subject, findParams)
-        score2 = result.analysis['0']['bestScore']
+        score2 = result.analysis['0']['bestBinScore']
 
         self.assertEqual(score1, score2)
         self.assertEqual(1.0, score1)
@@ -573,14 +573,14 @@ class TestDatabase(TestCase):
         hashCount1 = db.getSubjectByIndex(index).hashCount
         findParams = FindParameters(significanceFraction=0.0)
         result = db.find(query, findParams)
-        score1 = result.analysis['0']['bestScore']
+        score1 = result.analysis['0']['bestBinScore']
 
         params2 = Parameters([AlphaHelix, BetaStrand], [Peaks])
         db = Database(params2)
         _, index, _ = db.addSubject(query)
         hashCount2 = db.getSubjectByIndex(index).hashCount
         result = db.find(subject, findParams)
-        score2 = result.analysis['0']['bestScore']
+        score2 = result.analysis['0']['bestBinScore']
 
         self.assertNotEqual(hashCount1, hashCount2)
         self.assertEqual(score1, score2)

@@ -157,7 +157,7 @@ class TestResult(TestCase):
                                     significanceFraction=0.25)
         result = Result(read, database, matches, hashCount, findParams)
         self.assertEqual(['0'], list(result.significantSubjects()))
-        self.assertEqual(0.5, result.analysis['0']['bestScore'])
+        self.assertEqual(0.5, result.analysis['0']['bestBinScore'])
 
     def testTwoSignificantMatches(self):
         """
@@ -217,8 +217,8 @@ class TestResult(TestCase):
         result = Result(read, database, matches, hashCount, findParams)
         self.assertEqual(['0', '1'],
                          sorted(list(result.significantSubjects())))
-        self.assertEqual(0.4, result.analysis['0']['bestScore'])
-        self.assertEqual(0.4, result.analysis['1']['bestScore'])
+        self.assertEqual(0.4, result.analysis['0']['bestBinScore'])
+        self.assertEqual(0.4, result.analysis['1']['bestBinScore'])
 
     def testSaveEmpty(self):
         """
@@ -453,6 +453,7 @@ class TestResult(TestCase):
                     '  Score method: MinHashesScore\n'
                     '  Feature match score: 1.000000\n'
                     '  Feature mismatch score: -1.000000\n'
+                    '  OverallScoreMethod: BestBinScore\n'
                     '  Weights: \n'
                     '    AlphaHelix: 1.000000\n'
                     '    AlphaHelix_3_10: 1.000000\n'
@@ -494,6 +495,7 @@ class TestResult(TestCase):
                     '  Score method: MinHashesScore\n'
                     '  Feature match score: 1.000000\n'
                     '  Feature mismatch score: -1.000000\n'
+                    '  OverallScoreMethod: BestBinScore\n'
                     '  Weights: \n'
                     '    AlphaHelix: 1.000000\n'
                     '    AlphaHelix_3_10: 1.000000\n'
@@ -533,6 +535,7 @@ class TestResult(TestCase):
                     '  Score method: MinHashesScore\n'
                     '  Feature match score: 1.000000\n'
                     '  Feature mismatch score: -1.000000\n'
+                    '  OverallScoreMethod: BestBinScore\n'
                     '  Weights: \n'
                     '    AlphaHelix: 1.000000\n'
                     '    AlphaHelix_3_10: 1.000000\n'
@@ -575,6 +578,7 @@ class TestResult(TestCase):
                     '  Score method: MinHashesScore\n'
                     '  Feature match score: 1.000000\n'
                     '  Feature mismatch score: -1.000000\n'
+                    '  OverallScoreMethod: BestBinScore\n'
                     '  Weights: \n'
                     '    AlphaHelix: 1.000000\n'
                     '    AlphaHelix_3_10: 1.000000\n'
@@ -627,13 +631,13 @@ class TestResult(TestCase):
                                     scoreMethod='MinHashesScore')
         result = database.find(query, findParams, storeFullAnalysis=True)
 
-        self.maxDiff = None
         expected = ('Find parameters:\n'
                     '  Significance method: HashFraction\n'
                     '  Significance fraction: 0.100000\n'
                     '  Score method: MinHashesScore\n'
                     '  Feature match score: 1.000000\n'
                     '  Feature mismatch score: -1.000000\n'
+                    '  OverallScoreMethod: BestBinScore\n'
                     '  Weights: \n'
                     '    AlphaHelix: 1.000000\n'
                     '    AlphaHelix_3_10: 1.000000\n'
@@ -709,6 +713,7 @@ class TestResult(TestCase):
                     '  Score method: MinHashesScore\n'
                     '  Feature match score: 1.000000\n'
                     '  Feature mismatch score: -1.000000\n'
+                    '  OverallScoreMethod: BestBinScore\n'
                     '  Weights: \n'
                     '    AlphaHelix: 1.000000\n'
                     '    AlphaHelix_3_10: 1.000000\n'
@@ -768,6 +773,7 @@ class TestResult(TestCase):
                     '  Score method: MinHashesScore\n'
                     '  Feature match score: 1.000000\n'
                     '  Feature mismatch score: -1.000000\n'
+                    '  OverallScoreMethod: BestBinScore\n'
                     '  Weights: \n'
                     '    AlphaHelix: 1.000000\n'
                     '    AlphaHelix_3_10: 1.000000\n'
@@ -823,6 +829,7 @@ class TestResult(TestCase):
                     '  Score method: MinHashesScore\n'
                     '  Feature match score: 1.000000\n'
                     '  Feature mismatch score: -1.000000\n'
+                    '  OverallScoreMethod: BestBinScore\n'
                     '  Weights: \n'
                     '    AlphaHelix: 1.000000\n'
                     '    AlphaHelix_3_10: 1.000000\n'
@@ -884,6 +891,7 @@ class TestResult(TestCase):
                     '  Score method: MinHashesScore\n'
                     '  Feature match score: 1.000000\n'
                     '  Feature mismatch score: -1.000000\n'
+                    '  OverallScoreMethod: BestBinScore\n'
                     '  Weights: \n'
                     '    AlphaHelix: 1.000000\n'
                     '    AlphaHelix_3_10: 1.000000\n'
@@ -946,6 +954,7 @@ class TestResult(TestCase):
             '  Score method: MinHashesScore\n'
             '  Feature match score: 1.000000\n'
             '  Feature mismatch score: -1.000000\n'
+            '  OverallScoreMethod: BestBinScore\n'
             '  Weights: \n'
             '    AlphaHelix: 1.000000\n'
             '    AlphaHelix_3_10: 1.000000\n'
@@ -1022,7 +1031,7 @@ class TestResult(TestCase):
             error = ('Bin contains 14 deltas for a query/subject pair with a '
                      'minimum hash count of only 10.')
             self.assertIn(error, str(w[0].message))
-            self.assertEqual(1.0, result.analysis['0']['bestScore'])
+            self.assertEqual(1.0, result.analysis['0']['bestBinScore'])
 
     def testCorrectSignificanceAnalysisAlways(self):
         """

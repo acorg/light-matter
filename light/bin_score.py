@@ -66,6 +66,8 @@ class MinHashesScore(object):
         """
         Convert an analysis to a nicely formatted string.
 
+        @param analysis: A C{dict} with information about the score and its
+            calculation.
         @param margin: A C{str} that should be inserted at the start of each
             line of output.
         @return: A C{str} human-readable version of the last analysis.
@@ -263,6 +265,8 @@ class FeatureMatchingScore:
         """
         Convert an analysis to a nicely formatted string.
 
+        @param analysis: A C{dict} with information about the score and its
+            calculation.
         @param margin: A C{str} that should be inserted at the start of each
             line of output.
         @return: A C{str} human-readable version of the last analysis.
@@ -446,6 +450,8 @@ class FeatureAAScore:
         """
         Convert an analysis to a nicely formatted string.
 
+        @param analysis: A C{dict} with information about the score and its
+            calculation.
         @param margin: A C{str} that should be inserted at the start of each
             line of output.
         @return: A C{str} human-readable version of the last analysis.
@@ -683,6 +689,8 @@ class WeightedFeatureAAScore:
         """
         Convert an analysis to a nicely formatted string.
 
+        @param analysis: A C{dict} with information about the score and its
+            calculation.
         @param margin: A C{str} that should be inserted at the start of each
             line of output.
         @return: A C{str} human-readable version of the last analysis.
@@ -718,5 +726,5 @@ class WeightedFeatureAAScore:
 
         return str(result)
 
-ALL_SCORE_CLASSES = (MinHashesScore, FeatureMatchingScore, FeatureAAScore,
-                     WeightedFeatureAAScore)
+ALL_BIN_SCORE_CLASSES = (MinHashesScore, FeatureMatchingScore, FeatureAAScore,
+                         WeightedFeatureAAScore)

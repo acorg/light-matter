@@ -18,7 +18,7 @@ from light.landmarks import ALL_LANDMARK_CLASSES
 from light.parameters import FindParameters
 from light.performance.overlap import CalculateOverlap
 from light.performance import affinity
-from light.score import ALL_SCORE_CLASSES
+from light.bin_score import ALL_SCORE_CLASSES
 from light.string import MultilineString
 from light.trig import ALL_TRIG_CLASSES
 
@@ -690,7 +690,7 @@ class PlotHashesInSubjectAndRead(object):
         # just be created and no KeyError occurs.
         if subjectIndex in self.result.analysis:
             analysis = self.result.analysis[subjectIndex]
-            self.score = analysis['bestScore']
+            self.score = analysis['bestBinScore']
             self.significantBinCount = len(analysis['significantBins'])
 
             # If showBestBinOnly is true, we need significantBins to be

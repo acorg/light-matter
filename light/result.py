@@ -13,7 +13,7 @@ from light.significance import (
     Always, HashFraction, MaxBinHeight, MeanBinHeight)
 from light.bin_score import (MinHashesScore, FeatureMatchingScore,
                              FeatureAAScore, WeightedFeatureAAScore)
-from light.overall_score import BestBinScore
+from light.overall_score import BestBinScore, SignificantBinScore
 from light.backend import Backend
 from light.string import MultilineString
 
@@ -154,6 +154,10 @@ class Result(object):
             if overallScoreMethod == 'BestBinScore':
                 scorer = BestBinScore(histogram, significantBins)
                 overallScore = scorer.calculateScore()
+            elif overallScoreMethod == 'SignificantBinScore':
+                scorer = SignificantBinScore(histogram, significantBins, query,
+                                             subject, connector.params)
+                overallScore, overallScoreAnalysis = scorer.calculateScore()
             else:
                 raise ValueError('Unknown overall score method %r' %
                                  overallScoreMethod)

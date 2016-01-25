@@ -18,7 +18,7 @@ from light.landmarks import ALL_LANDMARK_CLASSES
 from light.parameters import FindParameters
 from light.performance.overlap import CalculateOverlap
 from light.performance import affinity
-from light.bin_score import ALL_SCORE_CLASSES
+from light.bin_score import ALL_BIN_SCORE_CLASSES
 from light.string import MultilineString
 from light.trig import ALL_TRIG_CLASSES
 
@@ -1412,7 +1412,7 @@ def compareScores(subject, query, scoreMethods=None,
     db = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
     _, subjectIndex, _ = db.addSubject(subject)
     scoreMethods = scoreMethods or sorted(
-        cls.__name__ for cls in ALL_SCORE_CLASSES)
+        cls.__name__ for cls in ALL_BIN_SCORE_CLASSES)
     findParams = findParams or FindParameters()
 
     # Calculate a score for each score method.

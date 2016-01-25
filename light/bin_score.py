@@ -483,8 +483,6 @@ class FeatureAAScore:
 
         return str(result)
 
-ALL_SCORE_CLASSES = (MinHashesScore, FeatureMatchingScore, FeatureAAScore)
-
 
 def getWeightedOffsets(offsetDict):
     """

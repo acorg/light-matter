@@ -67,7 +67,7 @@ class TestLightReadsAlignments(TestCase):
             error = ("^Could not convert first line of 'file.json' to "
                      "JSON \(Expected object or value\)\.$")
             six.assertRaisesRegex(
-                self,  ValueError, error, LightReadsAlignments, 'file.json',
+                self, ValueError, error, LightReadsAlignments, 'file.json',
                 DB)
 
     def testNonJSONInput(self):

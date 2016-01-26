@@ -55,16 +55,17 @@ class BestBinScore(object):
         return str(result)
 
 
-def featureIndicesInOffsets(feature, offsets):
+def featureIndicesOutsideOffsets(feature, offsets):
     """
-    Checks whether a feature falls within the offsets specified.
+    Returns a C{set} containing the offsets of a feature which aren't in the
+    offsets specified.
 
     @param feature: A C{light.features._Feature} subclass (i.e., a
         landmark or a trig point).
     @param offsets: A C{set} of offsets that are covered by a bin.
     @return: A C{set} of featureOffsets that are outside the offsets.
     """
-    return feature.coveredFeatureIndices() - offsets
+    return feature.coveredOffsets() - offsets
 
 
 class SignificantBinScore(object):
@@ -122,7 +123,7 @@ class SignificantBinScore(object):
             there are no significant bins) and a C{dict} with information about
             the score.
         """
-        if len(self._significantBinIndices) == 0:
+        if not self._significantBinIndices:
             return None, {}
 
         # Calculate the first quotient.
@@ -206,15 +207,15 @@ class SignificantBinScore(object):
         coveredQueryOffsets = set()
         coveredSubjectOffsets = set()
         for start, end in overallQueryStartEnd:
-            coveredQueryOffsets.update(set(range(start, end + 1)))
+            coveredQueryOffsets.update(range(start, end + 1))
         for start, end in overallSubjectStartEnd:
-            coveredSubjectOffsets.update(set(range(start, end + 1)))
+            coveredSubjectOffsets.update(range(start, end + 1))
 
         # Get all feature offsets that are not in a bin
         overallOffsetsNotInMatchQuery = set()
         for feature in self._allQueryFeatures:
-            coveredFeatIndices = featureIndicesInOffsets(feature,
-                                                         coveredQueryOffsets)
+            coveredFeatIndices = featureIndicesOutsideOffsets(
+                feature, coveredQueryOffsets)
             overallOffsetsNotInMatchQuery.update(coveredFeatIndices)
         overallOffsetsNotInMatchQuery -= set(overallMatchedQueryOffsets)
         numeratorQuery = (len(overallMatchedQueryOffsets) +
@@ -223,8 +224,8 @@ class SignificantBinScore(object):
 
         overallOffsetsNotInMatchSubject = set()
         for feature in self._allSubjectFeatures:
-            coveredFeatIndices = featureIndicesInOffsets(feature,
-                                                         coveredQueryOffsets)
+            coveredFeatIndices = featureIndicesOutsideOffsets(
+                feature, coveredQueryOffsets)
             overallOffsetsNotInMatchSubject.update(coveredFeatIndices)
         overallOffsetsNotInMatchSubject -= set(overallMatchedSubjectOffsets)
         numeratorSubject = (len(overallMatchedSubjectOffsets) +

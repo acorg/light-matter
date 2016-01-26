@@ -168,14 +168,6 @@ class TestLandmarks(TestCase):
         for _ in range(100):
             self.assertEqual(expected, sorted(shuffle(expected)))
 
-    def testLandmarkCoveredFeatureIndices(self):
-        """
-        The right offsets covered by this landmark must be returned.
-        """
-        landmark = Landmark('name', 'L', 50, 5, 0)
-        self.assertEqual({50, 51, 52, 53, 54},
-                         landmark.coveredFeatureIndices())
-
 
 class TestTrigPoints(TestCase):
     """
@@ -254,13 +246,6 @@ class TestTrigPoints(TestCase):
 
         for _ in range(100):
             self.assertEqual(expected, sorted(shuffle(expected)))
-
-    def testTrigPointCoveredFeatureIndices(self):
-        """
-        The right offset covered by this trigPoint must be returned.
-        """
-        trigPoint = TrigPoint('name', 'L', 50)
-        self.assertEqual({50}, trigPoint.coveredFeatureIndices())
 
 
 class TestCombinedFeatureList(TestCase):

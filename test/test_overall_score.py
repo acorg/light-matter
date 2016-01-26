@@ -8,7 +8,7 @@ from light.histogram import Histogram
 from light.landmarks import AlphaHelix, AminoAcids as AminoAcidsLm
 from light.trig.amino_acids import AminoAcids
 from light.overall_score import (BestBinScore, SignificantBinScore,
-                                 featureIndicesInOffsets)
+                                 featureIndicesOutsideOffsets)
 from light.parameters import Parameters, FindParameters
 from light.subject import Subject
 
@@ -19,7 +19,7 @@ class TestBestBinScore(TestCase):
     """
     def testEmptyHistogram(self):
         """
-        An empty histogram must return a score of C{bool} None.
+        An empty histogram must return a score of C{None}.
         """
         histogram = Histogram()
         histogram.finalize()
@@ -35,7 +35,7 @@ class TestBestBinScore(TestCase):
 
     def testCompareEqualSequencesScoreMustBeOne(self):
         """
-        If a sequence is compared to itself, the score must be 1.0. See
+        If a sequence is compared to itself, the overall score must be 1.0. See
         https://github.com/acorg/light-matter/issues/321.
         This is a real-life test that it actually works.
         """
@@ -62,12 +62,13 @@ class TestBestBinScore(TestCase):
                                     scoreMethod='FeatureAAScore',
                                     overallScoreMethod='BestBinScore')
         result = db.find(pichninde, findParams, storeFullAnalysis=True)
-        self.assertEqual(1.0, result.analysis[subjectIndex]['bestBinScore'])
         self.assertEqual(1.0, result.analysis[subjectIndex]['overallScore'])
 
-    def testCompareRealSequencesBestBinScoreAndFeatureAAScoreIdentical(self):
+    def testCompareRealSequencesBestBinScoreAndOverallScoreIdentical(self):
         """
-        When comparing two sequences, the BestBinScore and the FeatureAAScore
+        When comparing two sequences, the best bin score (calculated using the
+        FeatureAAScore class) and the overall score (calculated using the
+        BestBinScore class which sets the overall score to the best bin score)
         must be the same.
         """
         golv = AARead('GOLV', 'RVDIFKKNQHGGLREIYVLDLASRIVQLCLEEISRAVCQELPIEMM'
@@ -96,7 +97,8 @@ class TestBestBinScore(TestCase):
         db = DatabaseSpecifier().getDatabaseFromKeywords(**kwds)
         _, subjectIndex, _ = db.addSubject(golv)
         result = db.find(akav, findParams, storeFullAnalysis=True)
-
+        self.assertEqual(0.27265479670475684,
+                         result.analysis[subjectIndex]['overallScore'])
         self.assertEqual(result.analysis[subjectIndex]['bestBinScore'],
                          result.analysis[subjectIndex]['overallScore'])
 
@@ -115,35 +117,35 @@ class TestBestBinScore(TestCase):
         self.assertEqual(expected, BestBinScore.printAnalysis(analysis))
 
 
-class TestFeatureIndicesInOffsets(TestCase):
+class TestFeatureIndicesOutsideOffsets(TestCase):
     """
-    Tests for the light.overall_score.featureIndicesInOffsets function.
+    Tests for the light.overall_score.featureIndicesOutsideOffsets function.
     """
     def testReturnsRightOffsetsForLandmarkInside(self):
         """
-        The featureIndicesInOffsets function must return the right offsets for
-        a landmark completely inside the offsets specified.
+        The featureIndicesOutsideOffsets function must return the right offsets
+        for a landmark completely inside the offsets specified.
         """
         landmark = Landmark('AlphaHelix', 'A', 10, 10)
-        offsets = featureIndicesInOffsets(landmark, set(range(0, 21)))
+        offsets = featureIndicesOutsideOffsets(landmark, set(range(0, 21)))
         self.assertEqual(set(), offsets)
 
     def testReturnsRightOffsetsForLandmarkPartlyInside(self):
         """
-        The featureIndicesInOffsets function must return the right offsets for
-        a landmark partly inside the offsets specified.
+        The featureIndicesOutsideOffsets function must return the right offsets
+        for a landmark partly inside the offsets specified.
         """
         landmark = Landmark('AlphaHelix', 'A', 10, 10)
-        offsets = featureIndicesInOffsets(landmark, set(range(0, 15)))
+        offsets = featureIndicesOutsideOffsets(landmark, set(range(0, 15)))
         self.assertEqual({15, 16, 17, 18, 19}, offsets)
 
     def testReturnsRightOffsetsForTrigPointInside(self):
         """
-        The featureIndicesInOffsets function must return the right offsets for
-        a trigPoint completely inside the offsets specified.
+        The featureIndicesOutsideOffsets function must return the right offsets
+        for a trigPoint completely inside the offsets specified.
         """
         trigPoint = TrigPoint('Peaks', 'P', 10)
-        offsets = featureIndicesInOffsets(trigPoint, set(range(0, 5)))
+        offsets = featureIndicesOutsideOffsets(trigPoint, set(range(0, 5)))
         self.assertEqual({10}, offsets)
 
 
@@ -153,8 +155,7 @@ class TestSignificantBinScore(TestCase):
     """
     def testNoSignificantBins(self):
         """
-        If there are no significant bins, the overall score must be C{bool}
-        None.
+        If there are no significant bins, the overall score must be C{None}.
         """
         histogram = Histogram()
         histogram.finalize()
@@ -164,13 +165,13 @@ class TestSignificantBinScore(TestCase):
         significantBinScore = SignificantBinScore(histogram, [], query,
                                                   subject, params)
         score, analysis = significantBinScore.calculateScore()
-        self.assertEqual(None, score)
+        self.assertIs(None, score)
         self.assertEqual({}, analysis)
 
     def testQueryHasOneFeature(self):
         """
         If the query has one feature, but no pair, the match must have an
-        overall score of C{bool} None.
+        overall score of C{None}.
         """
         histogram = Histogram(1)
         histogram.finalize()
@@ -185,7 +186,7 @@ class TestSignificantBinScore(TestCase):
     def testQueryAndSubjectHaveOneFeature(self):
         """
         If the query and the subject have one feature each, but no pairs, the
-        match must have an overall score of C{bool} None.
+        match must have an overall score of C{None}.
         """
         histogram = Histogram(1)
         histogram.finalize()
@@ -199,8 +200,8 @@ class TestSignificantBinScore(TestCase):
 
     def testOnePairInOneBin(self):
         """
-        A match with one bin containing one pair must have a score of 1.0 if
-        the query and subject have no additional (non-matching) hashes.
+        A match with one bin containing one pair must have an overall score of
+        1.0 if the query and subject have no additional (non-matching) hashes.
         """
         queryLandmark = Landmark('AlphaHelix', 'A', 100, 20)
         queryTrigPoint = TrigPoint('Peaks', 'P', 110)
@@ -245,8 +246,8 @@ class TestSignificantBinScore(TestCase):
     def testOnePairInBinOccurringInTwoPlaces(self):
         """
         A match with one bin containing two pairs that occur in two places must
-        have a score of 1.0 if the query and subject have no additional
-        (non-matching) hashes.
+        have an overall score of 1.0 if the query and subject have no
+        additional (non-matching) hashes.
         """
         queryLandmark1 = Landmark('AlphaHelix', 'A', 0, 9)
         queryTrigPoint1 = TrigPoint('AminoAcids', 'M', 10)
@@ -302,8 +303,8 @@ class TestSignificantBinScore(TestCase):
 
     def testOneBinOnePairInBinQueryHasOneHashOutsideMatch(self):
         """
-        A match with one bin containing one pair must have a score of 1.0 if
-        the query has an additional pair that is outside the match area
+        A match with one bin containing one pair must have an overall score of
+        1.0 if the query has an additional pair that is outside the match area
         (because the subject should be used to do the normalisation by length).
         """
         queryLandmark = Landmark('AlphaHelix', 'A', 0, 9)
@@ -348,9 +349,10 @@ class TestSignificantBinScore(TestCase):
 
     def testOneBinOnePairInBinQueryHasTwoPairsOutsideMatch(self):
         """
-        A match with one bin containing one pair must have a score of 1.0 if
-        the query has two additional pairs that are outside the match area
-        (because the subject should be used to do the normalisation by length).
+        A match with one bin containing one pair must have an overall score of
+        1.0 if the query has two additional pairs that are outside the match
+        area (because the subject should be used to do the normalisation by
+        length).
         """
         queryLandmark = Landmark('AlphaHelix', 'A', 100, 9)
         queryTrigPoint = TrigPoint('AminoAcids', 'M', 110)
@@ -394,8 +396,9 @@ class TestSignificantBinScore(TestCase):
 
     def testOnePairInBinQuery2Subject1PairOutsideMatch(self):
         """
-        A bin containing one pair must not have a score of 1.0 if the query has
-        two and the subject one pair that are outside the match area.
+        A bin containing one pair must not have an overall score of 2 / 3 if
+        the query has two and the subject one pair that are outside the match
+        area.
         """
         queryLandmark = Landmark('AlphaHelix', 'A', 100, 20)
         queryTrigPoint = TrigPoint('Peaks', 'P', 110)
@@ -439,8 +442,9 @@ class TestSignificantBinScore(TestCase):
 
     def testOneHashInBinQuery1Subject2PairOutsideMatch(self):
         """
-        A bin containing one pair must not have a score of 1.0 if the query has
-        one and the subject two pairs that are outside the match area.
+        A bin containing one pair must not have an overall score of 2 / 3 if
+        the query has one and the subject two pairs that are outside the match
+        area.
         """
         queryLandmark = Landmark('AlphaHelix', 'A', 100, 20)
         queryTrigPoint = TrigPoint('Peaks', 'P', 110)
@@ -485,8 +489,8 @@ class TestSignificantBinScore(TestCase):
     def testOnePairInBinQueryHasOneUnmatchedPairInsideMatch(self):
         """
         A bin containing one pair where the landmark and trig point do not
-        overlap must have the correct score if the query has an additional
-        non-matching pair that is inside the match area.
+        overlap must have the correct overall score if the query has an
+        additional non-matching pair that is inside the match area.
         """
         queryLandmark = Landmark('AlphaHelix', 'A', 0, 20)
         queryTrigPoint = TrigPoint('Peaks', 'P', 50)
@@ -530,8 +534,8 @@ class TestSignificantBinScore(TestCase):
 
     def testOnePairInBinQueryHasOneUnmatchedPairExactlySpanningMatch(self):
         """
-        A bin containing one pair must have a the correct score if the query
-        has an additional pair that exactly spans the match area but the
+        A bin containing one pair must have a the correct overall score if the
+        query has an additional pair that exactly spans the match area but the
         additional pairs' offsets match those of the match (and so do not
         affect the score).
         """
@@ -577,9 +581,9 @@ class TestSignificantBinScore(TestCase):
 
     def testOnePairInBinQueryHasOneUnmatchedPairExceedingMatch(self):
         """
-        A match with one bin containing one pair must have a score of 1.0 if
-        the query has an additional pair that exceeds the match area on both
-        sides (because the subject is used for the score normalisation by
+        A match with one bin containing one pair must have an overall score of
+        1.0 if the query has an additional pair that exceeds the match area on
+        both sides (because the subject is used for the score normalisation by
         length, the score is not affected).
         """
         queryLandmark = Landmark('AlphaHelix', 'A', 2, 5)
@@ -629,9 +633,10 @@ class TestSignificantBinScore(TestCase):
 
     def testOnePairInBinQueryHasTwoUnmatchedFeaturesInsideMatch(self):
         """
-        A match with one bin containing one pair must have the correct score if
-        the query has two additional features (making a pair) that are inside
-        the match area but which do not overlap the features in the pair.
+        A match with one bin containing one pair must have the correct overall
+        score if the query has two additional features (making a pair) that are
+        inside the match area but which do not overlap the features in the
+        pair.
         """
         queryLandmark = Landmark('AlphaHelix', 'A', 0, 20)
         queryTrigPoint = TrigPoint('Peaks', 'P', 50)
@@ -675,9 +680,9 @@ class TestSignificantBinScore(TestCase):
 
     def testOnePairInBinQueryHasOneUnmatchedFeatureOverlappingMatchLeft(self):
         """
-        A match with one bin containing one pair must have a score of 1.0 if
-        the query has an additional feature that is only partly inside the
-        match area (with the extra feature jutting out on the left).
+        A match with one bin containing one pair must have an overall score of
+        1.0 if the query has an additional feature that is only partly inside
+        the match area (with the extra feature jutting out on the left).
         """
         queryLandmark = Landmark('AlphaHelix', 'A', 5, 20)
         queryTrigPoint = TrigPoint('Peaks', 'P', 10)
@@ -721,9 +726,9 @@ class TestSignificantBinScore(TestCase):
 
     def testOnePairInBinQueryHasOneUnmatchedFeatureOverlappingMatchRight(self):
         """
-        A match with one bin containing one pair must have a score of 1.0 if
-        the query has an additional feature that is only partly inside the
-        match area (with the extra feature jutting out on the right).
+        A match with one bin containing one pair must have an overall score of
+        1.0 if the query has an additional feature that is only partly inside
+        the match area (with the extra feature jutting out on the right).
         """
         queryLandmark = Landmark('AlphaHelix', 'A', 2, 3)
         queryTrigPoint = TrigPoint('Peaks', 'P', 5)
@@ -767,9 +772,9 @@ class TestSignificantBinScore(TestCase):
 
     def testTwoPairs(self):
         """
-        A match with one bin containing two pairs must have the correct score
-        if the query and subject both have an additional feature inside their
-        match areas.
+        A match with one bin containing two pairs must have the correct overall
+        score if the query and subject both have an additional feature inside
+        their match areas.
         """
         queryLandmark1 = Landmark('AlphaHelix_pi', 'C', 2, 3)
         queryTrigPoint1 = TrigPoint('Peaks', 'P', 10)
@@ -828,7 +833,7 @@ class TestSignificantBinScore(TestCase):
     def testThreeSignBinsWithOnePairEach(self):
         """
         A match that consists of three significant bins with one pair in each
-        bin must return a score of 1.0.
+        bin must return an overall score of 1.0.
         """
         queryLandmark1 = Landmark('AlphaHelix_pi', 'C', 2, 3)
         queryTrigPoint1 = TrigPoint('Peaks', 'P', 10)
@@ -1039,7 +1044,7 @@ class TestSignificantBinScore(TestCase):
         """
         A match that consists of three significant bins with one pair in each
         bin and bin with index 2 containing a non-matching pair in the query
-        must return the correct score.
+        must return the correct overall score.
         """
         queryLandmark1 = Landmark('AlphaHelix_pi', 'C', 2, 3)
         queryTrigPoint1 = TrigPoint('Peaks', 'P', 10)

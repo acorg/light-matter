@@ -173,6 +173,7 @@ class Result(object):
             elif significantBins:
                 self.analysis[subjectIndex] = {
                     'bestBinScore': bestBinScore,
+                    'overallScore': overallScore,
                     'significantBins': significantBins,
                 }
 

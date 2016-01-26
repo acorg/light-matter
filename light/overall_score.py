@@ -1,5 +1,3 @@
-from six.moves import filterfalse
-
 from light.utils import maxWithDefault, minWithDefault
 from light.string import MultilineString
 from light.bin_score import (getHashFeatures, featureInRange,
@@ -57,17 +55,16 @@ class BestBinScore(object):
         return str(result)
 
 
-def featureInOffsets(feature, offsets):
+def featureIndicesInOffsets(feature, offsets):
     """
     Checks whether a feature falls within the offsets specified.
 
     @param feature: A C{light.features._Feature} subclass (i.e., a
         landmark or a trig point).
-    @param offsets: A C{list} of offsets where a feature can occur.
-    @return: A C{bool} to indicate whether the feature falls completely
-        within the allowed offsets.
+    @param offsets: A C{set} of offsets that are covered by a bin.
+    @return: A C{set} of featureOffsets that are outside the offsets.
     """
-    return feature.offset in offsets
+    return feature.coveredFeatureIndices() - offsets
 
 
 class SignificantBinScore(object):
@@ -205,7 +202,7 @@ class SignificantBinScore(object):
             matchedRegionScore = 0.0
 
         # Calculate the score for the second quotient (the length normalizer)
-        # TODO check this again!
+        # Get all offsets that are part of a bin.
         coveredQueryOffsets = set()
         coveredSubjectOffsets = set()
         for start, end in overallQueryStartEnd:
@@ -213,21 +210,22 @@ class SignificantBinScore(object):
         for start, end in overallSubjectStartEnd:
             coveredSubjectOffsets.update(set(range(start, end + 1)))
 
+        # Get all feature offsets that are not in a bin
         overallOffsetsNotInMatchQuery = set()
-        for feature in filterfalse(
-                lambda f: featureInOffsets(f, coveredQueryOffsets),
-                self._allQueryFeatures):
-            overallOffsetsNotInMatchQuery.update(feature.coveredOffsets())
+        for feature in self._allQueryFeatures:
+            coveredFeatIndices = featureIndicesInOffsets(feature,
+                                                         coveredQueryOffsets)
+            overallOffsetsNotInMatchQuery.update(coveredFeatIndices)
         overallOffsetsNotInMatchQuery -= set(overallMatchedQueryOffsets)
         numeratorQuery = (len(overallMatchedQueryOffsets) +
                           len(overallUnMatchedQueryOffsets))
         denominatorQuery = numeratorQuery + len(overallOffsetsNotInMatchQuery)
 
         overallOffsetsNotInMatchSubject = set()
-        for feature in filterfalse(
-                lambda f: featureInOffsets(f, coveredSubjectOffsets),
-                self._allSubjectFeatures):
-            overallOffsetsNotInMatchSubject.update(feature.coveredOffsets())
+        for feature in self._allSubjectFeatures:
+            coveredFeatIndices = featureIndicesInOffsets(feature,
+                                                         coveredQueryOffsets)
+            overallOffsetsNotInMatchSubject.update(coveredFeatIndices)
         overallOffsetsNotInMatchSubject -= set(overallMatchedSubjectOffsets)
         numeratorSubject = (len(overallMatchedSubjectOffsets) +
                             len(overallUnMatchedSubjectOffsets))

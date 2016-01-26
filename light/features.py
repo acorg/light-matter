@@ -83,6 +83,14 @@ class Landmark(_Feature):
         """
         return '%s%s' % (self.symbol, self.symbolDetail)
 
+    def coveredFeatureIndices(self):
+        """
+        Return the offsets that are covered by this landmark.
+
+        @return: A C{set} of indices that are covered by this landmark.
+        """
+        return set(range(self.offset, self.offset + self.length))
+
 
 @total_ordering
 class TrigPoint(_Feature):
@@ -120,6 +128,14 @@ class TrigPoint(_Feature):
         @return: a C{str} of the symbol for the trig point.
         """
         return self.symbol
+
+    def coveredFeatureIndices(self):
+        """
+        Return the offsets that are covered by this trigPoint.
+
+        @return: A C{set} of indices that are covered by this trigPoint.
+        """
+        return {self.offset}
 
 
 class CombinedFeatureList(object):

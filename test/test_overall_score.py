@@ -7,7 +7,8 @@ from light.features import Landmark, TrigPoint
 from light.histogram import Histogram
 from light.landmarks import AlphaHelix, AminoAcids as AminoAcidsLm
 from light.trig.amino_acids import AminoAcids
-from light.overall_score import BestBinScore, SignificantBinScore
+from light.overall_score import (BestBinScore, SignificantBinScore,
+                                 featureIndicesInOffsets)
 from light.parameters import Parameters, FindParameters
 from light.subject import Subject
 
@@ -32,6 +33,73 @@ class TestBestBinScore(TestCase):
             },
             analysis)
 
+    def testCompareEqualSequencesScoreMustBeOne(self):
+        """
+        If a sequence is compared to itself, the score must be 1.0. See
+        https://github.com/acorg/light-matter/issues/321.
+        This is a real-life test that it actually works.
+        """
+        pichninde = AARead('pichninde', 'RLKFGLSYKEQVGGNRELYVGDLNTKLTTRLIEDYS'
+                                        'ESLMQNMRYTCLNNEKEFERALLDMKSVVRQSGLAV'
+                                        'SMDHSKWGPHMSPVIFAALLKGLEFNLKDGSEVPNA'
+                                        'AIVNILLWHIHKMVEVPFNVVEAYMKGFLKRGLGMM'
+                                        'DKGGCTIAEEFMFGYFEKGKVPSHISSVLDMGQGIL'
+                                        'HNTSDLYGLITEQFINYALELCYGVRFISYTSSDDE'
+                                        'IMLSLNEAFKFKDRDELNVDLVLDCMEFHYFLSDKL'
+                                        'NKFVSPKTVVGTFASEFKSRFFIWSQEVPLLTKFVA'
+                                        'AALH')
+
+        db = DatabaseSpecifier().getDatabaseFromKeywords(
+            landmarkNames=[
+                'AlphaHelix', 'AlphaHelix_3_10', 'AlphaHelix_pi',
+                'AminoAcidsLm', 'BetaStrand', 'BetaTurn', 'Prosite'],
+            trigPointNames=['AminoAcids', 'Peaks', 'Troughs'],
+            distanceBase=1.01, limitPerLandmark=50, minDistance=1,
+            maxDistance=100)
+        _, subjectIndex, _ = db.addSubject(pichninde)
+
+        findParams = FindParameters(significanceFraction=0.01,
+                                    scoreMethod='FeatureAAScore',
+                                    overallScoreMethod='BestBinScore')
+        result = db.find(pichninde, findParams, storeFullAnalysis=True)
+        self.assertEqual(1.0, result.analysis[subjectIndex]['bestBinScore'])
+        self.assertEqual(1.0, result.analysis[subjectIndex]['overallScore'])
+
+    def testCompareRealSequencesBestBinScoreAndFeatureAAScoreIdentical(self):
+        """
+        When comparing two sequences, the BestBinScore and the FeatureAAScore
+        must be the same.
+        """
+        golv = AARead('GOLV', 'RVDIFKKNQHGGLREIYVLDLASRIVQLCLEEISRAVCQELPIEMM'
+                              'MHPELKLKKPQEHMYKAAISPESYKSNVSSSNDAKVWNQGHHVAKF'
+                              'AQFLCRLLSPEWHGLIVNGLKLWTNKKIALPDGVMNILSRANTPLF'
+                              'RNSIHQAVHDSYKGITPMRWLRPGETFMRIESGMMQGILHYTSSLF'
+                              'HASLLMMRDSLWRSYSEQLGVKSITTDLVSSDDSSRMTDIFYRDSK'
+                              'NFKRGKIFARADHMAIEPLSRCFGIWMSPKSTYCCNGIMEFNSEYF'
+                              'FRASLYRPTLKWSYACLG')
+
+        akav = AARead('AKAV', 'VFTYFNKGQKTAKDREIFVGEFEAKMCLYLVERISKERCKLNPDEM'
+                              'ISEPGDGKLKKLEDMAEYEIRYTANTLKSMKDKALQEFSKFADDFN'
+                              'FKPHSTKIEINADMSKWSAQDVLFKYFWLFALDPALYKPEKERILY'
+                              'FLCNYMDKVLVIPDDVMTSILDQRVKREKDIIYEMTNGLKQNWVSI'
+                              'KRNWLQGNLNYTSSYLHSCCMNVYKDIIKNVATLLEGDVLVNSMVH'
+                              'SDDNHTSITMIQDKFPDDIIIEYCIKLFEKICLSFGNQANMKKTYV'
+                              'TNFIKEFVSLFNIYGEPFSVYGRFLLTAVG')
+
+        findParams = FindParameters(significanceFraction=0.01,
+                                    scoreMethod='FeatureAAScore')
+
+        kwds = dict(landmarkNames=['Prosite'], trigPointNames=['Peaks'],
+                    distanceBase=1, limitPerLandmark=40, minDistance=1,
+                    maxDistance=10000)
+
+        db = DatabaseSpecifier().getDatabaseFromKeywords(**kwds)
+        _, subjectIndex, _ = db.addSubject(golv)
+        result = db.find(akav, findParams, storeFullAnalysis=True)
+
+        self.assertEqual(result.analysis[subjectIndex]['bestBinScore'],
+                         result.analysis[subjectIndex]['overallScore'])
+
     def testPrintAnalysis(self):
         """
         The analysis of the overall score calculation must print correctly.
@@ -45,6 +113,38 @@ class TestBestBinScore(TestCase):
             'Overall score method: BestBinScore\nOverall score: %s' % score)
 
         self.assertEqual(expected, BestBinScore.printAnalysis(analysis))
+
+
+class TestFeatureIndicesInOffsets(TestCase):
+    """
+    Tests for the light.overall_score.featureIndicesInOffsets function.
+    """
+    def testReturnsRightOffsetsForLandmarkInside(self):
+        """
+        The featureIndicesInOffsets function must return the right offsets for
+        a landmark completely inside the offsets specified.
+        """
+        landmark = Landmark('AlphaHelix', 'A', 10, 10)
+        offsets = featureIndicesInOffsets(landmark, set(range(0, 21)))
+        self.assertEqual(set(), offsets)
+
+    def testReturnsRightOffsetsForLandmarkPartlyInside(self):
+        """
+        The featureIndicesInOffsets function must return the right offsets for
+        a landmark partly inside the offsets specified.
+        """
+        landmark = Landmark('AlphaHelix', 'A', 10, 10)
+        offsets = featureIndicesInOffsets(landmark, set(range(0, 15)))
+        self.assertEqual({15, 16, 17, 18, 19}, offsets)
+
+    def testReturnsRightOffsetsForTrigPointInside(self):
+        """
+        The featureIndicesInOffsets function must return the right offsets for
+        a trigPoint completely inside the offsets specified.
+        """
+        trigPoint = TrigPoint('Peaks', 'P', 10)
+        offsets = featureIndicesInOffsets(trigPoint, set(range(0, 5)))
+        self.assertEqual({10}, offsets)
 
 
 class TestSignificantBinScore(TestCase):
@@ -573,7 +673,7 @@ class TestSignificantBinScore(TestCase):
             },
             analysis)
 
-    def stestOnePairInBinQueryHasOneUnmatchedFeatureOverlappingMatchLeft(self):
+    def testOnePairInBinQueryHasOneUnmatchedFeatureOverlappingMatchLeft(self):
         """
         A match with one bin containing one pair must have a score of 1.0 if
         the query has an additional feature that is only partly inside the
@@ -611,15 +711,15 @@ class TestSignificantBinScore(TestCase):
                 'numeratorSubject': 20,
                 'normaliserQuery': 0.8,
                 'normaliserSubject': 1.0,
-                'queryOffsetsInBins': 0,
+                'queryOffsetsInBins': 20,
                 'score': score,
                 'scoreClass': SignificantBinScore,
-                'subjectOffsetsInBins': 0,
+                'subjectOffsetsInBins': 20,
                 'totalOffsetCount': 40,
             },
             analysis)
 
-    def ssOnePairInBinQueryHasOneUnmatchedFeatureOverlappingMatchRight(self):
+    def testOnePairInBinQueryHasOneUnmatchedFeatureOverlappingMatchRight(self):
         """
         A match with one bin containing one pair must have a score of 1.0 if
         the query has an additional feature that is only partly inside the
@@ -794,13 +894,12 @@ class TestSignificantBinScore(TestCase):
             },
             overallAnalysis)
 
-    def sstestThreeSignBinsWithOnePairEachWithOneAdditionalFinder(self):
+    def testThreeBinsOnePairEachQueryHasOneNonMatchingPairOutsideMatch(self):
         """
         A match that consists of three significant bins with one pair in each
-        bin and bin number 2 containing a non-matching pair must return the
-        correct score.
+        bin and an additional non-matching pair in the query must return an
+        overall score of 1.0.
         """
-        print('finish me')
         queryLandmark1 = Landmark('AlphaHelix_pi', 'C', 2, 3)
         queryTrigPoint1 = TrigPoint('Peaks', 'P', 10)
         subjectLandmark1 = Landmark('AlphaHelix_pi', 'C', 2, 3)
@@ -837,7 +936,7 @@ class TestSignificantBinScore(TestCase):
         })
         histogram.finalize()
         params = Parameters([AlphaHelix, AminoAcidsLm], [])
-        query = AARead('id', 80 * 'A')
+        query = AARead('id', 80 * 'A' + 'FRRRFRRRFAAAC')
         subject = Subject('id2', 80 * 'A', 0)
         significantBins = [{'index': 0}, {'index': 1}, {'index': 2}]
         sbs = SignificantBinScore(histogram, significantBins, query, subject,
@@ -847,7 +946,7 @@ class TestSignificantBinScore(TestCase):
         self.assertEqual(1.0, overallScore)
         self.assertEqual(
             {
-                'denominatorQuery': 16,
+                'denominatorQuery': 26,
                 'denominatorSubject': 16,
                 'matchedOffsetCount': 32,
                 'matchedQueryOffsetCount': 16,
@@ -855,13 +954,154 @@ class TestSignificantBinScore(TestCase):
                 'matchedSubjectOffsetCount': 16,
                 'numeratorQuery': 16,
                 'numeratorSubject': 16,
-                'normaliserQuery': 1.0,
+                'normaliserQuery': 16 / 26,
                 'normaliserSubject': 1.0,
                 'queryOffsetsInBins': 40,
                 'score': overallScore,
                 'scoreClass': SignificantBinScore,
                 'subjectOffsetsInBins': 40,
                 'totalOffsetCount': 32,
+            },
+            overallAnalysis)
+
+    def testThreeBinsOnePairEachQuery2Subject1PairOutsideMatch(self):
+        """
+        A match that consists of three significant bins with one pair in each
+        bin and two additional non-matching pairs in the query and one
+        additional non-matching pair in the query must not return an overall
+        score of 1.0.
+        """
+        queryLandmark1 = Landmark('AlphaHelix_pi', 'C', 2, 3)
+        queryTrigPoint1 = TrigPoint('Peaks', 'P', 10)
+        subjectLandmark1 = Landmark('AlphaHelix_pi', 'C', 2, 3)
+        subjectTrigPoint1 = TrigPoint('Peaks', 'P', 10)
+
+        queryLandmark2 = Landmark('AlphaHelix_pi', 'C', 40, 5)
+        queryTrigPoint2 = TrigPoint('Peaks', 'P', 60)
+        subjectLandmark2 = Landmark('AlphaHelix_pi', 'C', 40, 5)
+        subjectTrigPoint2 = TrigPoint('Peaks', 'P', 60)
+
+        queryLandmark3 = Landmark('AlphaHelix_pi', 'C', 40, 5)
+        queryTrigPoint3 = TrigPoint('Peaks', 'P', 70)
+        subjectLandmark3 = Landmark('AlphaHelix_pi', 'C', 40, 5)
+        subjectTrigPoint3 = TrigPoint('Peaks', 'P', 70)
+
+        histogram = Histogram(3)
+        histogram.add(10, {
+            'queryLandmark': queryLandmark1,
+            'queryTrigPoint': queryTrigPoint1,
+            'subjectLandmark': subjectLandmark1,
+            'subjectTrigPoint': subjectTrigPoint1,
+        })
+        histogram.add(20, {
+            'queryLandmark': queryLandmark2,
+            'queryTrigPoint': queryTrigPoint2,
+            'subjectLandmark': subjectLandmark2,
+            'subjectTrigPoint': subjectTrigPoint2,
+        })
+        histogram.add(30, {
+            'queryLandmark': queryLandmark3,
+            'queryTrigPoint': queryTrigPoint3,
+            'subjectLandmark': subjectLandmark3,
+            'subjectTrigPoint': subjectTrigPoint3,
+        })
+        histogram.finalize()
+        params = Parameters([AlphaHelix, AminoAcidsLm], [])
+        query = AARead('id', 80 * 'A' + 'FRRRFRRRF' + 'AAACAAAW')
+        subject = Subject('id2', 80 * 'A' + 'FRRRFRRRF' + 'AAAC', 0)
+        significantBins = [{'index': 0}, {'index': 1}, {'index': 2}]
+        sbs = SignificantBinScore(histogram, significantBins, query, subject,
+                                  params)
+        overallScore, overallAnalysis = sbs.calculateScore()
+        self.maxDiff = None
+        self.assertEqual(16 / 26, overallScore)
+        self.assertEqual(
+            {
+                'denominatorQuery': 26,
+                'denominatorSubject': 26,
+                'matchedOffsetCount': 32,
+                'matchedQueryOffsetCount': 16,
+                'matchedRegionScore': 1.0,
+                'matchedSubjectOffsetCount': 16,
+                'numeratorQuery': 16,
+                'numeratorSubject': 16,
+                'normaliserQuery': 16 / 26,
+                'normaliserSubject': 16 / 26,
+                'queryOffsetsInBins': 40,
+                'score': overallScore,
+                'scoreClass': SignificantBinScore,
+                'subjectOffsetsInBins': 40,
+                'totalOffsetCount': 32,
+            },
+            overallAnalysis)
+
+    def testThreeSignBinsWithOnePairEachWithOneAdditionalFinder(self):
+        """
+        A match that consists of three significant bins with one pair in each
+        bin and bin with index 2 containing a non-matching pair in the query
+        must return the correct score.
+        """
+        queryLandmark1 = Landmark('AlphaHelix_pi', 'C', 2, 3)
+        queryTrigPoint1 = TrigPoint('Peaks', 'P', 10)
+        subjectLandmark1 = Landmark('AlphaHelix_pi', 'C', 2, 3)
+        subjectTrigPoint1 = TrigPoint('Peaks', 'P', 10)
+
+        queryLandmark2 = Landmark('AlphaHelix_pi', 'C', 40, 5)
+        queryTrigPoint2 = TrigPoint('Peaks', 'P', 60)
+        subjectLandmark2 = Landmark('AlphaHelix_pi', 'C', 40, 5)
+        subjectTrigPoint2 = TrigPoint('Peaks', 'P', 60)
+
+        queryLandmark3 = Landmark('AlphaHelix_pi', 'C', 40, 5)
+        queryTrigPoint3 = TrigPoint('Peaks', 'P', 70)
+        subjectLandmark3 = Landmark('AlphaHelix_pi', 'C', 40, 5)
+        subjectTrigPoint3 = TrigPoint('Peaks', 'P', 70)
+
+        histogram = Histogram(3)
+        histogram.add(10, {
+            'queryLandmark': queryLandmark1,
+            'queryTrigPoint': queryTrigPoint1,
+            'subjectLandmark': subjectLandmark1,
+            'subjectTrigPoint': subjectTrigPoint1,
+        })
+        histogram.add(20, {
+            'queryLandmark': queryLandmark2,
+            'queryTrigPoint': queryTrigPoint2,
+            'subjectLandmark': subjectLandmark2,
+            'subjectTrigPoint': subjectTrigPoint2,
+        })
+        histogram.add(30, {
+            'queryLandmark': queryLandmark3,
+            'queryTrigPoint': queryTrigPoint3,
+            'subjectLandmark': subjectLandmark3,
+            'subjectTrigPoint': subjectTrigPoint3,
+        })
+        histogram.finalize()
+        params = Parameters([AlphaHelix, AminoAcidsLm], [])
+        query = AARead('id', 40 * 'A' + 'FRRRFRRRFAAC' + 28 * 'A')
+        subject = Subject('id2', 80 * 'A', 0)
+        significantBins = [{'index': 0}, {'index': 1}, {'index': 2}]
+        sbs = SignificantBinScore(histogram, significantBins, query, subject,
+                                  params)
+        overallScore, overallAnalysis = sbs.calculateScore()
+        self.maxDiff = None
+        self.assertEqual(32 / 42, overallScore)
+        self.assertEqual(
+            {
+                'denominatorQuery': 26,
+                'denominatorSubject': 16,
+                'matchedOffsetCount': 32,
+                'matchedQueryOffsetCount': 16,
+                'matchedRegionScore': 32 / 42,
+                'matchedSubjectOffsetCount': 16,
+                'numeratorQuery': 26,
+                'numeratorSubject': 16,
+                'normaliserQuery': 1.0,
+                'normaliserSubject': 1.0,
+                'queryOffsetsInBins': 40,
+                'score': overallScore,
+                'scoreClass': SignificantBinScore,
+                'subjectOffsetsInBins': 40,
+                'totalOffsetCount': 42,
             },
             overallAnalysis)
 
@@ -939,7 +1179,7 @@ class TestSignificantBinScore(TestCase):
         self.assertEqual(result1.analysis[subjectIndex1]['overallScore'],
                          result2.analysis[subjectIndex2]['overallScore'])
 
-    def sstestPrintAnalysis(self):
+    def testPrintAnalysis(self):
         """
         The analysis of a score calculation must print correctly, whether
         we print it using the class name explicitly or the score class that's
@@ -978,8 +1218,8 @@ class TestSignificantBinScore(TestCase):
             'Matched region score 1.0000 (40 / 40)\n'
             'Query normalizer: 0.8000 (20 / 25)\n'
             'Subject normalizer: 1.0000 (20 / 20)\n'
-            'Total query offsets that are in a bin: 0\n'
-            'Total subject offsets that are in a bin: 0\n')
+            'Total query offsets that are in a bin: 20\n'
+            'Total subject offsets that are in a bin: 20')
         self.assertEqual(expected, SignificantBinScore.printAnalysis(analysis))
         self.assertEqual(expected,
                          analysis['scoreClass'].printAnalysis(analysis))

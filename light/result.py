@@ -153,7 +153,7 @@ class Result(object):
             overallScoreMethod = findParams.overallScoreMethod
             if overallScoreMethod == 'BestBinScore':
                 scorer = BestBinScore(histogram, significantBins)
-                overallScore = scorer.calculateScore()
+                overallScore, overallScoreAnalysis = scorer.calculateScore()
             elif overallScoreMethod == 'SignificantBinScore':
                 scorer = SignificantBinScore(histogram, significantBins, query,
                                              subject, connector.params)

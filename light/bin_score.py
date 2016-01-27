@@ -10,9 +10,9 @@ from light.utils import maxWithDefault, minWithDefault
 
 class NoneScore(object):
     """
-    Unconditionally set the bin score to be C{None}.
+    Unconditionally set bin scores to C{None}.
 
-    This is useful when the individual scores of bins isn't needed, most
+    This is useful when the individual scores of bins aren't needed, most
     likely because an overall match score between query and subject is
     more useful.
     """
@@ -24,9 +24,9 @@ class NoneScore(object):
 
     def calculateScore(self, binIndex):
         """
-        Calculate the score (always C{None}) for a given histogram bin.
+        Calculate the score (always C{None}) for a histogram bin.
 
-        @param binIndex: The C{int} index of the bin to examine.
+        @param binIndex: The C{int} index of the bin to (supposedly) examine.
         @return: A 2-tuple, containing C{None} (the score of the bin) and a
             C{dict} with the analysis leading to the score.
         """

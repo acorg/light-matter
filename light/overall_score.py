@@ -72,19 +72,16 @@ class SignificantBinScore(object):
     """
     Calculate an overall score based on all significant bins. The score is
     calculated as follows:
-    The score is a quotient. The numerator consists of the sum of all offsets
-    in features in pairs that match between subject and query, in all
-    significant bins. The denominator consists of the sum of all offsets in
-    features in pairs in subject and query that don't match, for all
+    The score is a quotient. The numerator consists of the sum of all unique
+    offsets in features in pairs that match between subject and query, in all
+    significant bins. The denominator consists of the sum of all unique offsets
+    in features in pairs in subject and query that don't match, for all
     significant bins.
     The score is corrected by length, by multiplying with another quotient.
     The quotient is calculated for both the subject and the query, and the
     bigger one is chosen. The numerator consists of the offsets of all
     features in the matched region. The denominator consists of all offsets in
     pairs for the whole sequence.
-    Note that this may result in double counting of pairs that are present in
-    more than one significant bin. For now, this is a desired effect, as not
-    double counting might result in a score that is bigger than 1.
 
     @param histogram: A C{light.histogram} instance.
     @param significantBins: A C{list} of C{dict}'s where each dict contains
@@ -127,11 +124,11 @@ class SignificantBinScore(object):
             return None, {}
 
         # Calculate the first quotient.
-        overallMatchedQueryOffsets = []
-        overallMatchedSubjectOffsets = []
+        overallMatchedQueryOffsets = set()
+        overallMatchedSubjectOffsets = set()
 
-        overallUnMatchedQueryOffsets = []
-        overallUnMatchedSubjectOffsets = []
+        overallUnMatchedQueryOffsets = set()
+        overallUnMatchedSubjectOffsets = set()
 
         overallQueryStartEnd = []
         overallSubjectStartEnd = []
@@ -185,11 +182,10 @@ class SignificantBinScore(object):
             # matched feature.
             unmatchedSubjectOffsets -= matchedSubjectOffsets
 
-            overallMatchedQueryOffsets.extend(list(matchedQueryOffsets))
-            overallMatchedSubjectOffsets.extend(list(matchedSubjectOffsets))
-            overallUnMatchedQueryOffsets.extend(list(unmatchedQueryOffsets))
-            overallUnMatchedSubjectOffsets.extend(list(
-                                                  unmatchedSubjectOffsets))
+            overallMatchedQueryOffsets.update(matchedQueryOffsets)
+            overallMatchedSubjectOffsets.update(matchedSubjectOffsets)
+            overallUnMatchedQueryOffsets.update(unmatchedQueryOffsets)
+            overallUnMatchedSubjectOffsets.update(unmatchedSubjectOffsets)
 
         # Calculate the first quotient over all bins.
         matchedOffsetCount = (len(overallMatchedQueryOffsets) +

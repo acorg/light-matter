@@ -7,6 +7,7 @@ from light.features import Landmark, TrigPoint
 from light.histogram import Histogram
 from light.landmarks import AlphaHelix, AminoAcids as AminoAcidsLm
 from light.trig.amino_acids import AminoAcids
+from light.trig.peaks import Peaks
 from light.overall_score import (BestBinScore, SignificantBinScore,
                                  featureIndicesOutsideOffsets)
 from light.parameters import Parameters, FindParameters
@@ -881,21 +882,21 @@ class TestSignificantBinScore(TestCase):
         self.assertEqual(1.0, overallScore)
         self.assertEqual(
             {
-                'denominatorQuery': 16,
-                'denominatorSubject': 16,
-                'matchedOffsetCount': 32,
-                'matchedQueryOffsetCount': 16,
+                'denominatorQuery': 11,
+                'denominatorSubject': 11,
+                'matchedOffsetCount': 22,
+                'matchedQueryOffsetCount': 11,
                 'matchedRegionScore': 1.0,
-                'matchedSubjectOffsetCount': 16,
-                'numeratorQuery': 16,
-                'numeratorSubject': 16,
+                'matchedSubjectOffsetCount': 11,
+                'numeratorQuery': 11,
+                'numeratorSubject': 11,
                 'normaliserQuery': 1.0,
                 'normaliserSubject': 1.0,
                 'queryOffsetsInBins': 40,
                 'score': overallScore,
                 'scoreClass': SignificantBinScore,
                 'subjectOffsetsInBins': 40,
-                'totalOffsetCount': 32,
+                'totalOffsetCount': 22,
             },
             overallAnalysis)
 
@@ -951,21 +952,21 @@ class TestSignificantBinScore(TestCase):
         self.assertEqual(1.0, overallScore)
         self.assertEqual(
             {
-                'denominatorQuery': 26,
-                'denominatorSubject': 16,
-                'matchedOffsetCount': 32,
-                'matchedQueryOffsetCount': 16,
+                'denominatorQuery': 21,
+                'denominatorSubject': 11,
+                'matchedOffsetCount': 22,
+                'matchedQueryOffsetCount': 11,
                 'matchedRegionScore': 1.0,
-                'matchedSubjectOffsetCount': 16,
-                'numeratorQuery': 16,
-                'numeratorSubject': 16,
-                'normaliserQuery': 16 / 26,
+                'matchedSubjectOffsetCount': 11,
+                'numeratorQuery': 11,
+                'numeratorSubject': 11,
+                'normaliserQuery': 0.5238095238095238,
                 'normaliserSubject': 1.0,
                 'queryOffsetsInBins': 40,
                 'score': overallScore,
                 'scoreClass': SignificantBinScore,
                 'subjectOffsetsInBins': 40,
-                'totalOffsetCount': 32,
+                'totalOffsetCount': 22,
             },
             overallAnalysis)
 
@@ -1019,24 +1020,24 @@ class TestSignificantBinScore(TestCase):
                                   params)
         overallScore, overallAnalysis = sbs.calculateScore()
         self.maxDiff = None
-        self.assertEqual(16 / 26, overallScore)
+        self.assertEqual(11 / 21, overallScore)
         self.assertEqual(
             {
-                'denominatorQuery': 26,
-                'denominatorSubject': 26,
-                'matchedOffsetCount': 32,
-                'matchedQueryOffsetCount': 16,
+                'denominatorQuery': 21,
+                'denominatorSubject': 21,
+                'matchedOffsetCount': 22,
+                'matchedQueryOffsetCount': 11,
                 'matchedRegionScore': 1.0,
-                'matchedSubjectOffsetCount': 16,
-                'numeratorQuery': 16,
-                'numeratorSubject': 16,
-                'normaliserQuery': 16 / 26,
-                'normaliserSubject': 16 / 26,
+                'matchedSubjectOffsetCount': 11,
+                'numeratorQuery': 11,
+                'numeratorSubject': 11,
+                'normaliserQuery': 11 / 21,
+                'normaliserSubject': 11 / 21,
                 'queryOffsetsInBins': 40,
                 'score': overallScore,
                 'scoreClass': SignificantBinScore,
                 'subjectOffsetsInBins': 40,
-                'totalOffsetCount': 32,
+                'totalOffsetCount': 22,
             },
             overallAnalysis)
 
@@ -1081,7 +1082,7 @@ class TestSignificantBinScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint3,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix, AminoAcidsLm], [])
+        params = Parameters([AlphaHelix, AminoAcidsLm], [Peaks])
         query = AARead('id', 40 * 'A' + 'FRRRFRRRFAAC' + 28 * 'A')
         subject = Subject('id2', 80 * 'A', 0)
         significantBins = [{'index': 0}, {'index': 1}, {'index': 2}]
@@ -1089,24 +1090,24 @@ class TestSignificantBinScore(TestCase):
                                   params)
         overallScore, overallAnalysis = sbs.calculateScore()
         self.maxDiff = None
-        self.assertEqual(32 / 42, overallScore)
+        self.assertEqual(22 / 27, overallScore)
         self.assertEqual(
             {
-                'denominatorQuery': 26,
-                'denominatorSubject': 16,
-                'matchedOffsetCount': 32,
-                'matchedQueryOffsetCount': 16,
-                'matchedRegionScore': 32 / 42,
-                'matchedSubjectOffsetCount': 16,
-                'numeratorQuery': 26,
-                'numeratorSubject': 16,
+                'denominatorQuery': 16,
+                'denominatorSubject': 11,
+                'matchedOffsetCount': 22,
+                'matchedQueryOffsetCount': 11,
+                'matchedRegionScore': 22 / 27,
+                'matchedSubjectOffsetCount': 11,
+                'numeratorQuery': 16,
+                'numeratorSubject': 11,
                 'normaliserQuery': 1.0,
                 'normaliserSubject': 1.0,
                 'queryOffsetsInBins': 40,
                 'score': overallScore,
                 'scoreClass': SignificantBinScore,
                 'subjectOffsetsInBins': 40,
-                'totalOffsetCount': 42,
+                'totalOffsetCount': 27,
             },
             overallAnalysis)
 
@@ -1139,7 +1140,7 @@ class TestSignificantBinScore(TestCase):
                                     overallScoreMethod='SignificantBinScore')
         result = db.find(pichninde, findParams, storeFullAnalysis=True)
         self.assertEqual(1.0, result.analysis[subjectIndex]['bestBinScore'])
-        self.assertEqual(0.4543991416309013,
+        self.assertEqual(0.5060240963855421,
                          result.analysis[subjectIndex]['overallScore'])
 
     def testScoresMustBeSymmetric(self):

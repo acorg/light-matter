@@ -11,8 +11,9 @@ from light.finder import Finder
 from light.landmarks import (
     findLandmark, DEFAULT_LANDMARK_CLASSES, ALL_LANDMARK_CLASSES)
 from light.trig import findTrigPoint, DEFAULT_TRIG_CLASSES, ALL_TRIG_CLASSES
-from light.score import MinHashesScore, ALL_SCORE_CLASSES
+from light.bin_score import MinHashesScore, ALL_BIN_SCORE_CLASSES
 from light.significance import HashFraction, ALL_SIGNIFICANCE_CLASSES
+from light.overall_score import BestBinScore, ALL_OVERALL_SCORE_CLASSES
 from light.string import MultilineString
 
 
@@ -55,6 +56,7 @@ class FindParameters(object):
     # are significant (i.e., worth reporting).
     DEFAULT_SCORE_METHOD = MinHashesScore.__name__
     DEFAULT_SIGNIFICANCE_METHOD = HashFraction.__name__
+    DEFAULT_OVERALL_SCORE_METHOD = BestBinScore.__name__
 
     # The default fraction of all (landmark, trig point) pairs for a
     # scannedRead that need to fall into the same offset delta histogram
@@ -85,8 +87,9 @@ class FindParameters(object):
     }
 
     def __init__(self, significanceMethod=None, significanceFraction=None,
-                 scoreMethod=None, featureMatchScore=None,
-                 featureMismatchScore=None, weights=None):
+                 scoreMethod=None, overallScoreMethod=None,
+                 featureMatchScore=None, featureMismatchScore=None,
+                 weights=None):
         self.significanceMethod = (
             self.DEFAULT_SIGNIFICANCE_METHOD if significanceMethod is None
             else significanceMethod)
@@ -107,6 +110,10 @@ class FindParameters(object):
             else featureMismatchScore)
 
         self.weights = self.DEFAULT_WEIGHTS if weights is None else weights
+
+        self.overallScoreMethod = (
+            self.DEFAULT_OVERALL_SCORE_METHOD if overallScoreMethod is
+            None else overallScoreMethod)
 
     @staticmethod
     def addArgsToParser(parser):
@@ -132,7 +139,7 @@ class FindParameters(object):
 
         parser.add_argument(
             '--scoreMethod', default=FindParameters.DEFAULT_SCORE_METHOD,
-            choices=[cls.__name__ for cls in ALL_SCORE_CLASSES],
+            choices=[cls.__name__ for cls in ALL_BIN_SCORE_CLASSES],
             help=('The name of the method used to calculate the score of a '
                   'histogram bin which is considered significant.'))
 
@@ -153,6 +160,13 @@ class FindParameters(object):
             help=('A string with the landmark name as the first element and '
                   'the weight as the second, separated by a space.'))
 
+        parser.add_argument(
+            '--overallScoreMethod',
+            default=FindParameters.DEFAULT_OVERALL_SCORE_METHOD,
+            choices=[cls.__name__ for cls in ALL_OVERALL_SCORE_CLASSES],
+            help=('The name of the method used to calculate the overall '
+                  'score of all histogram bins.'))
+
     @classmethod
     def fromArgs(cls, args):
         """
@@ -166,7 +180,8 @@ class FindParameters(object):
                        scoreMethod=args.scoreMethod,
                        featureMatchScore=args.featureMatchScore,
                        featureMismatchScore=args.featureMismatchScore,
-                       weights=parseWeights(args.weights or {}))
+                       weights=parseWeights(args.weights or {}),
+                       overallScoreMethod=args.overallScoreMethod)
 
         return dbParams
 
@@ -187,6 +202,7 @@ class FindParameters(object):
             'Score method: %s' % self.scoreMethod,
             'Feature match score: %f' % self.featureMatchScore,
             'Feature mismatch score: %f' % self.featureMismatchScore,
+            'OverallScoreMethod: %s' % self.overallScoreMethod,
             'Weights: ',
         ])
         result.indent()

@@ -11,8 +11,9 @@ from light.distance import scale
 from light.histogram import Histogram
 from light.significance import (
     Always, HashFraction, MaxBinHeight, MeanBinHeight)
-from light.bin_score import (MinHashesScore, FeatureMatchingScore,
-                             FeatureAAScore, WeightedFeatureAAScore)
+from light.bin_score import (
+    NoneScore, MinHashesScore, FeatureMatchingScore, FeatureAAScore,
+    WeightedFeatureAAScore)
 from light.overall_score import BestBinScore, SignificantBinScore
 from light.backend import Backend
 from light.string import MultilineString
@@ -115,7 +116,9 @@ class Result(object):
                                  significanceMethod)
 
             scoreMethod = findParams.scoreMethod
-            if scoreMethod == 'MinHashesScore':
+            if scoreMethod == 'NoneScore':
+                scorer = NoneScore()
+            elif scoreMethod == 'MinHashesScore':
                 scorer = MinHashesScore(histogram, minHashCount)
             elif scoreMethod == 'FeatureMatchingScore':
                 scorer = FeatureMatchingScore(

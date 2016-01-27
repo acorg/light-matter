@@ -55,33 +55,39 @@ class BestBinScore(object):
         return str(result)
 
 
-def featureIndicesOutsideOffsets(feature, offsets):
+def subtractOffsets(feature, offsets):
     """
     Returns a C{set} containing the offsets of a feature which aren't in the
     offsets specified.
 
     @param feature: A C{light.features._Feature} subclass (i.e., a
         landmark or a trig point).
-    @param offsets: A C{set} of offsets that are covered by a bin.
-    @return: A C{set} of featureOffsets that are outside the offsets.
+    @param offsets: A C{set} of C{int} offsets that are covered by a bin.
+    @return: A C{set} of C{int} feature offsets that are outside the passed
+        offsets.
     """
     return feature.coveredOffsets() - offsets
 
 
 class SignificantBinScore(object):
     """
-    Calculate an overall score based on all significant bins. The score is
-    calculated as follows:
-    The score is a quotient. The numerator consists of the sum of all unique
-    offsets in features in pairs that match between subject and query, in all
-    significant bins. The denominator consists of the sum of all unique offsets
-    in features in pairs in subject and query that don't match, for all
-    significant bins.
-    The score is corrected by length, by multiplying with another quotient.
+    Calculate an overall score based on all significant bins.
+    The overall score is calculated as a product:
+        M * N,
+        where M is a C{float} match score and
+        N is a C{float} length normalizer.
+    The overall score is always in the range [0.0 to 1.0].
+
+    The match score M is a quotient. The numerator consists of the number of
+    all unique offsets in features in pairs that match between subject and
+    query, in all significant bins. The denominator consists of the number of
+    all unique offsets in features in pairs in subject and query that don't
+    match, for all significant bins plus the numerator.
+    The score is normalized by length, by multiplying with another quotient, N.
     The quotient is calculated for both the subject and the query, and the
     bigger one is chosen. The numerator consists of the offsets of all
     features in the matched region. The denominator consists of all offsets in
-    pairs for the whole sequence.
+    features for the whole sequence.
 
     @param histogram: A C{light.histogram} instance.
     @param significantBins: A C{list} of C{dict}'s where each dict contains
@@ -116,12 +122,17 @@ class SignificantBinScore(object):
         Calculates the overall score for all significant bins, as described
         above.
 
-        @return: a C{float} score for the best significant bin (or C{None} if
-            there are no significant bins) and a C{dict} with information about
-            the score.
+        @return: a C{float} overall score for all significant bins (or C{None}
+            if there are no significant bins) and a C{dict} with information
+            about the score.
         """
         if not self._significantBinIndices:
-            return None, {}
+            analysis = {
+                'score': None,
+                'scoreClass': self.__class__,
+            }
+
+            return None, analysis
 
         # Calculate the first quotient.
         overallMatchedQueryOffsets = set()
@@ -207,23 +218,22 @@ class SignificantBinScore(object):
         for start, end in overallSubjectStartEnd:
             coveredSubjectOffsets.update(range(start, end + 1))
 
-        # Get all feature offsets that are not in a bin
+        # Get all feature offsets that are not in a bin.
         overallOffsetsNotInMatchQuery = set()
         for feature in self._allQueryFeatures:
-            coveredFeatIndices = featureIndicesOutsideOffsets(
-                feature, coveredQueryOffsets)
+            coveredFeatIndices = subtractOffsets(feature, coveredQueryOffsets)
             overallOffsetsNotInMatchQuery.update(coveredFeatIndices)
-        overallOffsetsNotInMatchQuery -= set(overallMatchedQueryOffsets)
+        overallOffsetsNotInMatchQuery -= overallMatchedQueryOffsets
         numeratorQuery = (len(overallMatchedQueryOffsets) +
                           len(overallUnMatchedQueryOffsets))
         denominatorQuery = numeratorQuery + len(overallOffsetsNotInMatchQuery)
 
         overallOffsetsNotInMatchSubject = set()
         for feature in self._allSubjectFeatures:
-            coveredFeatIndices = featureIndicesOutsideOffsets(
-                feature, coveredQueryOffsets)
+            coveredFeatIndices = subtractOffsets(feature,
+                                                 coveredSubjectOffsets)
             overallOffsetsNotInMatchSubject.update(coveredFeatIndices)
-        overallOffsetsNotInMatchSubject -= set(overallMatchedSubjectOffsets)
+        overallOffsetsNotInMatchSubject -= overallMatchedSubjectOffsets
         numeratorSubject = (len(overallMatchedSubjectOffsets) +
                             len(overallUnMatchedSubjectOffsets))
         denominatorSubject = (numeratorSubject +

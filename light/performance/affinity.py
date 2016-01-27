@@ -95,7 +95,7 @@ def affinityMatrix(queries, findParams=None, subjects=None, symmetric=True,
                 # for membership not try/except, because analysis[subjectIndex]
                 # will never raise a KeyError.
                 if subjectIndices[j] in analysis:
-                    score = analysis[subjectIndices[j]]['bestBinScore']
+                    score = analysis[subjectIndices[j]]['overallScore']
                 else:
                     score = 0.0
             affinity[i][j] = score

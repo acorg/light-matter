@@ -9,7 +9,7 @@ from light.landmarks import AlphaHelix, AminoAcids as AminoAcidsLm
 from light.trig.amino_acids import AminoAcids
 from light.trig.peaks import Peaks
 from light.overall_score import (BestBinScore, SignificantBinScore,
-                                 featureIndicesOutsideOffsets)
+                                 subtractOffsets)
 from light.parameters import Parameters, FindParameters
 from light.subject import Subject
 
@@ -118,35 +118,35 @@ class TestBestBinScore(TestCase):
         self.assertEqual(expected, BestBinScore.printAnalysis(analysis))
 
 
-class TestFeatureIndicesOutsideOffsets(TestCase):
+class TestSubtractOffsets(TestCase):
     """
-    Tests for the light.overall_score.featureIndicesOutsideOffsets function.
+    Tests for the light.overall_score.subtractOffsets function.
     """
     def testReturnsRightOffsetsForLandmarkInside(self):
         """
-        The featureIndicesOutsideOffsets function must return the right offsets
-        for a landmark completely inside the offsets specified.
+        The subtractOffsets function must return the right offsets for a
+        landmark completely inside the offsets specified.
         """
         landmark = Landmark('AlphaHelix', 'A', 10, 10)
-        offsets = featureIndicesOutsideOffsets(landmark, set(range(0, 21)))
+        offsets = subtractOffsets(landmark, set(range(0, 21)))
         self.assertEqual(set(), offsets)
 
     def testReturnsRightOffsetsForLandmarkPartlyInside(self):
         """
-        The featureIndicesOutsideOffsets function must return the right offsets
-        for a landmark partly inside the offsets specified.
+        The subtractOffsets function must return the right offsets for a
+        landmark partly inside the offsets specified.
         """
         landmark = Landmark('AlphaHelix', 'A', 10, 10)
-        offsets = featureIndicesOutsideOffsets(landmark, set(range(0, 15)))
+        offsets = subtractOffsets(landmark, set(range(0, 15)))
         self.assertEqual({15, 16, 17, 18, 19}, offsets)
 
     def testReturnsRightOffsetsForTrigPointInside(self):
         """
-        The featureIndicesOutsideOffsets function must return the right offsets
-        for a trigPoint completely inside the offsets specified.
+        The subtractOffsets function must return the right offsets for a
+        trigPoint completely inside the offsets specified.
         """
         trigPoint = TrigPoint('Peaks', 'P', 10)
-        offsets = featureIndicesOutsideOffsets(trigPoint, set(range(0, 5)))
+        offsets = subtractOffsets(trigPoint, set(range(0, 5)))
         self.assertEqual({10}, offsets)
 
 
@@ -167,7 +167,8 @@ class TestSignificantBinScore(TestCase):
                                                   subject, params)
         score, analysis = significantBinScore.calculateScore()
         self.assertIs(None, score)
-        self.assertEqual({}, analysis)
+        self.assertEqual({'score': None,
+                          'scoreClass': SignificantBinScore}, analysis)
 
     def testQueryHasOneFeature(self):
         """
@@ -182,7 +183,8 @@ class TestSignificantBinScore(TestCase):
         sbs = SignificantBinScore(histogram, [], query, subject, params)
         score, analysis = sbs.calculateScore()
         self.assertEqual(None, score)
-        self.assertEqual({}, analysis)
+        self.assertEqual({'score': None,
+                          'scoreClass': SignificantBinScore}, analysis)
 
     def testQueryAndSubjectHaveOneFeature(self):
         """
@@ -197,7 +199,8 @@ class TestSignificantBinScore(TestCase):
         sbs = SignificantBinScore(histogram, [], query, subject, params)
         score, analysis = sbs.calculateScore()
         self.assertEqual(None, score)
-        self.assertEqual({}, analysis)
+        self.assertEqual({'score': None,
+                          'scoreClass': SignificantBinScore}, analysis)
 
     def testOnePairInOneBin(self):
         """

@@ -61,7 +61,7 @@ class TestNoneScore(TestCase):
     """
     def testEmptyBin(self):
         """
-        A bin containing no elements must have a score of C{None}.
+        A bin containing no pairs must have a score of C{None}.
         """
         histogram = Histogram()
         histogram.finalize()
@@ -77,7 +77,7 @@ class TestNoneScore(TestCase):
 
     def testOneHashInBin(self):
         """
-        A bin containing one hash must have a score of C{None}.
+        A bin containing one pair must have a score of C{None}.
         """
         # Note that this test is almost identical to a FeatureMatchingScore
         # test below (with the same test name), but will result in a score

@@ -3,10 +3,11 @@
 from __future__ import print_function
 
 import argparse
-from operator import attrgetter
 
-from light.landmarks import ALL_LANDMARK_CLASSES
-from light.trig import ALL_TRIG_CLASSES
+from light.landmarks import ALL_LANDMARK_CLASSES_EVEN_BAD_ONES
+from light.trig import ALL_TRIG_CLASSES_EVEN_BAD_ONES
+from light.parameters import DatabaseParameters
+
 
 parser = argparse.ArgumentParser(
     description='List all landmark and trig point finders.')
@@ -16,19 +17,20 @@ parser.add_argument(
     help='If True, also print documentation for each finder class.')
 
 args = parser.parse_args()
-key = attrgetter('NAME')
+dbParams = DatabaseParameters(
+    landmarks=ALL_LANDMARK_CLASSES_EVEN_BAD_ONES,
+    trigPoints=ALL_TRIG_CLASSES_EVEN_BAD_ONES)
 
-maxLen = max(len(cls.NAME) for cls in
-             set(ALL_LANDMARK_CLASSES) | set(ALL_TRIG_CLASSES))
-
-print('%d landmark finders:' % len(ALL_LANDMARK_CLASSES))
-for finder in sorted(ALL_LANDMARK_CLASSES, key=key):
-    print('  %-*s (%s)' % (maxLen, finder.NAME, finder.SYMBOL))
+finders = dbParams.landmarkFinders
+print('%d landmark finders:' % len(finders))
+for finder in finders:
+    print(finder.print_(margin='  '))
     if args.verbose:
-        print(finder.__doc__)
+        print('  ', finder.__doc__)
 
-print('%d trig point finders:' % len(ALL_TRIG_CLASSES))
-for finder in sorted(ALL_TRIG_CLASSES, key=key):
-    print('  %-*s (%s)' % (maxLen, finder.NAME, finder.SYMBOL))
+finders = dbParams.trigPointFinders
+print('%d trig point finders:' % len(finders))
+for finder in finders:
+    print(finder.print_(margin='  '))
     if args.verbose:
-        print(finder.__doc__)
+        print('  ', finder.__doc__)

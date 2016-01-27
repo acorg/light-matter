@@ -3,8 +3,8 @@ from json import loads
 from os.path import dirname, join
 
 import light
-from light.features import Landmark, Finder
-
+from light.features import Landmark
+from light.finder import Finder
 
 _DB_FILE = join(dirname(light.__file__), '..', 'data', 'prosite-20.119.json')
 
@@ -25,8 +25,8 @@ class Prosite(Finder):
     NAME = 'Prosite'
     SYMBOL = 'PS'
 
-    def __init__(self, featureLengthBase=1.35):
-        Finder.__init__(self, featureLengthBase)
+    def __init__(self):
+        Finder.__init__(self)
         self.database = []
         with open(_DB_FILE) as fp:
             for line in fp:

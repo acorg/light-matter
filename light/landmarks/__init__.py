@@ -9,11 +9,14 @@ from light.landmarks.gor4_beta_strand import GOR4BetaStrand
 from light.landmarks.gor4_coil import GOR4Coil
 from light.landmarks.predicted_structure import PredictedStructure
 from light.landmarks.prosite import Prosite
+from light.landmarks.random import RandomLandmark
 
 ALL_LANDMARK_CLASSES = [
     AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, AminoAcids, BetaStrand,
     BetaTurn, GOR4AlphaHelix, GOR4BetaStrand, GOR4Coil, PredictedStructure,
     Prosite]
+
+ALL_LANDMARK_CLASSES_EVEN_BAD_ONES = ALL_LANDMARK_CLASSES + [RandomLandmark]
 
 DEFAULT_LANDMARK_CLASSES = [
     AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, AminoAcids, BetaStrand,

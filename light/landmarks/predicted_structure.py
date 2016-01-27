@@ -1,6 +1,7 @@
 from itertools import chain
 
-from light.features import Landmark, Finder
+from light.features import Landmark
+from light.finder import Finder
 
 
 class PredictedStructure(Finder):

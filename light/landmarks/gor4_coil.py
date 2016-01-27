@@ -1,5 +1,6 @@
 from light.distance import scale
-from light.features import Landmark, Finder
+from light.features import Landmark
+from light.finder import Finder
 
 
 class GOR4Coil(Finder):

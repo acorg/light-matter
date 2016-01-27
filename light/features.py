@@ -261,19 +261,3 @@ class CombinedFeatureList(object):
                         else:
                             # The smallest available delta is too large.
                             return
-
-
-class Finder(object):
-    """
-    Holds information about landmark or trigPoint finders.
-
-    @param featureLengthBase: The length of a landmark is scaled to be its
-        logarithm using this C{float} base, for the purpose of matching
-        landmarks via hashes. This reduces sensitivity to relatively small
-        differences in lengths. The default set below is only used by the
-        tests. In normal operation the value is passed from the parameters
-        for the database.
-    """
-
-    def __init__(self, featureLengthBase=1.35):
-        self._featureLengthBase = featureLengthBase

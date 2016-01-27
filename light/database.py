@@ -26,7 +26,7 @@ if six.PY3:
     from light.database_wamp import getWampClientDatabase
 
 from light.backend import Backend
-from light.parameters import Parameters
+from light.parameters import DatabaseParameters
 from light.landmarks import findLandmarks, DEFAULT_LANDMARK_CLASSES
 from light.trig import findTrigPoints, DEFAULT_TRIG_CLASSES
 from light.string import MultilineString
@@ -142,7 +142,7 @@ class Database:
             filePrefix = None
 
         with as_handle(saveFile) as fp:
-            params = Parameters.restore(fp)
+            params = DatabaseParameters.restore(fp)
             state = loads(fp.readline()[:-1])
 
         connectorClassName = state['_connectorClassName']
@@ -199,19 +199,23 @@ class Database:
 
 class DatabaseSpecifier:
     """
-    Helper class for creating or loading a database and populating it.
+    Helper class for 1) either creating a new database, loading one from
+    saved files, accessing one that's already in memory, or accessing one
+    remotely, and then, 2) optionally populating it.
 
-    @param allowCreation: If True, add options that permit the creation
+    @param allowCreation: If C{True}, add options that permit the creation
         of a new database.
-    @param allowPopulation: If True, add options that allow the automatic
+    @param allowPopulation: If C{True}, add options that allow the automatic
         addition of sequences to the database.
-    @param allowInMemory: If True, add the option that allows the user to
-        pass an in-memory database (e.g., as constructed in ipython or
+    @param allowInMemory: If C{True}, add the option that allows the user to
+        pass an in-memory database (e.g., as constructed in iPython or
         iPythonNotebook or programmatically).
-    @param allowWamp: If True, add options that allow the user to specify a
+    @param allowWamp: If C{True}, add options that allow the user to specify a
         WAMP-based distributed database. This option can only be used in
         Python 3.
-    @raise ValueError: If the allow options do not permit creation or loading.
+    @raise ValueError: If the allow* options do not permit creation, loading
+        from a file, or an in-memory database. Or if the use of WAMP is
+        attempted and we're not using Python 3.
     """
     def __init__(self, allowCreation=True, allowPopulation=True,
                  allowInMemory=True, allowWamp=six.PY3):
@@ -257,7 +261,7 @@ class DatabaseSpecifier:
             addWampArgsToParser(parser)
 
         if self._allowCreation:
-            Parameters.addArgsToParser(parser)
+            DatabaseParameters.addArgsToParser(parser)
 
         if self._allowPopulation:
             parser.add_argument(
@@ -304,12 +308,12 @@ class DatabaseSpecifier:
                     'Not creating database as no landmark or trig point '
                     'finders were specified. Use --landmark and/or --trig.')
 
-            return Parameters(landmarkClasses, trigClasses,
-                              limitPerLandmark=args.limitPerLandmark,
-                              maxDistance=args.maxDistance,
-                              minDistance=args.minDistance,
-                              distanceBase=args.distanceBase,
-                              featureLengthBase=args.featureLengthBase)
+            return DatabaseParameters(landmarkClasses, trigClasses,
+                                      limitPerLandmark=args.limitPerLandmark,
+                                      maxDistance=args.maxDistance,
+                                      minDistance=args.minDistance,
+                                      distanceBase=args.distanceBase,
+                                      featureLengthBase=args.featureLengthBase)
 
         database = None
         filePrefix = args.filePrefix
@@ -388,22 +392,19 @@ class DatabaseSpecifier:
 
     def getDatabaseFromKeywords(
             self, landmarkNames=None, trigPointNames=None,
-            defaultLandmarks=False, defaultTrigPoints=False,
-            limitPerLandmark=Parameters.DEFAULT_LIMIT_PER_LANDMARK,
-            maxDistance=Parameters.DEFAULT_MAX_DISTANCE,
-            minDistance=Parameters.DEFAULT_MIN_DISTANCE,
-            distanceBase=Parameters.DEFAULT_DISTANCE_BASE,
-            featureLengthBase=Parameters.DEFAULT_FEATURE_LENGTH_BASE,
-            database=None, databaseFasta=None, subjects=None, filePrefix=None):
+            limitPerLandmark=DatabaseParameters.DEFAULT_LIMIT_PER_LANDMARK,
+            maxDistance=DatabaseParameters.DEFAULT_MAX_DISTANCE,
+            minDistance=DatabaseParameters.DEFAULT_MIN_DISTANCE,
+            distanceBase=DatabaseParameters.DEFAULT_DISTANCE_BASE,
+            featureLengthBase=DatabaseParameters.DEFAULT_FEATURE_LENGTH_BASE,
+            database=None, databaseFasta=None, subjects=None, filePrefix=None,
+            **kwargs):
         """
         Use Python function keywords to build an argument parser that can
         used to find or create a database using getDatabaseFromArgs
 
         @param landmarkNames: a C{list} of C{str} of landmark finder names.
         @param trigPointNames: a C{list} of C{str} of trig finder names.
-        @param defaultLandmarks: If C{True}, use the default landmark finders.
-        @param defaultTrigPoints: If C{True}, use the default trig point
-            finders.
         @param limitPerLandmark: An C{int} limit on the number of pairs to
             yield per landmark.
         @param maxDistance: The C{int} maximum distance permitted between
@@ -425,6 +426,9 @@ class DatabaseSpecifier:
         @param filePrefix: The C{str} prefix of the name of a file containing
             saved data. A suffix will be added to get the various file names
             of the database hash index, the connector, the parameters, etc.
+        @param kwargs: Additional arguments specifying values for feature
+            finders that have parameters. To see the available parameters,
+            look at the PARAMETERS variable in each finder.
         @raise ValueError: If a database cannot be found or created.
         @return: A C{light.database.Database} instance.
         """
@@ -450,6 +454,8 @@ class DatabaseSpecifier:
 
         if filePrefix is not None:
             commandLine.extend(['--filePrefix', filePrefix])
+
+        dbParams = DatabaseParameters()
 
         if landmarkNames is not None:
             for landmarkName in landmarkNames:

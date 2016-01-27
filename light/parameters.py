@@ -1,13 +1,13 @@
 from __future__ import print_function
 
 import sys
-from operator import attrgetter
 try:
     from ujson import dumps, loads
 except ImportError:
     from json import dumps, loads
 
 from light.checksum import Checksum
+from light.finder import Finder
 from light.landmarks import (
     findLandmark, DEFAULT_LANDMARK_CLASSES, ALL_LANDMARK_CLASSES)
 from light.trig import findTrigPoint, DEFAULT_TRIG_CLASSES, ALL_TRIG_CLASSES
@@ -161,12 +161,14 @@ class FindParameters(object):
         @param args: The result of calling C{parse_args()} on an
             C{argparse.ArgumentParser} instance.
         """
-        return cls(significanceMethod=args.significanceMethod,
-                   significanceFraction=args.significanceFraction,
-                   scoreMethod=args.scoreMethod,
-                   featureMatchScore=args.featureMatchScore,
-                   featureMismatchScore=args.featureMismatchScore,
-                   weights=parseWeights(args.weights or {}))
+        dbParams = cls(significanceMethod=args.significanceMethod,
+                       significanceFraction=args.significanceFraction,
+                       scoreMethod=args.scoreMethod,
+                       featureMatchScore=args.featureMatchScore,
+                       featureMismatchScore=args.featureMismatchScore,
+                       weights=parseWeights(args.weights or {}))
+
+        return dbParams
 
     def print_(self, margin=''):
         """
@@ -193,14 +195,17 @@ class FindParameters(object):
         return str(result)
 
 
-class Parameters(object):
+class DatabaseParameters(object):
     """
-    Hold a collection of database parameter settings.
+    Hold a collection of database parameter settings, including parameters
+    defined by feature finders.
 
-    @param landmarkClasses: A C{list} of landmark finder classes, or C{None}
-        to use the default set of landmark finder classes.
-    @param trigPointClasses: A C{list} of trig point finder classes, or C{None}
-        to use the default set of trig point finder classes.
+    @param landmarks: Either C{None} (to use the default landmark finders) or
+        a mixed C{list} of landmark finder classes or C{str} landmark finder
+        names. To specify no landmark finders, pass an empty list.
+    @param trigPoints: Either C{None} (to use the default trig point finders)
+        or a mixed C{list} of trig point finder classes or C{str} trig point
+        finder names. To specify no trig point finders, pass an empty list.
     @param limitPerLandmark: An C{int} limit on the number of pairs to
         yield per landmark.
     @param maxDistance: The C{int} maximum distance permitted between
@@ -214,6 +219,10 @@ class Parameters(object):
         logarithm using this C{float} base, for the purpose of matching
         landmarks via hashes. This reduces sensitivity to relatively small
         differences in lengths.
+    @param kwargs: A C{dict} containing feature finder parameter names (as
+        keys) and values.
+    @raise ValueError: If an unknown landmark or trig point finder name is
+        given in C{landmarkNames} or C{trigPointNames}.
     """
 
     PARAMS = ('landmarkClasses', 'trigPointClasses', 'limitPerLandmark',
@@ -227,10 +236,11 @@ class Parameters(object):
     DEFAULT_DISTANCE_BASE = 1.1
     DEFAULT_FEATURE_LENGTH_BASE = 1.35
 
-    def __init__(self, landmarkClasses, trigPointClasses,
+    def __init__(self, landmarks=None, trigPoints=None,
                  limitPerLandmark=None, maxDistance=None, minDistance=None,
-                 distanceBase=None, featureLengthBase=None):
+                 distanceBase=None, featureLengthBase=None, **kwargs):
 
+        # First set the simple scalar parameters.
         self.distanceBase = (
             self.DEFAULT_DISTANCE_BASE if distanceBase is None
             else distanceBase)
@@ -245,20 +255,6 @@ class Parameters(object):
         if self.featureLengthBase <= 0:
             raise ValueError('featureLengthBase must be > 0.')
 
-        self.landmarkClasses = (
-            DEFAULT_LANDMARK_CLASSES if landmarkClasses is None
-            else landmarkClasses)
-
-        self.landmarkFinders = [landmarkClass(self.featureLengthBase)
-                                for landmarkClass in self.landmarkClasses]
-
-        self.trigPointClasses = (
-            DEFAULT_TRIG_CLASSES if trigPointClasses is None
-            else trigPointClasses)
-
-        self.trigPointFinders = [trigPointClass(self.featureLengthBase)
-                                 for trigPointClass in self.trigPointClasses]
-
         self.limitPerLandmark = (
             self.DEFAULT_LIMIT_PER_LANDMARK if limitPerLandmark is None
             else limitPerLandmark)
@@ -268,6 +264,50 @@ class Parameters(object):
 
         self.minDistance = (
             self.DEFAULT_MIN_DISTANCE if minDistance is None else minDistance)
+
+        if landmarks is None:
+            landmarkClasses = DEFAULT_LANDMARK_CLASSES
+        else:
+            landmarkClasses = set()
+            for landmark in landmarks:
+                if issubclass(landmark, Finder):
+                    landmarkClasses.add(landmark)
+                else:
+                    cls = findLandmark(landmark)
+                    if cls:
+                        landmarkClasses.add(cls)
+                    else:
+                        raise ValueError(
+                            'Could not find landmark finder class %r.'
+                            % landmark)
+
+        if trigPoints is None:
+            trigPointClasses = DEFAULT_TRIG_CLASSES
+        else:
+            trigPointClasses = set()
+            for trigPoint in trigPoints:
+                if issubclass(trigPoint, Finder):
+                    trigPointClasses.add(trigPoint)
+                else:
+                    cls = findTrigPoint(trigPoint)
+                    if cls:
+                        trigPointClasses.add(cls)
+                    else:
+                        raise ValueError(
+                            'Could not find trig point finder class %r.'
+                            % trigPoint)
+
+        # The finders instantiated here are not used in this file. They are
+        # used by the backend. We make sorted lists of them so we're guaranteed
+        # to always process them in the same order (in printing, in checksums,
+        # etc).
+        self.landmarkFinders = sorted(cls() for cls in landmarkClasses)
+        self.trigPointFinders = sorted(cls() for cls in trigPointClasses)
+
+        # Initialize all finders.
+        print('NIT............')
+        for finder in self.landmarkFinders + self.trigPointFinders:
+            finder.initializeFromKeywords(**kwargs)
 
     @property
     def checksum(self):
@@ -279,14 +319,11 @@ class Parameters(object):
         # with the same finders will have identical parameter checksums
         # (all else being equal).
         checksum = Checksum()
-        key = attrgetter('NAME')
-        landmarkFinders = sorted(self.landmarkFinders, key=key)
-        trigPointFinders = sorted(self.trigPointFinders, key=key)
         checksum.update(
-            [f.NAME for f in landmarkFinders] +
-            [f.SYMBOL for f in landmarkFinders] +
-            [f.NAME for f in trigPointFinders] +
-            [f.SYMBOL for f in trigPointFinders] +
+            [f.NAME for f in self.landmarkFinders] +
+            [f.SYMBOL for f in self.landmarkFinders] +
+            [f.NAME for f in self.trigPointFinders] +
+            [f.SYMBOL for f in self.trigPointFinders] +
             list(map(str, (self.limitPerLandmark, self.maxDistance,
                            self.minDistance, self.distanceBase,
                            self.featureLengthBase))))
@@ -324,23 +361,23 @@ class Parameters(object):
 
         parser.add_argument(
             '--limitPerLandmark', type=int,
-            default=Parameters.DEFAULT_LIMIT_PER_LANDMARK,
+            default=DatabaseParameters.DEFAULT_LIMIT_PER_LANDMARK,
             help=('A limit on the number of pairs to yield per landmark '
                   'per read.'))
 
         parser.add_argument(
             '--maxDistance', type=int,
-            default=Parameters.DEFAULT_MAX_DISTANCE,
+            default=DatabaseParameters.DEFAULT_MAX_DISTANCE,
             help='The maximum distance permitted between yielded pairs.')
 
         parser.add_argument(
             '--minDistance', type=int,
-            default=Parameters.DEFAULT_MIN_DISTANCE,
+            default=DatabaseParameters.DEFAULT_MIN_DISTANCE,
             help='The minimum distance permitted between yielded pairs.')
 
         parser.add_argument(
             '--distanceBase', type=float,
-            default=Parameters.DEFAULT_DISTANCE_BASE,
+            default=DatabaseParameters.DEFAULT_DISTANCE_BASE,
             help=('The distance between a landmark and a trig point is '
                   'scaled to be its logarithm using this base. This '
                   'reduces sensitivity to relatively small differences in '
@@ -348,11 +385,15 @@ class Parameters(object):
 
         parser.add_argument(
             '--featureLengthBase', type=float,
-            default=Parameters.DEFAULT_FEATURE_LENGTH_BASE,
+            default=DatabaseParameters.DEFAULT_FEATURE_LENGTH_BASE,
             help=('The length of landmarks, for the purpose of matching '
                   'hashes, is scaled to be the logarithm of the landmark '
                   'length using this base. This reduces sensitivity to '
                   'relatively small differences in landmark length.'))
+
+        # Allow all finders to add their own arguments.
+        for cls in ALL_LANDMARK_CLASSES + ALL_TRIG_CLASSES:
+            cls().addArgsToParser(parser)
 
     def save(self, fp=sys.stdout):
         """
@@ -361,16 +402,21 @@ class Parameters(object):
         @param fp: A file pointer.
         @return: The C{fp} we were passed (this is useful in testing).
         """
-        print(dumps({
-            'landmarkClassNames': [cls.NAME for cls in self.landmarkClasses],
-            'trigPointClassNames': [cls.NAME for cls in self.trigPointClasses],
+        state = {
+            'landmarks': [finder.NAME for finder in self.landmarkFinders],
+            'trigPoints': [finder.NAME for finder in self.trigPointFinders],
             'limitPerLandmark': self.limitPerLandmark,
             'maxDistance': self.maxDistance,
             'minDistance': self.minDistance,
             'distanceBase': self.distanceBase,
             'featureLengthBase': self.featureLengthBase,
-        }), file=fp)
+        }
 
+        # Add the state of all finders.
+        for finder in self.landmarkFinders + self.trigPointFinders:
+            state.update(finder.state())
+
+        print(dumps(state), file=fp)
         return fp
 
     @staticmethod
@@ -385,34 +431,7 @@ class Parameters(object):
             loaded from C{fp}.
         """
         state = loads(fp.readline()[:-1])
-
-        landmarkClasses = []
-        for landmarkClassName in state['landmarkClassNames']:
-            cls = findLandmark(landmarkClassName)
-            if cls:
-                landmarkClasses.append(cls)
-            else:
-                raise ValueError(
-                    'Could not find landscape finder class %s. Has that '
-                    'class been renamed or removed?' % landmarkClassName)
-
-        trigPointClasses = []
-        for trigPointClassName in state['trigPointClassNames']:
-            cls = findTrigPoint(trigPointClassName)
-            if cls:
-                trigPointClasses.append(cls)
-            else:
-                raise ValueError(
-                    'Could not find trig point finder class %s. Has that '
-                    'class been renamed or removed?' % trigPointClassName)
-
-        return Parameters(
-            landmarkClasses, trigPointClasses,
-            limitPerLandmark=state['limitPerLandmark'],
-            maxDistance=state['maxDistance'],
-            minDistance=state['minDistance'],
-            distanceBase=state['distanceBase'],
-            featureLengthBase=state['featureLengthBase'])
+        return DatabaseParameters(**state)
 
     def print_(self, margin=''):
         """
@@ -432,7 +451,8 @@ class Parameters(object):
         if self.landmarkFinders:
             append('Landmark finders:')
             result.indent()
-            extend(sorted(finder.NAME for finder in self.landmarkFinders))
+            for finder in self.landmarkFinders:
+                result.append(finder.print_(margin), verbatim=True)
             result.outdent()
         else:
             append('Landmark finders: none')
@@ -440,7 +460,8 @@ class Parameters(object):
         if self.trigPointFinders:
             append('Trig point finders:')
             result.indent()
-            extend(sorted(finder.NAME for finder in self.trigPointFinders))
+            for finder in self.trigPointFinders:
+                result.append(finder.print_(margin), verbatim=True)
             result.outdent()
         else:
             append('Trig point finders: none')
@@ -470,5 +491,7 @@ class Parameters(object):
             if ours != theirs:
                 err.append('\tParam %r values %r and %r differ.' %
                            (param, ours, theirs))
+
+        # TODO: compare finder parameters!
 
         return 'Summary of differences:\n%s' % '\n'.join(err) if err else None

@@ -391,20 +391,20 @@ class DatabaseSpecifier:
         return database
 
     def getDatabaseFromKeywords(
-            self, landmarkNames=None, trigPointNames=None,
-            limitPerLandmark=DatabaseParameters.DEFAULT_LIMIT_PER_LANDMARK,
-            maxDistance=DatabaseParameters.DEFAULT_MAX_DISTANCE,
-            minDistance=DatabaseParameters.DEFAULT_MIN_DISTANCE,
-            distanceBase=DatabaseParameters.DEFAULT_DISTANCE_BASE,
-            featureLengthBase=DatabaseParameters.DEFAULT_FEATURE_LENGTH_BASE,
+            self,
             database=None, databaseFasta=None, subjects=None, filePrefix=None,
             **kwargs):
         """
         Use Python function keywords to build an argument parser that can
         used to find or create a database using getDatabaseFromArgs
 
-        @param landmarkNames: a C{list} of C{str} of landmark finder names.
-        @param trigPointNames: a C{list} of C{str} of trig finder names.
+        @param landmarks: Either C{None} (to use the default landmark finders)
+            or a mixed C{list} of landmark finder classes or C{str} landmark
+            finder names. To specify no landmark finders, pass an empty list.
+        @param trigPoints: Either C{None} (to use the default trig point
+            finders) or a mixed C{list} of trig point finder classes or C{str}
+            trig point finder names. To specify no trig point finders, pass an
+            empty list.
         @param limitPerLandmark: An C{int} limit on the number of pairs to
             yield per landmark.
         @param maxDistance: The C{int} maximum distance permitted between
@@ -426,9 +426,12 @@ class DatabaseSpecifier:
         @param filePrefix: The C{str} prefix of the name of a file containing
             saved data. A suffix will be added to get the various file names
             of the database hash index, the connector, the parameters, etc.
-        @param kwargs: Additional arguments specifying values for feature
-            finders that have parameters. To see the available parameters,
-            look at the PARAMETERS variable in each finder.
+        @param kwargs: Additional arguments specifying values for database
+            parameters and values for feature finders that have parameters.
+            To see the available database parameters, see the docstring of
+            the DatabaseParameters class. To see the available parameters for
+            feature finders, run the bin/list-finders.py script or see the
+            PARAMETERS variable in the finder source code.
         @raise ValueError: If a database cannot be found or created.
         @return: A C{light.database.Database} instance.
         """
@@ -455,7 +458,7 @@ class DatabaseSpecifier:
         if filePrefix is not None:
             commandLine.extend(['--filePrefix', filePrefix])
 
-        dbParams = DatabaseParameters()
+        dbParams = DatabaseParameters(**kwargs)
 
         if landmarkNames is not None:
             for landmarkName in landmarkNames:
@@ -464,12 +467,6 @@ class DatabaseSpecifier:
         if trigPointNames is not None:
             for trigPointName in trigPointNames:
                 commandLine.extend(['--trig', trigPointName])
-
-        if defaultLandmarks:
-            commandLine.append('--defaultLandmarks')
-
-        if defaultTrigPoints:
-            commandLine.append('--defaultTrigPoints')
 
         commandLine.extend(['--limitPerLandmark', str(limitPerLandmark),
                             '--maxDistance', str(maxDistance),

@@ -9,8 +9,9 @@ except ImportError:
 from light.checksum import Checksum
 from light.finder import Finder
 from light.landmarks import (
-    findLandmark, DEFAULT_LANDMARK_CLASSES, ALL_LANDMARK_CLASSES)
-from light.trig import findTrigPoint, DEFAULT_TRIG_CLASSES, ALL_TRIG_CLASSES
+    findLandmark, DEFAULT_LANDMARK_CLASSES, ALL_LANDMARK_CLASSES_EVEN_BAD_ONES)
+from light.trig import (
+    findTrigPoint, DEFAULT_TRIG_CLASSES, ALL_TRIG_CLASSES_EVEN_BAD_ONES)
 from light.bin_score import MinHashesScore, ALL_BIN_SCORE_CLASSES
 from light.significance import HashFraction, ALL_SIGNIFICANCE_CLASSES
 from light.overall_score import BestBinScore, ALL_OVERALL_SCORE_CLASSES
@@ -238,7 +239,7 @@ class DatabaseParameters(object):
     @param kwargs: A C{dict} containing feature finder parameter names (as
         keys) and values.
     @raise ValueError: If an unknown landmark or trig point finder name is
-        given in C{landmarkNames} or C{trigPointNames}.
+        given in C{landmarks} or C{trigPoints}.
     """
 
     PARAMS = ('landmarkClasses', 'trigPointClasses', 'limitPerLandmark',
@@ -354,26 +355,29 @@ class DatabaseParameters(object):
         """
         parser.add_argument(
             '--landmark', action='append', dest='landmarkFinderNames',
-            choices=sorted(cl.NAME for cl in ALL_LANDMARK_CLASSES),
+            choices=sorted(c.NAME for c in ALL_LANDMARK_CLASSES_EVEN_BAD_ONES),
             help=('The name of a landmark finder to use. May be specified '
-                  'multiple times.'))
+                  'multiple times. If no landmark finders are '
+                  'given (and --noLandmarks is not specified), the default '
+                  'set of landmark finders (%s) will be used.' %
+                  ', '.join(sorted(c.NAME for c in DEFAULT_LANDMARK_CLASSES))))
 
         parser.add_argument(
             '--trig', action='append', dest='trigFinderNames',
-            choices=sorted(cl.NAME for cl in ALL_TRIG_CLASSES),
+            choices=sorted(c.NAME for c in ALL_TRIG_CLASSES_EVEN_BAD_ONES),
             help=('The name of a trig point finder to use. May be '
-                  'specified multiple times.'))
+                  'specified multiple times. If no trig point finders are '
+                  'given (and --noTrigPoints is not specified), the default '
+                  'set of trig point finders (%s) will be used.' %
+                  ', '.join(sorted(c.NAME for c in DEFAULT_TRIG_CLASSES))))
 
         parser.add_argument(
-            '--defaultLandmarks', action='store_true', default=False,
-            help=('If specified, use the default landmark finders: %s' %
-                  sorted(cl.NAME for cl in
-                         DEFAULT_LANDMARK_CLASSES)))
+            '--noLandmarks', action='store_true', default=False,
+            help='If specified, no landmark finders will be used.')
 
         parser.add_argument(
-            '--defaultTrigPoints', action='store_true', default=False,
-            help=('If specified, use the default trig point finders: %s' %
-                  sorted(cl.NAME for cl in DEFAULT_TRIG_CLASSES)))
+            '--noTrigPoints', action='store_true', default=False,
+            help='If specified, no trig point finders will be used.')
 
         parser.add_argument(
             '--limitPerLandmark', type=int,
@@ -408,7 +412,8 @@ class DatabaseParameters(object):
                   'relatively small differences in landmark length.'))
 
         # Allow all finders to add their own arguments.
-        for cls in ALL_LANDMARK_CLASSES + ALL_TRIG_CLASSES:
+        for cls in (ALL_LANDMARK_CLASSES_EVEN_BAD_ONES +
+                    ALL_TRIG_CLASSES_EVEN_BAD_ONES):
             cls().addArgsToParser(parser)
 
     def save(self, fp=sys.stdout):

@@ -134,8 +134,8 @@ class MeanBinHeight(object):
 
 def getHeight(bin_):
     """
-    Calculate the height of a histogram bin based on number of amino acids in
-    matching features in the bin.
+    Calculate the height of a histogram bin based on the number of amino acids
+    in matching features in the bin.
     The height consists of the following:
         All offsets in matching features in the query +
         all offsets in matching features in the subject.
@@ -161,8 +161,8 @@ class AAFraction(object):
     """
     Identify significant histogram bins based on the number of amino acids in
     features in the bin, as compared to the theoretical maximum number, using a
-    cutoff. The theoretical maximum number is the number of amino acids in
-    features in the subject and the query.
+    cutoff. The theoretical maximum number is the number of non-overlapping
+    amino acids in features in the subject and the query.
 
     @param histogram: A C{light.histogram} instance.
     @param featureAACount: The C{int} number of amino acids in features in the

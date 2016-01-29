@@ -132,6 +132,31 @@ class MeanBinHeight(object):
         return binCount >= self.significanceCutoff
 
 
+def getHeight(bin_):
+    """
+    Calculate the height of a histogram bin based on number of amino acids in
+    matching features in the bin.
+    The height consists of the following:
+        All offsets in matching features in the query +
+        all offsets in matching features in the subject.
+    Note that this doesn't double count the offsets that are in overlapping
+    features in the subject or the query.
+
+    @param bin_: A C{light.histogram.bin}.
+    @return: An C{int} of covered offsets in the subject and the query.
+    """
+    coveredQueryOffsets = set()
+    coveredSubjectOffsets = set()
+    for match in bin_:
+        coveredQueryOffsets.update(match['queryLandmark'].coveredOffsets())
+        coveredQueryOffsets.update(match['queryTrigPoint'].coveredOffsets())
+        coveredSubjectOffsets.update(match['subjectLandmark'].coveredOffsets())
+        coveredSubjectOffsets.update(
+            match['subjectTrigPoint'].coveredOffsets())
+
+    return len(coveredQueryOffsets) + len(coveredSubjectOffsets)
+
+
 class AAFraction(object):
     """
     Identify significant histogram bins based on the number of amino acids in
@@ -162,7 +187,7 @@ class AAFraction(object):
         @param binIndex: The C{int} index of the bin to examine.
         @return: A C{bool} indicating whether the bin is significant.
         """
-        binHeight = self._histogram[binIndex].height
+        binHeight = getHeight(self._histogram[binIndex])
         return binHeight >= self.significanceCutoff
 
 

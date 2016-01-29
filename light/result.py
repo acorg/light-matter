@@ -19,21 +19,6 @@ from light.backend import Backend
 from light.string import MultilineString
 
 
-def getHeight(match):
-    """
-    For a matching pair, get all offsets that are covered by that pair in the
-    subject as well as the query.
-
-    @param match: A C{dict} consisting of the subjectLandmark,
-        subjectTrigPoint, queryLandmark and queryTrigPoint.
-    """
-    height = (len(match['subjectLandmark'].coveredOffsets()) +
-              len(match['queryLandmark'].coveredOffsets()) +
-              len(match['subjectTrigPoint'].coveredOffsets()) +
-              len(match['queryTrigPoint'].coveredOffsets()))
-    return height
-
-
 class Result(object):
     """
     Hold the result of a database find() for a read.
@@ -75,12 +60,6 @@ class Result(object):
         if findParams.significanceMethod == 'AAFraction':
             queryAA = len(db.scan(query).coveredOffsets())
 
-            def add(histogram, delta, match):
-                height = getHeight(match)
-                histogram.add(delta, match, height)
-        else:
-            def add(histogram, delta, match):
-                histogram.add(delta, match)
         # Go through all the subjects that were matched at all, and put the
         # match offset deltas into bins so we can decide which (if any) of
         # the matches is significant.
@@ -94,6 +73,7 @@ class Result(object):
             # Make sure the number of bins is odd, else Histogram() will raise.
             nBins |= 0x1
             histogram = Histogram(nBins)
+            add = histogram.add
 
             # To ensure the set of query/subject offset deltas is the same
             # no matter which of the sequences is the query and which is
@@ -121,7 +101,7 @@ class Result(object):
                 # Add the information about this common landmark /
                 # trig point hash to the histogram bucket for the
                 # query landmark to subject landmark offset delta.
-                add(histogram, delta, match)
+                add(scale(delta, distanceBase), match)
 
             histogram.finalize()
 

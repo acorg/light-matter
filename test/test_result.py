@@ -6,7 +6,7 @@ import warnings
 
 from dark.reads import AARead
 
-from light.result import Result, getHeight
+from light.result import Result
 from light.parameters import Parameters, FindParameters
 from light.features import Landmark, TrigPoint
 from light.database import Database
@@ -1126,20 +1126,3 @@ class TestResult(TestCase):
         for subjectIndex in subjectIndex1, subjectIndex2:
             self.assertIn('scoreAnalysis',
                           result.analysis[subjectIndex]['significantBins'][0])
-
-
-class TestGetHeight(TestCase):
-    """
-    Tests for the light.result.getHeights function.
-    """
-    def testGetHeights(self):
-        """
-        The correct height must be returned.
-        """
-        match = {
-            'subjectLandmark': Landmark('AlphaHelix', 'A', 0, 9),
-            'queryLandmark': Landmark('AlphaHelix', 'A', 0, 9),
-            'subjectTrigPoint': TrigPoint('Peaks', 'P', 2),
-            'queryTrigPoint': TrigPoint('Peaks', 'P', 0),
-        }
-        self.assertEqual(20, getHeight(match))

@@ -465,3 +465,45 @@ class TestHistogram(TestCase):
         h.finalize()
         six.assertRaisesRegex(self, IndexError, '^list index out of range$',
                               h.__getitem__, 4)
+
+    def testHeightNoValues(self):
+        """
+        If a histogram with no value is finalized the height of each bin must
+        be 0.
+        """
+        h = Histogram(3)
+        h.finalize()
+        for bin_ in h.bins:
+            self.assertEqual(0, bin_.height)
+
+    def testHeightWithValuesNoHeightSpecified(self):
+        """
+        If a histogram with added values but without specified heights is
+        finalized, the height for each bin must be equal to the number of
+        values in each bin.
+        """
+        h = Histogram(3)
+        h.add(0)
+        h.add(1)
+        h.add(1)
+        h.add(1)
+        h.finalize()
+        self.assertEqual(h.bins[0].height, len(h.bins[0]))
+        self.assertEqual(h.bins[1].height, len(h.bins[1]))
+        self.assertEqual(h.bins[2].height, len(h.bins[2]))
+
+    def testHeightWithValuesHeightSpecified(self):
+        """
+        If a histogram with added values and with specified heights is
+        finalized, the correct height for each bin must be calculated.
+        """
+        h = Histogram(3)
+        h.add(0, height=3)
+        h.add(1, height=1)
+        h.add(1, height=2)
+        h.add(1, height=3)
+        h.add(2)
+        h.finalize()
+        self.assertEqual(3, h.bins[0].height)
+        self.assertEqual(6, h.bins[1].height)
+        self.assertEqual(1, h.bins[2].height)

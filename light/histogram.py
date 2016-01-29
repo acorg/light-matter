@@ -5,6 +5,15 @@ from math import floor
 _None = object()
 
 
+class Bin(list):
+    """
+    Makes a bin.
+    """
+    def __init__(self):
+        self.height = 0
+        list.__init__(self)
+
+
 class Histogram(object):
     """
     Maintain a histogram.
@@ -23,7 +32,7 @@ class Histogram(object):
         self._finalized = False
         self.bins = []
         for _ in range(nBins):
-            self.bins.append([])
+            self.bins.append(Bin())
 
     def __getitem__(self, binIndex):
         """
@@ -35,13 +44,14 @@ class Histogram(object):
         """
         return self.bins[binIndex]
 
-    def add(self, value, data=_None):
+    def add(self, value, data=_None, height=1):
         """
         Add an element to the histogram.
 
         @param data: An object to add to the histogram.
         @param value: A numeric value associated with the object, used to
             calculate what bin the object should be place into.
+        @param height: A C{int} height of the histogram bin.
         """
         if self._finalized:
             raise RuntimeError(
@@ -57,7 +67,7 @@ class Histogram(object):
             elif value > self.max:
                 self.max = value
 
-        self._values.append((value, data))
+        self._values.append((value, data, height))
 
     def finalize(self):
         """
@@ -71,16 +81,17 @@ class Histogram(object):
             min_ = self.min
             max_ = self.max
             binWidth = self.binWidth = (max_ - min_) / float(nBins)
-            for value, data in self._values:
+            for value, data, height in self._values:
                 if value == max_:
                     # The max value is put into the last bin. If we don't do
                     # this manually, we get an index error because we try to
                     # access one more bin than we have.
-                    bin_ = nBins - 1
+                    binIndex = nBins - 1
                 else:
                     # Use floor to consistently round down toward
                     # numerically smaller values to get the bin number.
                     # Note that int() does not do this - it rounds towards
                     # zero!  So while floor(-3.4) = -4.0, int(-3.4) = -3.
-                    bin_ = int(floor((value - min_) / binWidth))
-                self.bins[bin_].append(data)
+                    binIndex = int(floor((value - min_) / binWidth))
+                self.bins[binIndex].append(data)
+                self.bins[binIndex].height += height  # TODO calculate height

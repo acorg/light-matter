@@ -26,8 +26,8 @@ class HashFraction(object):
     the bin, as compared to the theoretical maximum number, using a cutoff.
 
     @param histogram: A C{light.histogram} instance.
-    @param minHashCount: The C{int} minimum number of hashes in the query
-        and the subject.
+    @param minHashCount: The C{int} minimum number of hashes in the query and
+        the subject.
     @param significanceFraction: The C{float} fraction of all (landmark,
         trig point) pairs for the query that need to fall into the same
         histogram bucket for that bucket to be considered a significant match
@@ -132,4 +132,39 @@ class MeanBinHeight(object):
         return binCount >= self.significanceCutoff
 
 
-ALL_SIGNIFICANCE_CLASSES = (Always, HashFraction, MaxBinHeight, MeanBinHeight)
+class AAFraction(object):
+    """
+    Identify significant histogram bins based on the number of amino acids in
+    features in the bin, as compared to the theoretical maximum number, using a
+    cutoff. The theoretical maximum number is the number of amino acids in
+    features in the subject and the query.
+
+    @param histogram: A C{light.histogram} instance.
+    @param featureAACount: The C{int} number of amino acids in features in the
+        query and the subject.
+    @param significanceFraction: The C{float} fraction of all amino acids in
+        features in the query and the subject that need to fall into the same
+        histogram bin for that bin to be considered a significant match with a
+        subject.
+    """
+    def __init__(self, histogram, featureAACount, significanceFraction):
+        self._histogram = histogram
+        self.significanceCutoff = significanceFraction * featureAACount
+        self.analysis = {
+            'significanceMethod': self.__class__.__name__,
+            'significanceCutoff': self.significanceCutoff,
+        }
+
+    def isSignificant(self, binIndex):
+        """
+        Determine whether a bin is significant.
+
+        @param binIndex: The C{int} index of the bin to examine.
+        @return: A C{bool} indicating whether the bin is significant.
+        """
+        binHeight = self._histogram[binIndex].height
+        return binHeight >= self.significanceCutoff
+
+
+ALL_SIGNIFICANCE_CLASSES = (Always, HashFraction, MaxBinHeight, MeanBinHeight,
+                            AAFraction)

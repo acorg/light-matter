@@ -227,7 +227,10 @@ class TestResult(TestCase):
         read = AARead('read', 'AGTARFSDDD')
         params = Parameters([], [])
         database = Database(params)
-        result = Result(read, database, [], 0, 0, 'HashFraction',
+        findParams = FindParameters(significanceMethod='HashFraction',
+                                    scoreMethod='MinHashesScore',
+                                    significanceFraction=0.3)
+        result = Result(read, database, [], 0, findParams, 'HashFraction',
                         'MinHashesScore')
         fp = StringIO()
         result.save(fp=fp)

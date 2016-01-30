@@ -231,10 +231,8 @@ class TestAAFraction(TestCase):
             'queryLandmark': Landmark('AlphaHelix', 'A', 10, 9),
             'queryTrigPoint': TrigPoint('Peaks', 'P', 25),
         }
-        histogram = Histogram(3)
+        histogram = Histogram(1)
         histogram.add(0, match)
-        histogram.add(1, match)
-        histogram.add(2, match)
         histogram.finalize()
         significance = AAFraction(histogram, 100, 0.75)
         self.assertFalse(significance.isSignificant(0))
@@ -250,10 +248,8 @@ class TestAAFraction(TestCase):
             'queryLandmark': Landmark('AlphaHelix', 'A', 10, 9),
             'queryTrigPoint': TrigPoint('Peaks', 'P', 25),
         }
-        histogram = Histogram(3)
+        histogram = Histogram(1)
         histogram.add(0, match)
-        histogram.add(1, match)
-        histogram.add(2, match)
         histogram.finalize()
         significance = AAFraction(histogram, 10, 0.75)
         self.assertTrue(significance.isSignificant(0))

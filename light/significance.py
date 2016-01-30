@@ -188,7 +188,6 @@ class AAFraction(object):
         @return: A C{bool} indicating whether the bin is significant.
         """
         binHeight = getHeight(self._histogram[binIndex])
-        print(binIndex, self._histogram[binIndex])
         return binHeight >= self.significanceCutoff
 
 

@@ -58,7 +58,7 @@ class Result(object):
         db = Database(connector.params)
 
         if findParams.significanceMethod == 'AAFraction':
-            queryAA = len(db.scan(query).coveredOffsets())
+            queryAACount = len(db.scan(query).coveredOffsets())
 
         # Go through all the subjects that were matched at all, and put the
         # match offset deltas into bins so we can decide which (if any) of
@@ -118,7 +118,7 @@ class Result(object):
             elif significanceMethod == 'MeanBinHeight':
                 significance = MeanBinHeight(histogram, query, connector)
             elif significanceMethod == 'AAFraction':
-                featureAACount = (queryAA +
+                featureAACount = (queryAACount +
                                   len(db.scan(subject).coveredOffsets()))
                 significance = AAFraction(histogram, featureAACount,
                                           findParams.significanceFraction)

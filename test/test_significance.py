@@ -157,6 +157,26 @@ class TestGetHeight(TestCase):
     """
     Tests for the light.significance.getHeight function.
     """
+    def testGetHeightEmptyBin(self):
+        """
+        If an empty bin is passed, 0 must be returned.
+        """
+        length = getHeight([])
+        self.assertEqual(0, length)
+
+    def testGetHeightOnePair(self):
+        """
+        If the bin only contains one pair, the correct height must be returned.
+        """
+        bin_ = [{
+            'subjectLandmark': Landmark('AlphaHelix', 'A', 0, 9),
+            'subjectTrigPoint': TrigPoint('Peaks', 'P', 21),
+            'queryLandmark': Landmark('AlphaHelix', 'A', 10, 9),
+            'queryTrigPoint': TrigPoint('Peaks', 'P', 25),
+        }]
+        length = getHeight(bin_)
+        self.assertEqual(20, length)
+
     def testGetHeightNoOverlap(self):
         """
         If there are no overlapping features in the subject and the query, the
@@ -200,7 +220,7 @@ class TestAAFraction(TestCase):
     """
     Tests for the light.significance.AAFraction class.
     """
-    def testAAFractionIsSignificantWhenNotSignificant(self):
+    def testAAFractionWhenNotSignificant(self):
         """
         The isSignificant method must return False if asked about a bin that is
         not significant.
@@ -219,10 +239,10 @@ class TestAAFraction(TestCase):
         significance = AAFraction(histogram, 100, 0.75)
         self.assertFalse(significance.isSignificant(0))
 
-    def testAAFractionIsSignificantWhenSignificant(self):
+    def testAAFractionWhenSignificant(self):
         """
         The isSignificant method must return True if asked about a bin that is
-        not significant.
+        significant.
         """
         match = {
             'subjectLandmark': Landmark('AlphaHelix', 'A', 0, 9),
@@ -235,6 +255,7 @@ class TestAAFraction(TestCase):
         histogram.add(1, match)
         histogram.add(2, match)
         histogram.finalize()
+        print(histogram.bins)
         significance = AAFraction(histogram, 10, 0.75)
         self.assertTrue(significance.isSignificant(0))
 

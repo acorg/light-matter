@@ -142,8 +142,8 @@ def getHeight(bin_):
     Note that this doesn't double count the offsets that are in overlapping
     features in the subject or the query.
 
-    @param bin_: A C{light.histogram.bin}.
-    @return: An C{int} of covered offsets in the subject and the query.
+    @param bin_: A C{light.histogram.Histogram} bin.
+    @return: An C{int} count of covered offsets in the subject and the query.
     """
     coveredQueryOffsets = set()
     coveredSubjectOffsets = set()
@@ -164,7 +164,7 @@ class AAFraction(object):
     cutoff. The theoretical maximum number is the number of non-overlapping
     amino acids in features in the subject and the query.
 
-    @param histogram: A C{light.histogram} instance.
+    @param histogram: A C{light.histogram.Histogram} instance.
     @param featureAACount: The C{int} number of amino acids in features in the
         query and the subject.
     @param significanceFraction: The C{float} fraction of all amino acids in
@@ -188,6 +188,7 @@ class AAFraction(object):
         @return: A C{bool} indicating whether the bin is significant.
         """
         binHeight = getHeight(self._histogram[binIndex])
+        print(binIndex, self._histogram[binIndex])
         return binHeight >= self.significanceCutoff
 
 

@@ -255,7 +255,6 @@ class TestAAFraction(TestCase):
         histogram.add(1, match)
         histogram.add(2, match)
         histogram.finalize()
-        print(histogram.bins)
         significance = AAFraction(histogram, 10, 0.75)
         self.assertTrue(significance.isSignificant(0))
 

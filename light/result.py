@@ -156,20 +156,21 @@ class Result(object):
             overallScoreMethod = findParams.overallScoreMethod
             if overallScoreMethod == 'BestBinScore':
                 scorer = BestBinScore(histogram, significantBins)
-                overallScore, overallScoreAnalysis = scorer.calculateScore()
             elif overallScoreMethod == 'SignificantBinScore':
-                scorer = SignificantBinScore(histogram, significantBins, query,
-                                             subject, connector.params)
-                overallScore, overallScoreAnalysis = scorer.calculateScore()
+                scorer = SignificantBinScore(significantBins, query, subject,
+                                             connector.params)
             else:
                 raise ValueError('Unknown overall score method %r' %
                                  overallScoreMethod)
+
+            overallScore, overallScoreAnalysis = scorer.calculateScore()
 
             if storeFullAnalysis:
                 self.analysis[subjectIndex] = {
                     'histogram': histogram,
                     'bestBinScore': bestBinScore,
                     'overallScore': overallScore,
+                    'overallScoreAnalysis': overallScoreAnalysis,
                     'significantBins': significantBins,
                     'significanceAnalysis': significance.analysis,
                 }

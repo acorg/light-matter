@@ -165,6 +165,13 @@ class Result(object):
 
             overallScore, overallScoreAnalysis = scorer.calculateScore()
 
+            # The overall score can be lower than the best bin score, for
+            # example when a sequence is compared against itself, where the
+            # bestBinScore will be 1.0, but the overallScore can be lower,
+            # because worse bins are taken into account. We don't allow that.
+            if bestBinScore is not None and overallScore < bestBinScore:
+                overallScore = bestBinScore
+
             if storeFullAnalysis:
                 self.analysis[subjectIndex] = {
                     'histogram': histogram,

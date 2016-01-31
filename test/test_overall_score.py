@@ -35,7 +35,7 @@ class TestBestBinScore(TestCase):
             },
             analysis)
 
-    def xtestCompareEqualSequencesScoreMustBeOne(self):
+    def testCompareEqualSequencesScoreMustBeOne(self):
         """
         If a sequence is compared to itself, the overall score must be 1.0. See
         https://github.com/acorg/light-matter/issues/321.
@@ -1470,10 +1470,13 @@ class TestSignificantBinScore(TestCase):
             },
             overallAnalysis)
 
-    def xtestCompareEqualSequencesScoreMustBeOne(self):
+    def testCompareEqualSequencesScoreMustBeOne(self):
         """
         If a sequence is compared to itself, the overall score must be 1.0.
         This is a real-life test to check that it actually works.
+        Note that this test only passes because we force the overallScore to be
+        equal to the bestBinScore if the overall Score is lower than the
+        bestBinScore.
         """
         pichninde = AARead('pichninde', 'RLKFGLSYKEQVGGNRELYVGDLNTKLTTRLIEDYS'
                                         'ESLMQNMRYTCLNNEKEFERALLDMKSVVRQSGLAV'
@@ -1499,15 +1502,18 @@ class TestSignificantBinScore(TestCase):
                                     overallScoreMethod='SignificantBinScore')
         result = db.find(pichninde, findParams, storeFullAnalysis=True)
         self.assertEqual(1.0, result.analysis[subjectIndex]['bestBinScore'])
-        self.assertEqual(0.5060240963855421,
+        self.assertEqual(1.0,
                          result.analysis[subjectIndex]['overallScore'])
 
-    def xtestCompareEqualSequencesScoreMustBeOneWithThreeBins(self):
+    def testCompareEqualSequencesScoreMustBeOneWithThreeBins(self):
         """
         If a sequence is compared to itself, the overall score must be 1.0
         when there are three significant bins. This test sequence is a
         subsequence of the Pichninde sequence, chosen to give just a small
         number of significant bins.
+        Note that this test only passes because we force the overallScore to be
+        equal to the bestBinScore if the overall Score is lower than the
+        bestBinScore.
         """
         sequence = AARead('id', 'NTKLTTRLIEDYS')
 
@@ -1523,14 +1529,8 @@ class TestSignificantBinScore(TestCase):
         result = db.find(sequence, findParams, storeFullAnalysis=True)
         self.assertEqual(
             3, len(result.analysis[subjectIndex]['significantBins']))
-        for bin_ in result.analysis[subjectIndex]['significantBins']:
-            print('BIN.............')
-            from pprint import pprint
-            pprint(bin_)
         self.assertEqual(1.0, result.analysis[subjectIndex]['bestBinScore'])
-        print('OVERALL ANALYSIS')
-        pprint(result.analysis[subjectIndex]['overallScoreAnalysis'])
-        self.assertEqual(0.5060240963855421,
+        self.assertEqual(1.0,
                          result.analysis[subjectIndex]['overallScore'])
 
     def testScoresMustBeSymmetric(self):

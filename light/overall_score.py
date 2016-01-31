@@ -56,7 +56,8 @@ class BestBinScore(object):
 
 def offsetsInBin(bin_, queryOrSubject, allFeatures):
     """
-    Calculate sets of matched and unmatched offsets.
+    Calculate sets of matched and unmatched offsets inside the bin, as well as
+    the minimum and maximum of of the matched offsets.
 
     @param bin_: A C{light.histogram.Histogram} bin.
     @param queryOrSubject: A C{str}, to indicate which features to extract,
@@ -66,7 +67,7 @@ def offsetsInBin(bin_, queryOrSubject, allFeatures):
     @raise KeyError: If C{queryOrSubject} is not 'query' or 'subject'.
     @return: A 4-tuple, with 1) the set of offsets of features that were
         matched in the bin, 2) the set of offsets in features in match
-        region but which were not in the match, 3) The minimum of the
+        region which were not in the match, 3) The minimum of the
         matched offsets, 4) the maximum of the matched offsets.
     """
     features, offsets = histogramBinFeatures(bin_, queryOrSubject)
@@ -137,7 +138,7 @@ class SignificantBinScore(object):
         where MRS is a C{float} Matched Region Score, and
         LN is a C{float} Length Normalizer.
 
-    The overall score is always in the range [0.0 to 1.0].
+    The overall score is always a C{float} in the range [0.0 to 1.0].
 
     MRS is a quotient. The numerator is the number of all unique offsets in
     features in pairs that match between subject and query, in all
@@ -155,7 +156,7 @@ class SignificantBinScore(object):
 
     @param significantBins: A C{list} of C{dict}s where each C{dict} contains
         information about the score, bin and index of a significant bin. This
-        list is already sorted by score.
+        list is already sorted by bin score.
     @param query: A C{dark.reads.AARead} instance.
     @param subject: A C{light.subject.Subject} instance (a subclass of
         C{dark.reads.AARead}).
@@ -197,18 +198,19 @@ class SignificantBinScore(object):
             backend.scan(self._subject)))
 
         # overallMatchedQueryOffsets and overallMatchedSubjectOffsets will
-        # contain all int offsets that are in features.
+        # contain all int offsets that are in matching features (and thus
+        # inside the matched region).
         overallMatchedQueryOffsets = set()
         overallMatchedSubjectOffsets = set()
 
         # overallUnmatchedQueryOffsets and overallUnmatchedSubjectOffsets
-        # will contain all int offsets that are not in any feature.
+        # will contain all int offsets that are in features that don't match,
+        # but which are inside the matched region.
         overallUnmatchedQueryOffsets = set()
         overallUnmatchedSubjectOffsets = set()
 
-        # The set of all offsets in all bins (whether or not the offsets
-        # are in matched features, unmatched features, or not in any
-        # feature.
+        # The set of all offsets in all bins (whether or not the offsets are in
+        # matched features, unmatched features, or not in any feature.
         queryOffsetsInBins = set()
         subjectOffsetsInBins = set()
 

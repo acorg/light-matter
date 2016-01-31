@@ -269,7 +269,6 @@ def plotHistogram(query, subject, significanceMethod=None,
         counts = [len(bin) for bin in histogram.bins]
         nBins = len(histogram.bins)
         width = (histogram.max - histogram.min) / float(nBins)
-        center = [histogram.min + (i + 0.5) * width for i in range(nBins)]
         title = fill('%s vs %s' % (query.id, subject.id), FILL_WIDTH)
 
         if readsAx is None:
@@ -279,7 +278,11 @@ def plotHistogram(query, subject, significanceMethod=None,
             readsAx.set_xlabel('Offset delta (subject - query)', fontsize=14)
             readsAx.xaxis.tick_bottom()
 
-        readsAx.bar(center, counts, align='center', width=width)
+        start = histogram.min
+        for count in counts:
+            plt.vlines(start, 0, count, color='blue', linewidth=2)
+            start += width
+
         mean = np.mean(counts)
         if showMean:
             readsAx.plot([histogram.min, histogram.max], [mean, mean], '-',

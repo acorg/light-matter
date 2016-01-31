@@ -1,4 +1,3 @@
-from light.utils import maxWithDefault, minWithDefault
 from light.string import MultilineString
 from light.bin_score import (getHashFeatures, featureInRange,
                              histogramBinFeatures)
@@ -55,42 +54,106 @@ class BestBinScore(object):
         return str(result)
 
 
-def subtractOffsets(feature, offsets):
+def offsetsInBin(bin_, queryOrSubject, allFeatures):
     """
-    Returns a C{set} containing the offsets of a feature which aren't in the
-    offsets specified.
+    Calculate sets of matched and unmatched offsets.
 
-    @param feature: A C{light.features._Feature} subclass (i.e., a
-        landmark or a trig point).
-    @param offsets: A C{set} of C{int} offsets that are covered by a bin.
-    @return: A C{set} of C{int} feature offsets that are outside the passed
-        offsets.
+    @param bin_: A C{light.histogram.Histogram} bin.
+    @param queryOrSubject: A C{str}, to indicate which features to extract,
+        either 'query' or 'subject'.
+     @param allFeatures: All the features that were found in the sequence
+        in question (either the query or the subject).
+    @raise KeyError: If C{queryOrSubject} is not 'query' or 'subject'.
+    @return: A 4-tuple, with 1) the set of offsets of features that were
+        matched in the bin, 2) the set of offsets in features in match
+        region but which were not in the match, 3) The minimum of the
+        matched offsets, 4) the maximum of the matched offsets.
     """
-    return feature.coveredOffsets() - offsets
+    features, offsets = histogramBinFeatures(bin_, queryOrSubject)
+
+    # Get the min/max offsets of features in the matched region.
+    minOffset = min(offsets)
+    maxOffset = max(offsets)
+
+    # Get the offsets of all features which are within the matched
+    # region but which are not matched in this bin.
+    unmatchedOffsets = set()
+    for feature in filter(
+            lambda f: featureInRange(f, minOffset, maxOffset),
+            allFeatures - features):
+        unmatchedOffsets.update(feature.coveredOffsets())
+
+    # The unmatched offsets shouldn't contain any offsets that were
+    # matched. (This occur when an unmatched feature overlaps with
+    # a matched feature.)
+    unmatchedOffsets -= offsets
+
+    return offsets, unmatchedOffsets, minOffset, maxOffset
+
+
+def computeLengthNormalizer(allFeatures, overallMatchedOffsets,
+                            overallUnmatchedOffsets, offsetsInBins):
+    """
+    Compute a Length Normalizer (LN) for the SignificantBinScore class.
+
+    @param allFeatures: All the features that were found in the sequence
+        in question (either the query or the subject).
+    @param overallMatchedOffsets: A C{set} of all the offsets in features
+        that were in the match.
+    @param overallUnmatchedoffsets: A C{set} of all the offsets in features
+        that were in the matched region but which were not part of the match.
+    @param offsetsInBins: A C{set} of all the offsets in features across all
+        significant bins.
+    @return: A 3-tuple, containing:
+        1) the C{float} length normalizer in the range [0.0, 1.0],
+        2) the C{int} numerator of the calculation, and
+        3) the C{int} denominator of the calculation.
+    """
+    # Get all feature offsets that are not in any bin.
+    overallOffsetsNotInMatches = set()
+    update = overallOffsetsNotInMatches.update
+    for feature in allFeatures:
+        update(feature.coveredOffsets() - offsetsInBins)
+
+    numerator = len(overallMatchedOffsets) + len(overallUnmatchedOffsets)
+    denominator = numerator + len(overallOffsetsNotInMatches)
+
+    try:
+        normalizer = numerator / denominator
+    except ZeroDivisionError:
+        normalizer = 1.0
+
+    return normalizer, numerator, denominator
 
 
 class SignificantBinScore(object):
     """
     Calculate an overall score based on all significant bins.
+
     The overall score is calculated as a product:
-        M * N,
-        where M is a C{float} match score and
-        N is a C{float} length normalizer.
+
+        score = MRS * LN
+
+        where MRS is a C{float} Matched Region Score, and
+        LN is a C{float} Length Normalizer.
+
     The overall score is always in the range [0.0 to 1.0].
 
-    The match score M is a quotient. The numerator consists of the number of
-    all unique offsets in features in pairs that match between subject and
-    query, in all significant bins. The denominator consists of the number of
-    all unique offsets in features in pairs in subject and query that don't
-    match, for all significant bins plus the numerator.
-    The score is normalized by length, by multiplying with another quotient, N.
-    The quotient is calculated for both the subject and the query, and the
-    bigger one is chosen. The numerator consists of the offsets of all
-    features in the matched region. The denominator consists of all offsets in
-    features for the whole sequence.
+    MRS is a quotient. The numerator is the number of all unique offsets in
+    features in pairs that match between subject and query, in all
+    significant bins. The denominator is the number of all unique offsets
+    in features in pairs in subject and query that don't match, for all
+    significant bins plus the numerator.
 
-    @param histogram: A C{light.histogram} instance.
-    @param significantBins: A C{list} of C{dict}'s where each dict contains
+    MRS is normalized by length, by multiplying it by LN, another quotient
+    derived from either the query or subject.  A quotient is calculated
+    individually for the subject and the query, and the larger is used as
+    LN. The numerator is the number of unique offsets in all features in the
+    matched region in the query (subject).  The denominator is the number of
+    unique offsets in all features in the whole of the query (subject)
+    sequence.
+
+    @param significantBins: A C{list} of C{dict}s where each C{dict} contains
         information about the score, bin and index of a significant bin. This
         list is already sorted by score.
     @param query: A C{dark.reads.AARead} instance.
@@ -98,24 +161,13 @@ class SignificantBinScore(object):
         C{dark.reads.AARead}).
     @param params: A C{Parameters} instance.
     """
-    def __init__(self, histogram, significantBins, query, subject, params):
-        self._histogram = histogram
-        self._queryLen = len(query)
-        self._subjectLen = len(subject)
-        self._significantBinIndices = [signBin['index'] for signBin in
-                                       significantBins]
-
-        from light.backend import Backend
-        backend = Backend()
-        backend.configure(params)
-
-        scannedQuery = backend.scan(query)
-        allQueryHashes = backend.getHashes(scannedQuery)
-        self._allQueryFeatures = getHashFeatures(allQueryHashes)
-
-        scannedSubject = backend.scan(subject)
-        allSubjectHashes = backend.getHashes(scannedSubject)
-        self._allSubjectFeatures = getHashFeatures(allSubjectHashes)
+    def __init__(self, significantBins, query, subject, params):
+        # The only thing we do here is store what we have been passed. All
+        # work happens in calculateScore (which is only called once).
+        self._significantBins = significantBins
+        self._query = query
+        self._subject = subject
+        self._params = params
 
     def calculateScore(self):
         """
@@ -126,7 +178,7 @@ class SignificantBinScore(object):
             if there are no significant bins) and a C{dict} with information
             about the score.
         """
-        if not self._significantBinIndices:
+        if not self._significantBins:
             analysis = {
                 'score': None,
                 'scoreClass': self.__class__,
@@ -134,122 +186,90 @@ class SignificantBinScore(object):
 
             return None, analysis
 
-        # Calculate the first quotient.
+        from light.backend import Backend
+        backend = Backend()
+        backend.configure(self._params)
+
+        allQueryFeatures = getHashFeatures(backend.getHashes(
+            backend.scan(self._query)))
+
+        allSubjectFeatures = getHashFeatures(backend.getHashes(
+            backend.scan(self._subject)))
+
+        # overallMatchedQueryOffsets and overallMatchedSubjectOffsets will
+        # contain all int offsets that are in features.
         overallMatchedQueryOffsets = set()
         overallMatchedSubjectOffsets = set()
 
-        overallUnMatchedQueryOffsets = set()
-        overallUnMatchedSubjectOffsets = set()
+        # overallUnmatchedQueryOffsets and overallUnmatchedSubjectOffsets
+        # will contain all int offsets that are not in any feature.
+        overallUnmatchedQueryOffsets = set()
+        overallUnmatchedSubjectOffsets = set()
 
-        overallQueryStartEnd = []
-        overallSubjectStartEnd = []
+        # The set of all offsets in all bins (whether or not the offsets
+        # are in matched features, unmatched features, or not in any
+        # feature.
+        queryOffsetsInBins = set()
+        subjectOffsetsInBins = set()
 
         # Get the features and their offsets which are matched and unmatched in
-        # subject and query in all bins. These will be used to calculate the
-        # numerator of the score.
-        for binIndex in self._significantBinIndices:
-            bin_ = self._histogram[binIndex]
-            matchedQueryFeatures, matchedQueryOffsets = histogramBinFeatures(
-                bin_, 'query')
+        # subject and query in all bins.
+        for bin_ in (sb['bin'] for sb in self._significantBins):
+            # Query.
+            matchedOffsets, unmatchedOffsets, minOffset, maxOffset = (
+                offsetsInBin(bin_, 'query', allQueryFeatures))
+            overallMatchedQueryOffsets.update(matchedOffsets)
+            overallUnmatchedQueryOffsets.update(unmatchedOffsets)
+            queryOffsetsInBins.update(range(minOffset, maxOffset + 1))
 
-            matchedSbjctFeatures, matchedSubjectOffsets = histogramBinFeatures(
-                bin_, 'subject')
+            # Subject.
+            matchedOffsets, unmatchedOffsets, minOffset, maxOffset = (
+                offsetsInBin(bin_, 'subject', allSubjectFeatures))
+            overallMatchedSubjectOffsets.update(matchedOffsets)
+            overallUnmatchedSubjectOffsets.update(unmatchedOffsets)
+            subjectOffsetsInBins.update(range(minOffset, maxOffset + 1))
 
-            # Get the extreme offsets in the matched region of query and
-            # subject.
-            minQueryOffset = minWithDefault(matchedQueryOffsets,
-                                            default=None)
-            maxQueryOffset = maxWithDefault(matchedQueryOffsets,
-                                            default=None)
-            minSubjectOffset = minWithDefault(matchedSubjectOffsets,
-                                              default=None)
-            maxSubjectOffset = maxWithDefault(matchedSubjectOffsets,
-                                              default=None)
-            overallQueryStartEnd.append([minQueryOffset, maxQueryOffset])
-            overallSubjectStartEnd.append([minSubjectOffset, maxSubjectOffset])
+        # Make sure none of the overall matched offsets are in the overall
+        # unmatchedOffsets.
+        overallMatchedQueryOffsets -= overallUnmatchedQueryOffsets
+        overallMatchedSubjectOffsets -= overallUnmatchedSubjectOffsets
 
-            # Get all features and their offsets which are present in the
-            # subject and the query within the matched region. These will be
-            # used to calculate the denominator.
-            unmatchedQueryOffsets = set()
-            for feature in filter(
-                    lambda f: featureInRange(f, minQueryOffset,
-                                             maxQueryOffset),
-                    self._allQueryFeatures - matchedQueryFeatures):
-                unmatchedQueryOffsets.update(feature.coveredOffsets())
-            # The unmatched offsets shouldn't contain any offsets that were
-            # matched. This can occur if an unmatched feature overlaps with a
-            # matched feature.
-            unmatchedQueryOffsets -= matchedQueryOffsets
-
-            unmatchedSubjectOffsets = set()
-            for feature in filter(
-                lambda f: featureInRange(f, minSubjectOffset,
-                                         maxSubjectOffset),
-                    self._allSubjectFeatures - matchedSbjctFeatures):
-                unmatchedSubjectOffsets.update(feature.coveredOffsets())
-            # The unmatched offsets shouldn't contain any offsets that were
-            # matched. This can occur if an unmatched feature overlaps with a
-            # matched feature.
-            unmatchedSubjectOffsets -= matchedSubjectOffsets
-
-            overallMatchedQueryOffsets.update(matchedQueryOffsets)
-            overallMatchedSubjectOffsets.update(matchedSubjectOffsets)
-            overallUnMatchedQueryOffsets.update(unmatchedQueryOffsets)
-            overallUnMatchedSubjectOffsets.update(unmatchedSubjectOffsets)
-
-        # Calculate the first quotient over all bins.
+        # Overall score calculation step 1: the matched region score (MRS).
         matchedOffsetCount = (len(overallMatchedQueryOffsets) +
                               len(overallMatchedSubjectOffsets))
         totalOffsetCount = (matchedOffsetCount +
-                            len(overallUnMatchedQueryOffsets) +
-                            len(overallUnMatchedSubjectOffsets))
+                            len(overallUnmatchedQueryOffsets) +
+                            len(overallUnmatchedSubjectOffsets))
+
         try:
             matchedRegionScore = matchedOffsetCount / totalOffsetCount
         except ZeroDivisionError:
+            # A small optimization could be done here. If the MRS is zero,
+            # we already know the overall score will be zero, so we could
+            # return at this point. To keep things simple, for now, just
+            # continue with the overall calculation.
             matchedRegionScore = 0.0
 
-        # Calculate the score for the second quotient (the length normalizer)
-        # Get all offsets that are part of a bin.
-        coveredQueryOffsets = set()
-        coveredSubjectOffsets = set()
-        for start, end in overallQueryStartEnd:
-            coveredQueryOffsets.update(range(start, end + 1))
-        for start, end in overallSubjectStartEnd:
-            coveredSubjectOffsets.update(range(start, end + 1))
+        # Overall score calculation step 2: the length normalizer (LN).
 
-        # Get all feature offsets that are not in a bin.
-        overallOffsetsNotInMatchQuery = set()
-        for feature in self._allQueryFeatures:
-            coveredFeatIndices = subtractOffsets(feature, coveredQueryOffsets)
-            overallOffsetsNotInMatchQuery.update(coveredFeatIndices)
-        overallOffsetsNotInMatchQuery -= overallMatchedQueryOffsets
-        numeratorQuery = (len(overallMatchedQueryOffsets) +
-                          len(overallUnMatchedQueryOffsets))
-        denominatorQuery = numeratorQuery + len(overallOffsetsNotInMatchQuery)
+        normalizerQuery, numeratorQuery, denominatorQuery = (
+            computeLengthNormalizer(
+                allQueryFeatures, overallMatchedQueryOffsets,
+                overallUnmatchedQueryOffsets, queryOffsetsInBins))
 
-        overallOffsetsNotInMatchSubject = set()
-        for feature in self._allSubjectFeatures:
-            coveredFeatIndices = subtractOffsets(feature,
-                                                 coveredSubjectOffsets)
-            overallOffsetsNotInMatchSubject.update(coveredFeatIndices)
-        overallOffsetsNotInMatchSubject -= overallMatchedSubjectOffsets
-        numeratorSubject = (len(overallMatchedSubjectOffsets) +
-                            len(overallUnMatchedSubjectOffsets))
-        denominatorSubject = (numeratorSubject +
-                              len(overallOffsetsNotInMatchSubject))
+        # There is a small optimization that could be done at this point.
+        # If the query normalizer is 1.0, don't bother to compute a
+        # normalizer for the subject (due to the use of max() below and
+        # because a normalizer is always <= 1.0).  But to keep the code
+        # simpler, for now, we still compute both normalizers.
 
-        try:
-            normaliserQuery = numeratorQuery / denominatorQuery
-        except ZeroDivisionError:
-            normaliserQuery = 1.0
+        normalizerSubject, numeratorSubject, denominatorSubject = (
+            computeLengthNormalizer(
+                allSubjectFeatures, overallMatchedSubjectOffsets,
+                overallUnmatchedSubjectOffsets, subjectOffsetsInBins))
 
-        try:
-            normaliserSubject = numeratorSubject / denominatorSubject
-        except ZeroDivisionError:
-            normaliserSubject = 1.0
-
-        score = matchedRegionScore * max(normaliserQuery, normaliserSubject)
+        # Calculate the final score, as descibed in the docstring.
+        score = matchedRegionScore * max(normalizerQuery, normalizerSubject)
 
         analysis = {
             'denominatorQuery': denominatorQuery,
@@ -260,13 +280,13 @@ class SignificantBinScore(object):
             'matchedRegionScore': matchedRegionScore,
             'numeratorQuery': numeratorQuery,
             'numeratorSubject': numeratorSubject,
-            'normaliserQuery': normaliserQuery,
-            'normaliserSubject': normaliserSubject,
+            'normalizerQuery': normalizerQuery,
+            'normalizerSubject': normalizerSubject,
             'score': score,
             'scoreClass': self.__class__,
             'totalOffsetCount': totalOffsetCount,
-            'queryOffsetsInBins': len(coveredQueryOffsets),
-            'subjectOffsetsInBins': len(coveredSubjectOffsets),
+            'queryOffsetsInBins': len(queryOffsetsInBins),
+            'subjectOffsetsInBins': len(subjectOffsetsInBins),
         }
 
         return score, analysis
@@ -297,9 +317,9 @@ class SignificantBinScore(object):
              '%(totalOffsetCount)d' % analysis),
             ('Matched region score %(matchedRegionScore).4f '
              '(%(matchedOffsetCount)d / %(totalOffsetCount)d)' % analysis),
-            ('Query normalizer: %(normaliserQuery).4f (%(numeratorQuery)d / '
+            ('Query normalizer: %(normalizerQuery).4f (%(numeratorQuery)d / '
              '%(denominatorQuery)d)' % analysis),
-            ('Subject normalizer: %(normaliserSubject).4f '
+            ('Subject normalizer: %(normalizerSubject).4f '
              '(%(numeratorSubject)d / %(denominatorSubject)d)' % analysis),
             ('Total query offsets that are in a bin: '
              '%(queryOffsetsInBins)d' % analysis),

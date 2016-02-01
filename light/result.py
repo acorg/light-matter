@@ -54,11 +54,12 @@ class Result(object):
         distanceBase = connector.params.distanceBase
         queryLen = len(query)
         scoreGetter = itemgetter('score')
-        from light.database import Database
-        db = Database(connector.params)
+        from light.backend import Backend
+        be = Backend()
+        be.configure(connector.params)
 
         if findParams.significanceMethod == 'AAFraction':
-            queryAACount = len(db.scan(query).coveredOffsets())
+            queryAACount = len(be.scan(query).coveredIndices())
 
         # Go through all the subjects that were matched at all, and put the
         # match offset deltas into bins so we can decide which (if any) of
@@ -119,7 +120,7 @@ class Result(object):
                 significance = MeanBinHeight(histogram, query, connector)
             elif significanceMethod == 'AAFraction':
                 featureAACount = (queryAACount +
-                                  len(db.scan(subject).coveredOffsets()))
+                                  len(be.scan(subject).coveredIndices()))
                 significance = AAFraction(histogram, featureAACount,
                                           findParams.significanceFraction)
             else:

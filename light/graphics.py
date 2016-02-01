@@ -9,6 +9,7 @@ from operator import attrgetter
 from textwrap import fill
 from collections import defaultdict
 from math import log10
+from itertools import repeat
 
 from light.backend import Backend
 from light.colors import colors
@@ -268,8 +269,8 @@ def plotHistogram(query, subject, significanceMethod=None,
     else:
         counts = [len(bin) for bin in histogram.bins]
         nBins = len(histogram.bins)
-        width = (histogram.max - histogram.min) / float(nBins)
-        center = [histogram.min + (i + 0.5) * width for i in range(nBins)]
+        centers = np.linspace(histogram.min, histogram.max, nBins,
+                              endpoint=False)
         title = fill('%s vs %s' % (query.id, subject.id), FILL_WIDTH)
 
         if readsAx is None:
@@ -279,7 +280,9 @@ def plotHistogram(query, subject, significanceMethod=None,
             readsAx.set_xlabel('Offset delta (subject - query)', fontsize=14)
             readsAx.xaxis.tick_bottom()
 
-        readsAx.bar(center, counts, align='center', width=width)
+        plt.vlines(centers, repeat(0, len(counts)), counts, color='blue',
+                   linewidth=2)
+
         mean = np.mean(counts)
         if showMean:
             readsAx.plot([histogram.min, histogram.max], [mean, mean], '-',

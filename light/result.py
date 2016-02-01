@@ -169,8 +169,10 @@ class Result(object):
             # example when a sequence is compared against itself, where the
             # bestBinScore will be 1.0, but the overallScore can be lower,
             # because worse bins are taken into account. We don't allow that.
+            adjusted = False
             if bestBinScore is not None and overallScore < bestBinScore:
                 overallScore = bestBinScore
+                adjusted = True
 
             if storeFullAnalysis:
                 self.analysis[subjectIndex] = {
@@ -180,6 +182,7 @@ class Result(object):
                     'overallScoreAnalysis': overallScoreAnalysis,
                     'significantBins': significantBins,
                     'significanceAnalysis': significance.analysis,
+                    'overallScoreAdjustedToBestBinScore': adjusted,
                 }
             elif significantBins:
                 self.analysis[subjectIndex] = {

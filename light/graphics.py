@@ -9,6 +9,7 @@ from operator import attrgetter
 from textwrap import fill
 from collections import defaultdict
 from math import log10
+from itertools import repeat
 
 from light.backend import Backend
 from light.colors import colors
@@ -285,10 +286,9 @@ def plotHistogram(query, subject, significanceMethod=None,
     else:
         counts = [len(bin) for bin in histogram.bins]
         nBins = len(histogram.bins)
-        width = (histogram.max - histogram.min) / float(nBins)
-        center = [histogram.min + (i + 0.5) * width for i in range(nBins)]
+        centers = np.linspace(histogram.min, histogram.max, nBins,
+                              endpoint=False)
         title = fill('%s vs %s' % (query.id, subject.id), FILL_WIDTH)
-        print(title)
 
         if readsAx is None:
             fig = plt.figure()
@@ -297,8 +297,8 @@ def plotHistogram(query, subject, significanceMethod=None,
             readsAx.set_xlabel('Offset delta (subject - query)', fontsize=14)
             readsAx.xaxis.tick_bottom()
 
-        readsAx.bar(center, counts, align='center', width=width,
-                    facecolor='blue', edgecolor='blue')
+        plt.vlines(centers, repeat(0, len(counts)), counts, color='blue',
+                   linewidth=2)
 
         if showSignificantBins:
             significanceMethod = findParams.significanceMethod
@@ -320,9 +320,8 @@ def plotHistogram(query, subject, significanceMethod=None,
 
             for binIndex, bin_ in enumerate(histogram.bins):
                 if significance.isSignificant(binIndex):
-                    readsAx.bar(center[binIndex], len(bin_), align='center',
-                                width=width, facecolor='red',
-                                edgecolor='red')
+                    plt.vlines(centers[binIndex], 0, len(bin_), color='red',
+                               linewidth=2)
 
         mean = np.mean(counts)
         if showMean:

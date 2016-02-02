@@ -10,7 +10,7 @@ from operator import itemgetter
 from light.distance import scale
 from light.histogram import Histogram
 from light.significance import (
-    Always, HashFraction, MaxBinHeight, MeanBinHeight)
+    Always, HashFraction, MaxBinHeight, MeanBinHeight, AAFraction)
 from light.bin_score import (
     NoneScore, MinHashesScore, FeatureMatchingScore, FeatureAAScore,
     WeightedFeatureAAScore)
@@ -54,6 +54,12 @@ class Result(object):
         distanceBase = connector.params.distanceBase
         queryLen = len(query)
         scoreGetter = itemgetter('score')
+        from light.backend import Backend
+        be = Backend()
+        be.configure(connector.params)
+
+        if findParams.significanceMethod == 'AAFraction':
+            queryAACount = len(be.scan(query).coveredIndices())
 
         # Go through all the subjects that were matched at all, and put the
         # match offset deltas into bins so we can decide which (if any) of
@@ -69,6 +75,7 @@ class Result(object):
             nBins |= 0x1
             histogram = Histogram(nBins)
             add = histogram.add
+
             # To ensure the set of query/subject offset deltas is the same
             # no matter which of the sequences is the query and which is
             # the subject, we negate all deltas if the subject sequence
@@ -111,6 +118,11 @@ class Result(object):
                 significance = MaxBinHeight(histogram, query, connector)
             elif significanceMethod == 'MeanBinHeight':
                 significance = MeanBinHeight(histogram, query, connector)
+            elif significanceMethod == 'AAFraction':
+                featureAACount = (queryAACount +
+                                  len(be.scan(subject).coveredIndices()))
+                significance = AAFraction(histogram, featureAACount,
+                                          findParams.significanceFraction)
             else:
                 raise ValueError('Unknown significance method %r' %
                                  significanceMethod)

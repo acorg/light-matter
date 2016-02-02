@@ -227,7 +227,10 @@ class TestResult(TestCase):
         read = AARead('read', 'AGTARFSDDD')
         params = Parameters([], [])
         database = Database(params)
-        result = Result(read, database, [], 0, 0, 'HashFraction',
+        findParams = FindParameters(significanceMethod='HashFraction',
+                                    scoreMethod='MinHashesScore',
+                                    significanceFraction=0.3)
+        result = Result(read, database, [], 0, findParams, 'HashFraction',
                         'MinHashesScore')
         fp = StringIO()
         result.save(fp=fp)
@@ -1123,3 +1126,29 @@ class TestResult(TestCase):
         for subjectIndex in subjectIndex1, subjectIndex2:
             self.assertIn('scoreAnalysis',
                           result.analysis[subjectIndex]['significantBins'][0])
+
+    def testAAFractionSignificanceMethodMustRun(self):
+        """
+        Make sure that the AAFraction significanceMethod is called with the
+        right arguments and runs properly.
+        """
+        read = AARead('read', 'AGTARFSDDD')
+        params = Parameters([], [])
+        database = Database(params)
+        database.addSubject(AARead('subject', 'AAA'))
+        hashCount = 1
+        matches = {
+            '0': [
+                {
+                    'queryLandmark': Landmark('AlphaHelix', 'A', 0, 9),
+                    'queryTrigPoint': TrigPoint('Peaks', 'P', 1),
+                    'subjectLandmark': Landmark('AlphaHelix', 'A', 0, 1),
+                    'subjectTrigPoint': TrigPoint('Peaks', 'P', 1),
+                },
+            ],
+        }
+        findParams = FindParameters(significanceMethod='AAFraction',
+                                    scoreMethod='MinHashesScore',
+                                    significanceFraction=0.1)
+        result = Result(read, database, matches, hashCount, findParams)
+        self.assertEqual(0.0, result.analysis['0']['bestBinScore'])

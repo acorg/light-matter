@@ -14,7 +14,7 @@ from light.significance import (
 from light.bin_score import (
     NoneScore, MinHashesScore, FeatureMatchingScore, FeatureAAScore,
     WeightedFeatureAAScore)
-from light.overall_score import BestBinScore
+from light.overall_score import BestBinScore, SignificantBinScore
 from light.backend import Backend
 from light.string import MultilineString
 
@@ -168,22 +168,38 @@ class Result(object):
             overallScoreMethod = findParams.overallScoreMethod
             if overallScoreMethod == 'BestBinScore':
                 scorer = BestBinScore(histogram, significantBins)
-                overallScore = scorer.calculateScore()
+            elif overallScoreMethod == 'SignificantBinScore':
+                scorer = SignificantBinScore(significantBins, query, subject,
+                                             connector.params)
             else:
                 raise ValueError('Unknown overall score method %r' %
                                  overallScoreMethod)
+
+            overallScore, overallScoreAnalysis = scorer.calculateScore()
+
+            # The overall score can be lower than the best bin score, for
+            # example when a sequence is compared against itself, where the
+            # bestBinScore will be 1.0, but the overallScore can be lower,
+            # because worse bins are taken into account. We don't allow that.
+            adjusted = False
+            if bestBinScore is not None and overallScore < bestBinScore:
+                overallScore = bestBinScore
+                adjusted = True
 
             if storeFullAnalysis:
                 self.analysis[subjectIndex] = {
                     'histogram': histogram,
                     'bestBinScore': bestBinScore,
                     'overallScore': overallScore,
+                    'overallScoreAnalysis': overallScoreAnalysis,
                     'significantBins': significantBins,
                     'significanceAnalysis': significance.analysis,
+                    'overallScoreAdjustedToBestBinScore': adjusted,
                 }
             elif significantBins:
                 self.analysis[subjectIndex] = {
                     'bestBinScore': bestBinScore,
+                    'overallScore': overallScore,
                     'significantBins': significantBins,
                 }
 

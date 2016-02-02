@@ -41,7 +41,7 @@ class Histogram(object):
 
         @param data: An object to add to the histogram.
         @param value: A numeric value associated with the object, used to
-            calculate what bin the object should be place into.
+            calculate what bin the object should be placed into.
         """
         if self._finalized:
             raise RuntimeError(

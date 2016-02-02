@@ -19,8 +19,10 @@ from light.landmarks import ALL_LANDMARK_CLASSES
 from light.parameters import FindParameters
 from light.performance.overlap import CalculateOverlap
 from light.performance import affinity
-from light.bin_score import ALL_SCORE_CLASSES
+from light.bin_score import ALL_BIN_SCORE_CLASSES
 from light.string import MultilineString
+from light.significance import (
+    Always, HashFraction, MaxBinHeight, MeanBinHeight)
 from light.trig import ALL_TRIG_CLASSES
 
 from dark.dimension import dimensionalIterator
@@ -73,7 +75,8 @@ def legendHandles(names):
 
 def _rectangularPanel(rows, cols, title, makeSubPlot, equalizeXAxes=False,
                       equalizeYAxes=False, includeUpper=True,
-                      includeLower=True, includeDiagonal=True):
+                      includeLower=True, includeDiagonal=True, saveAs=False,
+                      showFigure=True):
     """
     Create a rectangular panel of plots.
 
@@ -97,8 +100,10 @@ def _rectangularPanel(rows, cols, title, makeSubPlot, equalizeXAxes=False,
     @param includeLower: Like includeUpper, but for the lower triangle.
     @param includeDiagonal: Like includeUpper and includeLower, but for
         sub-plots on the diagonal.
+    @param saveAs: A C{str} name for the file that the figure will be saved to.
+    @param showFigure: If C{True} show the figure.
     """
-    figure, ax = plt.subplots(rows, cols, squeeze=False)
+    figure, ax = plt.subplots(rows, cols, squeeze=False, figsize=(150, 100))
     subplots = {}
 
     for row, col in dimensionalIterator((rows, cols)):
@@ -145,15 +150,19 @@ def _rectangularPanel(rows, cols, title, makeSubPlot, equalizeXAxes=False,
             a.axis('off')
 
     figure.suptitle(title, fontsize=20)
-    figure.set_size_inches(15, 3 * rows, forward=True)
-    figure.show()
+    if saveAs:
+        figure.set_size_inches(150, 100, forward=True, dpi=(300))
+        figure.savefig(saveAs)
+    if showFigure:
+        figure.show()
 
 
 def plotHistogramPanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
                        significanceMethod=None, significanceFraction=None,
                        showUpper=True, showLower=False, showDiagonal=True,
                        showMean=False, showMedian=False, showStdev=False,
-                       showSignificanceCutoff=False, **kwargs):
+                       showSignificanceCutoff=False, showSignificantBins=True,
+                       saveAs=False, showFigure=True, **kwargs):
     """
     Plot a square panel of histograms of matching hash offset deltas between
     all pairs of passed sequences.
@@ -182,6 +191,10 @@ def plotHistogramPanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
         plotted in magenta.
     @param showSignificanceCutoff: If C{True} the significanceCutoff will be
         plotted in green.
+    @param showSignificantBins: If C{True} the significant bins will be plotted
+        in red.
+    @param saveAs: A C{str} name for the file that the figure will be saved to.
+    @param showFigure: If C{True} show the figure.
     @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
         for additional keywords, all of which are optional.
     @return: The C{light.result.Result} from running the database find.
@@ -210,19 +223,21 @@ def plotHistogramPanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
                              readsAx=ax, showMean=showMean,
                              showMedian=showMedian, showStdev=showStdev,
                              showSignificanceCutoff=showSignificanceCutoff,
+                             showSignificantBins=showSignificantBins,
                              database=database)
 
     return _rectangularPanel(
         nReads, nReads, 'Histogram panel', makeSubPlot,
         equalizeXAxes=equalizeXAxes, equalizeYAxes=equalizeYAxes,
         includeUpper=showUpper, includeLower=showLower,
-        includeDiagonal=showDiagonal)
+        includeDiagonal=showDiagonal, saveAs=saveAs, showFigure=showFigure)
 
 
 def plotHistogram(query, subject, significanceMethod=None,
                   significanceFraction=None, readsAx=None, showMean=False,
                   showMedian=False, showStdev=False,
-                  showSignificanceCutoff=False, **kwargs):
+                  showSignificanceCutoff=False, showSignificantBins=False,
+                  **kwargs):
     """
     Plot a histogram of matching hash offset deltas between a query and a
     subject.
@@ -243,6 +258,8 @@ def plotHistogram(query, subject, significanceMethod=None,
         plotted in magenta.
     @param showSignificanceCutoff: If C{True} the significanceCutoff will be
         plotted in green.
+    @param showSignificantBins: If C{True} the significant bins will be plotted
+        in red.
     @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
         for additional keywords, all of which are optional.
     @return: The C{light.result.Result} from running the database find.
@@ -255,7 +272,7 @@ def plotHistogram(query, subject, significanceMethod=None,
         subjectIndex = subject
         subject = database.getSubjectByIndex(subjectIndex)
     else:
-        _, subjectIndex, _ = database.addSubject(subject)
+        _, subjectIndex, subjectHashCount = database.addSubject(subject)
 
     findParams = FindParameters(significanceMethod=significanceMethod,
                                 significanceFraction=significanceFraction)
@@ -276,12 +293,35 @@ def plotHistogram(query, subject, significanceMethod=None,
         if readsAx is None:
             fig = plt.figure()
             readsAx = fig.add_subplot(111)
-            readsAx.set_title(title)
+            readsAx.set_title(title, fontsize=30)
             readsAx.set_xlabel('Offset delta (subject - query)', fontsize=14)
             readsAx.xaxis.tick_bottom()
 
         plt.vlines(centers, repeat(0, len(counts)), counts, color='blue',
                    linewidth=2)
+
+        if showSignificantBins:
+            significanceMethod = findParams.significanceMethod
+            minHashCount = min(result.queryHashCount, subjectHashCount)
+
+            if significanceMethod == 'Always':
+                significance = Always()
+            elif significanceMethod == 'HashFraction':
+                significance = HashFraction(
+                    histogram, minHashCount, findParams.significanceFraction)
+            elif significanceMethod == 'MaxBinHeight':
+                significance = MaxBinHeight(histogram, query, result.connector)
+            elif significanceMethod == 'MeanBinHeight':
+                significance = MeanBinHeight(histogram, query,
+                                             result.connector)
+            else:
+                raise ValueError('Unknown significance method %r' %
+                                 significanceMethod)
+
+            for binIndex, bin_ in enumerate(histogram.bins):
+                if significance.isSignificant(binIndex):
+                    plt.vlines(centers[binIndex], 0, len(bin_), color='red',
+                               linewidth=2)
 
         mean = np.mean(counts)
         if showMean:
@@ -316,7 +356,8 @@ def plotHistogramLinePanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
                            significanceMethod=None, significanceFraction=None,
                            showUpper=True, showLower=False, showDiagonal=True,
                            showMean=False, showMedian=False, showStdev=False,
-                           showSignificanceCutoff=False, **kwargs):
+                           showSignificanceCutoff=False, saveAs=False,
+                           showFigure=True, **kwargs):
     """
     Plot a square panel of histogram line plots of matching hash offset deltas
     between all pairs of passed sequences.
@@ -345,6 +386,8 @@ def plotHistogramLinePanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
         plotted in magenta.
     @param showSignificanceCutoff: If C{True} the significanceCutoff will be
         plotted in green.
+    @param saveAs: A C{str} name for the file that the figure will be saved to.
+    @param showFigure: If C{True} show the figure.
     @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
         for additional keywords, all of which are optional.
     @return: The C{light.result.Result} from running the database find.
@@ -379,7 +422,7 @@ def plotHistogramLinePanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
         nReads, nReads, 'Histogram line panel', makeSubPlot,
         equalizeXAxes=equalizeXAxes, equalizeYAxes=equalizeYAxes,
         includeUpper=showUpper, includeLower=showLower,
-        includeDiagonal=showDiagonal)
+        includeDiagonal=showDiagonal, saveAs=saveAs, showFigure=showFigure)
 
 
 def plotHistogramLine(query, subject, significanceMethod=False,
@@ -593,7 +636,8 @@ def plotFeatureSquare(read, significanceFraction=None, readsAx=None, **kwargs):
 def plotHorizontalPairPanel(sequences, findParams=None, equalizeXAxes=True,
                             showSignificant=True, showInsignificant=True,
                             showBestBinOnly=False, showUpper=True,
-                            showLower=False, showDiagonal=True, **kwargs):
+                            showLower=False, showDiagonal=True, saveAs=False,
+                            showFigure=True, **kwargs):
     """
     Plot a panel of paired horizontally aligned sequences showing matching
     hashes. The individual sub-plots are produced by
@@ -616,6 +660,8 @@ def plotHorizontalPairPanel(sequences, findParams=None, equalizeXAxes=True,
         of the panel.
     @param showDiagonal: If C{True}, show the sub-plots on the diagonal.
         of the panel.
+    @param saveAs: A C{str} name for the file that the figure will be saved to.
+    @param showFigure: If C{True} show the figure.
     @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
         for additional keywords, all of which are optional.
     @return: The C{light.result.Result} from running the database find.
@@ -649,7 +695,7 @@ def plotHorizontalPairPanel(sequences, findParams=None, equalizeXAxes=True,
         nReads, nReads, 'Horizontal pairs panel', makeSubPlot,
         equalizeXAxes=equalizeXAxes, equalizeYAxes=False,
         includeUpper=showUpper, includeLower=showLower,
-        includeDiagonal=showDiagonal)
+        includeDiagonal=showDiagonal, saveAs=saveAs, showFigure=showFigure)
 
 
 class PlotHashesInSubjectAndRead(object):
@@ -961,7 +1007,7 @@ class PlotHashesInSubjectAndRead(object):
                           ncol=2, borderaxespad=0.5)
             ax.set_xlabel(fill('%s (top) vs %s (bottom)' %
                                (self.subject.id, self.query.id)), fontsize=14)
-
+        print(self.subject.id, self.query.id)
         minX = -horizontalPad
         maxX = maxLen + horizontalPad
         ax.set_xlim(minX, maxX)
@@ -1415,7 +1461,7 @@ def compareScores(subject, query, scoreMethods=None,
     db = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
     _, subjectIndex, _ = db.addSubject(subject)
     scoreMethods = scoreMethods or sorted(
-        cls.__name__ for cls in ALL_SCORE_CLASSES)
+        cls.__name__ for cls in ALL_BIN_SCORE_CLASSES)
     findParams = findParams or FindParameters()
 
     # Calculate a score for each score method.

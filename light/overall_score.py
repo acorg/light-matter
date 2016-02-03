@@ -409,9 +409,10 @@ class GreedySignificantBinScore(object):
             about the score.
         """
         # Don't attempt to calculate an overall score if there are no
-        # significant bins. Use the FeatureAAScore of the best bin as the
-        # overall score if there is only one significant bin or if the score
-        # of the best bin is 1.0.
+        # significant bins.
+        # We could also do more checking here and use the FeatureAAScore of the
+        # best bin as the overall score if there is only one significant bin or
+        # if the score of the best bin is 1.0.
         if not self._significantBins:
             analysis = {
                 'score': None,
@@ -454,7 +455,7 @@ class GreedySignificantBinScore(object):
         index = 0
 
         # Consider the significantBins one by one until the overall score drops
-        # below the bestBinScore.
+        # below the bestBinScore, or we run out of bins.
         for bin_ in (sb['bin'] for sb in self._significantBins):
             # Query.
             matchedOffsets, unmatchedOffsets, minOffset, maxOffset = (
@@ -511,6 +512,8 @@ class GreedySignificantBinScore(object):
             # Calculate the final score, as descibed in the docstring.
             newOverallScore = matchedRegionScore * max(normalizerQuery,
                                                        normalizerSubject)
+
+            # Check if we can add more bins, or if we need to return here.
             if newOverallScore >= overallScore:
                 index += 1
                 overallScore = newOverallScore

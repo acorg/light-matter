@@ -169,6 +169,8 @@ class SignificantBinScore(object):
         self._query = query
         self._subject = subject
         self._params = params
+        if len(self._significantBins) > 0:
+            self._bestBinScore = significantBins[0]['score']
 
     def calculateScore(self):
         """
@@ -273,6 +275,17 @@ class SignificantBinScore(object):
         # Calculate the final score, as descibed in the docstring.
         score = matchedRegionScore * max(normalizerQuery, normalizerSubject)
 
+        # The overall score can be lower than the best bin score, for
+        # example when a sequence is compared against itself, where the
+        # bestBinScore will be 1.0, but the overallScore can be lower,
+        # because worse bins are taken into account. We don't allow that.
+        if score < self._bestBinScore:
+            overallScore = self._bestBinScore
+            adjusted = True
+        else:
+            overallScore = score
+            adjusted = False
+
         analysis = {
             'denominatorQuery': denominatorQuery,
             'denominatorSubject': denominatorSubject,
@@ -284,14 +297,15 @@ class SignificantBinScore(object):
             'numeratorSubject': numeratorSubject,
             'normalizerQuery': normalizerQuery,
             'normalizerSubject': normalizerSubject,
-            'score': score,
+            'score': overallScore,
             'scoreClass': self.__class__,
             'totalOffsetCount': totalOffsetCount,
             'queryOffsetsInBins': len(queryOffsetsInBins),
             'subjectOffsetsInBins': len(subjectOffsetsInBins),
+            'overallScoreAdjustedToBestBinScore': adjusted,
         }
 
-        return score, analysis
+        return overallScore, analysis
 
     @staticmethod
     def printAnalysis(analysis, margin=''):
@@ -331,4 +345,258 @@ class SignificantBinScore(object):
 
         return str(result)
 
-ALL_OVERALL_SCORE_CLASSES = [BestBinScore, SignificantBinScore]
+
+class GreedySignificantBinScore(object):
+    """
+    Calculate an overall score based on the significant bins that lead to an
+    overall score higher than the bestBinScore.
+
+    The overall score is calculated as a product:
+
+        score = MRS * LN
+
+        where MRS is a C{float} Matched Region Score, and
+        LN is a C{float} Length Normalizer.
+
+    The overall score is always a C{float} in the range [0.0 to 1.0].
+
+    MRS is a quotient. The numerator is the number of all unique offsets in
+    features in pairs that match between subject and query, in the bins
+    considered. The denominator is the number of all unique offsets
+    in features in pairs in subject and query that don't match, in the bins
+    considered plus the numerator.
+
+    MRS is normalized by length, by multiplying it by LN, another quotient
+    derived from either the query or subject.  A quotient is calculated
+    individually for the subject and the query, and the larger is used as
+    LN. The numerator is the number of unique offsets in all features in the
+    matched region in the query (subject).  The denominator is the number of
+    unique offsets in all features in the whole of the query (subject)
+    sequence.
+
+    Significant bins are consideren in order, sorted by FeatureAAScore. In the
+    first iteration, the overall score is calculated for the best and the
+    second best bin. If the resulting score is lower than the FeatureAAScore
+    of the best bin, the loop terminates and the FeatureAAScore of the best bin
+    is used as the overall score. If however the resulting score is higher than
+    the FeatureAAScore of the best bin, it is accepted as the new overall
+    score. Subsequently, a new overall score is calculated using the first,
+    second and third highest bins and so on.
+
+    @param significantBins: A C{list} of C{dict}s where each C{dict} contains
+        information about the score, bin and index of a significant bin. This
+        list is already sorted by bin score.
+    @param query: A C{dark.reads.AARead} instance.
+    @param subject: A C{light.subject.Subject} instance (a subclass of
+        C{dark.reads.AARead}).
+    @param params: A C{Parameters} instance.
+    """
+    def __init__(self, significantBins, query, subject, params):
+        # The only thing we do here is store what we have been passed. All
+        # work happens in calculateScore (which is only called once).
+        self._significantBins = significantBins
+        self._query = query
+        self._subject = subject
+        self._params = params
+
+    def calculateScore(self):
+        """
+        Calculates the overall score, as described
+        above.
+
+        @return: a C{float} overall score for all significant bins (or C{None}
+            if there are no significant bins) and a C{dict} with information
+            about the score.
+        """
+        # Don't attempt to calculate an overall score if there are no
+        # significant bins. Use the FeatureAAScore of the best bin as the
+        # overall score if there is only one significant bin or if the score
+        # of the best bin is 1.0.
+        if not self._significantBins:
+            analysis = {
+                'score': None,
+                'scoreClass': self.__class__,
+            }
+
+            return None, analysis
+
+        from light.backend import Backend
+        backend = Backend()
+        backend.configure(self._params)
+
+        allQueryFeatures = getHashFeatures(backend.getHashes(
+            backend.scan(self._query)))
+
+        allSubjectFeatures = getHashFeatures(backend.getHashes(
+            backend.scan(self._subject)))
+
+        # overallMatchedQueryOffsets and overallMatchedSubjectOffsets will
+        # contain all int offsets that are in matching features (and thus
+        # inside the matched region).
+        overallMatchedQueryOffsets = set()
+        overallMatchedSubjectOffsets = set()
+
+        # overallUnmatchedQueryOffsets and overallUnmatchedSubjectOffsets
+        # will contain all int offsets that are in features that don't match,
+        # but which are inside the matched region.
+        overallUnmatchedQueryOffsets = set()
+        overallUnmatchedSubjectOffsets = set()
+
+        # The set of all offsets in all bins (whether or not the offsets are in
+        # matched features, unmatched features, or not in any feature.
+        queryOffsetsInBins = set()
+        subjectOffsetsInBins = set()
+
+        # Keep track of the scores.
+        overallScore = self._significantBins[0]['score']
+
+        # Keep track of the bins considered.
+        index = 0
+
+        # Consider the significantBins one by one until the overall score drops
+        # below the bestBinScore.
+        for bin_ in (sb['bin'] for sb in self._significantBins):
+            # Query.
+            matchedOffsets, unmatchedOffsets, minOffset, maxOffset = (
+                offsetsInBin(bin_, 'query', allQueryFeatures))
+            overallMatchedQueryOffsets.update(matchedOffsets)
+            overallUnmatchedQueryOffsets.update(unmatchedOffsets)
+            queryOffsetsInBins.update(range(minOffset, maxOffset + 1))
+
+            # Subject.
+            matchedOffsets, unmatchedOffsets, minOffset, maxOffset = (
+                offsetsInBin(bin_, 'subject', allSubjectFeatures))
+            overallMatchedSubjectOffsets.update(matchedOffsets)
+            overallUnmatchedSubjectOffsets.update(unmatchedOffsets)
+            subjectOffsetsInBins.update(range(minOffset, maxOffset + 1))
+
+            # Make sure none of the overall matched offsets are in the overall
+            # unmatchedOffsets.
+            overallMatchedQueryOffsets -= overallUnmatchedQueryOffsets
+            overallMatchedSubjectOffsets -= overallUnmatchedSubjectOffsets
+
+            # Overall score calculation step 1: the matched region score (MRS).
+            matchedOffsetCount = (len(overallMatchedQueryOffsets) +
+                                  len(overallMatchedSubjectOffsets))
+            totalOffsetCount = (matchedOffsetCount +
+                                len(overallUnmatchedQueryOffsets) +
+                                len(overallUnmatchedSubjectOffsets))
+
+            try:
+                matchedRegionScore = matchedOffsetCount / totalOffsetCount
+            except ZeroDivisionError:
+                # A small optimization could be done here. If the MRS is zero,
+                # we already know the overall score will be zero, so we could
+                # return at this point. To keep things simple, for now, just
+                # continue with the overall calculation.
+                matchedRegionScore = 0.0
+
+            # Overall score calculation step 2: the length normalizer (LN).
+
+            normalizerQuery, numeratorQuery, denominatorQuery = (
+                computeLengthNormalizer(
+                    allQueryFeatures, overallMatchedQueryOffsets,
+                    overallUnmatchedQueryOffsets, queryOffsetsInBins))
+
+            # There is a small optimization that could be done at this point.
+            # If the query normalizer is 1.0, don't bother to compute a
+            # normalizer for the subject (due to the use of max() below and
+            # because a normalizer is always <= 1.0).  But to keep the code
+            # simpler, for now, we still compute both normalizers.
+            normalizerSubject, numeratorSubject, denominatorSubject = (
+                computeLengthNormalizer(
+                    allSubjectFeatures, overallMatchedSubjectOffsets,
+                    overallUnmatchedSubjectOffsets, subjectOffsetsInBins))
+
+            # Calculate the final score, as descibed in the docstring.
+            newOverallScore = matchedRegionScore * max(normalizerQuery,
+                                                       normalizerSubject)
+            if newOverallScore >= overallScore:
+                index += 1
+                overallScore = newOverallScore
+            else:
+                analysis = {
+                    'denominatorQuery': denominatorQuery,
+                    'denominatorSubject': denominatorSubject,
+                    'matchedOffsetCount': matchedOffsetCount,
+                    'matchedSubjectOffsetCount': len(
+                        overallMatchedSubjectOffsets),
+                    'matchedQueryOffsetCount': len(overallMatchedQueryOffsets),
+                    'matchedRegionScore': matchedRegionScore,
+                    'numeratorQuery': numeratorQuery,
+                    'numeratorSubject': numeratorSubject,
+                    'normalizerQuery': normalizerQuery,
+                    'normalizerSubject': normalizerSubject,
+                    'score': overallScore,
+                    'scoreClass': self.__class__,
+                    'totalOffsetCount': totalOffsetCount,
+                    'queryOffsetsInBins': len(queryOffsetsInBins),
+                    'subjectOffsetsInBins': len(subjectOffsetsInBins),
+                    'numberOfBinsConsidered': index + 1,
+                }
+                return overallScore, analysis
+
+        analysis = {
+            'denominatorQuery': denominatorQuery,
+            'denominatorSubject': denominatorSubject,
+            'matchedOffsetCount': matchedOffsetCount,
+            'matchedSubjectOffsetCount': len(
+                overallMatchedSubjectOffsets),
+            'matchedQueryOffsetCount': len(
+                overallMatchedQueryOffsets),
+            'matchedRegionScore': matchedRegionScore,
+            'numeratorQuery': numeratorQuery,
+            'numeratorSubject': numeratorSubject,
+            'normalizerQuery': normalizerQuery,
+            'normalizerSubject': normalizerSubject,
+            'score': overallScore,
+            'scoreClass': self.__class__,
+            'totalOffsetCount': totalOffsetCount,
+            'queryOffsetsInBins': len(queryOffsetsInBins),
+            'subjectOffsetsInBins': len(subjectOffsetsInBins),
+            'numberOfBinsConsidered': index,
+        }
+        return overallScore, analysis
+
+    @staticmethod
+    def printAnalysis(analysis, margin=''):
+        """
+        Convert an analysis to a nicely formatted string.
+
+        @param analysis: A C{dict} with information about the score and its
+            calculation.
+        @param margin: A C{str} that should be inserted at the start of each
+            line of output.
+        @return: A C{str} human-readable version of the last analysis.
+        """
+        result = MultilineString(margin=margin)
+
+        result.extend([
+            'Overall score method: %s' % analysis['scoreClass'].__name__,
+            'Overall score: %s' % analysis['score'],
+            ('Total (query+subject) AA offsets in matched pairs in all bins: '
+             '%(matchedOffsetCount)d' % analysis),
+            ('Subject AA offsets in matched pairs in all bins: '
+             '%(matchedSubjectOffsetCount)d' % analysis),
+            ('Query AA offsets in matched pairs in all bins: '
+             '%(matchedQueryOffsetCount)d' % analysis),
+            ('Total (query+subject) AA offsets in hashes in matched region: '
+             '%(totalOffsetCount)d' % analysis),
+            ('Matched region score %(matchedRegionScore).4f '
+             '(%(matchedOffsetCount)d / %(totalOffsetCount)d)' % analysis),
+            ('Query normalizer: %(normalizerQuery).4f (%(numeratorQuery)d / '
+             '%(denominatorQuery)d)' % analysis),
+            ('Subject normalizer: %(normalizerSubject).4f '
+             '(%(numeratorSubject)d / %(denominatorSubject)d)' % analysis),
+            ('Total query offsets that are in a bin: '
+             '%(queryOffsetsInBins)d' % analysis),
+            ('Total subject offsets that are in a bin: '
+             '%(subjectOffsetsInBins)d' % analysis),
+            ('Number of bins included in the score calculation: '
+             '%(numberOfBinsConsidered)d' % analysis),
+        ])
+
+        return str(result)
+
+ALL_OVERALL_SCORE_CLASSES = [BestBinScore, SignificantBinScore,
+                             GreedySignificantBinScore]

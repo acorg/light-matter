@@ -65,7 +65,7 @@ def scaleLinear(dist, divisor):
 
     @param dist: An C{int} distance, usually a delta.
     @param divisor: The C{int} number by which dist is divided.
-    @raise ValueError: If C{base} is zero.
-    @return: A C{int} scaled distance.
+    @raise ZeroDivisionError: If C{divisor} is zero.
+    @return: An C{int} scaled distance.
     """
     return int(floor(dist / divisor))

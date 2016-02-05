@@ -51,8 +51,7 @@ class Result(object):
         self.nonMatchingHashes = nonMatchingHashes
         self._storeFullAnalysis = storeFullAnalysis
         self.analysis = defaultdict(dict)
-        deltaScale = connector.params.deltaScale
-        queryLen = len(query)
+        deltaScale = findParams.deltaScale
         scoreGetter = itemgetter('score')
         from light.backend import Backend
         be = Backend()
@@ -68,9 +67,7 @@ class Result(object):
             subject = connector.getSubjectByIndex(subjectIndex)
             # Use a histogram to bin scaled (landmark, trigPoint) offset
             # deltas.
-            subjectLen = len(subject)
-            maxLen = max(queryLen, subjectLen)
-            nBins = maxLen
+            nBins = max(len(query), len(subject))
             # Make sure the number of bins is odd, else Histogram() will raise.
             nBins |= 0x1
             histogram = Histogram(nBins)

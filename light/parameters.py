@@ -51,6 +51,9 @@ class FindParameters(object):
         a score when a feature in a query and subject are part of a match.
     @param featureMismatchScore: The C{float} contribution (usually negative)
         to a score when a feature in a query and subject are part of a match.
+    @param deltaScale: A C{float}. The delta between the queryOffset and the
+        subjectOffset of a matching pair is scaled by dividing the delta by the
+        deltaScale to reduce sensitivity.
     """
     # The methods to be used to calculate match scores and whether matches
     # are significant (i.e., worth reporting).
@@ -68,6 +71,9 @@ class FindParameters(object):
     # FeatureMatchingScore scoring (see light/score.py).
     DEFAULT_FEATURE_MATCH_SCORE = 1.0
     DEFAULT_FEATURE_MISMATCH_SCORE = -1.0
+
+    DEFAULT_DELTA_SCALE = 1.0
+
     DEFAULT_WEIGHTS = {
         'AlphaHelix': 1.0,
         'AlphaHelix_3_10': 1.0,
@@ -89,7 +95,7 @@ class FindParameters(object):
     def __init__(self, significanceMethod=None, significanceFraction=None,
                  scoreMethod=None, overallScoreMethod=None,
                  featureMatchScore=None, featureMismatchScore=None,
-                 weights=None):
+                 weights=None, deltaScale=None):
         self.significanceMethod = (
             self.DEFAULT_SIGNIFICANCE_METHOD if significanceMethod is None
             else significanceMethod)
@@ -114,6 +120,12 @@ class FindParameters(object):
         self.overallScoreMethod = (
             self.DEFAULT_OVERALL_SCORE_METHOD if overallScoreMethod is
             None else overallScoreMethod)
+
+        self.deltaScale = (
+            self.DEFAULT_DELTA_SCALE if deltaScale is None else deltaScale)
+
+        if self.deltaScale <= 0:
+            raise ValueError('deltaScale must be > 0.')
 
     @staticmethod
     def addArgsToParser(parser):
@@ -167,6 +179,13 @@ class FindParameters(object):
             help=('The name of the method used to calculate the overall '
                   'score of all histogram bins.'))
 
+        parser.add_argument(
+            '--deltaScale', type=float,
+            default=FindParameters.DEFAULT_DELTA_SCALE,
+            help=('The delta between the query offset and the subject offset '
+                  'is scaled by dividing the delta by the deltaScale to '
+                  'reduce sensitivity.'))
+
     @classmethod
     def fromArgs(cls, args):
         """
@@ -181,7 +200,8 @@ class FindParameters(object):
                    featureMatchScore=args.featureMatchScore,
                    featureMismatchScore=args.featureMismatchScore,
                    weights=parseWeights(args.weights or {}),
-                   overallScoreMethod=args.overallScoreMethod)
+                   overallScoreMethod=args.overallScoreMethod,
+                   deltaScale=args.deltaScale)
 
     def print_(self, margin=''):
         """
@@ -201,7 +221,8 @@ class FindParameters(object):
             'Feature match score: %f' % self.featureMatchScore,
             'Feature mismatch score: %f' % self.featureMismatchScore,
             'OverallScoreMethod: %s' % self.overallScoreMethod,
-            'Weights: ',
+            'Delta scale: %f' % self.deltaScale,
+            'Weights: '
         ])
         result.indent()
         for key in sorted(self.weights.keys()):
@@ -230,14 +251,11 @@ class Parameters(object):
         logarithm using this C{float} base, for the purpose of matching
         landmarks via hashes. This reduces sensitivity to relatively small
         differences in lengths.
-    @param deltaScale: The delta between the queryOffset and the subjectOffset
-        of a matching pair is scaled by dividing the delta by the deltaScale to
-        reduce sensitivity.
     """
 
     PARAMS = ('landmarkClasses', 'trigPointClasses', 'limitPerLandmark',
               'maxDistance', 'minDistance', 'distanceBase',
-              'featureLengthBase', 'deltaScale')
+              'featureLengthBase')
 
     # Database defaults (see explanations in the above docstring).
     DEFAULT_LIMIT_PER_LANDMARK = 10
@@ -245,11 +263,10 @@ class Parameters(object):
     DEFAULT_MIN_DISTANCE = 1
     DEFAULT_DISTANCE_BASE = 1.1
     DEFAULT_FEATURE_LENGTH_BASE = 1.35
-    DEFAULT_DELTA_SCALE = 1
 
     def __init__(self, landmarkClasses, trigPointClasses,
                  limitPerLandmark=None, maxDistance=None, minDistance=None,
-                 distanceBase=None, featureLengthBase=None, deltaScale=None):
+                 distanceBase=None, featureLengthBase=None):
 
         self.distanceBase = (
             self.DEFAULT_DISTANCE_BASE if distanceBase is None
@@ -257,13 +274,6 @@ class Parameters(object):
 
         if self.distanceBase <= 0:
             raise ValueError('distanceBase must be > 0.')
-
-        self.deltaScale = (
-            self.DEFAULT_DELTA_SCALE if deltaScale is None
-            else deltaScale)
-
-        if self.deltaScale <= 0:
-            raise ValueError('deltaScale must be > 0.')
 
         self.featureLengthBase = (
             self.DEFAULT_FEATURE_LENGTH_BASE if featureLengthBase is None
@@ -316,7 +326,7 @@ class Parameters(object):
             [f.SYMBOL for f in trigPointFinders] +
             list(map(str, (self.limitPerLandmark, self.maxDistance,
                            self.minDistance, self.distanceBase,
-                           self.featureLengthBase, self.deltaScale))))
+                           self.featureLengthBase))))
         return checksum.value
 
     @staticmethod
@@ -381,13 +391,6 @@ class Parameters(object):
                   'length using this base. This reduces sensitivity to '
                   'relatively small differences in landmark length.'))
 
-        parser.add_argument(
-            '--deltaScale', type=float,
-            default=Parameters.DEFAULT_DELTA_SCALE,
-            help=('The delta between the query offset and the subject offset '
-                  'is scaled by dividing the delta by the deltaScale to '
-                  'reduce sensitivity.'))
-
     def save(self, fp=sys.stdout):
         """
         Save the parameters in JSON format.
@@ -403,7 +406,6 @@ class Parameters(object):
             'minDistance': self.minDistance,
             'distanceBase': self.distanceBase,
             'featureLengthBase': self.featureLengthBase,
-            'deltaScale': self.deltaScale,
         }), file=fp)
 
         return fp
@@ -447,8 +449,7 @@ class Parameters(object):
             maxDistance=state['maxDistance'],
             minDistance=state['minDistance'],
             distanceBase=state['distanceBase'],
-            featureLengthBase=state['featureLengthBase'],
-            deltaScale=state['deltaScale'])
+            featureLengthBase=state['featureLengthBase'])
 
     def print_(self, margin=''):
         """
@@ -487,7 +488,6 @@ class Parameters(object):
             'Min distance: %d' % self.minDistance,
             'Distance base: %f' % self.distanceBase,
             'Feature length base: %f' % self.featureLengthBase,
-            'Delta scale: %f' % self.deltaScale,
         ])
 
         return str(result)

@@ -205,6 +205,12 @@ class TestScaleLinear(TestCase):
     """
     Tests for the light.distance.scaleLinear function.
     """
+    def testScaleLinearDivisor0(self):
+        """
+        If the divisor is 0, a ZeroDivisionError must be raised.
+        """
+        self.assertRaises(ZeroDivisionError, scaleLinear, 2, 0.0)
+
     def testScaleLinearDivisor1(self):
         """
         If the divisor is 1, all distances must be scaled correctly.
@@ -226,6 +232,17 @@ class TestScaleLinear(TestCase):
                                    (5, 2),
                                    (10, 5)):
             self.assertEqual(scaled, scaleLinear(distance, 2))
+
+    def testScaleLinearDivisor2Float(self):
+        """
+        If the divisor is 2.0, all distances must be scaled correctly.
+        """
+        for (distance, scaled) in ((1.0, 0.0),
+                                   (2.0, 1.0),
+                                   (3.0, 1.0),
+                                   (5.0, 2.0),
+                                   (10.0, 5.0)):
+            self.assertEqual(scaled, scaleLinear(distance, 2.0))
 
     def testScaleLinearDivisor5(self):
         """

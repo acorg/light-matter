@@ -1676,7 +1676,6 @@ class TestGreedySignificantBinScore(TestCase):
                                          params)
         score, analysis = gsbs.calculateScore()
         self.assertEqual(1.0, score)
-        self.maxDiff = None
         self.assertEqual(
             {
                 'denominatorQuery': 20,
@@ -1698,7 +1697,7 @@ class TestGreedySignificantBinScore(TestCase):
             },
             analysis)
 
-    def testGoodScoresMustBeCalculated(self):
+    def testCorrectScoresMustBeCalculated(self):
         """
         When comparing two sequences, the correct score must be calculated.
         """
@@ -1740,8 +1739,8 @@ class TestGreedySignificantBinScore(TestCase):
 
         self.assertEqual(0.3023133221365436,
                          result.analysis[subjectIndex]['bestBinScore'])
-        self.assertEqual(0.5842663952304784,
-                         result.analysis[subjectIndex]['overallScore'])
+        self.assertAlmostEqual(0.5842663952304784,
+                               result.analysis[subjectIndex]['overallScore'])
         self.maxDiff = None
         analysis = result.analysis[subjectIndex]['overallScoreAnalysis']
         self.assertEqual(
@@ -1750,13 +1749,13 @@ class TestGreedySignificantBinScore(TestCase):
                 'denominatorSubject': 299,
                 'matchedOffsetCount': 196,
                 'matchedQueryOffsetCount': 97,
-                'matchedRegionScore': 0.327212020033389,
+                'matchedRegionScore': 196 / 599,
                 'matchedSubjectOffsetCount': 99,
                 'numeratorQuery': 301,
                 'numeratorSubject': 298,
                 'queryOffsetsInBins': 355,
                 'normalizerQuery': 1.0,
-                'normalizerSubject': 0.9966555183946488,
+                'normalizerSubject': 298 / 299,
                 'numberOfBinsConsidered': 3,
                 'score': 0.5842663952304784,
                 'scoreClass': GreedySignificantBinScore,
@@ -1798,8 +1797,6 @@ class TestGreedySignificantBinScore(TestCase):
         gsbs = GreedySignificantBinScore(significantBins, query, subject,
                                          params)
         score, analysis = gsbs.calculateScore()
-        self.assertEqual(1.0, score)
-        self.maxDiff = None
         expected = (
             'Overall score method: GreedySignificantBinScore\n'
             'Overall score: 1.0\n'

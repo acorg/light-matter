@@ -169,7 +169,7 @@ class SignificantBinScore(object):
         self._query = query
         self._subject = subject
         self._params = params
-        if len(self._significantBins) > 0:
+        if self._significantBins:
             self._bestBinScore = significantBins[0]['score']
 
     def calculateScore(self):
@@ -374,7 +374,7 @@ class GreedySignificantBinScore(object):
     unique offsets in all features in the whole of the query (subject)
     sequence.
 
-    Significant bins are consideren in order, sorted by FeatureAAScore. In the
+    Significant bins are consideren in order, sorted by bin score. In the
     first iteration, the overall score is calculated for the best and the
     second best bin. If the resulting score is lower than the FeatureAAScore
     of the best bin, the loop terminates and the FeatureAAScore of the best bin

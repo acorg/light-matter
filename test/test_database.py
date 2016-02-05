@@ -654,12 +654,13 @@ class TestDatabase(TestCase):
             '  Min distance: 0\n'
             '  Distance base: 1.000000\n'
             '  Feature length base: 1.350000\n'
+            '  Delta scale: 1.000000\n'
             'Connector class: SimpleConnector\n'
             'Subject count: 1\n'
             'Hash count: 3\n'
             'Total residues: 15\n'
             'Coverage: 73.33%\n'
-            'Checksum: 793188254\n'
+            'Checksum: 2837611126\n'
             'Connector:')
         self.assertEqual(expected, db.print_())
 
@@ -674,6 +675,7 @@ class TestDatabase(TestCase):
                             distanceBase=1)
         db = Database(params)
         db.addSubject(subject)
+        self.maxDiff = None
         expected = (
             'Parameters:\n'
             '  Landmark finders:\n'
@@ -687,17 +689,18 @@ class TestDatabase(TestCase):
             '  Min distance: 0\n'
             '  Distance base: 1.000000\n'
             '  Feature length base: 1.350000\n'
+            '  Delta scale: 1.000000\n'
             'Connector class: SimpleConnector\n'
             'Subject count: 1\n'
             'Hash count: 3\n'
             'Total residues: 15\n'
             'Coverage: 73.33%\n'
-            'Checksum: 1474134342\n'
+            'Checksum: 3250776912\n'
             'Connector:\n'
             'Backends:\n'
             '  Name: backend\n'
             '  Hash count: 3\n'
-            '  Checksum: 1474134342\n'
+            '  Checksum: 3250776912\n'
             '  Subjects (with offsets) by hash:\n'
             '    A2:P:10\n'
             '      0 [[0, 9, 10, 1]]\n'
@@ -736,11 +739,12 @@ class TestDatabase(TestCase):
             '  Min distance: 0\n'
             '  Distance base: 1.000000\n'
             '  Feature length base: 1.350000\n'
+            '  Delta scale: 1.000000\n'
             'Connector class: SimpleConnector\n'
             'Subject count: 1\n'
             'Hash count: 0\n'
             'Total residues: 0\n'
             'Coverage: 0.00%\n'
-            'Checksum: 903728869\n'
+            'Checksum: 1862200913\n'
             'Connector:')
         self.assertEqual(expected, db.print_())

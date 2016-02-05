@@ -7,7 +7,7 @@ from collections import defaultdict
 from math import log10, ceil
 from operator import itemgetter
 
-from light.distance import scale
+from light.distance import scaleLinear
 from light.histogram import Histogram
 from light.significance import (
     Always, HashFraction, MaxBinHeight, MeanBinHeight, AAFraction)
@@ -51,7 +51,7 @@ class Result(object):
         self.nonMatchingHashes = nonMatchingHashes
         self._storeFullAnalysis = storeFullAnalysis
         self.analysis = defaultdict(dict)
-        distanceBase = connector.params.distanceBase
+        deltaScale = connector.params.deltaScale
         queryLen = len(query)
         scoreGetter = itemgetter('score')
         from light.backend import Backend
@@ -70,7 +70,7 @@ class Result(object):
             # deltas.
             subjectLen = len(subject)
             maxLen = max(queryLen, subjectLen)
-            nBins = scale(maxLen, distanceBase)
+            nBins = maxLen
             # Make sure the number of bins is odd, else Histogram() will raise.
             nBins |= 0x1
             histogram = Histogram(nBins)
@@ -102,7 +102,7 @@ class Result(object):
                 # Add the information about this common landmark /
                 # trig point hash to the histogram bucket for the
                 # query landmark to subject landmark offset delta.
-                add(scale(delta, distanceBase), match)
+                add(scaleLinear(delta, deltaScale), match)
 
             histogram.finalize()
 

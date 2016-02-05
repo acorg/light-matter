@@ -346,11 +346,8 @@ class TestResult(TestCase):
 
     def testRightNumberOfBucketsDefault(self):
         """
-        If no distanceBase is specified for a database, the number of bins must
-        be 21 if the length of the subject is 21 and the length of the read
-        is less. This is because int(log base 1.1 of 21) = 31, which is
-        greater than 21, so the value of 21 should be used. Note that 1.1
-        is the default distanceBase.
+        The number of bins must be 21 if the length of the subject is 21 and
+        the length of the read is less.
         """
         read = AARead('read', 'AGTARFSDDD')
         params = Parameters([], [])
@@ -373,64 +370,6 @@ class TestResult(TestCase):
         result = Result(read, database, matches, hashCount, findParams,
                         storeFullAnalysis=True)
         self.assertEqual(21, result.analysis['0']['histogram'].nBins)
-
-    def testRightNumberOfBucketsDefaultNonEven(self):
-        """
-        If no distanceBase is specified for a database, the number of bins must
-        be 21 if the length of the subject is 20 and the length of the read
-        is less. This is because int(log base 1.1 of 20) = 31, which is greater
-        than 20, so the value of 20 should be used but result.py will adjust
-        this to 21 to ensure that the number of bins is odd.
-        """
-        read = AARead('read', 'AGTARFSDDD')
-        params = Parameters([], [])
-        database = Database(params)
-        database.addSubject(AARead('subject', 'A' * 20))
-        hashCount = 1
-        matches = {
-            '0': [
-                {
-                    'queryLandmark': Landmark('AlphaHelix', 'A', 1, 9),
-                    'queryTrigPoint': TrigPoint('Peaks', 'P', 1),
-                    'subjectLandmark': Landmark('AlphaHelix', 'A', 2, 9),
-                    'subjectTrigPoint': TrigPoint('Peaks', 'P', 0),
-                },
-            ],
-        }
-        findParams = FindParameters(significanceMethod='HashFraction',
-                                    scoreMethod='MinHashesScore',
-                                    significanceFraction=0.1)
-        result = Result(read, database, matches, hashCount, findParams,
-                        storeFullAnalysis=True)
-        self.assertEqual(21, result.analysis['0']['histogram'].nBins)
-
-    def testRightNumberOfBucketsWithNonDefaultDistanceBase(self):
-        """
-        If a distanceBase of 1.3 is given and the length of the longer
-        sequence (out of subject and query) is 20, there should be 11 buckets
-        (because int(log base 1.3 of 20) = 11).
-        """
-        read = AARead('read', 'AGTARFSDDD')
-        params = Parameters([], [], distanceBase=1.3)
-        database = Database(params)
-        database.addSubject(AARead('subject', 'AAAAAAAAAAAAAAAAAAAA'))
-        hashCount = 1
-        matches = {
-            '0': [
-                {
-                    'queryLandmark': Landmark('AlphaHelix', 'A', 1, 9),
-                    'queryTrigPoint': TrigPoint('Peaks', 'P', 1),
-                    'subjectLandmark': Landmark('AlphaHelix', 'A', 2, 9),
-                    'subjectTrigPoint': TrigPoint('Peaks', 'P', 0),
-                },
-            ],
-        }
-        findParams = FindParameters(significanceMethod='HashFraction',
-                                    scoreMethod='MinHashesScore',
-                                    significanceFraction=0.1)
-        result = Result(read, database, matches, hashCount, findParams,
-                        storeFullAnalysis=True)
-        self.assertEqual(11, result.analysis['0']['histogram'].nBins)
 
     def testPrintWithQueryWithNoMatchesDueToNoFinders(self):
         """

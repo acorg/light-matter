@@ -1,10 +1,10 @@
 from __future__ import division
 
-from math import log
+from math import log, floor
 from warnings import warn
 
 
-def _pp_scale(dist, base):
+def _pp_scaleLog(dist, base):
     """
     Use a log scale to adjust a distance.
 
@@ -43,7 +43,7 @@ except ImportError as e:
     warn('Could not import cffi scale function (%s). Using pure Python '
          'version.' % e)
     # Use the pure Python version.
-    scale = _pp_scale
+    scaleLog = _pp_scaleLog
 else:
     # Use the C version (see ../src/distance.py).
     #
@@ -56,4 +56,16 @@ else:
     # so would be so spectacularly weird (all distances would be scaled to
     # zero), I thought it better to just call the C function directly. See
     # also the tests in ../test/test_distance.py
-    scale = lib.scale
+    scaleLog = lib.scale
+
+
+def scaleLinear(dist, divisor):
+    """
+    Linearly scale a distance.
+
+    @param dist: An C{int} distance, usually a delta.
+    @param divisor: The C{int} number by which dist is divided.
+    @raise ValueError: If C{base} is zero.
+    @return: A C{int} scaled distance.
+    """
+    return int(floor(dist / divisor))

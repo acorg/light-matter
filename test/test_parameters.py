@@ -164,7 +164,7 @@ class TestParameters(TestCase):
         """
         params = Parameters([AlphaHelix], [Peaks], limitPerLandmark=3,
                             maxDistance=19, minDistance=5, distanceBase=1.2,
-                            featureLengthBase=1.7)
+                            featureLengthBase=1.7, deltaScale=2)
 
         fp = StringIO()
         params.save(fp)
@@ -176,6 +176,7 @@ class TestParameters(TestCase):
             'minDistance': 5,
             'distanceBase': 1.2,
             'featureLengthBase': 1.7,
+            'deltaScale': 2,
         }
         self.assertEqual(expected, loads(fp.getvalue()))
 

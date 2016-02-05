@@ -1,12 +1,13 @@
 from unittest import TestCase
 from functools import wraps
 
-from light.distance import scale as defaultScale, _pp_scale
+from light.distance import scaleLog as defaultScale, _pp_scaleLog
+from light.distance import scaleLinear
 
 
 class TestDistanceMixin(object):
     """
-    Tests for the light.distance.scale function.
+    Tests for the light.distance.scaleLog function.
     """
 
     def testDistanceZero(self):
@@ -144,9 +145,9 @@ class TestDistanceMixin(object):
             self.assertEqual(scaled, self.scale(length, 1.35))
 
 
-class TestDistanceDefault(TestDistanceMixin, TestCase):
+class TestDistanceLogDefault(TestDistanceMixin, TestCase):
     """
-    Tests for the light.distance.scale function, which is the
+    Tests for the light.distance.scaleLog function, which is the
     C extension version (as verified below).
     """
 
@@ -174,15 +175,15 @@ class TestDistanceDefault(TestDistanceMixin, TestCase):
         self.assertEqual(0.0, self.scale(27, 0.0))
 
 
-class TestDistancePurePython(TestDistanceMixin, TestCase):
+class TestDistanceLogPurePython(TestDistanceMixin, TestCase):
     """
-    Tests for the light.distance._pp_scale function, the pure Python
+    Tests for the light.distance._pp_scaleLog function, the pure Python
     version of the scale function.
     """
 
-    @wraps(_pp_scale)
+    @wraps(_pp_scaleLog)
     def scale(self, dist, base):
-        return _pp_scale(dist, base)
+        return _pp_scaleLog(dist, base)
 
     def testNotCExtension(self):
         """
@@ -198,3 +199,49 @@ class TestDistancePurePython(TestDistanceMixin, TestCase):
         ValueError.
         """
         self.assertRaises(ValueError, self.scale, 27, 0.0)
+
+
+class TestScaleLinear(TestCase):
+    """
+    Tests for the light.distance.scaleLinear function.
+    """
+    def testScaleLinearDivisor1(self):
+        """
+        If the divisor is 1, all distances must be scaled correctly.
+        """
+        for (distance, scaled) in ((1, 1),
+                                   (2, 2),
+                                   (3, 3),
+                                   (5, 5),
+                                   (10, 10)):
+            self.assertEqual(scaled, scaleLinear(distance, 1))
+
+    def testScaleLinearDivisor2(self):
+        """
+        If the divisor is 2, all distances must be scaled correctly.
+        """
+        for (distance, scaled) in ((1, 0),
+                                   (2, 1),
+                                   (3, 1),
+                                   (5, 2),
+                                   (10, 5)):
+            self.assertEqual(scaled, scaleLinear(distance, 2))
+
+    def testScaleLinearDivisor5(self):
+        """
+        If the divisor is 5, all distances must be scaled correctly.
+        """
+        for (distance, scaled) in ((1, 0),
+                                   (2, 0),
+                                   (3, 0),
+                                   (5, 1),
+                                   (10, 2),
+                                   (11, 2),
+                                   (12, 2),
+                                   (15, 3),
+                                   (16, 3),
+                                   (17, 3),
+                                   (18, 3),
+                                   (19, 3),
+                                   (20, 4)):
+            self.assertEqual(scaled, scaleLinear(distance, 5))

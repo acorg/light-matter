@@ -10,7 +10,7 @@ except ImportError:
 from Bio.File import as_handle
 
 from light.subject import Subject, SubjectStore
-from light.distance import scale
+from light.distance import scaleLog
 from light.checksum import Checksum
 from light.parameters import Parameters
 from light.reads import ScannedRead
@@ -225,8 +225,8 @@ class Backend:
         @return: A C{str} hash key based on the landmark, the trig point,
             and the distance between them.
         """
-        distance = scale(trigPoint.offset - landmark.offset,
-                         self.params.distanceBase)
+        distance = scaleLog(trigPoint.offset - landmark.offset,
+                            self.params.distanceBase)
         return '%s:%s:%s' % (landmark.hashkey(), trigPoint.hashkey(),
                              distance)
 

@@ -1,4 +1,4 @@
-from light.distance import scale
+from light.distance import scaleLog
 from light.features import Landmark, Finder
 
 
@@ -36,10 +36,10 @@ class GOR4AlphaHelix(Finder):
                 if length:
                     # We were in a string of H's, but it has just ended.
                     yield Landmark(self.NAME, self.SYMBOL, start, length,
-                                   scale(length, self._featureLengthBase))
+                                   scaleLog(length, self._featureLengthBase))
                     length = 0
 
         if length:
             # We reached the end of the string still in an alpha helix.
             yield Landmark(self.NAME, self.SYMBOL, start, length,
-                           scale(length, self._featureLengthBase))
+                           scaleLog(length, self._featureLengthBase))

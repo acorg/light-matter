@@ -51,6 +51,9 @@ class FindParameters(object):
         a score when a feature in a query and subject are part of a match.
     @param featureMismatchScore: The C{float} contribution (usually negative)
         to a score when a feature in a query and subject are part of a match.
+    @param deltaScale: A C{float}. The delta between the queryOffset and the
+        subjectOffset of a matching pair is scaled by dividing the delta by the
+        deltaScale to reduce sensitivity.
     """
     # The methods to be used to calculate match scores and whether matches
     # are significant (i.e., worth reporting).
@@ -68,6 +71,9 @@ class FindParameters(object):
     # FeatureMatchingScore scoring (see light/score.py).
     DEFAULT_FEATURE_MATCH_SCORE = 1.0
     DEFAULT_FEATURE_MISMATCH_SCORE = -1.0
+
+    DEFAULT_DELTA_SCALE = 1.0
+
     DEFAULT_WEIGHTS = {
         'AlphaHelix': 1.0,
         'AlphaHelix_3_10': 1.0,
@@ -89,7 +95,7 @@ class FindParameters(object):
     def __init__(self, significanceMethod=None, significanceFraction=None,
                  scoreMethod=None, overallScoreMethod=None,
                  featureMatchScore=None, featureMismatchScore=None,
-                 weights=None):
+                 weights=None, deltaScale=None):
         self.significanceMethod = (
             self.DEFAULT_SIGNIFICANCE_METHOD if significanceMethod is None
             else significanceMethod)
@@ -114,6 +120,12 @@ class FindParameters(object):
         self.overallScoreMethod = (
             self.DEFAULT_OVERALL_SCORE_METHOD if overallScoreMethod is
             None else overallScoreMethod)
+
+        self.deltaScale = (
+            self.DEFAULT_DELTA_SCALE if deltaScale is None else deltaScale)
+
+        if self.deltaScale <= 0:
+            raise ValueError('deltaScale must be > 0.')
 
     @staticmethod
     def addArgsToParser(parser):
@@ -167,6 +179,13 @@ class FindParameters(object):
             help=('The name of the method used to calculate the overall '
                   'score of all histogram bins.'))
 
+        parser.add_argument(
+            '--deltaScale', type=float,
+            default=FindParameters.DEFAULT_DELTA_SCALE,
+            help=('The delta between the query offset and the subject offset '
+                  'is scaled by dividing the delta by the deltaScale to '
+                  'reduce sensitivity.'))
+
     @classmethod
     def fromArgs(cls, args):
         """
@@ -181,7 +200,8 @@ class FindParameters(object):
                    featureMatchScore=args.featureMatchScore,
                    featureMismatchScore=args.featureMismatchScore,
                    weights=parseWeights(args.weights or {}),
-                   overallScoreMethod=args.overallScoreMethod)
+                   overallScoreMethod=args.overallScoreMethod,
+                   deltaScale=args.deltaScale)
 
     def print_(self, margin=''):
         """
@@ -201,7 +221,8 @@ class FindParameters(object):
             'Feature match score: %f' % self.featureMatchScore,
             'Feature mismatch score: %f' % self.featureMismatchScore,
             'OverallScoreMethod: %s' % self.overallScoreMethod,
-            'Weights: ',
+            'Delta scale: %f' % self.deltaScale,
+            'Weights: '
         ])
         result.indent()
         for key in sorted(self.weights.keys()):

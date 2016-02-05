@@ -10,7 +10,7 @@ from sklearn.metrics import (
 from dark.reads import AAReadWithX
 from dark.fasta import FastaReads
 
-from light.distance import scale
+from light.distance import scaleLog
 from light.database import DatabaseSpecifier
 from light.backend import Backend
 from light.string import MultilineString
@@ -57,8 +57,8 @@ class ClusterAnalysis(object):
             offsetDeltas = Counter()
             scannedRead = backend.scan(read)
             for landmark, trigPoint in backend.getScannedPairs(scannedRead):
-                delta = scale(trigPoint.offset - landmark.offset,
-                              database.params.distanceBase)
+                delta = scaleLog(trigPoint.offset - landmark.offset,
+                                 database.params.distanceBase)
                 offsetDeltas[delta] += 1
             allOffsetDeltas.append(offsetDeltas)
 

@@ -25,7 +25,7 @@ class _Feature(object):
 
         @return: A C{set} of offsets at which the feature appears.
         """
-        return set(list(range(self.offset, self.offset + self.length)))
+        return set(range(self.offset, self.offset + self.length))
 
 
 @total_ordering

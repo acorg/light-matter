@@ -10,13 +10,14 @@ class Finder(object):
 
     @param dbParams: A C{DatabaseParameters} instance.
     """
-
-    # PARAMETERS can be used by Finder subclasses to define finder-specific
-    # parameters. Its keys are parameter names, and its values are
-    # dictionaries suitable for passing to the add_argument method of an
-    # argparse.ArgumentParser instance (see addArgsToParser below). See
-    # landmarks/random.py for an example usage.
-    PARAMETERS = {}
+    def __init__(self, dbParams=None):
+        if dbParams:
+            self._dbParams = dbParams
+        else:
+            # We can't import DatabaseParameters at the top level as it
+            # causes a circular import problem.
+            from light.parameters import DatabaseParameters
+            self._dbParams = DatabaseParameters()
 
     def __eq__(self, other):
         """
@@ -42,64 +43,14 @@ class Finder(object):
         """
         return (self.NAME, self.SYMBOL) < (other.NAME, other.SYMBOL)
 
-    def addArgsToParser(self, parser):
-        """
-        Add this finder's parameter arguments (if any) to an argparse parser.
-
-        @param parser: An C{argparse.ArgumentParser} instance.
-        """
-        for parameterName, parameterKwds in self.PARAMETERS.items():
-            parser.add_argument('--' + parameterName, **parameterKwds)
-
-    def state(self):
-        """
-        Get the state of the finder (its parameter settings).
-
-        @return: A C{dict} of parameter name, parameter value.
-        """
-        result = {}
-        for parameterName in self.PARAMETERS:
-            result[parameterName] = getattr(self, parameterName)
-        return result
-
-    def initializeFromArgs(self, args):
-        """
-        Set a finder's parameters from values given on the command line.
-
-        @param args: Command line arguments as returned by the C{argparse}
-            C{parse_args} method.
-        """
-        for parameterName, parameterKwds in self.PARAMETERS.items():
-            setattr(self, parameterName,
-                    getattr(args, parameterName, parameterKwds['default']))
-
-    def initializeFromKeywords(self, **kwargs):
-        """
-        Set all a finder's parameters from keyword arguments (if present in
-        C{kwargs}) or using the finder's default value (if not).
-
-        @param kwargs: A C{dict} of keywords and values.
-        """
-        print('  init', self.NAME)
-        for parameterName, parameterKwds in self.PARAMETERS.items():
-            print('      ', parameterName, parameterKwds)
-            setattr(self, parameterName,
-                    kwargs.get(parameterName, parameterKwds['default']))
-
     def print_(self, margin=''):
         """
-        Create a C{str} with the finder name and its parameter values (if any).
+        Create a C{str} with the finder name.
 
         @param margin: A C{str} that should be inserted at the start of each
             line of output.
-        @return: A C{str} representation of the finder and its parameters.
+        @return: A C{str} representation of the finder.
         """
         result = MultilineString(margin=margin)
         result.append(self.NAME)
-        if self.PARAMETERS:
-            result.indent()
-            result.extend([
-                '%s: %s' % (parameterName, getattr(self, parameterName))
-                for parameterName in sorted(self.PARAMETERS)])
-            result.outdent()
         return str(result)

@@ -8,7 +8,7 @@ from dark.alignments import (
     Alignment, ReadsAlignments, ReadsAlignmentsParams, ReadAlignments)
 from dark.utils import numericallySortFilenames
 
-from light.parameters import Parameters
+from light.parameters import DatabaseParameters
 
 
 class LightAlignment(Alignment):
@@ -56,10 +56,10 @@ class LightReadsAlignments(ReadsAlignments):
 
         # Prepare application parameters in order to initialize self.
         self._reader = self._getReader(self.resultFilenames[0])
-        params = copy.deepcopy(self._reader.params)
+        dbParams = copy.deepcopy(self._reader.dbParams)
 
         applicationParams = ReadsAlignmentsParams(
-            'light', applicationParams=params, subjectIsNucleotides=False)
+            'light', applicationParams=dbParams, subjectIsNucleotides=False)
 
         # We will add to self._reads as we go through the results (which
         # contain the read ids and sequences). Note that this means the
@@ -106,7 +106,7 @@ class LightReadsAlignments(ReadsAlignments):
                 first = False
             else:
                 reader = self._getReader(resultFilename)
-                differences = self.params.applicationParams.compare(
+                differences = self.dbParams.applicationParams.compare(
                     reader.params)
                 if differences:
                     raise ValueError(
@@ -184,7 +184,7 @@ class JSONRecordsReader(object):
             self._fp = open(filename)
 
         try:
-            self.params = Parameters.restore(self._fp)
+            self.dbParams = DatabaseParameters.restore(self._fp)
         except ValueError as e:
             raise ValueError(
                 'Could not convert first line of %r to JSON (%s).' % (

@@ -72,3 +72,18 @@ class MultilineString:
             newlines (but no final newline).
         """
         return '\n'.join(self._strings)
+
+    def __len__(self):
+        """
+        Get the length of a multi-line string. Note that this can be used
+        for truth testing as well (using 'if' and 'if not').
+
+        @return: An C{int} length of the string.
+        """
+        # Note that with the following simplistic implementation it is
+        # inefficient to write e.g., 'return str(s) if s else None' when s
+        # is a MultilineString as that converts s to a str twice. It would
+        # be more efficient to use 'x = str(s); return x if x else None'.
+        # To alleviate this we could instead provide a method that tested
+        # the length of self._strings. But for now, be dumb.
+        return len(str(self))

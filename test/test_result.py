@@ -7,7 +7,7 @@ import warnings
 from dark.reads import AARead
 
 from light.result import Result
-from light.parameters import Parameters, FindParameters
+from light.parameters import DatabaseParameters, FindParameters
 from light.features import Landmark, TrigPoint
 from light.database import Database
 from light.landmarks import AlphaHelix, BetaStrand, AminoAcids as AminoAcidsLm
@@ -23,8 +23,8 @@ class TestResult(TestCase):
         A result with no matches added to it must have the expected attributes.
         """
         read = AARead('read', 'AGTARFSDDD')
-        params = Parameters([], [])
-        database = Database(params)
+        dbParams = DatabaseParameters()
+        database = Database(dbParams)
         hashCount = 0
         findParams = FindParameters(significanceMethod='HashFraction',
                                     scoreMethod='MinHashesScore',
@@ -40,8 +40,8 @@ class TestResult(TestCase):
         significance method.
         """
         read = AARead('read', 'AGTARFSDDD')
-        params = Parameters([], [])
-        database = Database(params)
+        dbParams = DatabaseParameters()
+        database = Database(dbParams)
         database.addSubject(AARead('subject', 'AAA'))
         matches = {
             '0': [
@@ -68,8 +68,8 @@ class TestResult(TestCase):
         that information being stored in the result instance.
         """
         read = AARead('read', 'AGTARFSDDD')
-        params = Parameters([], [])
-        database = Database(params)
+        dbParams = DatabaseParameters()
+        database = Database(dbParams)
         database.addSubject(AARead('subject', 'AAA'))
         hashCount = 1
         matches = {
@@ -94,8 +94,9 @@ class TestResult(TestCase):
         above the mean number of deltas.
         """
         read = AARead('read', 'AGTARFSDDD')
-        params = Parameters([AlphaHelix], [AminoAcids])
-        database = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix],
+                                      trigPoints=[AminoAcids])
+        database = Database(dbParams)
         database.addSubject(AARead('subject', 'ADDDADDDAWW'))
         hashCount = 1
         matches = {
@@ -126,8 +127,9 @@ class TestResult(TestCase):
         (the maximum number of identical distances) must be too.
         """
         read = AARead('read', 'AGTARFSDDD')
-        params = Parameters([AlphaHelix], [AminoAcids])
-        database = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix],
+                                      trigPoints=[AminoAcids])
+        database = Database(dbParams)
         database.addSubject(AARead('subject', 'ADDDADDDAWWWW'))
         hashCount = 4
         matches = {
@@ -165,8 +167,9 @@ class TestResult(TestCase):
         different subjects, and their scores must be correct.
         """
         read = AARead('read', 'AGTARFSDDD')
-        params = Parameters([AlphaHelix], [AminoAcids])
-        database = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix],
+                                      trigPoints=[AminoAcids])
+        database = Database(dbParams)
         # Note that both subject added here have a hash count of 5 (the
         # same as the passed query hash count). If we use anything less,
         # the score will change because its calculation uses the min
@@ -225,9 +228,12 @@ class TestResult(TestCase):
         If self.matches is empty, return an empty output.
         """
         read = AARead('read', 'AGTARFSDDD')
-        params = Parameters([], [])
-        database = Database(params)
-        result = Result(read, database, [], 0, 0, 'HashFraction',
+        dbParams = DatabaseParameters()
+        database = Database(dbParams)
+        findParams = FindParameters(significanceMethod='HashFraction',
+                                    scoreMethod='MinHashesScore',
+                                    significanceFraction=0.3)
+        result = Result(read, database, [], 0, findParams, 'HashFraction',
                         'MinHashesScore')
         fp = StringIO()
         result.save(fp=fp)
@@ -245,8 +251,8 @@ class TestResult(TestCase):
         The save function must return its (fp) argument.
         """
         read = AARead('id', 'A')
-        params = Parameters([], [])
-        database = Database(params)
+        dbParams = DatabaseParameters()
+        database = Database(dbParams)
         findParams = FindParameters(significanceMethod='HashFraction',
                                     scoreMethod='MinHashesScore',
                                     significanceFraction=0.1)
@@ -259,8 +265,8 @@ class TestResult(TestCase):
         Save must write results out in the expected JSON format.
         """
         read = AARead('id', 'FRRRFRRRFRFRFRFRRRFRRRF')
-        params = Parameters([AlphaHelix], [])
-        database = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix])
+        database = Database(dbParams)
         database.addSubject(AARead('subject0', 'FRRRFRRRFRFRFRFRRRFRRRF'))
         database.addSubject(AARead('subject1', 'FRRRFRRRFRFRFRFRRRFRRRF'))
         hashCount = 1
@@ -343,15 +349,12 @@ class TestResult(TestCase):
 
     def testRightNumberOfBucketsDefault(self):
         """
-        If no distanceBase is specified for a database, the number of bins must
-        be 21 if the length of the subject is 21 and the length of the read
-        is less. This is because int(log base 1.1 of 21) = 31, which is
-        greater than 21, so the value of 21 should be used. Note that 1.1
-        is the default distanceBase.
+        The number of bins must be 21 if the length of the subject is 21 and
+        the length of the read is less.
         """
         read = AARead('read', 'AGTARFSDDD')
-        params = Parameters([], [])
-        database = Database(params)
+        dbParams = DatabaseParameters()
+        database = Database(dbParams)
         database.addSubject(AARead('subject', 'A' * 21))
         hashCount = 1
         matches = {
@@ -371,64 +374,6 @@ class TestResult(TestCase):
                         storeFullAnalysis=True)
         self.assertEqual(21, result.analysis['0']['histogram'].nBins)
 
-    def testRightNumberOfBucketsDefaultNonEven(self):
-        """
-        If no distanceBase is specified for a database, the number of bins must
-        be 21 if the length of the subject is 20 and the length of the read
-        is less. This is because int(log base 1.1 of 20) = 31, which is greater
-        than 20, so the value of 20 should be used but result.py will adjust
-        this to 21 to ensure that the number of bins is odd.
-        """
-        read = AARead('read', 'AGTARFSDDD')
-        params = Parameters([], [])
-        database = Database(params)
-        database.addSubject(AARead('subject', 'A' * 20))
-        hashCount = 1
-        matches = {
-            '0': [
-                {
-                    'queryLandmark': Landmark('AlphaHelix', 'A', 1, 9),
-                    'queryTrigPoint': TrigPoint('Peaks', 'P', 1),
-                    'subjectLandmark': Landmark('AlphaHelix', 'A', 2, 9),
-                    'subjectTrigPoint': TrigPoint('Peaks', 'P', 0),
-                },
-            ],
-        }
-        findParams = FindParameters(significanceMethod='HashFraction',
-                                    scoreMethod='MinHashesScore',
-                                    significanceFraction=0.1)
-        result = Result(read, database, matches, hashCount, findParams,
-                        storeFullAnalysis=True)
-        self.assertEqual(21, result.analysis['0']['histogram'].nBins)
-
-    def testRightNumberOfBucketsWithNonDefaultDistanceBase(self):
-        """
-        If a distanceBase of 1.3 is given and the length of the longer
-        sequence (out of subject and query) is 20, there should be 11 buckets
-        (because int(log base 1.3 of 20) = 11).
-        """
-        read = AARead('read', 'AGTARFSDDD')
-        params = Parameters([], [], distanceBase=1.3)
-        database = Database(params)
-        database.addSubject(AARead('subject', 'AAAAAAAAAAAAAAAAAAAA'))
-        hashCount = 1
-        matches = {
-            '0': [
-                {
-                    'queryLandmark': Landmark('AlphaHelix', 'A', 1, 9),
-                    'queryTrigPoint': TrigPoint('Peaks', 'P', 1),
-                    'subjectLandmark': Landmark('AlphaHelix', 'A', 2, 9),
-                    'subjectTrigPoint': TrigPoint('Peaks', 'P', 0),
-                },
-            ],
-        }
-        findParams = FindParameters(significanceMethod='HashFraction',
-                                    scoreMethod='MinHashesScore',
-                                    significanceFraction=0.1)
-        result = Result(read, database, matches, hashCount, findParams,
-                        storeFullAnalysis=True)
-        self.assertEqual(11, result.analysis['0']['histogram'].nBins)
-
     def testPrintWithQueryWithNoMatchesDueToNoFinders(self):
         """
         Check that the print_ method of a result produces the expected result
@@ -436,8 +381,8 @@ class TestResult(TestCase):
         case due to the database having no finders).
         """
         read = AARead('read', 'AGTARFSDDD')
-        params = Parameters([], [])
-        database = Database(params)
+        dbParams = DatabaseParameters(landmarks=[])
+        database = Database(dbParams)
         database.addSubject(read)
         findParams = FindParameters(significanceFraction=0.1,
                                     scoreMethod='MinHashesScore')
@@ -454,6 +399,7 @@ class TestResult(TestCase):
                     '  Feature match score: 1.000000\n'
                     '  Feature mismatch score: -1.000000\n'
                     '  OverallScoreMethod: BestBinScore\n'
+                    '  Delta scale: 1.000000\n'
                     '  Weights: \n'
                     '    AlphaHelix: 1.000000\n'
                     '    AlphaHelix_3_10: 1.000000\n'
@@ -480,15 +426,14 @@ class TestResult(TestCase):
         """
         Check that the print_ method of a result produces the expected result
         when asked to not print the read and when there are no matches (in this
-        case due to the database having no finders).
+        case due to the database having no landmark finders).
         """
         read = AARead('read', 'AGTARFSDDD')
-        params = Parameters([], [])
-        database = Database(params)
+        dbParams = DatabaseParameters(landmarks=[])
+        database = Database(dbParams)
         database.addSubject(read)
         findParams = FindParameters(significanceFraction=0.1)
         result = database.find(read, findParams, storeFullAnalysis=True)
-
         expected = ('Find parameters:\n'
                     '  Significance method: HashFraction\n'
                     '  Significance fraction: 0.100000\n'
@@ -496,6 +441,7 @@ class TestResult(TestCase):
                     '  Feature match score: 1.000000\n'
                     '  Feature mismatch score: -1.000000\n'
                     '  OverallScoreMethod: BestBinScore\n'
+                    '  Delta scale: 1.000000\n'
                     '  Weights: \n'
                     '    AlphaHelix: 1.000000\n'
                     '    AlphaHelix_3_10: 1.000000\n'
@@ -523,8 +469,8 @@ class TestResult(TestCase):
         when there are no matches.
         """
         query = AARead('query', 'FRRRFRRRFRFRFRFRFRFRFFRRRFRRRFRRRF')
-        params = Parameters([AlphaHelix, BetaStrand], [])
-        database = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, BetaStrand])
+        database = Database(dbParams)
         subject = AARead('subject', 'VICVICV')
         database.addSubject(subject)
         result = database.find(query, storeFullAnalysis=True)
@@ -536,6 +482,7 @@ class TestResult(TestCase):
                     '  Feature match score: 1.000000\n'
                     '  Feature mismatch score: -1.000000\n'
                     '  OverallScoreMethod: BestBinScore\n'
+                    '  Delta scale: 1.000000\n'
                     '  Weights: \n'
                     '    AlphaHelix: 1.000000\n'
                     '    AlphaHelix_3_10: 1.000000\n'
@@ -563,8 +510,8 @@ class TestResult(TestCase):
         when there is a match and we keep the full analysis.
         """
         sequence = 'FRRRFRRRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'
-        params = Parameters([AlphaHelix], [])
-        database = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix])
+        database = Database(dbParams)
         subject = AARead('subject', sequence)
         database.addSubject(subject)
         query = AARead('query', sequence)
@@ -579,6 +526,7 @@ class TestResult(TestCase):
                     '  Feature match score: 1.000000\n'
                     '  Feature mismatch score: -1.000000\n'
                     '  OverallScoreMethod: BestBinScore\n'
+                    '  Delta scale: 1.000000\n'
                     '  Weights: \n'
                     '    AlphaHelix: 1.000000\n'
                     '    AlphaHelix_3_10: 1.000000\n'
@@ -622,8 +570,8 @@ class TestResult(TestCase):
         when there is a match and we keep the full analysis and also ask for
         the histogram to be printed.
         """
-        params = Parameters([AminoAcidsLm], [])
-        database = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AminoAcidsLm])
+        database = Database(dbParams)
         subject = AARead('subject', 'CACACAAACACA')
         database.addSubject(subject)
         query = AARead('query', 'CACACA')
@@ -638,6 +586,7 @@ class TestResult(TestCase):
                     '  Feature match score: 1.000000\n'
                     '  Feature mismatch score: -1.000000\n'
                     '  OverallScoreMethod: BestBinScore\n'
+                    '  Delta scale: 1.000000\n'
                     '  Weights: \n'
                     '    AlphaHelix: 1.000000\n'
                     '    AlphaHelix_3_10: 1.000000\n'
@@ -698,8 +647,8 @@ class TestResult(TestCase):
         full analysis is not stored, and when sequences are not printed.
         """
         sequence = 'FRRRFRRRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'
-        params = Parameters([AlphaHelix], [])
-        database = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix])
+        database = Database(dbParams)
         subject = AARead('subject', sequence)
         database.addSubject(subject)
         query = AARead('query', sequence)
@@ -714,6 +663,7 @@ class TestResult(TestCase):
                     '  Feature match score: 1.000000\n'
                     '  Feature mismatch score: -1.000000\n'
                     '  OverallScoreMethod: BestBinScore\n'
+                    '  Delta scale: 1.000000\n'
                     '  Weights: \n'
                     '    AlphaHelix: 1.000000\n'
                     '    AlphaHelix_3_10: 1.000000\n'
@@ -758,8 +708,8 @@ class TestResult(TestCase):
         full analysis is not stored, and when features are not printed.
         """
         sequence = 'FRRRFRRRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'
-        params = Parameters([AlphaHelix], [])
-        database = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix])
+        database = Database(dbParams)
         subject = AARead('subject', sequence)
         database.addSubject(subject)
         query = AARead('query', sequence)
@@ -774,6 +724,7 @@ class TestResult(TestCase):
                     '  Feature match score: 1.000000\n'
                     '  Feature mismatch score: -1.000000\n'
                     '  OverallScoreMethod: BestBinScore\n'
+                    '  Delta scale: 1.000000\n'
                     '  Weights: \n'
                     '    AlphaHelix: 1.000000\n'
                     '    AlphaHelix_3_10: 1.000000\n'
@@ -814,8 +765,8 @@ class TestResult(TestCase):
         full analysis is not stored, when features are not printed, and when
         there are six HSPs.
         """
-        params = Parameters([AminoAcidsLm], [])
-        database = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AminoAcidsLm])
+        database = Database(dbParams)
         subject = AARead('subject', 'CACACAAACACA')
         database.addSubject(subject)
         query = AARead('query', 'CACACA')
@@ -830,6 +781,7 @@ class TestResult(TestCase):
                     '  Feature match score: 1.000000\n'
                     '  Feature mismatch score: -1.000000\n'
                     '  OverallScoreMethod: BestBinScore\n'
+                    '  Delta scale: 1.000000\n'
                     '  Weights: \n'
                     '    AlphaHelix: 1.000000\n'
                     '    AlphaHelix_3_10: 1.000000\n'
@@ -876,8 +828,8 @@ class TestResult(TestCase):
         there are six HSPs and these are not sorted by score (but by histogram
         bin index).
         """
-        params = Parameters([AminoAcidsLm], [])
-        database = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AminoAcidsLm])
+        database = Database(dbParams)
         subject = AARead('subject', 'CACACAAACACA')
         database.addSubject(subject)
         query = AARead('query', 'CACACA')
@@ -892,6 +844,7 @@ class TestResult(TestCase):
                     '  Feature match score: 1.000000\n'
                     '  Feature mismatch score: -1.000000\n'
                     '  OverallScoreMethod: BestBinScore\n'
+                    '  Delta scale: 1.000000\n'
                     '  Weights: \n'
                     '    AlphaHelix: 1.000000\n'
                     '    AlphaHelix_3_10: 1.000000\n'
@@ -938,8 +891,8 @@ class TestResult(TestCase):
         full analysis is not stored, and when sequences are printed.
         """
         sequence = 'FRRRFRRRFRFRFRFRFRFRFRFRFFRRRFRRRFRRRF'
-        params = Parameters([AlphaHelix], [])
-        database = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix])
+        database = Database(dbParams)
         subject = AARead('subject', sequence)
         database.addSubject(subject)
         query = AARead('query', sequence)
@@ -955,6 +908,7 @@ class TestResult(TestCase):
             '  Feature match score: 1.000000\n'
             '  Feature mismatch score: -1.000000\n'
             '  OverallScoreMethod: BestBinScore\n'
+            '  Delta scale: 1.000000\n'
             '  Weights: \n'
             '    AlphaHelix: 1.000000\n'
             '    AlphaHelix_3_10: 1.000000\n'
@@ -1016,8 +970,9 @@ class TestResult(TestCase):
             'VLKLLTAGVELSDPTYQLMMKEFESPGSTGDSPLFPNAGSGYCILHRGMMQGILHYTSSLLHVN'
             'YLFVTRELIRSAYKAKFPDTTFLIDQMCSSDDSATIMSVVHPLNESEQGIKVISAFSEIICEVL'
             'KTFCRYSCFTNSEKSVMGSLNQLEFNSEFIIGNNMAVPILKWVFSAFG')
-        params = Parameters([AlphaHelix], [Troughs], distanceBase=1.4)
-        database = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix],
+                                      trigPoints=[Troughs], distanceBase=1.4)
+        database = Database(dbParams)
         subject = AARead('subject', sequence)
         database.addSubject(subject)
         query = AARead('query', sequence)
@@ -1039,8 +994,8 @@ class TestResult(TestCase):
         significance analysis if the Always significance method was used.
         """
         read = AARead('read', 'AGTARFSDDD')
-        params = Parameters([], [])
-        database = Database(params)
+        dbParams = DatabaseParameters()
+        database = Database(dbParams)
         database.addSubject(AARead('subject', 'A' * 21))
         hashCount = 1
         matches = {
@@ -1067,8 +1022,9 @@ class TestResult(TestCase):
         in each significant bin.
         """
         read = AARead('read', 'AGTARFSDDD')
-        params = Parameters([AlphaHelix], [AminoAcids])
-        database = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix],
+                                      trigPoints=[AminoAcids])
+        database = Database(dbParams)
         _, subjectIndex1, _ = database.addSubject(AARead('subject0',
                                                          'ADDDADDDAWWWWW'))
         _, subjectIndex2, _ = database.addSubject(AARead('subject1',
@@ -1123,3 +1079,29 @@ class TestResult(TestCase):
         for subjectIndex in subjectIndex1, subjectIndex2:
             self.assertIn('scoreAnalysis',
                           result.analysis[subjectIndex]['significantBins'][0])
+
+    def testAAFractionSignificanceMethodMustRun(self):
+        """
+        Make sure that the AAFraction significanceMethod is called with the
+        right arguments and runs properly.
+        """
+        read = AARead('read', 'AGTARFSDDD')
+        dbParams = DatabaseParameters()
+        database = Database(dbParams)
+        database.addSubject(AARead('subject', 'AAA'))
+        hashCount = 1
+        matches = {
+            '0': [
+                {
+                    'queryLandmark': Landmark('AlphaHelix', 'A', 0, 9),
+                    'queryTrigPoint': TrigPoint('Peaks', 'P', 1),
+                    'subjectLandmark': Landmark('AlphaHelix', 'A', 0, 1),
+                    'subjectTrigPoint': TrigPoint('Peaks', 'P', 1),
+                },
+            ],
+        }
+        findParams = FindParameters(significanceMethod='AAFraction',
+                                    scoreMethod='MinHashesScore',
+                                    significanceFraction=0.1)
+        result = Result(read, database, matches, hashCount, findParams)
+        self.assertEqual(0.0, result.analysis['0']['bestBinScore'])

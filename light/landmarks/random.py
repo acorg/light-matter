@@ -13,15 +13,6 @@ class RandomLandmark(Finder):
     NAME = 'RandomLandmark'
     SYMBOL = 'RL'
 
-    PARAMETERS = {
-        'randomLandmarkDensity': {
-            'default': 0.1,
-            'type': float,
-            'help': ('The (float) density of random length-1 landmarks to '
-                     'generate.'),
-        },
-    }
-
     def find(self, read):
         """
         A function that returns a specified number of landmarks at random

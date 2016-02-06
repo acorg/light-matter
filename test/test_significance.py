@@ -1,8 +1,9 @@
 from unittest import TestCase
 
+from light.features import Landmark, TrigPoint
 from light.histogram import Histogram
 from light.significance import (Always, HashFraction, MaxBinHeight,
-                                MeanBinHeight)
+                                MeanBinHeight, AAFraction, getHeight)
 
 from test.sample_data import DB, COWPOX, SQUIRRELPOX
 
@@ -149,4 +150,127 @@ class TestAlways(TestCase):
         histogram.finalize()
         significance = Always()
         self.assertEqual({'significanceMethod': 'Always'},
+                         significance.analysis)
+
+
+class TestGetHeight(TestCase):
+    """
+    Tests for the light.significance.getHeight function.
+    """
+    def testGetHeightEmptyBin(self):
+        """
+        If an empty bin is passed, 0 must be returned.
+        """
+        length = getHeight([])
+        self.assertEqual(0, length)
+
+    def testGetHeightOnePair(self):
+        """
+        If the bin only contains one pair, the correct height must be returned.
+        """
+        bin_ = [{
+            'subjectLandmark': Landmark('AlphaHelix', 'A', 0, 9),
+            'subjectTrigPoint': TrigPoint('Peaks', 'P', 21),
+            'queryLandmark': Landmark('AlphaHelix', 'A', 10, 9),
+            'queryTrigPoint': TrigPoint('Peaks', 'P', 25),
+        }]
+        length = getHeight(bin_)
+        self.assertEqual(20, length)
+
+    def testGetHeightNoOverlap(self):
+        """
+        If there are no overlapping features in the subject and the query, the
+        correct height must be returned.
+        """
+        bin_ = [{
+            'subjectLandmark': Landmark('AlphaHelix', 'A', 0, 9),
+            'subjectTrigPoint': TrigPoint('Peaks', 'P', 21),
+            'queryLandmark': Landmark('AlphaHelix', 'A', 10, 9),
+            'queryTrigPoint': TrigPoint('Peaks', 'P', 25),
+        }, {
+            'subjectLandmark': Landmark('AlphaHelix', 'A', 30, 9),
+            'subjectTrigPoint': TrigPoint('Peaks', 'P', 41),
+            'queryLandmark': Landmark('AlphaHelix', 'A', 40, 9),
+            'queryTrigPoint': TrigPoint('Peaks', 'P', 55),
+        }]
+        length = getHeight(bin_)
+        self.assertEqual(40, length)
+
+    def testGetHeightOverlap(self):
+        """
+        If there is overlap between the features in the query, the correct
+        height must be returned.
+        """
+        bin_ = [{
+            'subjectLandmark': Landmark('AlphaHelix', 'A', 0, 9),
+            'subjectTrigPoint': TrigPoint('Peaks', 'P', 21),
+            'queryLandmark': Landmark('AlphaHelix', 'A', 10, 9),
+            'queryTrigPoint': TrigPoint('Peaks', 'P', 25),
+        }, {
+            'subjectLandmark': Landmark('AlphaHelix', 'A', 5, 9),
+            'subjectTrigPoint': TrigPoint('Peaks', 'P', 26),
+            'queryLandmark': Landmark('AlphaHelix', 'A', 15, 9),
+            'queryTrigPoint': TrigPoint('Peaks', 'P', 30),
+        }]
+        length = getHeight(bin_)
+        self.assertEqual(32, length)
+
+
+class TestAAFraction(TestCase):
+    """
+    Tests for the light.significance.AAFraction class.
+    """
+    def testAAFractionWhenNotSignificant(self):
+        """
+        The isSignificant method must return False if asked about a bin that is
+        not significant.
+        """
+        match = {
+            'subjectLandmark': Landmark('AlphaHelix', 'A', 0, 9),
+            'subjectTrigPoint': TrigPoint('Peaks', 'P', 21),
+            'queryLandmark': Landmark('AlphaHelix', 'A', 10, 9),
+            'queryTrigPoint': TrigPoint('Peaks', 'P', 25),
+        }
+        histogram = Histogram(1)
+        histogram.add(0, match)
+        histogram.finalize()
+        significance = AAFraction(histogram, 100, 0.75)
+        self.assertFalse(significance.isSignificant(0))
+
+    def testAAFractionWhenSignificant(self):
+        """
+        The isSignificant method must return True if asked about a bin that is
+        significant.
+        """
+        match = {
+            'subjectLandmark': Landmark('AlphaHelix', 'A', 0, 9),
+            'subjectTrigPoint': TrigPoint('Peaks', 'P', 21),
+            'queryLandmark': Landmark('AlphaHelix', 'A', 10, 9),
+            'queryTrigPoint': TrigPoint('Peaks', 'P', 25),
+        }
+        histogram = Histogram(1)
+        histogram.add(0, match)
+        histogram.finalize()
+        significance = AAFraction(histogram, 10, 0.75)
+        self.assertTrue(significance.isSignificant(0))
+
+    def testAAFractionSignificanceAnalysis(self):
+        """
+        The correct analysis must be provided.
+        """
+        match = {
+            'subjectLandmark': Landmark('AlphaHelix', 'A', 0, 9),
+            'subjectTrigPoint': TrigPoint('Peaks', 'P', 21),
+            'queryLandmark': Landmark('AlphaHelix', 'A', 10, 9),
+            'queryTrigPoint': TrigPoint('Peaks', 'P', 25),
+        }
+        histogram = Histogram(3)
+        histogram.add(0, match)
+        histogram.add(1, match)
+        histogram.add(2, match)
+        histogram.finalize()
+        significance = AAFraction(histogram, 10, 0.75)
+        self.assertTrue(significance.isSignificant(0))
+        self.assertEqual({'significanceCutoff': 7.5,
+                          'significanceMethod': 'AAFraction'},
                          significance.analysis)

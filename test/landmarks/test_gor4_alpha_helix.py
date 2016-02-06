@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from dark.reads import AARead
 
-from light.distance import scale
+from light.distance import scaleLog
 from light.features import Landmark
 from light.parameters import Parameters
 from light.backend import Backend
@@ -41,8 +41,8 @@ class TestGOR4AlphaHelix(TestCase):
         read = AARead('id', seq)
         landmark = GOR4AlphaHelix()
         result = list(landmark.find(read))
-        scaled7 = scale(7, Parameters.DEFAULT_FEATURE_LENGTH_BASE)
-        scaled11 = scale(11, Parameters.DEFAULT_FEATURE_LENGTH_BASE)
+        scaled7 = scaleLog(7, Parameters.DEFAULT_FEATURE_LENGTH_BASE)
+        scaled11 = scaleLog(11, Parameters.DEFAULT_FEATURE_LENGTH_BASE)
         # The GOR IV secondary structure prediction is
         # 'CCCCCCCCCCHHHHHHHCCHHHHHHHHHHHCCCCEEEEECCEEEEEEEEC'
         self.assertEqual([Landmark('GOR4AlphaHelix', 'GA', 10, 7, scaled7),
@@ -61,8 +61,8 @@ class TestGOR4AlphaHelix(TestCase):
         featureLengthBase = 1.5
         landmark = GOR4AlphaHelix(featureLengthBase)
         result = list(landmark.find(read))
-        scaled7 = scale(7, featureLengthBase)
-        scaled11 = scale(11, featureLengthBase)
+        scaled7 = scaleLog(7, featureLengthBase)
+        scaled11 = scaleLog(11, featureLengthBase)
         # The GOR IV secondary structure prediction is
         # 'CCCCCCCCCCHHHHHHHCCHHHHHHHHHHHCCCCEEEEECCEEEEEEEEC'
         self.assertEqual([Landmark('GOR4AlphaHelix', 'GA', 10, 7, scaled7),
@@ -78,7 +78,7 @@ class TestGOR4AlphaHelix(TestCase):
         featureLengthBase = 1.5
         landmark = GOR4AlphaHelix(featureLengthBase)
         result = list(landmark.find(read))
-        scaled47 = scale(47, featureLengthBase)
+        scaled47 = scaleLog(47, featureLengthBase)
         self.assertEqual([Landmark('GOR4AlphaHelix', 'GA', 10, 47, scaled47)],
                          result)
 

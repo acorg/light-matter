@@ -674,6 +674,7 @@ class TestDatabase(TestCase):
                             distanceBase=1)
         db = Database(params)
         db.addSubject(subject)
+        self.maxDiff = None
         expected = (
             'Parameters:\n'
             '  Landmark finders:\n'

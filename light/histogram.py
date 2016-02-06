@@ -41,7 +41,7 @@ class Histogram(object):
 
         @param data: An object to add to the histogram.
         @param value: A numeric value associated with the object, used to
-            calculate what bin the object should be place into.
+            calculate what bin the object should be placed into.
         """
         if self._finalized:
             raise RuntimeError(
@@ -76,11 +76,11 @@ class Histogram(object):
                     # The max value is put into the last bin. If we don't do
                     # this manually, we get an index error because we try to
                     # access one more bin than we have.
-                    bin_ = nBins - 1
+                    binIndex = nBins - 1
                 else:
                     # Use floor to consistently round down toward
                     # numerically smaller values to get the bin number.
                     # Note that int() does not do this - it rounds towards
                     # zero!  So while floor(-3.4) = -4.0, int(-3.4) = -3.
-                    bin_ = int(floor((value - min_) / binWidth))
-                self.bins[bin_].append(data)
+                    binIndex = int(floor((value - min_) / binWidth))
+                self.bins[binIndex].append(data)

@@ -7,13 +7,14 @@ from collections import defaultdict
 from math import log10, ceil
 from operator import itemgetter
 
-from light.distance import scale
+from light.distance import scaleLinear
 from light.histogram import Histogram
 from light.significance import (
-    Always, HashFraction, MaxBinHeight, MeanBinHeight)
-from light.bin_score import (MinHashesScore, FeatureMatchingScore,
-                             FeatureAAScore, WeightedFeatureAAScore)
-from light.overall_score import BestBinScore
+    Always, HashFraction, MaxBinHeight, MeanBinHeight, AAFraction)
+from light.bin_score import (
+    NoneScore, MinHashesScore, FeatureMatchingScore, FeatureAAScore,
+    WeightedFeatureAAScore)
+from light.overall_score import BestBinScore, SignificantBinScore
 from light.backend import Backend
 from light.string import MultilineString
 
@@ -50,9 +51,14 @@ class Result(object):
         self.nonMatchingHashes = nonMatchingHashes
         self._storeFullAnalysis = storeFullAnalysis
         self.analysis = defaultdict(dict)
-        distanceBase = connector.params.distanceBase
-        queryLen = len(query)
+        deltaScale = findParams.deltaScale
         scoreGetter = itemgetter('score')
+        from light.backend import Backend
+        be = Backend()
+        be.configure(connector.dbParams)
+
+        if findParams.significanceMethod == 'AAFraction':
+            queryAACount = len(be.scan(query).coveredIndices())
 
         # Go through all the subjects that were matched at all, and put the
         # match offset deltas into bins so we can decide which (if any) of
@@ -61,13 +67,12 @@ class Result(object):
             subject = connector.getSubjectByIndex(subjectIndex)
             # Use a histogram to bin scaled (landmark, trigPoint) offset
             # deltas.
-            subjectLen = len(subject)
-            maxLen = max(queryLen, subjectLen)
-            nBins = scale(maxLen, distanceBase)
+            nBins = max(len(query), len(subject))
             # Make sure the number of bins is odd, else Histogram() will raise.
             nBins |= 0x1
             histogram = Histogram(nBins)
             add = histogram.add
+
             # To ensure the set of query/subject offset deltas is the same
             # no matter which of the sequences is the query and which is
             # the subject, we negate all deltas if the subject sequence
@@ -94,7 +99,7 @@ class Result(object):
                 # Add the information about this common landmark /
                 # trig point hash to the histogram bucket for the
                 # query landmark to subject landmark offset delta.
-                add(scale(delta, distanceBase), match)
+                add(scaleLinear(delta, deltaScale), match)
 
             histogram.finalize()
 
@@ -110,22 +115,29 @@ class Result(object):
                 significance = MaxBinHeight(histogram, query, connector)
             elif significanceMethod == 'MeanBinHeight':
                 significance = MeanBinHeight(histogram, query, connector)
+            elif significanceMethod == 'AAFraction':
+                featureAACount = (queryAACount +
+                                  len(be.scan(subject).coveredIndices()))
+                significance = AAFraction(histogram, featureAACount,
+                                          findParams.significanceFraction)
             else:
                 raise ValueError('Unknown significance method %r' %
                                  significanceMethod)
 
             scoreMethod = findParams.scoreMethod
-            if scoreMethod == 'MinHashesScore':
+            if scoreMethod == 'NoneScore':
+                scorer = NoneScore()
+            elif scoreMethod == 'MinHashesScore':
                 scorer = MinHashesScore(histogram, minHashCount)
             elif scoreMethod == 'FeatureMatchingScore':
                 scorer = FeatureMatchingScore(
-                    histogram, query, subject, connector.params, findParams)
+                    histogram, query, subject, connector.dbParams, findParams)
             elif scoreMethod == 'FeatureAAScore':
                 scorer = FeatureAAScore(
-                    histogram, query, subject, connector.params)
+                    histogram, query, subject, connector.dbParams)
             elif scoreMethod == 'WeightedFeatureAAScore':
                 scorer = WeightedFeatureAAScore(
-                    histogram, query, subject, connector.params,
+                    histogram, query, subject, connector.dbParams,
                     findParams.weights)
             else:
                 raise ValueError('Unknown score method %r' % scoreMethod)
@@ -153,22 +165,38 @@ class Result(object):
             overallScoreMethod = findParams.overallScoreMethod
             if overallScoreMethod == 'BestBinScore':
                 scorer = BestBinScore(histogram, significantBins)
-                overallScore = scorer.calculateScore()
+            elif overallScoreMethod == 'SignificantBinScore':
+                scorer = SignificantBinScore(significantBins, query, subject,
+                                             connector.dbParams)
             else:
                 raise ValueError('Unknown overall score method %r' %
                                  overallScoreMethod)
+
+            overallScore, overallScoreAnalysis = scorer.calculateScore()
+
+            # The overall score can be lower than the best bin score, for
+            # example when a sequence is compared against itself, where the
+            # bestBinScore will be 1.0, but the overallScore can be lower,
+            # because worse bins are taken into account. We don't allow that.
+            adjusted = False
+            if bestBinScore is not None and overallScore < bestBinScore:
+                overallScore = bestBinScore
+                adjusted = True
 
             if storeFullAnalysis:
                 self.analysis[subjectIndex] = {
                     'histogram': histogram,
                     'bestBinScore': bestBinScore,
                     'overallScore': overallScore,
+                    'overallScoreAnalysis': overallScoreAnalysis,
                     'significantBins': significantBins,
                     'significanceAnalysis': significance.analysis,
+                    'overallScoreAdjustedToBestBinScore': adjusted,
                 }
             elif significantBins:
                 self.analysis[subjectIndex] = {
                     'bestBinScore': bestBinScore,
+                    'overallScore': overallScore,
                     'significantBins': significantBins,
                 }
 
@@ -280,7 +308,7 @@ class Result(object):
 
         if printQuery:
             backend = Backend()
-            backend.configure(self.connector.params)
+            backend.configure(self.connector.dbParams)
             scannedQuery = backend.scan(self.query)
             append(scannedQuery.print_(printSequence=printSequences,
                                        printFeatures=printFeatures,

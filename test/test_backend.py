@@ -8,7 +8,7 @@ except ImportError:
 
 from dark.reads import AARead
 
-from light.distance import scale
+from light.distance import scaleLog
 from light.features import Landmark, TrigPoint
 from light.landmarks import AlphaHelix, BetaStrand
 from light.trig import Peaks, Troughs
@@ -51,7 +51,7 @@ class TestBackend(TestCase):
         be.configure(params)
         landmark = Landmark('name', 'A', 20, 0)
         trigPoint = TrigPoint('name', 'B', 10)
-        distanceMinus10 = str(scale(-10, Parameters.DEFAULT_DISTANCE_BASE))
+        distanceMinus10 = str(scaleLog(-10, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual('A:B:' + distanceMinus10,
                          be.hash(landmark, trigPoint))
 
@@ -65,7 +65,7 @@ class TestBackend(TestCase):
         be.configure(params)
         landmark = Landmark('name', 'A', 20, 0)
         trigPoint = TrigPoint('name', 'B', 30)
-        distance10 = str(scale(10, Parameters.DEFAULT_DISTANCE_BASE))
+        distance10 = str(scaleLog(10, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual('A:B:' + distance10, be.hash(landmark, trigPoint))
 
     def testHashWithFeatureOnLeftAndNonDefaultDistanceBase(self):
@@ -79,7 +79,7 @@ class TestBackend(TestCase):
         be.configure(params)
         landmark = Landmark('name', 'A', 20, 0)
         trigPoint = TrigPoint('name', 'B', 10)
-        distanceMinus10 = str(scale(-10, 1.5))
+        distanceMinus10 = str(scaleLog(-10, 1.5))
         self.assertEqual('A:B:' + distanceMinus10,
                          be.hash(landmark, trigPoint))
 
@@ -94,7 +94,7 @@ class TestBackend(TestCase):
         be.configure(params)
         landmark = Landmark('name', 'A', 20, 0)
         trigPoint = TrigPoint('name', 'B', 30)
-        distance10 = str(scale(10, 1.5))
+        distance10 = str(scaleLog(10, 1.5))
         self.assertEqual('A:B:' + distance10, be.hash(landmark, trigPoint))
 
     def testHashWithSymbolDetail(self):
@@ -107,7 +107,7 @@ class TestBackend(TestCase):
         be.configure(params)
         landmark = Landmark('name', 'A', 20, 0, 5)
         trigPoint = TrigPoint('name', 'B', 30)
-        distance10 = str(scale(10, Parameters.DEFAULT_DISTANCE_BASE))
+        distance10 = str(scaleLog(10, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual('A5:B:' + distance10, be.hash(landmark, trigPoint))
 
     def testScan(self):
@@ -251,7 +251,7 @@ class TestBackend(TestCase):
         be.configure(params)
         be.addSubject(
             AARead('id', 'FRRRFRRRFAAAAAAAAAAAAAAFRRRFRRRFRRRF'), '0')
-        distance23 = str(scale(23, Parameters.DEFAULT_DISTANCE_BASE))
+        distance23 = str(scaleLog(23, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
             {
                 'A2:A3:' + distance23: {'0': [[0, 9, 23, 13]]},
@@ -289,7 +289,7 @@ class TestBackend(TestCase):
             AARead('id1', 'AFRRRFRRRFAAAAAAAAAAAAAAFRRRFRRRFRRRF'), '0')
         be.addSubject(
             AARead('id2', 'FRRRFRRRFAAAAAAAAAAAAAAFRRRFRRRFRRRF'), '1')
-        distance23 = str(scale(23, Parameters.DEFAULT_DISTANCE_BASE))
+        distance23 = str(scaleLog(23, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
             {
                 'A2:A3:' + distance23: {
@@ -308,7 +308,7 @@ class TestBackend(TestCase):
         be = Backend()
         be.configure(params)
         be.addSubject(AARead('id', 'FRRRFRRRFASA'), '0')
-        distance10 = str(scale(10, Parameters.DEFAULT_DISTANCE_BASE))
+        distance10 = str(scaleLog(10, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
             {
                 'A2:P:' + distance10: {'0': [[0, 9, 10, 1]]},
@@ -329,7 +329,7 @@ class TestBackend(TestCase):
         be = Backend()
         be.configure(params)
         be.addSubject(AARead('id', 'FRRRFRRRFASA'), '0')
-        distance10 = str(scale(10, distanceBase))
+        distance10 = str(scaleLog(10, distanceBase))
         self.assertEqual(
             {
                 'A2:P:' + distance10: {'0': [[0, 9, 10, 1]]},
@@ -356,8 +356,8 @@ class TestBackend(TestCase):
         be = Backend()
         be.configure(params)
         be.addSubject(AARead('id', 'FRRRFRRRFASAASA'), '0')
-        distance13 = str(scale(13, Parameters.DEFAULT_DISTANCE_BASE))
-        distance10 = str(scale(10, Parameters.DEFAULT_DISTANCE_BASE))
+        distance13 = str(scaleLog(13, Parameters.DEFAULT_DISTANCE_BASE))
+        distance10 = str(scaleLog(10, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
             {
                 'A2:P:' + distance13: {'0': [[0, 9, 13, 1]]},
@@ -375,7 +375,7 @@ class TestBackend(TestCase):
         be = Backend()
         be.configure(params)
         be.addSubject(AARead('id', 'FRRRFRRRFASAASA'), '0')
-        distance10 = str(scale(10, Parameters.DEFAULT_DISTANCE_BASE))
+        distance10 = str(scaleLog(10, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
             {
                 'A2:P:' + distance10: {'0': [[0, 9, 10, 1]]},
@@ -404,7 +404,7 @@ class TestBackend(TestCase):
         be = Backend()
         be.configure(params)
         be.addSubject(AARead('id', 'FRRRFRRRFASAASA'), '0')
-        distance10 = str(scale(10, Parameters.DEFAULT_DISTANCE_BASE))
+        distance10 = str(scaleLog(10, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
             {
                 'A2:P:' + distance10: {'0': [[0, 9, 10, 1]]},
@@ -421,8 +421,8 @@ class TestBackend(TestCase):
         be = Backend()
         be.configure(params)
         be.addSubject(AARead('id', 'FRRRFRRRFASAASA'), '0')
-        distance13 = str(scale(13, Parameters.DEFAULT_DISTANCE_BASE))
-        distance10 = str(scale(10, Parameters.DEFAULT_DISTANCE_BASE))
+        distance13 = str(scaleLog(13, Parameters.DEFAULT_DISTANCE_BASE))
+        distance10 = str(scaleLog(10, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
             {
                 'A2:P:' + distance13: {'0': [[0, 9, 13, 1]]},
@@ -440,8 +440,8 @@ class TestBackend(TestCase):
         be = Backend()
         be.configure(params)
         be.addSubject(AARead('id', 'FRRRFRRRFASAASA'), '0')
-        distance13 = str(scale(13, Parameters.DEFAULT_DISTANCE_BASE))
-        distance10 = str(scale(10, Parameters.DEFAULT_DISTANCE_BASE))
+        distance13 = str(scaleLog(13, Parameters.DEFAULT_DISTANCE_BASE))
+        distance10 = str(scaleLog(10, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
             {
                 'A2:P:' + distance13: {'0': [[0, 9, 13, 1]]},
@@ -459,7 +459,7 @@ class TestBackend(TestCase):
         be = Backend()
         be.configure(params)
         be.addSubject(AARead('id', 'FRRRFRRRFASAASA'), '0')
-        distance13 = str(scale(13, Parameters.DEFAULT_DISTANCE_BASE))
+        distance13 = str(scaleLog(13, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
             {
                 'A2:P:' + distance13: {'0': [[0, 9, 13, 1]]},
@@ -494,7 +494,7 @@ class TestBackend(TestCase):
         be = Backend()
         be.configure(params)
         be.addSubject(AARead('id', seq + seq), '0')
-        distance10 = str(scale(10, Parameters.DEFAULT_DISTANCE_BASE))
+        distance10 = str(scaleLog(10, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
             {
                 'A2:P:' + distance10: {'0': [[0, 9, 10, 1], [12, 9, 22, 1]]},
@@ -518,7 +518,7 @@ class TestBackend(TestCase):
             AARead('id1', 'FRRRFRRRFAAAAAAAAAAAAAAFRRRFRRRFRRRF'), '0')
         be.addSubject(
             AARead('id2', 'FRRRFRRRFAAAAAAAAAAAAAAFRRRFRRRFRRRF'), '1')
-        distance23 = str(scale(23, Parameters.DEFAULT_DISTANCE_BASE))
+        distance23 = str(scaleLog(23, Parameters.DEFAULT_DISTANCE_BASE))
         self.assertEqual(
             {
                 'A2:A3:' + distance23: {

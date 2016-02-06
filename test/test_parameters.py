@@ -4,7 +4,7 @@ from unittest import TestCase
 from json import loads
 from six import StringIO
 
-from light.parameters import Parameters, FindParameters
+from light.parameters import DatabaseParameters, FindParameters
 from light.landmarks import DEFAULT_LANDMARK_CLASSES, AlphaHelix, BetaStrand
 from light.trig import DEFAULT_TRIG_CLASSES, Peaks, Troughs
 
@@ -66,63 +66,78 @@ class TestFindParameters(TestCase):
         self.assertEqual(6, findParams.featureMismatchScore)
 
 
-class TestParameters(TestCase):
+class TestDatabasedParameters(TestCase):
     """
-    Tests for the light.database.Parameters class.
+    Tests for the light.database.DatabaseParameters class.
     """
     def testDefaults(self):
         """
         If no specific parameter values are given, the defaults must be set.
         """
-        params = Parameters([], [])
-        self.assertEqual([], params.landmarkClasses)
-        self.assertEqual([], params.trigPointClasses)
-        self.assertEqual(Parameters.DEFAULT_DISTANCE_BASE, params.distanceBase)
-        self.assertEqual(Parameters.DEFAULT_FEATURE_LENGTH_BASE,
-                         params.featureLengthBase)
-        self.assertEqual(Parameters.DEFAULT_LIMIT_PER_LANDMARK,
-                         params.limitPerLandmark)
-        self.assertEqual(Parameters.DEFAULT_MAX_DISTANCE, params.maxDistance)
-        self.assertEqual(Parameters.DEFAULT_MIN_DISTANCE, params.minDistance)
+        dbParams = DatabaseParameters()
+        self.assertEqual([cls(dbParams) for cls in DEFAULT_LANDMARK_CLASSES],
+                         dbParams.landmarkFinders)
+        self.assertEqual([cls(dbParams) for cls in DEFAULT_TRIG_CLASSES],
+                         dbParams.trigPointFinders)
+        self.assertEqual(DatabaseParameters.DEFAULT_DISTANCE_BASE,
+                         dbParams.distanceBase)
+        self.assertEqual(DatabaseParameters.DEFAULT_FEATURE_LENGTH_BASE,
+                         dbParams.featureLengthBase)
+        self.assertEqual(DatabaseParameters.DEFAULT_LIMIT_PER_LANDMARK,
+                         dbParams.limitPerLandmark)
+        self.assertEqual(DatabaseParameters.DEFAULT_MAX_DISTANCE,
+                         dbParams.maxDistance)
+        self.assertEqual(DatabaseParameters.DEFAULT_MIN_DISTANCE,
+                         dbParams.minDistance)
+        self.assertEqual(DatabaseParameters.DEFAULT_RANDOM_LANDMARK_DENSITY,
+                         dbParams.randomLandmarkDensity)
+        self.assertEqual(DatabaseParameters.DEFAULT_RANDOM_TRIG_POINT_DENSITY,
+                         dbParams.randomTrigPointDensity)
 
     def testNotDefaults(self):
         """
         If specific parameter values are given, the passed values must be set.
         """
-        params = Parameters([AlphaHelix, BetaStrand], [Peaks, Troughs],
-                            distanceBase=3.0, featureLengthBase=1.7,
-                            limitPerLandmark=10, maxDistance=77,
-                            minDistance=66)
-        self.assertEqual([AlphaHelix, BetaStrand], params.landmarkClasses)
-        self.assertEqual([Peaks, Troughs], params.trigPointClasses)
-        self.assertEqual(3.0, params.distanceBase)
-        self.assertEqual(1.7, params.featureLengthBase)
-        self.assertEqual(10, params.limitPerLandmark)
-        self.assertEqual(77, params.maxDistance)
-        self.assertEqual(66, params.minDistance)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, BetaStrand],
+                                      trigPoints=[Peaks, Troughs],
+                                      distanceBase=3.0, featureLengthBase=1.7,
+                                      limitPerLandmark=10, maxDistance=77,
+                                      minDistance=66,
+                                      randomLandmarkDensity=0.1,
+                                      randomTrigPointDensity=0.2)
+        self.assertEqual([AlphaHelix(), BetaStrand()],
+                         dbParams.landmarkFinders)
+        self.assertEqual([Peaks(), Troughs()], dbParams.trigPointFinders)
+        self.assertEqual(3.0, dbParams.distanceBase)
+        self.assertEqual(1.7, dbParams.featureLengthBase)
+        self.assertEqual(10, dbParams.limitPerLandmark)
+        self.assertEqual(77, dbParams.maxDistance)
+        self.assertEqual(66, dbParams.minDistance)
+        self.assertEqual(0.1, dbParams.randomLandmarkDensity)
+        self.assertEqual(0.2, dbParams.randomTrigPointDensity)
 
-    def testDefaultLandmarkClasses(self):
+    def testDefaultLandmarkFinders(self):
         """
-        If None is passed for landmark classes, the default list of classes
+        If no landmark classes are passed, the default list of classes
         must be used.
         """
-        params = Parameters(None, [])
-        self.assertEqual(DEFAULT_LANDMARK_CLASSES, params.landmarkClasses)
+        dbParams = DatabaseParameters()
+        self.assertEqual(DEFAULT_LANDMARK_CLASSES, dbParams.landmarkFinders)
 
-    def testDefaultTrigPointClasses(self):
+    def testDefaultTrigPointFinders(self):
         """
-        If None is passed for trig point classes, the default list of classes
+        If no trig point classes are passed, the default list of classes
         must be used.
         """
-        params = Parameters([], None)
-        self.assertEqual(DEFAULT_TRIG_CLASSES, params.trigPointClasses)
+        dbParams = DatabaseParameters()
+        self.assertEqual(DEFAULT_TRIG_CLASSES, dbParams.trigPointFinders)
 
     def testDistanceBaseZeroValueError(self):
         """
         If the distanceBase is zero, a ValueError must be raised.
         """
         error = 'distanceBase must be > 0\\.'
-        six.assertRaisesRegex(self, ValueError, error, Parameters, [], [],
+        six.assertRaisesRegex(self, ValueError, error, DatabaseParameters,
                               distanceBase=0.0)
 
     def testDistanceBaseLessThanZeroValueError(self):
@@ -130,7 +145,7 @@ class TestParameters(TestCase):
         If the distanceBase is < 0, a ValueError must be raised.
         """
         error = 'distanceBase must be > 0\\.'
-        six.assertRaisesRegex(self, ValueError, error, Parameters, [], [],
+        six.assertRaisesRegex(self, ValueError, error, DatabaseParameters,
                               distanceBase=-1.0)
 
     def testFeatureLengthBaseZeroValueError(self):
@@ -138,7 +153,7 @@ class TestParameters(TestCase):
         If the featureLengthBase is zero, a ValueError must be raised.
         """
         error = 'featureLengthBase must be > 0\\.'
-        six.assertRaisesRegex(self, ValueError, error, Parameters, [], [],
+        six.assertRaisesRegex(self, ValueError, error, DatabaseParameters,
                               featureLengthBase=0.0)
 
     def testFeatureLengthBaseLessThanZeroValueError(self):
@@ -146,36 +161,39 @@ class TestParameters(TestCase):
         If the featureLengthBase is < 0, a ValueError must be raised.
         """
         error = 'featureLengthBase must be > 0\\.'
-        six.assertRaisesRegex(self, ValueError, error, Parameters, [], [],
+        six.assertRaisesRegex(self, ValueError, error, DatabaseParameters,
                               featureLengthBase=-1.0)
 
     def testSaveReturnsItsArgument(self):
         """
         The save function must return its (fp) argument.
         """
-        params = Parameters([AlphaHelix], [Peaks], limitPerLandmark=3,
-                            maxDistance=10)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix],
+                                      trigPoints=[Peaks], limitPerLandmark=3,
+                                      maxDistance=10)
         fp = StringIO()
-        self.assertIs(fp, params.save(fp))
+        self.assertIs(fp, dbParams.save(fp))
 
     def testSave(self):
         """
         Saving parameters as JSON must work correctly.
         """
-        params = Parameters([AlphaHelix], [Peaks], limitPerLandmark=3,
-                            maxDistance=19, minDistance=5, distanceBase=1.2,
-                            featureLengthBase=1.7)
-
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix],
+                                      trigPoints=[Peaks], limitPerLandmark=3,
+                                      maxDistance=19, minDistance=5,
+                                      distanceBase=1.2, featureLengthBase=1.7)
         fp = StringIO()
-        params.save(fp)
+        dbParams.save(fp)
         expected = {
-            'landmarkClassNames': ['AlphaHelix'],
-            'trigPointClassNames': ['Peaks'],
+            'landmarks': ['AlphaHelix'],
+            'trigPoints': ['Peaks'],
             'limitPerLandmark': 3,
             'maxDistance': 19,
             'minDistance': 5,
             'distanceBase': 1.2,
             'featureLengthBase': 1.7,
+            'randomLandmarkDensity': 0.1,
+            'randomTrigPointDensity': 0.1,
         }
         self.assertEqual(expected, loads(fp.getvalue()))
 
@@ -184,31 +202,38 @@ class TestParameters(TestCase):
         The restore method must produce the same parameter values that were
         present in a Parameters instance when it is saved.
         """
-        params = Parameters([AlphaHelix, BetaStrand], [Peaks, Troughs],
-                            distanceBase=3.0, featureLengthBase=3.9,
-                            limitPerLandmark=10, maxDistance=77,
-                            minDistance=66)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, BetaStrand],
+                                      trigPoints=[Peaks, Troughs],
+                                      distanceBase=3.0, featureLengthBase=3.9,
+                                      limitPerLandmark=10, maxDistance=77,
+                                      minDistance=66,
+                                      randomLandmarkDensity=0.1,
+                                      randomTrigPointDensity=0.9)
         fp = StringIO()
-        params.save(fp)
+        dbParams.save(fp)
         fp.seek(0)
-        result = Parameters.restore(fp)
+        result = DatabaseParameters.restore(fp)
 
-        self.assertEqual([AlphaHelix, BetaStrand], result.landmarkClasses)
-        self.assertEqual([Peaks, Troughs], result.trigPointClasses)
+        self.assertEqual([AlphaHelix(), BetaStrand()], result.landmarkFinders)
+        self.assertEqual([Peaks(), Troughs()], result.trigPointFinders)
         self.assertEqual(3.0, result.distanceBase)
         self.assertEqual(3.9, result.featureLengthBase)
         self.assertEqual(10, result.limitPerLandmark)
         self.assertEqual(77, result.maxDistance)
         self.assertEqual(66, result.minDistance)
+        self.assertEqual(0.1, result.randomLandmarkDensity)
+        self.assertEqual(0.9, result.randomTrigPointDensity)
 
     def testFinderOrderInvariant(self):
         """
         The parameter checksum must be identical when finders are specified,
         no matter what order the finders are given.
         """
-        params1 = Parameters([AlphaHelix, BetaStrand], [Peaks, Troughs])
-        params2 = Parameters([BetaStrand, AlphaHelix], [Troughs, Peaks])
-        self.assertEqual(params1.checksum, params2.checksum)
+        dbParams1 = DatabaseParameters(landmarks=[AlphaHelix, BetaStrand],
+                                       trigPoints=[Peaks, Troughs])
+        dbParams2 = DatabaseParameters(landmarks=[BetaStrand, AlphaHelix],
+                                       trigPoints=[Troughs, Peaks])
+        self.assertEqual(dbParams1.checksum, dbParams2.checksum)
 
     def testSaveLoadMissingLandmark(self):
         """
@@ -216,14 +241,13 @@ class TestParameters(TestCase):
         found when the parameters are later loaded, a ValueError error must be
         raised.
         """
-        params = Parameters([AlphaHelix], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix])
         fp = StringIO()
-        params.save(fp)
+        dbParams.save(fp)
         newSave = fp.getvalue().replace('AlphaHelix', 'Non-existent')
-        error = ('^Could not find landscape finder class Non-existent. '
-                 'Has that class been renamed or removed\?$')
-        six.assertRaisesRegex(self, ValueError, error, Parameters.restore,
-                              StringIO(newSave))
+        error = '^Could not find landmark finder class \'Non-existent\'\.$'
+        six.assertRaisesRegex(self, ValueError, error,
+                              DatabaseParameters.restore, StringIO(newSave))
 
     def testSaveLoadMissingTrigPoint(self):
         """
@@ -231,14 +255,13 @@ class TestParameters(TestCase):
         found when the parameters are later loaded, a ValueError error must be
         raised.
         """
-        params = Parameters([], [Peaks])
+        dbParams = DatabaseParameters(trigPoints=[Peaks])
         fp = StringIO()
-        params.save(fp)
+        dbParams.save(fp)
         newSave = fp.getvalue().replace('Peaks', 'Non-existent')
-        error = ('^Could not find trig point finder class Non-existent. '
-                 'Has that class been renamed or removed\?$')
-        six.assertRaisesRegex(self, ValueError, error, Parameters.restore,
-                              StringIO(newSave))
+        error = '^Could not find trig point finder class \'Non-existent\'.$'
+        six.assertRaisesRegex(self, ValueError, error,
+                              DatabaseParameters.restore, StringIO(newSave))
 
     def testRestoreInvalidJSON(self):
         """
@@ -246,117 +269,123 @@ class TestParameters(TestCase):
         valid JSON, a ValueError error must be raised.
         """
         error = '^Expected object or value$'
-        six.assertRaisesRegex(self, ValueError, error, Parameters.restore,
-                              StringIO('xxx'))
+        six.assertRaisesRegex(self, ValueError, error,
+                              DatabaseParameters.restore, StringIO('xxx'))
 
     def testCompareIdentical(self):
         """
         The compare method must return None when two parameter instances
         have the same values.
         """
-        params1 = Parameters([AlphaHelix, BetaStrand], [Peaks, Troughs],
-                             distanceBase=3.0, featureLengthBase=3.9,
-                             limitPerLandmark=10, maxDistance=77,
-                             minDistance=66)
-        params2 = Parameters([AlphaHelix, BetaStrand], [Peaks, Troughs],
-                             distanceBase=3.0, featureLengthBase=3.9,
-                             limitPerLandmark=10, maxDistance=77,
-                             minDistance=66)
-        self.assertIs(None, params1.compare(params2))
+        dbParams1 = DatabaseParameters(landmarks=[AlphaHelix, BetaStrand],
+                                       trigPoints=[Peaks, Troughs],
+                                       distanceBase=3.0, featureLengthBase=3.9,
+                                       limitPerLandmark=10, maxDistance=77,
+                                       minDistance=66,
+                                       randomLandmarkDensity=0.1,
+                                       randomTrigPointDensity=0.2)
+        dbParams2 = DatabaseParameters(landmarks=[AlphaHelix, BetaStrand],
+                                       trigPoints=[Peaks, Troughs],
+                                       distanceBase=3.0, featureLengthBase=3.9,
+                                       limitPerLandmark=10, maxDistance=77,
+                                       minDistance=66,
+                                       randomLandmarkDensity=0.1,
+                                       randomTrigPointDensity=0.2)
+        self.assertIs(None, dbParams1.compare(dbParams2))
 
     def testCompareDifferentLandmarkFinders(self):
         """
         The compare method must return a description of parameter differences
         when two parameter instances have different landmark finders.
         """
-        params1 = Parameters([AlphaHelix, BetaStrand], [])
-        params2 = Parameters([AlphaHelix], [])
+        dbParams1 = DatabaseParameters(landmarks=[AlphaHelix, BetaStrand])
+        dbParams2 = DatabaseParameters(landmarks=[AlphaHelix])
         expected = ("Summary of differences:\n"
-                    "\tParam 'landmarkClasses' values "
+                    "\tParam 'landmarkFinders' values "
                     "[<class 'light.landmarks.alpha_helix.AlphaHelix'>, "
                     "<class 'light.landmarks.beta_strand.BetaStrand'>] and "
                     "[<class 'light.landmarks.alpha_helix.AlphaHelix'>] "
                     "differ.")
-        self.assertEqual(expected, params1.compare(params2))
+        self.assertEqual(expected, dbParams1.compare(dbParams2))
 
     def testCompareDifferentTrigPointFinders(self):
         """
         The compare method must return a description of parameter differences
         when two parameter instances have different trig point finders.
         """
-        params1 = Parameters([], [Peaks, Troughs])
-        params2 = Parameters([], [Peaks])
+        dbParams1 = DatabaseParameters(trigPoints=[Peaks, Troughs])
+        dbParams2 = DatabaseParameters(trigPoints=[Peaks])
         expected = ("Summary of differences:\n"
-                    "\tParam 'trigPointClasses' values "
+                    "\tParam 'trigPointFinders' values "
                     "[<class 'light.trig.peaks.Peaks'>, "
                     "<class 'light.trig.troughs.Troughs'>] and "
                     "[<class 'light.trig.peaks.Peaks'>] "
                     "differ.")
-        self.assertEqual(expected, params1.compare(params2))
+        self.assertEqual(expected, dbParams1.compare(dbParams2))
 
     def testCompareDifferentDistanceBase(self):
         """
         The compare method must return a description of parameter differences
         when two parameter instances have different distance bases.
         """
-        params1 = Parameters([], [], distanceBase=1.0)
-        params2 = Parameters([], [], distanceBase=2.0)
+        dbParams1 = DatabaseParameters(distanceBase=1.0)
+        dbParams2 = DatabaseParameters(distanceBase=2.0)
         expected = ("Summary of differences:\n"
                     "\tParam 'distanceBase' values 1.0 and 2.0 differ.")
-        self.assertEqual(expected, params1.compare(params2))
+        self.assertEqual(expected, dbParams1.compare(dbParams2))
 
     def testCompareDifferentFeatureLengthBase(self):
         """
         The compare method must return a description of parameter differences
         when two parameter instances have different featureLength bases.
         """
-        params1 = Parameters([], [], featureLengthBase=1.0)
-        params2 = Parameters([], [], featureLengthBase=2.0)
+        dbParams1 = DatabaseParameters(featureLengthBase=1.0)
+        dbParams2 = DatabaseParameters(featureLengthBase=2.0)
         expected = ("Summary of differences:\n"
                     "\tParam 'featureLengthBase' values 1.0 and 2.0 differ.")
-        self.assertEqual(expected, params1.compare(params2))
+        self.assertEqual(expected, dbParams1.compare(dbParams2))
 
     def testCompareDifferentLimitPerLandmark(self):
         """
         The compare method must return a description of parameter differences
         when two parameter instances have different limit per landmark.
         """
-        params1 = Parameters([], [], limitPerLandmark=10)
-        params2 = Parameters([], [], limitPerLandmark=20)
+        dbParams1 = DatabaseParameters(limitPerLandmark=10)
+        dbParams2 = DatabaseParameters(limitPerLandmark=20)
         expected = ("Summary of differences:\n"
                     "\tParam 'limitPerLandmark' values 10 and 20 differ.")
-        self.assertEqual(expected, params1.compare(params2))
+        self.assertEqual(expected, dbParams1.compare(dbParams2))
 
     def testCompareDifferentMaxDistance(self):
         """
         The compare method must return a description of parameter differences
         when two parameter instances have different max distances.
         """
-        params1 = Parameters([], [], maxDistance=10)
-        params2 = Parameters([], [], maxDistance=20)
+        dbParams1 = DatabaseParameters(maxDistance=10)
+        dbParams2 = DatabaseParameters(maxDistance=20)
         expected = ("Summary of differences:\n"
                     "\tParam 'maxDistance' values 10 and 20 differ.")
-        self.assertEqual(expected, params1.compare(params2))
+        self.assertEqual(expected, dbParams1.compare(dbParams2))
 
     def testCompareDifferentMinDistance(self):
         """
         The compare method must return a description of parameter differences
         when two parameter instances have different min distances.
         """
-        params1 = Parameters([], [], minDistance=10)
-        params2 = Parameters([], [], minDistance=20)
+        dbParams1 = DatabaseParameters(minDistance=10)
+        dbParams2 = DatabaseParameters(minDistance=20)
         expected = ("Summary of differences:\n"
                     "\tParam 'minDistance' values 10 and 20 differ.")
-        self.assertEqual(expected, params1.compare(params2))
+        self.assertEqual(expected, dbParams1.compare(dbParams2))
 
     def testCompareDifferentMaxDistanceAndMinDistance(self):
         """
         The compare method must return a description of parameter differences
         when two parameter instances have multiple different attributes.
         """
-        params1 = Parameters([], [], maxDistance=10, minDistance=30)
-        params2 = Parameters([], [], maxDistance=20, minDistance=40)
+        dbParams1 = DatabaseParameters(maxDistance=10, minDistance=30)
+        dbParams2 = DatabaseParameters(maxDistance=20, minDistance=40)
         expected = ("Summary of differences:\n"
                     "\tParam 'maxDistance' values 10 and 20 differ.\n"
                     "\tParam 'minDistance' values 30 and 40 differ.")
-        self.assertEqual(expected, params1.compare(params2))
+        self.assertEqual(expected, dbParams1.compare(dbParams2))

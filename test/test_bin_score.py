@@ -11,9 +11,9 @@ from light.features import Landmark, TrigPoint
 from light.parameters import Parameters, FindParameters
 from light.subject import Subject
 from light.bin_score import (
-    MinHashesScore, FeatureMatchingScore, FeatureAAScore, histogramBinFeatures,
-    featureInRange, getHashFeatures, weightedHistogramBinFeatures,
-    getWeightedOffsets, WeightedFeatureAAScore)
+    NoneScore, MinHashesScore, FeatureMatchingScore, FeatureAAScore,
+    histogramBinFeatures, featureInRange, getHashFeatures,
+    weightedHistogramBinFeatures, getWeightedOffsets, WeightedFeatureAAScore)
 from light.histogram import Histogram
 from light.landmarks import AlphaHelix, AminoAcids as AminoAcidsLm
 from light.trig import Peaks, AminoAcids
@@ -53,6 +53,56 @@ TEST_WEIGHTS = {
     'IndividualPeaks': 1,
     'IndividualTroughs': 1,
 }
+
+
+class TestNoneScore(TestCase):
+    """
+    Tests for the light.bin_score.NoneScore class.
+    """
+    def testEmptyBin(self):
+        """
+        A bin containing no pairs must have a score of C{None}.
+        """
+        histogram = Histogram()
+        histogram.finalize()
+        ns = NoneScore()
+        score, analysis = ns.calculateScore(0)
+        self.assertIs(None, score)
+        self.assertEqual(
+            {
+                'score': None,
+                'scoreClass': NoneScore,
+            },
+            analysis)
+
+    def testOneHashInBin(self):
+        """
+        A bin containing one pair must have a score of C{None}.
+        """
+        # Note that this test is almost identical to a FeatureMatchingScore
+        # test below (with the same test name), but will result in a score
+        # of None.
+        queryLandmark = Landmark('AlphaHelix', 'A', 100, 20)
+        queryTrigPoint = TrigPoint('Peaks', 'P', 110)
+        subjectLandmark = Landmark('AlphaHelix', 'A', 100, 20)
+        subjectTrigPoint = TrigPoint('Peaks', 'P', 110)
+        histogram = Histogram(1)
+        histogram.add(44, {
+            'queryLandmark': queryLandmark,
+            'queryTrigPoint': queryTrigPoint,
+            'subjectLandmark': subjectLandmark,
+            'subjectTrigPoint': subjectTrigPoint,
+        })
+        histogram.finalize()
+        ns = NoneScore()
+        score, analysis = ns.calculateScore(0)
+        self.assertIs(None, score)
+        self.assertEqual(
+            {
+                'score': None,
+                'scoreClass': NoneScore,
+            },
+            analysis)
 
 
 class TestMinHashesScore(TestCase):

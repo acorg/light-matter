@@ -17,16 +17,13 @@ class Prosite(Finder):
     An explanation about the fields and structure of the database is available
     at: http://prosite.expasy.org/prosuser.html
 
-    @param featureLengthBase: See the light.features.Finder class for
-        documentation of this parameter. It is unused in the Prosite finder
-        but we need it in our signature because all finders must be able to
-        accept a featureLengthBase argument.
+    @param dbParams: A C{DatabaseParameters} instance.
     """
     NAME = 'Prosite'
     SYMBOL = 'PS'
 
-    def __init__(self):
-        Finder.__init__(self)
+    def __init__(self, dbParams):
+        Finder.__init__(self, dbParams)
         self.database = []
         with open(_DB_FILE) as fp:
             for line in fp:

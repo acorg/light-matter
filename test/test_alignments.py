@@ -27,7 +27,7 @@ from light.landmarks.alpha_helix import AlphaHelix
 from light.landmarks.beta_strand import BetaStrand
 from light.trig.amino_acids import AminoAcids
 from light.database import Database
-from light.parameters import Parameters
+from light.parameters import DatabaseParameters
 from light.alignments import LightReadsAlignments, jsonDictToAlignments
 
 
@@ -106,13 +106,14 @@ class TestLightReadsAlignments(TestCase):
         Light matter parameters must be extracted from the input JSON file and
         stored correctly.
         """
-        params = Parameters([AlphaHelix, BetaStrand], [AminoAcids])
-        savedParams = params.save(StringIO()).getvalue()
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, BetaStrand],
+                                      trigPoints=[AminoAcids])
+        savedDbParams = dbParams.save(StringIO()).getvalue()
 
-        mockOpener = mockOpen(read_data=savedParams)
+        mockOpener = mockOpen(read_data=savedDbParams)
         with patch.object(builtins, 'open', mockOpener):
             readsAlignments = LightReadsAlignments('file.json', DB)
-            diffs = readsAlignments.params.applicationParams.compare(params)
+            diffs = readsAlignments.params.applicationParams.compare(dbParams)
             self.assertIs(diffs, None)
 
     def testJSONParamsButNoHits(self):
@@ -224,9 +225,9 @@ class TestLightReadsAlignments(TestCase):
                     self._first = False
                     return BZ2([PARAMS, RECORD0])
                 else:
-                    params = loads(PARAMS)
-                    params['limitPerLandmark'] = 100
-                    return BZ2([dumps(params) + '\n', RECORD1])
+                    dbParams = loads(PARAMS)
+                    dbParams['limitPerLandmark'] = 100
+                    return BZ2([dumps(dbParams) + '\n', RECORD1])
 
         sideEffect = SideEffect()
         with patch.object(bz2, 'BZ2File') as mockMethod:
@@ -234,7 +235,7 @@ class TestLightReadsAlignments(TestCase):
             error = ("^Incompatible light matter parameters found\. The "
                      "parameters in file2\.json\.bz2 differ from those "
                      "originally found in file1\.json\.bz2\. Summary of "
-                     "differences:\n\tParam 'limitPerLandmark' values 10 "
+                     "differences:\n  Param 'limitPerLandmark' values 10 "
                      "and 100 differ\.$")
             readsAlignments = LightReadsAlignments(
                 ['file1.json.bz2', 'file2.json.bz2'], DB)
@@ -701,8 +702,8 @@ class TestJSONDictToAlignments(TestCase):
         a light matter result dict (as would be read from a JSON file) with
         no alignments.
         """
-        params = Parameters([], [])
-        database = Database(params)
+        dbParams = DatabaseParameters(landmarks=[], trigPoints=[])
+        database = Database(dbParams)
         lightDict = {
             'alignments': [],
         }
@@ -714,8 +715,8 @@ class TestJSONDictToAlignments(TestCase):
         passed a light matter result dict (as would be read from a JSON file)
         that has two alignments in it.
         """
-        params = Parameters([], [])
-        database = Database(params)
+        dbParams = DatabaseParameters(landmarks=[], trigPoints=[])
+        database = Database(dbParams)
         subject0 = AARead('subject0', 'AAA')
         subject1 = AARead('subject1', 'VVV')
         database.addSubject(subject0)

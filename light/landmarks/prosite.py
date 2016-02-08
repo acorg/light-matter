@@ -6,7 +6,23 @@ import light
 from light.features import Landmark
 from light.finder import Finder
 
-_DB_FILE = join(dirname(light.__file__), '..', 'data', 'prosite-20.119.json')
+
+def loadDatabase():
+    filename = join(dirname(light.__file__), '..', 'data',
+                    'prosite-20.119.json')
+    database = []
+    append = database.append
+    with open(filename) as fp:
+        for line in fp:
+            motif = loads(line)
+            regex = re.compile(motif['pattern'])
+            append({
+                'accession': motif['accession'],
+                'regex': regex,
+            })
+    return database
+
+_DATABASE = loadDatabase()
 
 
 class Prosite(Finder):
@@ -22,18 +38,6 @@ class Prosite(Finder):
     NAME = 'Prosite'
     SYMBOL = 'PS'
 
-    def __init__(self, dbParams):
-        Finder.__init__(self, dbParams)
-        self.database = []
-        with open(_DB_FILE) as fp:
-            for line in fp:
-                motif = loads(line)
-                regex = re.compile(motif['pattern'])
-                self.database.append({
-                                     'accession': motif['accession'],
-                                     'regex': regex,
-                                     })
-
     def find(self, read):
         """
         A function that checks if and where a prosite motif in a sequence
@@ -42,7 +46,7 @@ class Prosite(Finder):
         @param read: An instance of C{dark.reads.AARead}.
         @return: A generator that yields C{Landmark} instances.
         """
-        for motif in self.database:
+        for motif in _DATABASE:
             for match in motif['regex'].finditer(read.sequence):
                 start = match.start()
                 end = match.end()

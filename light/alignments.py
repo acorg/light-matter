@@ -56,10 +56,10 @@ class LightReadsAlignments(ReadsAlignments):
 
         # Prepare application parameters in order to initialize self.
         self._reader = self._getReader(self.resultFilenames[0])
-        dbParams = copy.deepcopy(self._reader.dbParams)
+        params = copy.deepcopy(self._reader.params)
 
         applicationParams = ReadsAlignmentsParams(
-            'light', applicationParams=dbParams, subjectIsNucleotides=False)
+            'light', applicationParams=params, subjectIsNucleotides=False)
 
         # We will add to self._reads as we go through the results (which
         # contain the read ids and sequences). Note that this means the
@@ -106,9 +106,9 @@ class LightReadsAlignments(ReadsAlignments):
                 first = False
             else:
                 reader = self._getReader(resultFilename)
-                differences = self.dbParams.applicationParams.compare(
+                differences = self.params.applicationParams.compare(
                     reader.params)
-                if differences:
+                if differences is not None:
                     raise ValueError(
                         'Incompatible light matter parameters found. The '
                         'parameters in %s differ from those originally found '
@@ -184,7 +184,7 @@ class JSONRecordsReader(object):
             self._fp = open(filename)
 
         try:
-            self.dbParams = DatabaseParameters.restore(self._fp)
+            self.params = DatabaseParameters.restore(self._fp)
         except ValueError as e:
             raise ValueError(
                 'Could not convert first line of %r to JSON (%s).' % (

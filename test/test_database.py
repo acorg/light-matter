@@ -12,7 +12,7 @@ from light.features import Landmark, TrigPoint
 from light.landmarks import AlphaHelix, BetaStrand
 from light.trig import Peaks, Troughs
 from light.checksum import Checksum
-from light.parameters import Parameters, FindParameters
+from light.parameters import DatabaseParameters, FindParameters
 from light.database import Database
 from light.subject import Subject
 from light.backend import Backend
@@ -28,21 +28,12 @@ class TestDatabase(TestCase):
         """
         self.assertEqual(0.25, FindParameters.DEFAULT_SIGNIFICANCE_FRACTION)
 
-    def testFindersAreStored(self):
-        """
-        The list of landmark and trig point finders must be stored correctly.
-        """
-        params = Parameters([AlphaHelix], [Peaks])
-        db = Database(params)
-        self.assertEqual([AlphaHelix], db.params.landmarkClasses)
-        self.assertEqual([Peaks], db.params.trigPointClasses)
-
     def testInitialStatistics(self):
         """
         The database statistics must be initially correct.
         """
-        params = Parameters([], [])
-        db = Database(params)
+        dbParams = DatabaseParameters()
+        db = Database(dbParams)
         self.assertEqual(0, db.subjectCount())
         self.assertEqual(0, db.totalResidues())
         self.assertEqual(0, db.totalCoveredResidues())
@@ -52,8 +43,8 @@ class TestDatabase(TestCase):
         The database must not have any stored subject information if no
         subjects have been added.
         """
-        params = Parameters([], [])
-        db = Database(params)
+        dbParams = DatabaseParameters()
+        db = Database(dbParams)
         self.assertEqual([], list(db.getSubjects()))
 
     def testAddSubjectReturnsIndexAndPreExisting(self):
@@ -62,8 +53,8 @@ class TestDatabase(TestCase):
         added subject and a Boolean to indicate whether the subject was already
         in the database.
         """
-        params = Parameters([AlphaHelix], [])
-        db = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix], trigPoints=[])
+        db = Database(dbParams)
         preExisting, subjectIndex, hashCount = db.addSubject(
             AARead('id', 'FRRRFRRRF'))
         self.assertFalse(preExisting)
@@ -75,8 +66,8 @@ class TestDatabase(TestCase):
         If an identical subject is added multiple times, the same subject
         index must be returned.
         """
-        params = Parameters([AlphaHelix], [])
-        db = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix], trigPoints=[])
+        db = Database(dbParams)
         self.assertEqual(db.addSubject(AARead('id', 'FRRRFRRRF'))[1],
                          db.addSubject(AARead('id', 'FRRRFRRRF'))[1])
 
@@ -85,8 +76,8 @@ class TestDatabase(TestCase):
         If an identical subject is added multiple times, the expected
         pre-existing values must be returned.
         """
-        params = Parameters([AlphaHelix], [])
-        db = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix], trigPoints=[])
+        db = Database(dbParams)
         self.assertEqual([False, True],
                          [db.addSubject(AARead('id', 'FRRRFRRRF'))[0],
                           db.addSubject(AARead('id', 'FRRRFRRRF'))[0]])
@@ -96,8 +87,8 @@ class TestDatabase(TestCase):
         If an identical subject is added multiple times, the database size
         does not increase.
         """
-        params = Parameters([AlphaHelix], [])
-        db = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix], trigPoints=[])
+        db = Database(dbParams)
         db.addSubject(AARead('id', 'FRRRFRRRF'))
         self.assertEqual(1, db.subjectCount())
         db.addSubject(AARead('id', 'FRRRFRRRF'))
@@ -108,8 +99,8 @@ class TestDatabase(TestCase):
         If an unknown subject index is passed to getSubjectByIndex, a KeyError
         must be raised.
         """
-        params = Parameters([AlphaHelix], [])
-        db = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix], trigPoints=[])
+        db = Database(dbParams)
         error = "^'xxx'$"
         six.assertRaisesRegex(self, KeyError, error, db.getSubjectByIndex,
                               'xxx')
@@ -119,8 +110,8 @@ class TestDatabase(TestCase):
         If a non-existent subject is passed to getIndexBySubject, a KeyError
         must be raised.
         """
-        params = Parameters([AlphaHelix], [])
-        db = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix], trigPoints=[])
+        db = Database(dbParams)
         error = "^'id'$"
         six.assertRaisesRegex(self, KeyError, error, db.getIndexBySubject,
                               Subject('id', 'FF', 5))
@@ -130,8 +121,8 @@ class TestDatabase(TestCase):
         If a subject is added, getSubjectByIndex must be able to return it
         given its string index.
         """
-        params = Parameters([AlphaHelix], [])
-        db = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix], trigPoints=[])
+        db = Database(dbParams)
         subject = AARead('id', 'FRRRFRRRF')
         _, index, _ = db.addSubject(subject)
         self.assertEqual(Subject('id', 'FRRRFRRRF', 0),
@@ -142,8 +133,8 @@ class TestDatabase(TestCase):
         If a subject is added, getIndexBySubject must be able to return it
         given an identical subject to look up.
         """
-        params = Parameters([AlphaHelix], [])
-        db = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix], trigPoints=[])
+        db = Database(dbParams)
         _, index, _ = db.addSubject(AARead('id', 'FRRRFRRRF'))
         self.assertEqual(index,
                          db.getIndexBySubject(Subject('id', 'FRRRFRRRF', 0)))
@@ -153,8 +144,8 @@ class TestDatabase(TestCase):
         If a subject is added, getSubjectByIndex must return a Subject
         instance that has the correct hash count.
         """
-        params = Parameters([AlphaHelix], [])
-        db = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix], trigPoints=[])
+        db = Database(dbParams)
         subject = AARead('id', 'FRRRFRRRFAFRRRFRRRF')
         _, index, _ = db.addSubject(subject)
         self.assertEqual(1, db.getSubjectByIndex(index).hashCount)
@@ -164,8 +155,8 @@ class TestDatabase(TestCase):
         If one subject with just one landmark (and hence no hashes) is added,
         an entry is appended to the database subject info.
         """
-        params = Parameters([AlphaHelix], [])
-        db = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix], trigPoints=[])
+        db = Database(dbParams)
         db.addSubject(AARead('id', 'FRRRFRRRF'))
         subjects = list(db.getSubjects())
         self.assertEqual(1, len(subjects))
@@ -178,8 +169,8 @@ class TestDatabase(TestCase):
         If one subject with two landmarks (and hence one hash) is added, an
         entry is appended to the database subject info.
         """
-        params = Parameters([AlphaHelix], [])
-        db = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix], trigPoints=[])
+        db = Database(dbParams)
         db.addSubject(AARead('id', 'FRRRFRRRFAFRRRFRRRF'))
         subject = list(db.getSubjects())[0]
         self.assertEqual(Subject('id', 'FRRRFRRRFAFRRRFRRRF', 1), subject)
@@ -189,8 +180,8 @@ class TestDatabase(TestCase):
         """
         If one subject is added the database statistics must be correct.
         """
-        params = Parameters([], [])
-        db = Database(params)
+        dbParams = DatabaseParameters(landmarks=[], trigPoints=[])
+        db = Database(dbParams)
         db.addSubject(AARead('id', 'FRRRFRRRF'))
         self.assertEqual(1, db.subjectCount())
         self.assertEqual(9, db.totalResidues())
@@ -200,8 +191,8 @@ class TestDatabase(TestCase):
         """
         If one subject is added, the database statistics must be correct.
         """
-        params = Parameters([AlphaHelix], [])
-        db = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix], trigPoints=[])
+        db = Database(dbParams)
         db.addSubject(AARead('id', 'FRRRFRRRFAAAAAAAAAAAAAAFRRRFRRRFRRRF'))
         self.assertEqual(1, db.subjectCount())
         self.assertEqual(36, db.totalResidues())
@@ -212,8 +203,8 @@ class TestDatabase(TestCase):
         If two identical reads are added, the database statistics must be
         correct.
         """
-        params = Parameters([AlphaHelix], [])
-        db = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix], trigPoints=[])
+        db = Database(dbParams)
         db.addSubject(AARead('id1', 'FRRRFRRRFAAAAAAAAAAAAAAFRRRFRRRFRRRF'))
         db.addSubject(AARead('id2', 'FRRRFRRRFAAAAAAAAAAAAAAFRRRFRRRFRRRF'))
         self.assertEqual(2, db.subjectCount())
@@ -226,14 +217,15 @@ class TestDatabase(TestCase):
         database parameters, the database state, the backend parameters and
         the backend state.
         """
-        params = Parameters([AlphaHelix], [Peaks])
-        db = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix],
+                                      trigPoints=[Peaks])
+        db = Database(dbParams)
         fp = StringIO()
         db.save(fp)
         fp.seek(0)
-        dbParams = Parameters.restore(fp)
+        dbParams = DatabaseParameters.restore(fp)
         loads(fp.readline()[:-1])
-        backendParams = Parameters.restore(fp)
+        backendParams = DatabaseParameters.restore(fp)
         loads(fp.readline()[:-1])
         self.assertIs(None, dbParams.compare(backendParams))
 
@@ -242,12 +234,13 @@ class TestDatabase(TestCase):
         When the database saves, its JSON content must include the expected
         keys and values.
         """
-        params = Parameters([AlphaHelix], [Peaks])
-        db = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix],
+                                      trigPoints=[Peaks])
+        db = Database(dbParams)
         fp = StringIO()
         db.save(fp)
         fp.seek(0)
-        Parameters.restore(fp)
+        DatabaseParameters.restore(fp)
         state = loads(fp.readline()[:-1])
 
         # Keys
@@ -261,8 +254,9 @@ class TestDatabase(TestCase):
         When asked to save and then restore an empty database, the correct
         database must result.
         """
-        params = Parameters([AlphaHelix], [Peaks])
-        db = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix],
+                                      trigPoints=[Peaks])
+        db = Database(dbParams)
         fp = StringIO()
         db.save(fp)
         fp.seek(0)
@@ -270,15 +264,15 @@ class TestDatabase(TestCase):
         self.assertEqual(0, result.subjectCount())
         self.assertEqual(0, result.totalCoveredResidues())
         self.assertEqual(0, result.totalResidues())
-        self.assertIs(None, params.compare(result.params))
+        self.assertIs(None, dbParams.compare(result.dbParams))
 
     def testRestoreInvalidJSON(self):
         """
         If a database restore is attempted from a file that does not contain
         valid JSON, a ValueError error must be raised.
         """
-        params = Parameters([], [Peaks])
-        db = Database(params)
+        dbParams = DatabaseParameters()
+        db = Database(dbParams)
         error = '^Expected object or value$'
         six.assertRaisesRegex(self, ValueError, error, db.restore,
                               StringIO('xxx'))
@@ -288,14 +282,15 @@ class TestDatabase(TestCase):
         When asked to save and then restore a non-empty database, the correct
         database must result.
         """
-        params = Parameters([AlphaHelix, BetaStrand], [Peaks, Troughs])
-        db = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, BetaStrand],
+                                      trigPoints=[Peaks, Troughs])
+        db = Database(dbParams)
         db.addSubject(AARead('id', 'FRRRFRRRFASAASA'))
         fp = StringIO()
         db.save(fp)
         fp.seek(0)
         result = db.restore(fp)
-        self.assertIs(None, params.compare(result.params))
+        self.assertIs(None, dbParams.compare(result.dbParams))
         self.assertEqual(db.subjectCount(), result.subjectCount())
         self.assertEqual(db.totalCoveredResidues(),
                          result.totalCoveredResidues())
@@ -311,8 +306,9 @@ class TestDatabase(TestCase):
         """
         seq1 = 'FRRRFRRRFASAASA'
         seq2 = 'MMMMMMMMMFRRRFR'
-        params1 = Parameters([AlphaHelix, BetaStrand], [Peaks, Troughs])
-        db1 = Database(params1)
+        dbParams1 = DatabaseParameters(landmarks=[AlphaHelix, BetaStrand],
+                                       trigPoints=[Peaks, Troughs])
+        db1 = Database(dbParams1)
         db1.addSubject(AARead('id1', seq1))
         fp = StringIO()
         db1.save(fp)
@@ -320,8 +316,9 @@ class TestDatabase(TestCase):
         db1 = Database.restore(fp)
         db1.addSubject(AARead('id2', seq2))
 
-        params2 = Parameters([AlphaHelix, BetaStrand], [Peaks, Troughs])
-        db2 = Database(params2)
+        dbParams2 = DatabaseParameters(landmarks=[AlphaHelix, BetaStrand],
+                                       trigPoints=[Peaks, Troughs])
+        db2 = Database(dbParams2)
         db2.addSubject(AARead('id1', seq1))
         db2.addSubject(AARead('id2', seq2))
 
@@ -333,8 +330,9 @@ class TestDatabase(TestCase):
         """
         subject = AARead('subject', 'FRRRFRRRFASAASA')
         query = AARead('query', 'FRRR')
-        params = Parameters([AlphaHelix], [Peaks])
-        db = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix],
+                                      trigPoints=[Peaks])
+        db = Database(dbParams)
         db.addSubject(subject)
         result = db.find(query)
         self.assertEqual({}, result.matches)
@@ -346,8 +344,9 @@ class TestDatabase(TestCase):
         """
         subject = AARead('subject', 'AFRRRFRRRFASAASAVVVVVVASAVVVASA')
         query = AARead('query', 'FRRRFRRRFASAASAFRRRFRRRFFRRRFRRRFFRRRFRRRF')
-        params = Parameters([AlphaHelix, BetaStrand], [Peaks])
-        db1 = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, BetaStrand],
+                                      trigPoints=[Peaks])
+        db1 = Database(dbParams)
         db1.addSubject(subject)
         result = db1.find(query)
         expected = {
@@ -381,8 +380,9 @@ class TestDatabase(TestCase):
         """
         subject = AARead('subject', 'AFRRRFRRRFASAASAVVVVVVASAVVVASA')
         query = AARead('query', 'FRRRFRRRFASAASAFRRRFRRRFFRRRFRRRFFRRRFRRRF')
-        params = Parameters([AlphaHelix, BetaStrand], [Peaks])
-        db = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, BetaStrand],
+                                      trigPoints=[Peaks])
+        db = Database(dbParams)
         db.addSubject(subject)
         result = db.find(query)
         self.assertEqual(
@@ -414,8 +414,9 @@ class TestDatabase(TestCase):
         sequence = 'AFRRRFRRRFASAASA'
         subject = AARead('subject', sequence)
         query = AARead('query', sequence)
-        params = Parameters([AlphaHelix], [Peaks], maxDistance=11)
-        db = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix],
+                                      trigPoints=[Peaks], maxDistance=11)
+        db = Database(dbParams)
         db.addSubject(subject)
         findParams = FindParameters(significanceFraction=0.0)
         result = db.find(query, findParams)
@@ -442,8 +443,9 @@ class TestDatabase(TestCase):
         sequence = 'AFRRRFRRRFASAASA'
         subject = AARead('subject', sequence)
         query = AARead('query', sequence)
-        params = Parameters([AlphaHelix], [Peaks], maxDistance=11)
-        db = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix],
+                                      trigPoints=[Peaks], maxDistance=11)
+        db = Database(dbParams)
         db.addSubject(subject)
         findParams = FindParameters(significanceFraction=0.0)
         result = db.find(query, findParams, subjectIndices={'0', 'x', 'y'})
@@ -470,8 +472,9 @@ class TestDatabase(TestCase):
         sequence = 'AFRRRFRRRFASAASA'
         subject = AARead('subject', sequence)
         query = AARead('query', sequence)
-        params = Parameters([AlphaHelix], [Peaks], maxDistance=11)
-        db = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix],
+                                      trigPoints=[Peaks], maxDistance=11)
+        db = Database(dbParams)
         db.addSubject(subject)
         findParams = FindParameters(significanceFraction=0.0)
         result = db.find(query, findParams, subjectIndices=set())
@@ -484,8 +487,9 @@ class TestDatabase(TestCase):
         sequence = 'AFRRRFRRRFASAASA'
         subject = AARead('subject', sequence)
         query = AARead('query', sequence)
-        params = Parameters([AlphaHelix], [Peaks], maxDistance=1)
-        db = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix],
+                                      trigPoints=[Peaks], maxDistance=1)
+        db = Database(dbParams)
         db.addSubject(subject)
         result = db.find(query)
         self.assertEqual({}, result.matches)
@@ -498,8 +502,8 @@ class TestDatabase(TestCase):
         sequence = 'AFRRRFRRRFASAASA'
         subject = AARead('subject', sequence)
         query = AARead('query', sequence)
-        params = Parameters([AlphaHelix], [])
-        db = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix], trigPoints=[])
+        db = Database(dbParams)
         db.addSubject(subject)
         result = db.find(query)
         self.assertEqual({}, result.matches)
@@ -511,8 +515,9 @@ class TestDatabase(TestCase):
         sequence = 'FRRRFRRRFASAASA'
         subject = AARead('subject', sequence)
         query = AARead('query', sequence)
-        params = Parameters([AlphaHelix], [Peaks])
-        db = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix],
+                                      trigPoints=[Peaks])
+        db = Database(dbParams)
         db.addSubject(subject)
         result = db.find(query)
 
@@ -543,15 +548,17 @@ class TestDatabase(TestCase):
         sequence = 'AFRRRFRRRFASAASAFRRRFRRRF'
         subject = AARead('subject', sequence)
         query = AARead('query', sequence)
-        params = Parameters([AlphaHelix, BetaStrand], [Peaks])
-        db = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, BetaStrand],
+                                      trigPoints=[Peaks])
+        db = Database(dbParams)
         db.addSubject(subject)
         findParams = FindParameters(significanceFraction=0.0)
         result = db.find(query, findParams)
         score1 = result.analysis['0']['bestBinScore']
 
-        params = Parameters([AlphaHelix, BetaStrand], [Peaks])
-        db = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, BetaStrand],
+                                      trigPoints=[Peaks])
+        db = Database(dbParams)
         db.addSubject(query)
         result = db.find(subject, findParams)
         score2 = result.analysis['0']['bestBinScore']
@@ -567,16 +574,18 @@ class TestDatabase(TestCase):
         """
         subject = AARead('subject', 'AFRRRFRRRFASAASAFRRRFRRRF')
         query = AARead('query', 'FRRRFRRRFASAVVVVVV')
-        params1 = Parameters([AlphaHelix, BetaStrand], [Peaks])
-        db = Database(params1)
+        dbParams1 = DatabaseParameters(landmarks=[AlphaHelix, BetaStrand],
+                                       trigPoints=[Peaks])
+        db = Database(dbParams1)
         _, index, _ = db.addSubject(subject)
         hashCount1 = db.getSubjectByIndex(index).hashCount
         findParams = FindParameters(significanceFraction=0.0)
         result = db.find(query, findParams)
         score1 = result.analysis['0']['bestBinScore']
 
-        params2 = Parameters([AlphaHelix, BetaStrand], [Peaks])
-        db = Database(params2)
+        dbParams2 = DatabaseParameters(landmarks=[AlphaHelix, BetaStrand],
+                                       trigPoints=[Peaks])
+        db = Database(dbParams2)
         _, index, _ = db.addSubject(query)
         hashCount2 = db.getSubjectByIndex(index).hashCount
         result = db.find(subject, findParams)
@@ -592,11 +601,11 @@ class TestDatabase(TestCase):
         parameters plus the default backend name when no subjects have
         been added to the database.
         """
-        params = Parameters([], [])
-        expected = Checksum(params.checksum).update([
+        dbParams = DatabaseParameters()
+        expected = Checksum(dbParams.checksum).update([
             Backend.DEFAULT_NAME,
         ])
-        db = Database(params)
+        db = Database(dbParams)
         self.assertEqual(expected.value, db.checksum())
 
     def testChecksumAfterSubjectAdded(self):
@@ -604,13 +613,13 @@ class TestDatabase(TestCase):
         The database checksum must be as expected when a subject has been
         added to the database.
         """
-        params = Parameters([AlphaHelix], [])
-        db = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix], trigPoints=[])
+        db = Database(dbParams)
         sequence = 'AFRRRFRRRFASAASA'
         subject = AARead('id', sequence)
         db.addSubject(subject)
 
-        expected = Checksum(params.checksum).update([
+        expected = Checksum(dbParams.checksum).update([
             Backend.DEFAULT_NAME,
             'id',
             sequence,
@@ -622,24 +631,29 @@ class TestDatabase(TestCase):
         When asked to save and then restore a database with non-default
         parameters, a database with the correct parameters must result.
         """
-        params = Parameters([], [], limitPerLandmark=16, maxDistance=17,
-                            minDistance=18, distanceBase=19.0)
-        db = Database(params)
+        dbParams = DatabaseParameters(landmarks=[], trigPoints=[],
+                                      limitPerLandmark=16,
+                                      maxDistance=17, minDistance=18,
+                                      distanceBase=19.0)
+        db = Database(dbParams)
         fp = StringIO()
         db.save(fp)
         fp.seek(0)
         result = db.restore(fp)
-        self.assertIs(None, params.compare(result.params))
+        self.assertIs(None, dbParams.compare(result.dbParams))
 
     def testPrint(self):
         """
         The print_ function should produce the expected output.
         """
         subject = AARead('subject', 'FRRRFRRRFASAASA')
-        params = Parameters([AlphaHelix, BetaStrand], [Peaks, Troughs],
-                            limitPerLandmark=16, maxDistance=10, minDistance=0,
-                            distanceBase=1)
-        db = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, BetaStrand],
+                                      trigPoints=[Peaks, Troughs],
+                                      limitPerLandmark=16, maxDistance=10,
+                                      minDistance=0, distanceBase=1,
+                                      randomLandmarkDensity=0.6,
+                                      randomTrigPointDensity=0.4)
+        db = Database(dbParams)
         db.addSubject(subject)
         expected = (
             'Parameters:\n'
@@ -654,12 +668,14 @@ class TestDatabase(TestCase):
             '  Min distance: 0\n'
             '  Distance base: 1.000000\n'
             '  Feature length base: 1.350000\n'
+            '  Random landmark density: 0.600000\n'
+            '  Random trig point density: 0.400000\n'
             'Connector class: SimpleConnector\n'
             'Subject count: 1\n'
             'Hash count: 3\n'
             'Total residues: 15\n'
             'Coverage: 73.33%\n'
-            'Checksum: 793188254\n'
+            'Checksum: 1080240747\n'
             'Connector:')
         self.assertEqual(expected, db.print_())
 
@@ -669,10 +685,11 @@ class TestDatabase(TestCase):
         print hash information.
         """
         subject = AARead('subject-id', 'FRRRFRRRFASAASA')
-        params = Parameters([AlphaHelix, BetaStrand], [Peaks, Troughs],
-                            limitPerLandmark=16, maxDistance=10, minDistance=0,
-                            distanceBase=1)
-        db = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, BetaStrand],
+                                      trigPoints=[Peaks, Troughs],
+                                      limitPerLandmark=16, maxDistance=10,
+                                      minDistance=0, distanceBase=1)
+        db = Database(dbParams)
         db.addSubject(subject)
         self.maxDiff = None
         expected = (
@@ -688,17 +705,19 @@ class TestDatabase(TestCase):
             '  Min distance: 0\n'
             '  Distance base: 1.000000\n'
             '  Feature length base: 1.350000\n'
+            '  Random landmark density: 0.100000\n'
+            '  Random trig point density: 0.100000\n'
             'Connector class: SimpleConnector\n'
             'Subject count: 1\n'
             'Hash count: 3\n'
             'Total residues: 15\n'
             'Coverage: 73.33%\n'
-            'Checksum: 1474134342\n'
+            'Checksum: 2842633337\n'
             'Connector:\n'
             'Backends:\n'
             '  Name: backend\n'
             '  Hash count: 3\n'
-            '  Checksum: 1474134342\n'
+            '  Checksum: 2842633337\n'
             '  Subjects (with offsets) by hash:\n'
             '    A2:P:10\n'
             '      0 [[0, 9, 10, 1]]\n'
@@ -719,10 +738,11 @@ class TestDatabase(TestCase):
         found in the subject.
         """
         subject = AARead('subject', '')
-        params = Parameters([AlphaHelix, BetaStrand], [Peaks, Troughs],
-                            limitPerLandmark=16, maxDistance=10, minDistance=0,
-                            distanceBase=1)
-        db = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, BetaStrand],
+                                      trigPoints=[Peaks, Troughs],
+                                      limitPerLandmark=16, maxDistance=10,
+                                      minDistance=0, distanceBase=1)
+        db = Database(dbParams)
         db.addSubject(subject)
         expected = (
             'Parameters:\n'
@@ -737,11 +757,13 @@ class TestDatabase(TestCase):
             '  Min distance: 0\n'
             '  Distance base: 1.000000\n'
             '  Feature length base: 1.350000\n'
+            '  Random landmark density: 0.100000\n'
+            '  Random trig point density: 0.100000\n'
             'Connector class: SimpleConnector\n'
             'Subject count: 1\n'
             'Hash count: 0\n'
             'Total residues: 0\n'
             'Coverage: 0.00%\n'
-            'Checksum: 903728869\n'
+            'Checksum: 171162040\n'
             'Connector:')
         self.assertEqual(expected, db.print_())

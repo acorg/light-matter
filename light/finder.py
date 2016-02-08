@@ -43,7 +43,7 @@ class Finder(object):
         """
         return (self.NAME, self.SYMBOL) < (other.NAME, other.SYMBOL)
 
-    def print_(self, margin=''):
+    def xprint_(self, margin=''):
         """
         Create a C{str} with the finder name.
 

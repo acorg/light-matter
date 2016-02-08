@@ -2,7 +2,8 @@ from unittest import TestCase
 from random import shuffle as pyshuffle
 from copy import copy
 
-from light.features import Landmark, TrigPoint, CombinedFeatureList, Finder
+from light.features import Landmark, TrigPoint, CombinedFeatureList
+from light.features import _Feature
 
 
 def shuffle(l):
@@ -16,6 +17,26 @@ def shuffle(l):
     result = copy(l)
     pyshuffle(result)
     return result
+
+
+class TestFeature(TestCase):
+    """
+    Tests for the light.features._Feature class
+    """
+    def testZeroCoverage(self):
+        """
+        A feature of zero length must not cover any AA offsets.
+        """
+        self.assertEqual(set(),
+                         _Feature('name', 'symbol', 10, 0).coveredOffsets())
+
+    def testCoverage(self):
+        """
+        The coveredOffsets function must give the expected result for a
+        non-zero length feature.
+        """
+        self.assertEqual(set([10, 11, 12, 13, 14]),
+                         _Feature('name', 'symbol', 10, 5).coveredOffsets())
 
 
 class TestLandmarks(TestCase):
@@ -447,23 +468,3 @@ class TestSets(TestCase):
         trigPoint = TrigPoint('trig', 't', 44)
         s = set([(landmark, trigPoint)])
         self.assertIn((landmark, trigPoint), s)
-
-
-class TestFinder(TestCase):
-    """
-    Tests for the light.features.Finder class.
-    """
-    def testDefaultFeatureLengthBase(self):
-        """
-        An instance must have the right default feature length base.
-        """
-        finder = Finder()
-        self.assertEqual(1.35, finder._featureLengthBase)
-
-    def testNonDefaultFeatureLengthBase(self):
-        """
-        An instance made with a non-default feature length base must have the
-        right featureLengthBase set.
-        """
-        finder = Finder(featureLengthBase=1.5)
-        self.assertEqual(1.5, finder._featureLengthBase)

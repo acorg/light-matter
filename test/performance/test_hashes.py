@@ -18,7 +18,7 @@ class TestHashesString(TestCase):
         reads = Reads()
         reads.add(MONKEYPOX)
         reads.add(MUMMYPOX)
-        hashesString = HashesString(reads, 0.0, landmarkNames=['AlphaHelix'])
+        hashesString = HashesString(reads, 0.0, landmarks=['AlphaHelix'])
         result = len(hashesString.hashString)
         self.assertEqual(2, result)
 
@@ -31,8 +31,8 @@ class TestHashesString(TestCase):
         reads = Reads()
         reads.add(MONKEYPOX)
         reads.add(MUMMYPOX)
-        hashesString = HashesString(reads, 0.0, landmarkNames=['AlphaHelix'],
-                                    trigPointNames=['AminoAcids'])
+        hashesString = HashesString(reads, 0.0, landmarks=['AlphaHelix'],
+                                    trigPoints=['AminoAcids'])
         ones = hashesString.hashString['Monkeypox'].count('1')
         self.assertEqual(3, ones)
 
@@ -45,7 +45,7 @@ class TestHashesString(TestCase):
         reads = Reads()
         reads.add(MONKEYPOX)
         reads.add(MUMMYPOX)
-        hashesString = HashesString(reads, 0.5, landmarkNames=['AlphaHelix'],
-                                    trigPointNames=['AminoAcids'])
+        hashesString = HashesString(reads, 0.5, landmarks=['AlphaHelix'],
+                                    trigPoints=['AminoAcids'])
         zeroes = hashesString.hashString['Monkeypox'].count('0')
         self.assertEqual(0, zeroes)

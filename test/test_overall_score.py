@@ -477,7 +477,7 @@ class TestSignificantBinScore(TestCase):
         """
         histogram = Histogram()
         histogram.finalize()
-        dbParams = DatabaseParameters([], [])
+        dbParams = DatabaseParameters(landmarks=[], trigPoints=[])
         query = AARead('id1', 'A')
         subject = Subject('id2', 'A', 0)
         sbs = SignificantBinScore([], query, subject, dbParams)
@@ -493,7 +493,7 @@ class TestSignificantBinScore(TestCase):
         """
         histogram = Histogram(1)
         histogram.finalize()
-        dbParams = DatabaseParameters([AlphaHelix], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix], trigPoints=[])
         query = AARead('id', 'FRRRFRRRF')
         subject = Subject('id2', 'A', 0)
         sbs = SignificantBinScore([], query, subject, dbParams)
@@ -509,7 +509,7 @@ class TestSignificantBinScore(TestCase):
         """
         histogram = Histogram(1)
         histogram.finalize()
-        dbParams = DatabaseParameters([AlphaHelix], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix], trigPoints=[])
         query = AARead('id', 'FRRRFRRRF')
         subject = Subject('id2', 'AAAAAAAAAAAAAAFRRRFRRRF', 0)
         sbs = SignificantBinScore([], query, subject, dbParams)
@@ -535,7 +535,7 @@ class TestSignificantBinScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        dbParams = DatabaseParameters([], [])
+        dbParams = DatabaseParameters(landmarks=[], trigPoints=[])
         query = AARead('id1', 'A')
         subject = Subject('id2', 'A', 0)
         significantBins = [
@@ -595,7 +595,8 @@ class TestSignificantBinScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint2,
         })
         histogram.finalize()
-        dbParams = DatabaseParameters([AlphaHelix], [AminoAcids])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix],
+                                      trigPoints=[AminoAcids])
         query = AARead('id1', 'A')
         subject = Subject('id2', 'A', 0)
         significantBins = [
@@ -643,7 +644,8 @@ class TestSignificantBinScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        dbParams = DatabaseParameters([AlphaHelix, AminoAcidsLm], [AminoAcids])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[AminoAcids])
         query = AARead('id', 300 * 'A' + 'FRRRFRRRFAAAC')
         subject = Subject('id', 30 * 'A', 0)
         significantBins = [
@@ -692,7 +694,8 @@ class TestSignificantBinScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        dbParams = DatabaseParameters([AlphaHelix, AminoAcidsLm], [AminoAcids])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[AminoAcids])
         query = AARead('id', 'FRRRFRRRF' + ('F' * 200) + 'FRRRFRRRFAAACAAAW')
         subject = Subject('id2', 'A', 0)
         significantBins = [
@@ -740,7 +743,8 @@ class TestSignificantBinScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        dbParams = DatabaseParameters([AlphaHelix, AminoAcidsLm], [AminoAcids])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[AminoAcids])
         query = AARead('id', 'FRRRFRRRF' + 'AAACAAAW')
         subject = Subject('id2', 'FRRRFRRRF' + 'AAAC', 0)
         significantBins = [
@@ -788,7 +792,8 @@ class TestSignificantBinScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        dbParams = DatabaseParameters([AlphaHelix, AminoAcidsLm], [AminoAcids])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[AminoAcids])
         query = Subject('id2', 'FRRRFRRRF' + 'AAAC', 0)
         subject = AARead('id', 'FRRRFRRRF' + 'AAACAAAW')
         significantBins = [
@@ -836,7 +841,8 @@ class TestSignificantBinScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        dbParams = DatabaseParameters([AlphaHelix, AminoAcidsLm], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[])
         query = AARead('id', 20 * 'A' + 'FRRRFRRRFAAC')
         subject = Subject('id2', 'A', 0)
         significantBins = [
@@ -885,7 +891,8 @@ class TestSignificantBinScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        dbParams = DatabaseParameters([AlphaHelix, AminoAcidsLm], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[])
         query = AARead('id', 'FRRRFRRRFAAAAC')
         subject = Subject('id2', 'A', 0)
         significantBins = [
@@ -934,7 +941,8 @@ class TestSignificantBinScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        dbParams = DatabaseParameters([AlphaHelix, AminoAcidsLm], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[])
         query = AARead('id', 'FRRRFRRRF' + 20 * 'A' + 'C')
         subject = Subject('id2', 'A', 0)
         significantBins = [
@@ -988,7 +996,8 @@ class TestSignificantBinScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        dbParams = DatabaseParameters([AlphaHelix, AminoAcidsLm], [AminoAcids])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[AminoAcids])
         query = AARead('id', 22 * 'A' + 'CAAW')
         subject = Subject('id2', 'A', 0)
         significantBins = [
@@ -1036,7 +1045,8 @@ class TestSignificantBinScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        dbParams = DatabaseParameters([AlphaHelix, AminoAcidsLm], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[])
         query = AARead('id', 'FRRRFRRRFC')
         subject = Subject('id2', 'A', 0)
         significantBins = [
@@ -1084,7 +1094,8 @@ class TestSignificantBinScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        dbParams = DatabaseParameters([AlphaHelix, AminoAcidsLm], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[])
         query = AARead('id', 'AAAFRRRFRRRFC')
         subject = Subject('id2', 'A', 0)
         significantBins = [
@@ -1144,7 +1155,8 @@ class TestSignificantBinScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint2,
         })
         histogram.finalize()
-        dbParams = DatabaseParameters([AlphaHelix, AminoAcidsLm], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[])
         query = AARead('id', 20 * 'A' + 'FRRRFRRRFC')
         subject = Subject('id2', 25 * 'A' + 'FRRRFRRRFRRRFAAC', 0)
         significantBins = [
@@ -1215,7 +1227,8 @@ class TestSignificantBinScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint3,
         })
         histogram.finalize()
-        dbParams = DatabaseParameters([AlphaHelix, AminoAcidsLm], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[])
         query = AARead('id', 80 * 'A')
         subject = Subject('id2', 80 * 'A', 0)
         significantBins = [
@@ -1289,7 +1302,8 @@ class TestSignificantBinScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint3,
         })
         histogram.finalize()
-        dbParams = DatabaseParameters([AlphaHelix, AminoAcidsLm], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[])
         query = AARead('id', 80 * 'A' + 'FRRRFRRRFAAAC')
         subject = Subject('id2', 80 * 'A', 0)
         significantBins = [
@@ -1364,7 +1378,8 @@ class TestSignificantBinScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint3,
         })
         histogram.finalize()
-        dbParams = DatabaseParameters([AlphaHelix, AminoAcidsLm], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[])
         query = AARead('id', 80 * 'A' + 'FRRRFRRRF' + 'AAACAAAW')
         subject = Subject('id2', 80 * 'A' + 'FRRRFRRRF' + 'AAAC', 0)
         significantBins = [
@@ -1438,7 +1453,8 @@ class TestSignificantBinScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint3,
         })
         histogram.finalize()
-        dbParams = DatabaseParameters([AlphaHelix, AminoAcidsLm], [Peaks])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[Peaks])
         query = AARead('id', 40 * 'A' + 'FRRRFRRRFAAC' + 28 * 'A')
         subject = Subject('id2', 80 * 'A', 0)
         significantBins = [
@@ -1593,7 +1609,8 @@ class TestSignificantBinScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        dbParams = DatabaseParameters([AlphaHelix, AminoAcidsLm], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[])
         query = AARead('id', 'FRRRFRRRFC')
         subject = Subject('id2', 'A', 0)
         significantBins = [

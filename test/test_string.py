@@ -27,6 +27,13 @@ class TestMultilineString(TestCase):
         """
         self.assertEqual(0, len(MultilineString()))
 
+    def testLineCountZero(self):
+        """
+        If a multiline string has nothing added to it, its line count must be
+        zero.
+        """
+        self.assertEqual(0, MultilineString().lineCount())
+
     def testAppendOneLine(self):
         """
         If a multiline string has one thing appended to it, its str
@@ -44,6 +51,15 @@ class TestMultilineString(TestCase):
         s = MultilineString()
         s.append('test')
         self.assertTrue(s)
+
+    def testOneLineLineCount(self):
+        """
+        If a multiline string has one thing appended to it, its line count
+        must be one.
+        """
+        s = MultilineString()
+        s.append('test')
+        self.assertEqual(1, s.lineCount())
 
     def testOneLineLength(self):
         """
@@ -70,6 +86,16 @@ class TestMultilineString(TestCase):
         s.append('test1')
         s.append('test2')
         self.assertEqual('test1\ntest2', str(s))
+
+    def testTwoLinesLineCount(self):
+        """
+        If a multiline string has two things appended to it, its line count
+        must be 2.
+        """
+        s = MultilineString()
+        s.append('test1')
+        s.append('test2')
+        self.assertEqual(2, s.lineCount())
 
     def testTwoLinesLength(self):
         """
@@ -107,6 +133,15 @@ class TestMultilineString(TestCase):
         s = MultilineString()
         s.extend(['test1', 'test2'])
         self.assertEqual('test1\ntest2', str(s))
+
+    def testExtendTwoLinesLineCount(self):
+        """
+        If a multiline string is extended by two strings, its line count
+        must be 2.
+        """
+        s = MultilineString()
+        s.extend(['test1', 'test2'])
+        self.assertEqual(2, s.lineCount())
 
     def testIndentReturnsSelf(self):
         """
@@ -188,3 +223,15 @@ class TestMultilineString(TestCase):
         s.append('      test2\n      test3', verbatim=True)
         s.append('test4')
         self.assertEqual('  test1\n      test2\n      test3\n  test4', str(s))
+
+    def testAppendVerbatimLineCount(self):
+        """
+        If a multiline string is given a verbatim string to append, its
+        line count must be correct.
+        """
+        s = MultilineString()
+        s.indent()
+        s.append('test1')
+        s.append('      test2\n      test3', verbatim=True)
+        s.append('test4')
+        self.assertEqual(4, s.lineCount())

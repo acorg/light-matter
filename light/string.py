@@ -87,3 +87,11 @@ class MultilineString:
         # To alleviate this we could instead provide a method that tested
         # the length of self._strings. But for now, be dumb.
         return len(str(self))
+
+    def lineCount(self):
+        """
+        How many lines are in this multi-line string?
+
+        @return: The C{int} number of lines in this multi-line string.
+        """
+        return len(self._strings)

@@ -548,7 +548,7 @@ class DatabaseParameters(object):
             append('Landmark finders:')
             result.indent()
             for finder in self.landmarkFinders:
-                append(finder.print_(margin), verbatim=True)
+                append(finder.__class__.__name__)
             result.outdent()
         else:
             append('Landmark finders: none')
@@ -557,7 +557,7 @@ class DatabaseParameters(object):
             append('Trig point finders:')
             result.indent()
             for finder in self.trigPointFinders:
-                append(finder.print_(margin), verbatim=True)
+                append(finder.__class__.__name__)
             result.outdent()
         else:
             append('Trig point finders: none')
@@ -568,8 +568,8 @@ class DatabaseParameters(object):
             'Min distance: %d' % self.minDistance,
             'Distance base: %f' % self.distanceBase,
             'Feature length base: %f' % self.featureLengthBase,
-            'randomLandmarkDensity: %f' % self.randomLandmarkDensity,
-            'randomTrigPointDensity: %f' % self.randomTrigPointDensity,
+            'Random landmark density: %f' % self.randomLandmarkDensity,
+            'Random trig point density: %f' % self.randomTrigPointDensity,
         ])
 
         return str(result)
@@ -586,48 +586,46 @@ class DatabaseParameters(object):
         err.append('Summary of differences:')
         err.indent()
 
+        ourLandmarks = self.landmarkFinderNames()
+        otherLandmarks = other.landmarkFinderNames()
+        if ourLandmarks != otherLandmarks:
+            err.append("Param 'landmarks' values %r and %r differ." %
+                       (ourLandmarks, otherLandmarks))
+
+        ourTrigPoints = self.trigPointFinderNames()
+        otherTrigPoints = other.trigPointFinderNames()
+        if ourTrigPoints != otherTrigPoints:
+            err.append("Param 'trigPoints' values %r and %r differ." %
+                       (ourTrigPoints, otherTrigPoints))
+
         for param in (
-                'landmarkFinders', 'trigPointFinders', 'limitPerLandmark',
-                'maxDistance', 'minDistance', 'distanceBase',
-                'featureLengthBase', 'randomLandmarkDensity',
+                'limitPerLandmark', 'maxDistance', 'minDistance',
+                'distanceBase', 'featureLengthBase', 'randomLandmarkDensity',
                 'randomTrigPointDensity'):
             ours = getattr(self, param)
-            theirs = getattr(other, param)
-            if ours != theirs:
-                err.append('\tParam %r values %r and %r differ.' %
-                           (param, ours, theirs))
+            others = getattr(other, param)
+            if ours != others:
+                err.append('Param %r values %r and %r differ.' %
+                           (param, ours, others))
 
-        return str(err) if err else None
+        # We have an error if the multi-line string result has more than
+        # the initial 'Summary of differences' heading line.
+        return str(err) if err.lineCount() > 1 else None
 
-    def commandLine(self):
+    def landmarkFinderNames(self):
         """
-        Return the command line arguments with values that could be used to
-        to recreate this C{DatabaseParameters} instance.
+        Get a list of the names of our landmark finders.
 
-        @return: A C{list} of C{str} command line arguments, with values.
+        @return: A C{list} of C{str} landmark finder names. These will be in
+            the sorted order of landmark finders set in our __init__.
         """
-        result = []
+        return [finder.__class__.NAME for finder in self.landmarkFinders]
 
-        if self.landmarkFinders:
-            for finder in self.landmarkFinders:
-                result.extend(['--landmark', finder.__class__.__name__])
-        else:
-            result.append('--noLandmarks')
+    def trigPointFinderNames(self):
+        """
+        Get a list of the names of our trig point finders.
 
-        if self.trigPointFinders:
-            for finder in self.trigPointFinders:
-                result.extend(['--trig', finder.__class__.__name__])
-        else:
-            result.append('--noTrigPoints')
-
-        result.extend([
-            '--limitPerLandmark', str(self.limitPerLandmark),
-            '--maxDistance', str(self.maxDistance),
-            '--minDistance', str(self.minDistance),
-            '--distanceBase', str(self.distanceBase),
-            '--featureLengthBase', str(self.featureLengthBase),
-            '--randomLandmarkDensity', str(self.randomLandmarkDensity),
-            '--randomTrigPointDensity', str(self.randomTrigPointDensity),
-        ])
-
-        return result
+        @return: A C{list} of C{str} trig point finder names. These will be in
+            the sorted order of trig point finders set in our __init__.
+        """
+        return [finder.__class__.NAME for finder in self.trigPointFinders]

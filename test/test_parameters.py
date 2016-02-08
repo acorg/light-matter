@@ -48,6 +48,7 @@ class TestFindParameters(TestCase):
             '--featureMatchScore', '5',
             '--featureMismatchScore', '6',
             '--weights', 'AlphaHelix 2',
+            '--deltaScale', '0.2',
         ])
 
         # Parsing must do the expected thing.
@@ -56,6 +57,7 @@ class TestFindParameters(TestCase):
         self.assertEqual('MinHashesScore', args.scoreMethod)
         self.assertEqual(5, args.featureMatchScore)
         self.assertEqual(6, args.featureMismatchScore)
+        self.assertEqual(0.2, args.deltaScale)
 
         # We must be able to make an instance from the parsed args.
         findParams = FindParameters.fromArgs(args)
@@ -64,9 +66,10 @@ class TestFindParameters(TestCase):
         self.assertEqual('MinHashesScore', findParams.scoreMethod)
         self.assertEqual(5, findParams.featureMatchScore)
         self.assertEqual(6, findParams.featureMismatchScore)
+        self.assertEqual(0.2, findParams.deltaScale)
 
 
-class TestDatabasedParameters(TestCase):
+class TestDatabaseParameters(TestCase):
     """
     Tests for the light.database.DatabaseParameters class.
     """
@@ -75,10 +78,10 @@ class TestDatabasedParameters(TestCase):
         If no specific parameter values are given, the defaults must be set.
         """
         dbParams = DatabaseParameters()
-        self.assertEqual([cls(dbParams) for cls in DEFAULT_LANDMARK_CLASSES],
-                         dbParams.landmarkFinders)
-        self.assertEqual([cls(dbParams) for cls in DEFAULT_TRIG_CLASSES],
-                         dbParams.trigPointFinders)
+        self.assertEqual([cls.NAME for cls in DEFAULT_LANDMARK_CLASSES],
+                         dbParams.landmarkFinderNames())
+        self.assertEqual([cls.NAME for cls in DEFAULT_TRIG_CLASSES],
+                         dbParams.trigPointFinderNames())
         self.assertEqual(DatabaseParameters.DEFAULT_DISTANCE_BASE,
                          dbParams.distanceBase)
         self.assertEqual(DatabaseParameters.DEFAULT_FEATURE_LENGTH_BASE,
@@ -105,9 +108,9 @@ class TestDatabasedParameters(TestCase):
                                       minDistance=66,
                                       randomLandmarkDensity=0.1,
                                       randomTrigPointDensity=0.2)
-        self.assertEqual([AlphaHelix(), BetaStrand()],
-                         dbParams.landmarkFinders)
-        self.assertEqual([Peaks(), Troughs()], dbParams.trigPointFinders)
+        self.assertEqual(['AlphaHelix', 'BetaStrand'],
+                         dbParams.landmarkFinderNames())
+        self.assertEqual(['Peaks', 'Troughs'], dbParams.trigPointFinderNames())
         self.assertEqual(3.0, dbParams.distanceBase)
         self.assertEqual(1.7, dbParams.featureLengthBase)
         self.assertEqual(10, dbParams.limitPerLandmark)
@@ -115,22 +118,6 @@ class TestDatabasedParameters(TestCase):
         self.assertEqual(66, dbParams.minDistance)
         self.assertEqual(0.1, dbParams.randomLandmarkDensity)
         self.assertEqual(0.2, dbParams.randomTrigPointDensity)
-
-    def testDefaultLandmarkFinders(self):
-        """
-        If no landmark classes are passed, the default list of classes
-        must be used.
-        """
-        dbParams = DatabaseParameters()
-        self.assertEqual(DEFAULT_LANDMARK_CLASSES, dbParams.landmarkFinders)
-
-    def testDefaultTrigPointFinders(self):
-        """
-        If no trig point classes are passed, the default list of classes
-        must be used.
-        """
-        dbParams = DatabaseParameters()
-        self.assertEqual(DEFAULT_TRIG_CLASSES, dbParams.trigPointFinders)
 
     def testDistanceBaseZeroValueError(self):
         """
@@ -301,11 +288,8 @@ class TestDatabasedParameters(TestCase):
         dbParams1 = DatabaseParameters(landmarks=[AlphaHelix, BetaStrand])
         dbParams2 = DatabaseParameters(landmarks=[AlphaHelix])
         expected = ("Summary of differences:\n"
-                    "\tParam 'landmarkFinders' values "
-                    "[<class 'light.landmarks.alpha_helix.AlphaHelix'>, "
-                    "<class 'light.landmarks.beta_strand.BetaStrand'>] and "
-                    "[<class 'light.landmarks.alpha_helix.AlphaHelix'>] "
-                    "differ.")
+                    "  Param 'landmarks' values "
+                    "['AlphaHelix', 'BetaStrand'] and ['AlphaHelix'] differ.")
         self.assertEqual(expected, dbParams1.compare(dbParams2))
 
     def testCompareDifferentTrigPointFinders(self):
@@ -316,11 +300,8 @@ class TestDatabasedParameters(TestCase):
         dbParams1 = DatabaseParameters(trigPoints=[Peaks, Troughs])
         dbParams2 = DatabaseParameters(trigPoints=[Peaks])
         expected = ("Summary of differences:\n"
-                    "\tParam 'trigPointFinders' values "
-                    "[<class 'light.trig.peaks.Peaks'>, "
-                    "<class 'light.trig.troughs.Troughs'>] and "
-                    "[<class 'light.trig.peaks.Peaks'>] "
-                    "differ.")
+                    "  Param 'trigPoints' values "
+                    "['Peaks', 'Troughs'] and ['Peaks'] differ.")
         self.assertEqual(expected, dbParams1.compare(dbParams2))
 
     def testCompareDifferentDistanceBase(self):
@@ -331,7 +312,7 @@ class TestDatabasedParameters(TestCase):
         dbParams1 = DatabaseParameters(distanceBase=1.0)
         dbParams2 = DatabaseParameters(distanceBase=2.0)
         expected = ("Summary of differences:\n"
-                    "\tParam 'distanceBase' values 1.0 and 2.0 differ.")
+                    "  Param 'distanceBase' values 1.0 and 2.0 differ.")
         self.assertEqual(expected, dbParams1.compare(dbParams2))
 
     def testCompareDifferentFeatureLengthBase(self):
@@ -342,7 +323,7 @@ class TestDatabasedParameters(TestCase):
         dbParams1 = DatabaseParameters(featureLengthBase=1.0)
         dbParams2 = DatabaseParameters(featureLengthBase=2.0)
         expected = ("Summary of differences:\n"
-                    "\tParam 'featureLengthBase' values 1.0 and 2.0 differ.")
+                    "  Param 'featureLengthBase' values 1.0 and 2.0 differ.")
         self.assertEqual(expected, dbParams1.compare(dbParams2))
 
     def testCompareDifferentLimitPerLandmark(self):
@@ -353,7 +334,7 @@ class TestDatabasedParameters(TestCase):
         dbParams1 = DatabaseParameters(limitPerLandmark=10)
         dbParams2 = DatabaseParameters(limitPerLandmark=20)
         expected = ("Summary of differences:\n"
-                    "\tParam 'limitPerLandmark' values 10 and 20 differ.")
+                    "  Param 'limitPerLandmark' values 10 and 20 differ.")
         self.assertEqual(expected, dbParams1.compare(dbParams2))
 
     def testCompareDifferentMaxDistance(self):
@@ -364,7 +345,7 @@ class TestDatabasedParameters(TestCase):
         dbParams1 = DatabaseParameters(maxDistance=10)
         dbParams2 = DatabaseParameters(maxDistance=20)
         expected = ("Summary of differences:\n"
-                    "\tParam 'maxDistance' values 10 and 20 differ.")
+                    "  Param 'maxDistance' values 10 and 20 differ.")
         self.assertEqual(expected, dbParams1.compare(dbParams2))
 
     def testCompareDifferentMinDistance(self):
@@ -375,7 +356,7 @@ class TestDatabasedParameters(TestCase):
         dbParams1 = DatabaseParameters(minDistance=10)
         dbParams2 = DatabaseParameters(minDistance=20)
         expected = ("Summary of differences:\n"
-                    "\tParam 'minDistance' values 10 and 20 differ.")
+                    "  Param 'minDistance' values 10 and 20 differ.")
         self.assertEqual(expected, dbParams1.compare(dbParams2))
 
     def testCompareDifferentMaxDistanceAndMinDistance(self):
@@ -386,6 +367,40 @@ class TestDatabasedParameters(TestCase):
         dbParams1 = DatabaseParameters(maxDistance=10, minDistance=30)
         dbParams2 = DatabaseParameters(maxDistance=20, minDistance=40)
         expected = ("Summary of differences:\n"
-                    "\tParam 'maxDistance' values 10 and 20 differ.\n"
-                    "\tParam 'minDistance' values 30 and 40 differ.")
+                    "  Param 'maxDistance' values 10 and 20 differ.\n"
+                    "  Param 'minDistance' values 30 and 40 differ.")
         self.assertEqual(expected, dbParams1.compare(dbParams2))
+
+    def testLandmarkFinderNamesNoLandmarkFinders(self):
+        """
+        The landmarkFinderNames method must return an empty list when there
+        are no landmark finders.
+        """
+        dbParams = DatabaseParameters(landmarks=[])
+        self.assertEqual([], dbParams.landmarkFinderNames())
+
+    def testLandmarkFinderNames(self):
+        """
+        The landmarkFinderNames method must return the expected list of names
+        of landmark finders.
+        """
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, BetaStrand])
+        self.assertEqual(['AlphaHelix', 'BetaStrand'],
+                         dbParams.landmarkFinderNames())
+
+    def testTrigPointFinderNamesNoTrigPointFinders(self):
+        """
+        The trigPointFinderNames method must return an empty list when there
+        are no trig point finders.
+        """
+        dbParams = DatabaseParameters(trigPoints=[])
+        self.assertEqual([], dbParams.trigPointFinderNames())
+
+    def testTrigPointFinderNames(self):
+        """
+        The trigPointFinderNames method must return the expected list of names
+        of trig point finders.
+        """
+        dbParams = DatabaseParameters(trigPoints=[Peaks, Troughs])
+        self.assertEqual(['Peaks', 'Troughs'],
+                         dbParams.trigPointFinderNames())

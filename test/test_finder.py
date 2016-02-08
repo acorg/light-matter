@@ -1,23 +1,38 @@
 from unittest import TestCase
 
-from light.features import _Feature
+from light.finder import Finder
+from light.landmarks import AlphaHelix, BetaStrand
+from light.parameters import DatabaseParameters
 
 
-class TestFeature(TestCase):
+class TestFinder(TestCase):
     """
-    Tests for the light.features._Feature class
+    Tests for the light.finder.Finder class.
     """
-    def testZeroCoverage(self):
+    def testParamsAreStored(self):
         """
-        A feature of zero length must not cover any AA offsets.
+        A Finder instance must store the database parameters it is passed.
         """
-        self.assertEqual(set(),
-                         _Feature('name', 'symbol', 10, 0).coveredOffsets())
+        dbParams = DatabaseParameters()
+        finder = Finder(dbParams)
+        self.assertIs(dbParams, finder._dbParams)
 
-    def testCoverage(self):
+    def testDefaultParams(self):
         """
-        The coveredOffsets function must give the expected result for a
-        non-zero length feature.
+        A Finder instance that is not passed any parameters must use the
+        default parameters.
         """
-        self.assertEqual(set([10, 11, 12, 13, 14]),
-                         _Feature('name', 'symbol', 10, 5).coveredOffsets())
+        finder = Finder()
+        self.assertIs(None, finder._dbParams.compare(DatabaseParameters()))
+
+    def testEqual(self):
+        """
+        Two identical finders must compare equal.
+        """
+        self.assertEqual(AlphaHelix(), AlphaHelix())
+
+    def testNotEqual(self):
+        """
+        Different finders must not compare equal.
+        """
+        self.assertNotEqual(AlphaHelix(), BetaStrand())

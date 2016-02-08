@@ -4,8 +4,8 @@ from dark.reads import AARead
 
 from light.distance import scaleLog
 from light.features import Landmark
-from light.parameters import DatabaseParameters
 from light.landmarks.gor4_coil import GOR4Coil
+from light.parameters import DatabaseParameters
 
 
 class TestGOR4Coil(TestCase):
@@ -54,7 +54,7 @@ class TestGOR4Coil(TestCase):
         """
         seq = 'DKATIPSESPFAAAEVADGAIVVDIAKMKYETPELHVKVGDTVTWINREA'
         read = AARead('id', seq)
-        landmark = GOR4Coil(DatabaseParameters.DEFAULT_FEATURE_LENGTH_BASE)
+        landmark = GOR4Coil()
         result = list(landmark.find(read))
         scaled1 = scaleLog(1, DatabaseParameters.DEFAULT_FEATURE_LENGTH_BASE)
         scaled2 = scaleLog(2, DatabaseParameters.DEFAULT_FEATURE_LENGTH_BASE)
@@ -79,7 +79,8 @@ class TestGOR4Coil(TestCase):
         seq = 'DKATIPSESPFAAAEVADGAIVVDIAKMKYETPELHVKVGDTVTWINREA'
         read = AARead('id', seq)
         featureLengthBase = 1.5
-        landmark = GOR4Coil(featureLengthBase)
+        dbParams = DatabaseParameters(featureLengthBase=featureLengthBase)
+        landmark = GOR4Coil(dbParams)
         result = list(landmark.find(read))
         scaled1 = scaleLog(1, featureLengthBase)
         scaled2 = scaleLog(2, featureLengthBase)

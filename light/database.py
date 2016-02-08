@@ -278,15 +278,15 @@ class DatabaseSpecifier:
     def getDatabaseFromArgs(self, args, dbParams=None):
         """
         Read an existing database (if args.database is given) or create
-        one from args.
+        one from command-line arguments in C{args} and the database parameters
+        in C{dbParams}.
 
         There is an order of preference in examining the arguments used to
         specify a database: pre-existing in a file (via --filePrefix),
-        and then via the creation of a new database (many args). There are
-        currently no checks to make sure the user isn't trying to do
-        conflicting things, such as restoring from a file and also specifying
-        landmark finders, the one with the highest priority is silently
-        acted on first.
+        and then via the creation of a new database. There are currently no
+        checks to make sure the user isn't trying to do conflicting things,
+        such as restoring from a file and also specifying landmark finders,
+        the one with the highest priority is silently acted on first.
 
         @param args: Command line arguments as returned by the C{argparse}
             C{parse_args} method.
@@ -340,7 +340,6 @@ class DatabaseSpecifier:
 
         if database is None and self._allowWamp:
             if args.wampServer:
-                dbParams = DatabaseParameters.fromArgs(args)
                 connector = WampServerConnector(dbParams,
                                                 filePrefix=filePrefix)
                 database = Database(dbParams, connector=connector,
@@ -351,7 +350,6 @@ class DatabaseSpecifier:
         if database is None and self._allowCreation:
             # A new in-memory database, with a simple connector and a local
             # backend.
-            dbParams = DatabaseParameters.fromArgs(args)
             database = Database(dbParams, filePrefix=filePrefix)
 
         if database is None and self._allowWamp:
@@ -397,7 +395,7 @@ class DatabaseSpecifier:
         @raise ValueError: If a database cannot be found or created.
         @return: A C{light.database.Database} instance.
         """
-        # An pre-existing in-memory database gets returned immediately,
+        # A pre-existing in-memory database gets returned immediately,
         # after adding any optional sequences to it.
         if database is not None:
             assert self._allowInMemory, (
@@ -408,8 +406,6 @@ class DatabaseSpecifier:
             self.addArgsToParser(parser)
 
             dbParams = DatabaseParameters(**kwargs)
-            print('landmarkFinders:', dbParams.landmarkFinders)
-            print('trigPointFinders:', dbParams.trigPointFinders)
             commandLine = []
 
             if filePrefix is not None:

@@ -1,6 +1,6 @@
 import six
 import argparse
-from unittest import TestCase
+from unittest import TestCase, skip
 from six import StringIO
 from six.moves import builtins
 try:
@@ -999,6 +999,7 @@ class TestGetDatabaseFromArgs(TestCase):
         six.assertRaisesRegex(self, RuntimeError, error,
                               specifier.getDatabaseFromArgs, args)
 
+    @skip('Cannot test errors causing argparse to call sys.exit')
     def testPopulationNotAllowed(self):
         """
         Using --databaseFasta must result in a ValueError if database

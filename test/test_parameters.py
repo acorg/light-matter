@@ -1,6 +1,6 @@
 import six
 import argparse
-from unittest import TestCase
+from unittest import TestCase, skip
 from json import loads
 from six import StringIO
 
@@ -531,6 +531,7 @@ class TestDatabaseParameters(TestCase):
         dbParams = DatabaseParameters.fromArgs(args)
         self.assertEqual([], dbParams.landmarkFinders)
 
+    @skip('Cannot test errors causing argparse to call sys.exit')
     def testFromArgsNonexistentLandmark(self):
         """
         If --landmark is given on a command line with a non-existent landmark
@@ -571,6 +572,7 @@ class TestDatabaseParameters(TestCase):
         dbParams = DatabaseParameters.fromArgs(args)
         self.assertEqual([], dbParams.trigPointFinders)
 
+    @skip('Cannot test errors causing argparse to call sys.exit')
     def testFromArgsNonexistentTrigPoint(self):
         """
         If --trig is given on a command line with a non-existent trig point

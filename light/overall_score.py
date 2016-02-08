@@ -160,15 +160,15 @@ class SignificantBinScore(object):
     @param query: A C{dark.reads.AARead} instance.
     @param subject: A C{light.subject.Subject} instance (a subclass of
         C{dark.reads.AARead}).
-    @param params: A C{Parameters} instance.
+    @param dbParams: A C{DatabaseParameters} instance.
     """
-    def __init__(self, significantBins, query, subject, params):
+    def __init__(self, significantBins, query, subject, dbParams):
         # The only thing we do here is store what we have been passed. All
         # work happens in calculateScore (which is only called once).
         self._significantBins = significantBins
         self._query = query
         self._subject = subject
-        self._params = params
+        self._dbParams = dbParams
 
     def calculateScore(self):
         """
@@ -189,7 +189,7 @@ class SignificantBinScore(object):
 
         from light.backend import Backend
         backend = Backend()
-        backend.configure(self._params)
+        backend.configure(self._dbParams)
 
         allQueryFeatures = getHashFeatures(backend.getHashes(
             backend.scan(self._query)))

@@ -201,7 +201,7 @@ class TestDatabaseParameters(TestCase):
     def testRestore(self):
         """
         The restore method must produce the same parameter values that were
-        present in a Parameters instance when it is saved.
+        present in a DatabaseParameters instance when it is saved.
         """
         dbParams = DatabaseParameters(landmarks=[AlphaHelix, BetaStrand],
                                       trigPoints=[Peaks, Troughs],

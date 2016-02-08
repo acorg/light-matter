@@ -523,7 +523,7 @@ class DatabaseParameters(object):
         Load parameters from a file.
 
         @param fp: A file pointer.
-        @return: An instance of L{Parameters}.
+        @return: An instance of L{DatabaseParameters}.
         @raises ValueError: If a now non-existent landmark or trig point name
             is found in the saved parameters file. Or if valid JSON cannot be
             loaded from C{fp}.
@@ -577,9 +577,9 @@ class DatabaseParameters(object):
 
     def compare(self, other):
         """
-        Compare our parameters against another Parameters instance.
+        Compare our parameters against another C{DatabaseParameters} instance.
 
-        @param other: A C{Parameters} instance.
+        @param other: A C{DatabaseParameters} instance.
         @return: A C{str} summary of the parameter differences if any, else
             C{None}.
         """

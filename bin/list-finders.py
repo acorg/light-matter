@@ -3,10 +3,10 @@
 from __future__ import print_function
 
 import argparse
+from operator import attrgetter
 
 from light.landmarks import ALL_LANDMARK_CLASSES_EVEN_BAD_ONES
 from light.trig import ALL_TRIG_CLASSES_EVEN_BAD_ONES
-
 
 parser = argparse.ArgumentParser(
     description='List all landmark and trig point finders.')
@@ -17,16 +17,13 @@ parser.add_argument(
 
 args = parser.parse_args()
 
-finders = ALL_LANDMARK_CLASSES_EVEN_BAD_ONES
-print('%d landmark finders:' % len(finders))
-for finder in finders:
-    print('  ', finder.NAME)
-    if args.verbose:
-        print('  ', finder.__doc__)
+key = attrgetter('NAME')
 
-finders = ALL_TRIG_CLASSES_EVEN_BAD_ONES
-print('%d trig point finders:' % len(finders))
-for finder in finders:
-    print('  ', finder.NAME)
-    if args.verbose:
-        print('  ', finder.__doc__)
+for what, finders in (
+        ('landmark', sorted(ALL_LANDMARK_CLASSES_EVEN_BAD_ONES, key=key)),
+        ('trig point', sorted(ALL_TRIG_CLASSES_EVEN_BAD_ONES, key=key))):
+    print('%d %s finders:' % (len(finders), what))
+    for finder in finders:
+        print('  ', finder.NAME)
+        if args.verbose:
+            print('  ', finder.__doc__)

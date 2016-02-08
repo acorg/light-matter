@@ -68,6 +68,20 @@ class TestFindParameters(TestCase):
         self.assertEqual(6, findParams.featureMismatchScore)
         self.assertEqual(0.2, findParams.deltaScale)
 
+    def testUnknownMethods(self):
+        """
+        It is currently not possible to test passing unknown methods.
+        """
+        # parse_args prints to stderr and calls sys.exit if an argument
+        # whose possible choices are not met is encountered. It also
+        # imports sys before we get a chance to patch sys.exit.  I'm
+        # leaving this (non-)test here so you can see I (Terry) tried to
+        # treat these cases and also because it may become useful if
+        # argparse becomes more flexible.
+        #
+        # This problem exists for testing the 'choices' arguments:
+        # significanceMethod, scoreMethod, overallScoreMethod.
+
 
 class TestDatabaseParameters(TestCase):
     """
@@ -155,9 +169,7 @@ class TestDatabaseParameters(TestCase):
         """
         The save function must return its (fp) argument.
         """
-        dbParams = DatabaseParameters(landmarks=[AlphaHelix],
-                                      trigPoints=[Peaks], limitPerLandmark=3,
-                                      maxDistance=10)
+        dbParams = DatabaseParameters(landmarks=[], trigPoints=[])
         fp = StringIO()
         self.assertIs(fp, dbParams.save(fp))
 
@@ -168,7 +180,9 @@ class TestDatabaseParameters(TestCase):
         dbParams = DatabaseParameters(landmarks=[AlphaHelix],
                                       trigPoints=[Peaks], limitPerLandmark=3,
                                       maxDistance=19, minDistance=5,
-                                      distanceBase=1.2, featureLengthBase=1.7)
+                                      distanceBase=1.2, featureLengthBase=1.7,
+                                      randomLandmarkDensity=0.3,
+                                      randomTrigPointDensity=0.9)
         fp = StringIO()
         dbParams.save(fp)
         expected = {
@@ -179,8 +193,8 @@ class TestDatabaseParameters(TestCase):
             'minDistance': 5,
             'distanceBase': 1.2,
             'featureLengthBase': 1.7,
-            'randomLandmarkDensity': 0.1,
-            'randomTrigPointDensity': 0.1,
+            'randomLandmarkDensity': 0.3,
+            'randomTrigPointDensity': 0.9,
         }
         self.assertEqual(expected, loads(fp.getvalue()))
 
@@ -371,6 +385,32 @@ class TestDatabaseParameters(TestCase):
                     "  Param 'minDistance' values 30 and 40 differ.")
         self.assertEqual(expected, dbParams1.compare(dbParams2))
 
+    def testCompareDifferentRandomLandmarkDensity(self):
+        """
+        The compare method must return a description of parameter differences
+        when two parameter instances have different randomLandmarkDensity
+        values.
+        """
+        dbParams1 = DatabaseParameters(randomLandmarkDensity=0.2)
+        dbParams2 = DatabaseParameters(randomLandmarkDensity=0.4)
+        expected = (
+            "Summary of differences:\n"
+            "  Param 'randomLandmarkDensity' values 0.2 and 0.4 differ.")
+        self.assertEqual(expected, dbParams1.compare(dbParams2))
+
+    def testCompareDifferentRandomTrigPointDensity(self):
+        """
+        The compare method must return a description of parameter differences
+        when two parameter instances have different randomTrigPointDensity
+        values.
+        """
+        dbParams1 = DatabaseParameters(randomTrigPointDensity=0.2)
+        dbParams2 = DatabaseParameters(randomTrigPointDensity=0.4)
+        expected = (
+            "Summary of differences:\n"
+            "  Param 'randomTrigPointDensity' values 0.2 and 0.4 differ.")
+        self.assertEqual(expected, dbParams1.compare(dbParams2))
+
     def testLandmarkFinderNamesNoLandmarkFinders(self):
         """
         The landmarkFinderNames method must return an empty list when there
@@ -404,3 +444,117 @@ class TestDatabaseParameters(TestCase):
         dbParams = DatabaseParameters(trigPoints=[Peaks, Troughs])
         self.assertEqual(['Peaks', 'Troughs'],
                          dbParams.trigPointFinderNames())
+
+    def testFromArgsNoArgs(self):
+        """
+        If no arguments are given on a command line, default parameters must
+        be returned by fromArgs.
+        """
+        parser = argparse.ArgumentParser()
+        DatabaseParameters.addArgsToParser(parser)
+        args = parser.parse_args([])
+        dbParams = DatabaseParameters.fromArgs(args)
+        self.assertIs(None, dbParams.compare(DatabaseParameters()))
+
+    def testFromArgsNoLandmarks(self):
+        """
+        If --noLandmarks is given on a command line, the returned parameters
+        from fromArgs must have no landmarks.
+        """
+        parser = argparse.ArgumentParser()
+        DatabaseParameters.addArgsToParser(parser)
+        args = parser.parse_args(['--noLandmarks'])
+        dbParams = DatabaseParameters.fromArgs(args)
+        self.assertEqual([], dbParams.landmarkFinders)
+
+    def testFromArgsNonexistentLandmark(self):
+        """
+        If --landmark is given on a command line with a non-existent landmark
+        name, we should be able to catch it but currently cannot.
+        """
+        parser = argparse.ArgumentParser()
+        DatabaseParameters.addArgsToParser(parser)
+        # The following doesn't work, as parse_args prints to stderr and
+        # calls sys.exit if an argument whose possible choices are not met
+        # is encountered. It also imports sys before we get a chance to
+        # patch sys.exit.  I'm leaving this (non-)test here so you can see
+        # I (Terry) tried to treat this case and also because it may become
+        # useful if argparse becomes more flexible.
+        #
+        # args = parser.parse_args(['--landmark', 'non-existent'])
+
+    def testFromArgsLandmarks(self):
+        """
+        If --landmark is given on a command line, the returned parameters
+        from fromArgs must have the expected landmark finders.
+        """
+        parser = argparse.ArgumentParser()
+        DatabaseParameters.addArgsToParser(parser)
+        args = parser.parse_args(
+            ['--landmark', 'AlphaHelix', '--landmark', 'BetaStrand'])
+        dbParams = DatabaseParameters.fromArgs(args)
+        self.assertEqual(['AlphaHelix', 'BetaStrand'],
+                         dbParams.landmarkFinderNames())
+
+    def testFromArgsNoTrigPoints(self):
+        """
+        If --noTrigPoints is given on a command line, the returned parameters
+        from fromArgs must have no trig points.
+        """
+        parser = argparse.ArgumentParser()
+        DatabaseParameters.addArgsToParser(parser)
+        args = parser.parse_args(['--noTrigPoints'])
+        dbParams = DatabaseParameters.fromArgs(args)
+        self.assertEqual([], dbParams.trigPointFinders)
+
+    def testFromArgsNonexistentTrigPoint(self):
+        """
+        If --trig is given on a command line with a non-existent trig point
+        name, we should be able to catch it but currently cannot.
+        """
+        parser = argparse.ArgumentParser()
+        DatabaseParameters.addArgsToParser(parser)
+        # The following doesn't work, as parse_args prints to stderr and
+        # calls sys.exit if an argument whose possible choices are not met
+        # is encountered. It also imports sys before we get a chance to
+        # patch sys.exit.  I'm leaving this (non-)test here so you can see
+        # I (Terry) tried to treat this case and also because it may become
+        # useful if argparse becomes more flexible.
+        #
+        # args = parser.parse_args(['--trig', 'non-existent'])
+
+    def testFromArgsTrigPoints(self):
+        """
+        If --trig is given on a command line, the returned parameters
+        from fromArgs must have the expected trig point finders.
+        """
+        parser = argparse.ArgumentParser()
+        DatabaseParameters.addArgsToParser(parser)
+        args = parser.parse_args(['--trig', 'Troughs', '--trig', 'Peaks'])
+        dbParams = DatabaseParameters.fromArgs(args)
+        self.assertEqual(['Peaks', 'Troughs'],
+                         sorted(dbParams.trigPointFinderNames()))
+
+    def testFromArgsScalarParameters(self):
+        """
+        All scalar arguments must be processed by fromArgs as expected.
+        """
+        parser = argparse.ArgumentParser()
+        DatabaseParameters.addArgsToParser(parser)
+        args = parser.parse_args([
+            '--limitPerLandmark', '5',
+            '--maxDistance', '10',
+            '--minDistance', '3',
+            '--distanceBase', '1.9',
+            '--featureLengthBase', '2.3',
+            '--randomLandmarkDensity', '0.7',
+            '--randomTrigPointDensity', '0.3',
+        ])
+        dbParams = DatabaseParameters.fromArgs(args)
+        self.assertEqual(5, dbParams.limitPerLandmark)
+        self.assertEqual(10, dbParams.maxDistance)
+        self.assertEqual(3, dbParams.minDistance)
+        self.assertEqual(1.9, dbParams.distanceBase)
+        self.assertEqual(2.3, dbParams.featureLengthBase)
+        self.assertEqual(0.7, dbParams.randomLandmarkDensity)
+        self.assertEqual(0.3, dbParams.randomTrigPointDensity)

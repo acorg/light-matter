@@ -13,7 +13,8 @@ from light.landmarks import (
     findLandmark, findLandmarks, DEFAULT_LANDMARK_CLASSES,
     ALL_LANDMARK_CLASSES_EVEN_BAD_ONES)
 from light.trig import (
-    findTrigPoint, DEFAULT_TRIG_CLASSES, ALL_TRIG_CLASSES_EVEN_BAD_ONES)
+    findTrigPoint, findTrigPoints, DEFAULT_TRIG_CLASSES,
+    ALL_TRIG_CLASSES_EVEN_BAD_ONES)
 from light.bin_score import MinHashesScore, ALL_BIN_SCORE_CLASSES
 from light.significance import HashFraction, ALL_SIGNIFICANCE_CLASSES
 from light.overall_score import BestBinScore, ALL_OVERALL_SCORE_CLASSES
@@ -159,6 +160,13 @@ class FindParameters(object):
                   'histogram bin which is considered significant.'))
 
         parser.add_argument(
+            '--overallScoreMethod',
+            default=FindParameters.DEFAULT_OVERALL_SCORE_METHOD,
+            choices=[cls.__name__ for cls in ALL_OVERALL_SCORE_CLASSES],
+            help=('The name of the method used to calculate the overall '
+                  'score of all histogram bins.'))
+
+        parser.add_argument(
             '--featureMatchScore', type=float,
             default=FindParameters.DEFAULT_FEATURE_MATCH_SCORE,
             help=('The contribution (usually positive) to a score when a '
@@ -174,13 +182,6 @@ class FindParameters(object):
             '--weights', action='append',
             help=('A string with the landmark name as the first element and '
                   'the weight as the second, separated by a space.'))
-
-        parser.add_argument(
-            '--overallScoreMethod',
-            default=FindParameters.DEFAULT_OVERALL_SCORE_METHOD,
-            choices=[cls.__name__ for cls in ALL_OVERALL_SCORE_CLASSES],
-            help=('The name of the method used to calculate the overall '
-                  'score of all histogram bins.'))
 
         parser.add_argument(
             '--deltaScale', type=float,
@@ -471,7 +472,7 @@ class DatabaseParameters(object):
             else:
                 trigPointClasses = []
         elif args.trigPoints:
-            trigPointClasses = findLandmarks(args.trigPoints)
+            trigPointClasses = findTrigPoints(args.trigPoints)
         else:
             trigPointClasses = DEFAULT_TRIG_CLASSES
 

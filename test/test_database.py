@@ -1008,15 +1008,17 @@ class TestGetDatabaseFromArgs(TestCase):
         specifier = DatabaseSpecifier(allowPopulation=False)
         specifier.addArgsToParser(parser)
         # The following doesn't work, as parse_args prints to stderr and
-        # calls sys.exit if an unknown argument is encountered. I'm leaving
-        # this (non-)test here so you can see I (Terry) tried to treat this
-        # case and also because it may become useful if argparse becomes
-        # more flexible.
+        # calls sys.exit if an unknown argument is encountered. It also
+        # imports sys before we get a chance to patch sys.exit.  I'm
+        # leaving this (non-)test here so you can see I (Terry) tried to
+        # treat this case and also because it may become useful if argparse
+        # becomes more flexible.
         #
         # error = '^Database population is not enabled.$'
         # six.assertRaisesRegex(
         # self, ValueError, error,
         # parser.parse_args, ['--databaseFasta', 'file.fasta'])
+        # db = specifier.getDatabaseFromArgs(args)
 
     def testPopulationFromCommandLineSequences(self):
         """

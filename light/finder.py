@@ -1,7 +1,5 @@
 from functools import total_ordering
 
-from light.string import MultilineString
-
 
 @total_ordering
 class Finder(object):
@@ -42,15 +40,3 @@ class Finder(object):
         @return: C{True} if C{self} is less than the other finder.
         """
         return (self.NAME, self.SYMBOL) < (other.NAME, other.SYMBOL)
-
-    def xprint_(self, margin=''):
-        """
-        Create a C{str} with the finder name.
-
-        @param margin: A C{str} that should be inserted at the start of each
-            line of output.
-        @return: A C{str} representation of the finder.
-        """
-        result = MultilineString(margin=margin)
-        result.append(self.NAME)
-        return str(result)

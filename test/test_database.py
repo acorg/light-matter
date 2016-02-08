@@ -1,27 +1,43 @@
 import six
+import argparse
 from unittest import TestCase
 from six import StringIO
+from six.moves import builtins
 try:
     from ujson import loads
 except ImportError:
     from json import loads
 
-from dark.reads import AARead
+try:
+    from unittest.mock import patch
+except ImportError:
+    from mock import patch
 
+from .mocking import mockOpen
+
+from dark.reads import Reads, AARead
+
+from light.backend import Backend
+from light.checksum import Checksum
+from light.database import Database, DatabaseSpecifier
 from light.features import Landmark, TrigPoint
 from light.landmarks import AlphaHelix, BetaStrand
-from light.trig import Peaks, Troughs
-from light.checksum import Checksum
 from light.parameters import DatabaseParameters, FindParameters
-from light.database import Database
 from light.subject import Subject
-from light.backend import Backend
+from light.trig import Peaks, Troughs
 
 
 class TestDatabase(TestCase):
     """
     Tests for the light.database.Database class.
     """
+    def testNoParameters(self):
+        """
+        If no parameters are passed, a default set is used.
+        """
+        db = Database()
+        self.assertIs(None, db.dbParams.compare(DatabaseParameters()))
+
     def testSignificanceFractionDefault(self):
         """
         The significanceFraction default value must be as expected.
@@ -767,3 +783,307 @@ class TestDatabase(TestCase):
             'Checksum: 171162040\n'
             'Connector:')
         self.assertEqual(expected, db.print_())
+
+
+class TestDatabaseSpecifier(TestCase):
+    """
+    Tests for the light.database.DatabaseSpecifier class.
+    """
+    def testCreationImpossible(self):
+        """
+        The DatabaseSpecifier init method must raise ValueError if
+        there is no permitted way to create a database.
+        """
+        error = ('^You must either allow database creation, loading a '
+                 'database from a file, or passing an in-memory database\.$')
+        six.assertRaisesRegex(self, ValueError, error, DatabaseSpecifier,
+                              allowCreation=False, allowInMemory=False,
+                              allowWamp=False)
+
+    def testOnlyAllowWampUnderPythonThree(self):
+        """
+        A WAMP database can (currently) only be specified under Python 3.
+        """
+        if not six.PY3:
+            error = '^You can only use allowWamp under Python 3\.$'
+            six.assertRaisesRegex(self, ValueError, error, DatabaseSpecifier,
+                                  allowWamp=True)
+
+
+class TestGetDatabaseFromKeywords(TestCase):
+    """
+    Tests for the light.database.DatabaseSpecifier.getDatabaseFromKeywords
+    method.
+    """
+
+    # TODO: Add tests that pass a filePrefix keyword with various
+    #       combinations of existing and non-existing save files.
+
+    def testNoKeywords(self):
+        """
+        The getDatabaseFromKeywords method must return a database when
+        it is passed no keywords.
+        """
+        db = DatabaseSpecifier().getDatabaseFromKeywords()
+        self.assertIsInstance(db, Database)
+
+    def testNoKeywordsDefaultParameters(self):
+        """
+        The database returned from getDatabaseFromKeywords when it is
+        passed no keywords must have the default database parameters.
+        """
+        db = DatabaseSpecifier().getDatabaseFromKeywords()
+        self.assertIs(None, db.dbParams.compare(DatabaseParameters()))
+
+    def testCreationNotAllowed(self):
+        """
+        Not passing a database keyword when creation (or a WAMP connection)
+        is not allowed must result in a RuntimeError.
+        """
+        specifier = DatabaseSpecifier(allowCreation=False, allowWamp=False)
+        error = ('^Not enough information given to specify a database, '
+                 'database creation is not enabled, and '
+                 'no remote WAMP database could be found\.$')
+        six.assertRaisesRegex(self, RuntimeError, error,
+                              specifier.getDatabaseFromKeywords)
+
+    def testInMemoryDatabaseNotAllowed(self):
+        """
+        Passing a database keyword results in a ValueError if an in-memory
+        database is not allowed.
+        """
+        original = Database()
+        specifier = DatabaseSpecifier(allowInMemory=False)
+        error = '^In-memory database specification not enabled.$'
+        six.assertRaisesRegex(self, ValueError, error,
+                              specifier.getDatabaseFromKeywords,
+                              database=original)
+
+    def testPopulationNotAllowed(self):
+        """
+        Passing a subjects keyword must result in a ValueError if database
+        population has not been enabled.
+        """
+        subjects = Reads()
+        specifier = DatabaseSpecifier(allowPopulation=False)
+        error = '^Database population is not enabled.$'
+        six.assertRaisesRegex(self, ValueError, error,
+                              specifier.getDatabaseFromKeywords,
+                              subjects=subjects)
+
+    def testPopulationByInMemorySubjects(self):
+        """
+        Passing a subjects keyword must result in the subjects being added
+        to the returned database.
+        """
+        subjects = Reads()
+        subject1 = AARead('id1', 'FFF')
+        subject2 = AARead('id2', 'RRR')
+        subjects.add(subject1)
+        subjects.add(subject2)
+        db = DatabaseSpecifier().getDatabaseFromKeywords(subjects=subjects)
+        allSubjects = db.getSubjects()
+        self.assertEqual({subject1, subject2}, set(allSubjects))
+
+    def testPopulationFromFastaFile(self):
+        """
+        Passing a databaseFasta keyword must result in the subjects in the
+        file being added to the returned database.
+        """
+        data = '\n'.join(['>id1', 'FFF', '>id2', 'RRR'])
+        mockOpener = mockOpen(read_data=data)
+        with patch.object(builtins, 'open', mockOpener):
+            db = DatabaseSpecifier().getDatabaseFromKeywords(
+                databaseFasta='file.fasta')
+
+        allSubjects = db.getSubjects()
+        self.assertEqual({AARead('id1', 'FFF'), AARead('id2', 'RRR')},
+                         set(allSubjects))
+
+    def testPopulationFromInMemoryAndFastaFile(self):
+        """
+        Passing both subjects and databaseFasta keywords must result in
+        all the subjects in memory and in the file being added to the returned
+        database.
+        """
+        subjects = Reads()
+        subject1 = AARead('id1', 'FFF')
+        subject2 = AARead('id2', 'RRR')
+        subjects.add(subject1)
+        subjects.add(subject2)
+
+        data = '\n'.join(['>id3', 'FFFF', '>id4', 'RRRR'])
+        mockOpener = mockOpen(read_data=data)
+        with patch.object(builtins, 'open', mockOpener):
+            db = DatabaseSpecifier().getDatabaseFromKeywords(
+                subjects=subjects, databaseFasta='file.fasta')
+
+        allSubjects = db.getSubjects()
+        self.assertEqual(
+            {
+                subject1, subject2,
+                AARead('id3', 'FFFF'), AARead('id4', 'RRRR')
+            },
+            set(allSubjects))
+
+    def testInMemoryDatabaseIsReturned(self):
+        """
+        Passing a database keyword with an in-memory database results in that
+        database being returned.
+        """
+        original = Database()
+        db = DatabaseSpecifier().getDatabaseFromKeywords(database=original)
+        self.assertIs(original, db)
+
+    def testInMemoryDatabaseIsPopulated(self):
+        """
+        Passing a database keyword with an in-memory database results in that
+        database being populated.
+        """
+        original = Database()
+        subjects = Reads()
+        subject1 = AARead('id1', 'FFF')
+        subject2 = AARead('id2', 'RRR')
+        subjects.add(subject1)
+        subjects.add(subject2)
+        db = DatabaseSpecifier().getDatabaseFromKeywords(
+            database=original, subjects=subjects)
+        allSubjects = db.getSubjects()
+        self.assertEqual({subject1, subject2}, set(allSubjects))
+
+
+class TestGetDatabaseFromArgs(TestCase):
+    """
+    Tests for the light.database.DatabaseSpecifier.getDatabaseFromArgs
+    method.
+    """
+
+    # TODO: Add tests that use --filePrefix with various combinations of
+    #       existing and non-existing save files.
+
+    def testNoArgs(self):
+        """
+        If no arguments are given, getDatabaseFromArgs must return a database.
+        """
+        parser = argparse.ArgumentParser()
+        specifier = DatabaseSpecifier()
+        specifier.addArgsToParser(parser)
+        args = parser.parse_args([])
+        db = specifier.getDatabaseFromArgs(args)
+        self.assertIsInstance(db, Database)
+
+    def testNoArgsDefaultParameters(self):
+        """
+        The database returned from getDatabaseFromKeywords when it is
+        passed no keywords must have the default database parameters.
+        """
+        parser = argparse.ArgumentParser()
+        specifier = DatabaseSpecifier()
+        specifier.addArgsToParser(parser)
+        args = parser.parse_args([])
+        db = specifier.getDatabaseFromArgs(args)
+        self.assertIs(None, db.dbParams.compare(DatabaseParameters()))
+
+    def testCreationNotAllowed(self):
+        """
+        Not passing any arguments when creation (or a WAMP connection)
+        is not allowed must result in a RuntimeError.
+        """
+        parser = argparse.ArgumentParser()
+        specifier = DatabaseSpecifier(allowCreation=False, allowWamp=False)
+        specifier.addArgsToParser(parser)
+        args = parser.parse_args([])
+        error = ('^Not enough information given to specify a database, '
+                 'database creation is not enabled, and '
+                 'no remote WAMP database could be found\.$')
+        six.assertRaisesRegex(self, RuntimeError, error,
+                              specifier.getDatabaseFromArgs, args)
+
+    def testPopulationNotAllowed(self):
+        """
+        Using --databaseFasta must result in a ValueError if database
+        population has not been enabled.
+        """
+        parser = argparse.ArgumentParser()
+        specifier = DatabaseSpecifier(allowPopulation=False)
+        specifier.addArgsToParser(parser)
+        # The following doesn't work, as parse_args prints to stderr and
+        # calls sys.exit if an unknown argument is encountered. I'm leaving
+        # this (non-)test here so you can see I (Terry) tried to treat this
+        # case and also because it may become useful if argparse becomes
+        # more flexible.
+        #
+        # error = '^Database population is not enabled.$'
+        # six.assertRaisesRegex(
+        # self, ValueError, error,
+        # parser.parse_args, ['--databaseFasta', 'file.fasta'])
+
+    def testPopulationFromCommandLineSequences(self):
+        """
+        Passing --databaseSequence arguments must result in the subjects in the
+        sequences being added to the returned database.
+        """
+        parser = argparse.ArgumentParser()
+        specifier = DatabaseSpecifier()
+        specifier.addArgsToParser(parser)
+        args = parser.parse_args(['--databaseSequence', 'id1 FFF',
+                                  '--databaseSequence', 'id2 RRR'])
+        db = specifier.getDatabaseFromArgs(args)
+        allSubjects = db.getSubjects()
+        self.assertEqual({AARead('id1', 'FFF'), AARead('id2', 'RRR')},
+                         set(allSubjects))
+
+    def testPopulationFromFastaFile(self):
+        """
+        Passing a --databaseFasta argument must result in the subjects in the
+        file being added to the returned database.
+        """
+        parser = argparse.ArgumentParser()
+        specifier = DatabaseSpecifier()
+        specifier.addArgsToParser(parser)
+        args = parser.parse_args(['--databaseFasta', 'file.fasta'])
+        data = '\n'.join(['>id1', 'FFF', '>id2', 'RRR'])
+        mockOpener = mockOpen(read_data=data)
+        with patch.object(builtins, 'open', mockOpener):
+            db = specifier.getDatabaseFromArgs(args)
+
+        allSubjects = db.getSubjects()
+        self.assertEqual({AARead('id1', 'FFF'), AARead('id2', 'RRR')},
+                         set(allSubjects))
+
+    def testPopulationFromCommandLineSequencesAndFastaFile(self):
+        """
+        Using both command line sequences and --databaseFasta must result in
+        all the command line subjects and those in the file being added to the
+        returned database.
+        """
+        parser = argparse.ArgumentParser()
+        specifier = DatabaseSpecifier()
+        specifier.addArgsToParser(parser)
+        args = parser.parse_args(['--databaseFasta', 'file.fasta',
+                                  '--databaseSequence', 'id1 FFF',
+                                  '--databaseSequence', 'id2 RRR'])
+        data = '\n'.join(['>id3', 'FFFF', '>id4', 'RRRR'])
+        mockOpener = mockOpen(read_data=data)
+        with patch.object(builtins, 'open', mockOpener):
+            db = specifier.getDatabaseFromArgs(args)
+
+        allSubjects = db.getSubjects()
+        self.assertEqual(
+            {
+                AARead('id1', 'FFF'), AARead('id2', 'RRR'),
+                AARead('id3', 'FFFF'), AARead('id4', 'RRRR'),
+            },
+            set(allSubjects))
+
+    def testPassedParamsAreUsed(self):
+        """
+        If specific parameters are given, they must be used.
+        """
+        parser = argparse.ArgumentParser()
+        specifier = DatabaseSpecifier()
+        specifier.addArgsToParser(parser)
+        args = parser.parse_args([])
+        dbParams = DatabaseParameters()
+        db = specifier.getDatabaseFromArgs(args, dbParams)
+        self.assertIs(db.dbParams, dbParams)

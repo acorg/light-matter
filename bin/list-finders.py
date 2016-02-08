@@ -6,7 +6,6 @@ import argparse
 
 from light.landmarks import ALL_LANDMARK_CLASSES_EVEN_BAD_ONES
 from light.trig import ALL_TRIG_CLASSES_EVEN_BAD_ONES
-from light.parameters import DatabaseParameters
 
 
 parser = argparse.ArgumentParser(
@@ -17,20 +16,17 @@ parser.add_argument(
     help='If True, also print documentation for each finder class.')
 
 args = parser.parse_args()
-dbParams = DatabaseParameters(
-    landmarks=ALL_LANDMARK_CLASSES_EVEN_BAD_ONES,
-    trigPoints=ALL_TRIG_CLASSES_EVEN_BAD_ONES)
 
-finders = dbParams.landmarkFinders
+finders = ALL_LANDMARK_CLASSES_EVEN_BAD_ONES
 print('%d landmark finders:' % len(finders))
 for finder in finders:
-    print(finder.print_(margin='  '))
+    print('  ', finder.NAME)
     if args.verbose:
         print('  ', finder.__doc__)
 
-finders = dbParams.trigPointFinders
+finders = ALL_TRIG_CLASSES_EVEN_BAD_ONES
 print('%d trig point finders:' % len(finders))
 for finder in finders:
-    print(finder.print_(margin='  '))
+    print('  ', finder.NAME)
     if args.verbose:
         print('  ', finder.__doc__)

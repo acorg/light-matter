@@ -19,16 +19,15 @@ from Bio.File import as_handle
 from dark.fasta import combineReads, FastaReads
 from dark.reads import AAReadWithX
 
-from light.string import MultilineString
-from light.parameters import DatabaseParameters
-
+from light.backend import Backend
 from light.connector import SimpleConnector
+from light.parameters import DatabaseParameters
+from light.string import MultilineString
+
 if six.PY3:
     from light.wamp import addArgsToParser as addWampArgsToParser
     from light.connector_wamp import WampServerConnector
     from light.database_wamp import getWampClientDatabase
-
-from light.backend import Backend
 
 logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
                     level=logging.INFO)
@@ -40,7 +39,8 @@ class Database:
     sequences (aka subjects) and provide for database insertion and look-up
     operations on them.
 
-    @param dbParams: A C{Parameters} instance.
+    @param dbParams: A C{DatabaseParameters} instance or C{None} to use
+        default parameters.
     @param connector: A C{ligh.SimpleConnector} instance (or other connector)
         for connecting to the database backend(s).
     @param filePrefix: Either a C{str} file name prefix to use as a default
@@ -49,9 +49,9 @@ class Database:
 
     SAVE_SUFFIX = '.lmdb'
 
-    def __init__(self, dbParams, connector=None, filePrefix=None):
-        self.dbParams = dbParams
-        self._connector = connector or SimpleConnector(dbParams,
+    def __init__(self, dbParams=None, connector=None, filePrefix=None):
+        self.dbParams = dbParams or DatabaseParameters()
+        self._connector = connector or SimpleConnector(self.dbParams,
                                                        filePrefix=filePrefix)
         self._filePrefix = filePrefix
 
@@ -296,8 +296,8 @@ class DatabaseSpecifier:
         @return: A C{light.database.Database} instance.
         """
 
-        dbParams = dbParams or DatabaseParameters()
         database = None
+        dbParams = dbParams or DatabaseParameters()
         filePrefix = args.filePrefix
 
         if filePrefix:
@@ -359,8 +359,10 @@ class DatabaseSpecifier:
 
         if database is None:
             raise RuntimeError(
-                'Not enough information given to specify a database, and no '
-                'remote WAMP database could be found.')
+                'Not enough information given to specify a database, %sand no '
+                'remote WAMP database could be found.' %
+                ('' if self._allowCreation else
+                 'database creation is not enabled, '))
 
         if self._allowPopulation:
             for read in combineReads(
@@ -392,20 +394,23 @@ class DatabaseSpecifier:
             parameters (some of which may be used by specific feature finders).
             To see the available database parameters, see the docstring of
             the DatabaseParameters class.
-        @raise ValueError: If a database cannot be found or created.
+        @raise ValueError: If 1) a database cannot be found or created, or 2)
+            an in-memory database is passed but C{self.allowInMemory} is
+            C{False}, or 3) if population is attempted but
+            C{self.allowPopulation} is C{False}.
         @return: A C{light.database.Database} instance.
         """
-        # A pre-existing in-memory database gets returned immediately,
-        # after adding any optional sequences to it.
         if database is not None:
-            assert self._allowInMemory, (
-                'In-memory database specification not enabled.')
+            # A pre-existing in-memory database.
+            if not self._allowInMemory:
+                raise ValueError(
+                    'In-memory database specification not enabled.')
         else:
-            # Use self.getDatabaseFromArgs to get the database.
+            # Use self.getDatabaseFromArgs to get the database. Here we
+            # build and parse a command line to get args to pass to it.
+            dbParams = DatabaseParameters(**kwargs)
             parser = argparse.ArgumentParser()
             self.addArgsToParser(parser)
-
-            dbParams = DatabaseParameters(**kwargs)
             commandLine = []
 
             if filePrefix is not None:
@@ -429,5 +434,7 @@ class DatabaseSpecifier:
             if subjects is not None:
                 for subject in subjects:
                     database.addSubject(subject)
+        elif databaseFasta or subjects is not None:
+            raise ValueError('Database population is not enabled.')
 
         return database

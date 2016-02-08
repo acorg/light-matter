@@ -3,7 +3,7 @@ from unittest import TestCase
 from dark.reads import AARead
 
 from light.features import Landmark
-from light.landmarks.prosite import Prosite, _DATABASE
+from light.landmarks.prosite import Prosite, _DATABASE, _loadDatabase
 
 
 class TestProsite(TestCase):
@@ -182,9 +182,14 @@ class TestProsite(TestCase):
         result = list(finder.find(AARead('id', 'RXXXDXXXXY')))
         self.assertEqual([], result)
 
-    def testDatabaseLength(self):
+    def testLoadDatabase(self):
         """
-        The Prosite database must have the expected length.
+        The Prosite database loading function must work and produce the
+        expected result.
         """
+        db = _loadDatabase()
         # The 1309 is based on Prosite database 20.119 of 14-Oct-2015
-        self.assertEqual(1309, len(_DATABASE))
+        self.assertEqual(1309, len(db))
+        expectedKeys = {'regex', 'accession'}
+        for motif in db:
+            self.assertEqual(expectedKeys, set(motif.keys()))

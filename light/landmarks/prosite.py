@@ -7,7 +7,22 @@ from light.features import Landmark
 from light.finder import Finder
 
 
-def loadDatabase():
+def _loadDatabase():
+    """
+    Read and convert our JSON version of the Prosite database.
+
+    The prosite database is available at:
+    ftp://ftp.expasy.org/databases/prosite/prosite.dat An explanation about
+    the fields and structure of the database is available at:
+    http://prosite.expasy.org/prosuser.html
+
+    See data/README.md for details of automated download and conversion from
+    the Prosite file to our JSON format.
+
+    @return: A C{list} of C{dict}s, each containing 1) an 'accession' key
+        giving the C{str} Prosite accession number and 2) a 'regex' key with
+        a compiled regex value.
+    """
     filename = join(dirname(light.__file__), '..', 'data',
                     'prosite-20.119.json')
     database = []
@@ -22,26 +37,23 @@ def loadDatabase():
             })
     return database
 
-_DATABASE = loadDatabase()
+
+# Read the database (just once) into a singleton for use in the
+# Prosite.find method.
+_DATABASE = _loadDatabase()
 
 
 class Prosite(Finder):
     """
-    A class for computing statistics based on prosite motifs. The prosite
-    database is available at:
-    ftp://ftp.expasy.org/databases/prosite/prosite.dat
-    An explanation about the fields and structure of the database is available
-    at: http://prosite.expasy.org/prosuser.html
-
-    @param dbParams: A C{DatabaseParameters} instance.
+    A class for finding prosite motifs.
     """
     NAME = 'Prosite'
     SYMBOL = 'PS'
 
     def find(self, read):
         """
-        A function that checks if and where a prosite motif in a sequence
-        occurs and returns C{Landmark} instances.
+        A function that finds and yields (as C{Landmark}s instances) Prosite
+        motifs from a sequence
 
         @param read: An instance of C{dark.reads.AARead}.
         @return: A generator that yields C{Landmark} instances.
@@ -49,7 +61,6 @@ class Prosite(Finder):
         for motif in _DATABASE:
             for match in motif['regex'].finditer(read.sequence):
                 start = match.start()
-                end = match.end()
-                length = end - start
+                length = match.end() - start
                 yield Landmark(self.NAME, self.SYMBOL, start, length,
                                motif['accession'])

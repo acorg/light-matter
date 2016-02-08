@@ -6,7 +6,7 @@ from light.finder import Finder
 
 class RandomLandmark(Finder):
     """
-    A class for producing random landmarks of length 1. The number of landarks
+    A class for producing random landmarks of length 1. The number of landmarks
     generated is determined by the database randomLandmarkDensity parameter.
     """
     NAME = 'RandomLandmark'

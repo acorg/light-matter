@@ -111,6 +111,10 @@ class FindParameters(object):
         self.scoreMethod = (
             self.DEFAULT_SCORE_METHOD if scoreMethod is None else scoreMethod)
 
+        self.overallScoreMethod = (
+            self.DEFAULT_OVERALL_SCORE_METHOD if overallScoreMethod is
+            None else overallScoreMethod)
+
         self.featureMatchScore = (
             self.DEFAULT_FEATURE_MATCH_SCORE if featureMatchScore is None
             else featureMatchScore)
@@ -120,10 +124,6 @@ class FindParameters(object):
             else featureMismatchScore)
 
         self.weights = self.DEFAULT_WEIGHTS if weights is None else weights
-
-        self.overallScoreMethod = (
-            self.DEFAULT_OVERALL_SCORE_METHOD if overallScoreMethod is
-            None else overallScoreMethod)
 
         self.deltaScale = (
             self.DEFAULT_DELTA_SCALE if deltaScale is None else deltaScale)

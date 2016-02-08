@@ -4,8 +4,11 @@ from unittest import TestCase
 from json import loads
 from six import StringIO
 
-from light.parameters import DatabaseParameters, FindParameters
+from light.bin_score import MinHashesScore
 from light.landmarks import DEFAULT_LANDMARK_CLASSES, AlphaHelix, BetaStrand
+from light.overall_score import BestBinScore
+from light.parameters import DatabaseParameters, FindParameters
+from light.significance import HashFraction
 from light.trig import DEFAULT_TRIG_CLASSES, Peaks, Troughs
 
 
@@ -17,9 +20,54 @@ class TestFindParameters(TestCase):
         """
         If no specific parameter values are given, the defaults must be set.
         """
-        findParams = FindParameters([], [])
+        findParams = FindParameters()
+        self.assertEqual(FindParameters.DEFAULT_SIGNIFICANCE_METHOD,
+                         findParams.significanceMethod)
         self.assertEqual(FindParameters.DEFAULT_SCORE_METHOD,
                          findParams.scoreMethod)
+        self.assertEqual(FindParameters.DEFAULT_OVERALL_SCORE_METHOD,
+                         findParams.overallScoreMethod)
+        self.assertEqual(FindParameters.DEFAULT_FEATURE_MATCH_SCORE,
+                         findParams.featureMatchScore)
+        self.assertEqual(FindParameters.DEFAULT_FEATURE_MISMATCH_SCORE,
+                         findParams.featureMismatchScore)
+        self.assertEqual(FindParameters.DEFAULT_WEIGHTS,
+                         findParams.weights)
+        self.assertEqual(FindParameters.DEFAULT_DELTA_SCALE,
+                         findParams.deltaScale)
+
+    def testDefaultValues(self):
+        """
+        Guard against accidental edits of default parameter values.
+        """
+        self.assertEqual(HashFraction.__name__,
+                         FindParameters.DEFAULT_SIGNIFICANCE_METHOD)
+        self.assertEqual(MinHashesScore.__name__,
+                         FindParameters.DEFAULT_SCORE_METHOD)
+        self.assertEqual(BestBinScore.__name__,
+                         FindParameters.DEFAULT_OVERALL_SCORE_METHOD)
+        self.assertEqual(1.0, FindParameters.DEFAULT_FEATURE_MATCH_SCORE)
+        self.assertEqual(-1.0, FindParameters.DEFAULT_FEATURE_MISMATCH_SCORE)
+        self.assertEqual(
+            {
+                'AlphaHelix': 1.0,
+                'AlphaHelix_3_10': 1.0,
+                'AlphaHelix_pi': 1.0,
+                'BetaStrand': 1.0,
+                'BetaTurn': 1.0,
+                'AminoAcidsLm': 1.0,
+                'GOR4AlphaHelix': 1.0,
+                'GOR4BetaStrand': 1.0,
+                'GOR4Coil': 1.0,
+                'Prosite': 1.0,
+                'Peaks': 1.0,
+                'Troughs': 1.0,
+                'AminoAcids': 1.0,
+                'IndividualPeaks': 1.0,
+                'IndividualTroughs': 1.0,
+            },
+            FindParameters.DEFAULT_WEIGHTS)
+        self.assertEqual(1.0, FindParameters.DEFAULT_DELTA_SCALE)
 
     def testNotDefaults(self):
         """
@@ -110,6 +158,22 @@ class TestDatabaseParameters(TestCase):
                          dbParams.randomLandmarkDensity)
         self.assertEqual(DatabaseParameters.DEFAULT_RANDOM_TRIG_POINT_DENSITY,
                          dbParams.randomTrigPointDensity)
+
+    def testDefaultValues(self):
+        """
+        Guard against accidental edits of default parameter values.
+        """
+        # DEFAULT_LANDMARK_CLASSES and DEFAULT_TRIG_CLASSES are tested in
+        # test/landmarks/test_landmark.py and test/trig/test_trig.py
+        self.assertEqual(10, DatabaseParameters.DEFAULT_LIMIT_PER_LANDMARK)
+        self.assertEqual(200, DatabaseParameters.DEFAULT_MAX_DISTANCE)
+        self.assertEqual(1, DatabaseParameters.DEFAULT_MIN_DISTANCE)
+        self.assertEqual(1.1, DatabaseParameters.DEFAULT_DISTANCE_BASE)
+        self.assertEqual(1.35, DatabaseParameters.DEFAULT_FEATURE_LENGTH_BASE)
+        self.assertEqual(0.1,
+                         DatabaseParameters.DEFAULT_RANDOM_LANDMARK_DENSITY)
+        self.assertEqual(0.1,
+                         DatabaseParameters.DEFAULT_RANDOM_TRIG_POINT_DENSITY)
 
     def testNotDefaults(self):
         """

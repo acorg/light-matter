@@ -125,7 +125,7 @@ class TestAllLandmarkClassesEvenBadOnes(TestCase):
 
     def testAllClasses(self):
         """
-        The ALL_LANDMARK_CLASSES list must be as expected.
+        The ALL_LANDMARK_CLASSES_EVEN_BAD_ONES list must be as expected.
         """
         self.assertEqual(
             [AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, AminoAcids,

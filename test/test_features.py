@@ -2,8 +2,7 @@ from unittest import TestCase
 from random import shuffle as pyshuffle
 from copy import copy
 
-from light.features import Landmark, TrigPoint, CombinedFeatureList
-from light.features import _Feature
+from light.features import Landmark, TrigPoint, CombinedFeatureList, _Feature
 
 
 def shuffle(l):

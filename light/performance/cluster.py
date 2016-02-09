@@ -44,7 +44,7 @@ class ClusterAnalysis(object):
             reads = sequences
         database = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
         backend = Backend()
-        backend.configure(database.params)
+        backend.configure(database.dbParams)
         allOffsetDeltas = []
         trueLabels = []
 
@@ -58,7 +58,7 @@ class ClusterAnalysis(object):
             scannedRead = backend.scan(read)
             for landmark, trigPoint in backend.getScannedPairs(scannedRead):
                 delta = scaleLog(trigPoint.offset - landmark.offset,
-                                 database.params.distanceBase)
+                                 database.dbParams.distanceBase)
                 offsetDeltas[delta] += 1
             allOffsetDeltas.append(offsetDeltas)
 

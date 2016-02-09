@@ -7,7 +7,7 @@ from six import StringIO
 from random import uniform, choice
 
 from light.backend import Backend
-from light.parameters import Parameters
+from light.parameters import DatabaseParameters
 from light.result import Result
 from light.string import MultilineString
 
@@ -35,7 +35,7 @@ class WampServerConnector:
     Provide a connection between a persistent WAMP database component and a set
     of remote WAMP backend instances.
 
-    @param params: A C{Parameters} instance.
+    @param dbParams: A C{DatabaseParameters} instance.
     @param _id: A C{str} id, or C{None} to have an id assigned randomly.
     @param subjectStore: A C{SubjectStore} instance, or C{None} if a
         C{SubjectStore} should be created.
@@ -49,9 +49,9 @@ class WampServerConnector:
     """
     SAVE_SUFFIX = '.lmwsco'
 
-    def __init__(self, params, _id=None, subjectStore=None, checksum=None,
+    def __init__(self, dbParams, _id=None, subjectStore=None, checksum=None,
                  disconnectedBackends=None, filePrefix=None):
-        self.params = params
+        self.dbParams = dbParams
         # Assign ourselves a random id to make backend name collisions
         # highly unlikely. I.e., if an unknown backend connects, the name
         # it supplies should be very unlikely to be accepted.
@@ -65,7 +65,7 @@ class WampServerConnector:
         # run to run. If we used it in the checksum then if we restarted a
         # connector and it began to talk to existing backends, it would
         # have a different checksum and errors would result.
-        self._checksum = checksum or Checksum(params.checksum)
+        self._checksum = checksum or Checksum(dbParams.checksum)
         # In self._disconnectedBackends and self._backends, keys are
         # backend names and values are Checksum instances.
         self._disconnectedBackends = disconnectedBackends or {}
@@ -107,10 +107,11 @@ class WampServerConnector:
 
         # Derive an initial checksum for the backend from the database
         # parameters and the backend name.
-        suggestedChecksum = Backend.initialChecksum(self.params, suggestedName)
+        suggestedChecksum = Backend.initialChecksum(self.dbParams,
+                                                    suggestedName)
 
         # Get a string representation of the params to send over the network.
-        paramsStr = self.params.save(StringIO()).getvalue()
+        dbParamsStr = self.dbParams.save(StringIO()).getvalue()
 
         # Attempt to configure the backend. It may already be configured,
         # which is fine. We must do this before adding the backend name to
@@ -118,7 +119,7 @@ class WampServerConnector:
         # backend (in another request) before it has been configured.
 
         name, checksum, subjectCount = yield from self._component.call(
-            'configure-%d' % sessionId, paramsStr, suggestedName,
+            'configure-%d' % sessionId, dbParamsStr, suggestedName,
             suggestedChecksum.value)
 
         if name == suggestedName:
@@ -330,11 +331,11 @@ class WampServerConnector:
         @return: A C{light.result.Result} instance.
         """
         if significanceFraction is None:
-            significanceFraction = self.params.DEFAULT_SIGNIFICANCE_FRACTION
+            significanceFraction = self.dbParams.DEFAULT_SIGNIFICANCE_FRACTION
         if significanceMethod is None:
-            significanceMethod = self.params.DEFAULT_SIGNIFICANCE_METHOD
+            significanceMethod = self.dbParams.DEFAULT_SIGNIFICANCE_METHOD
         if scoreMethod is None:
-            scoreMethod = self.params.DEFAULT_SCORE_METHOD
+            scoreMethod = self.dbParams.DEFAULT_SCORE_METHOD
 
         allMatches = defaultdict(list)
         allNonMatchingHashes = {}
@@ -426,7 +427,7 @@ class WampServerConnector:
         }
 
         with as_handle(saveFile, 'w') as fp:
-            self.params.save(fp)
+            self.dbParams.save(fp)
             dump(state, fp)
             fp.write('\n')
 
@@ -449,7 +450,7 @@ class WampServerConnector:
             filePrefix = None
 
         with as_handle(saveFile) as fp:
-            params = Parameters.restore(fp)
+            dbParams = DatabaseParameters.restore(fp)
             state = loads(fp.readline()[:-1])
 
         disconnectedBackends = {}
@@ -459,7 +460,7 @@ class WampServerConnector:
                 'subjectCount': backendInfo['subjectCount'],
             }
 
-        return cls(params, _id=state['id'],
+        return cls(dbParams, _id=state['id'],
                    checksum=Checksum(state['checksum']),
                    disconnectedBackends=disconnectedBackends,
                    filePrefix=filePrefix)

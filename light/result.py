@@ -55,7 +55,7 @@ class Result(object):
         scoreGetter = itemgetter('score')
         from light.backend import Backend
         be = Backend()
-        be.configure(connector.params)
+        be.configure(connector.dbParams)
 
         if findParams.significanceMethod == 'AAFraction':
             queryAACount = len(be.scan(query).coveredIndices())
@@ -131,13 +131,13 @@ class Result(object):
                 scorer = MinHashesScore(histogram, minHashCount)
             elif scoreMethod == 'FeatureMatchingScore':
                 scorer = FeatureMatchingScore(
-                    histogram, query, subject, connector.params, findParams)
+                    histogram, query, subject, connector.dbParams, findParams)
             elif scoreMethod == 'FeatureAAScore':
                 scorer = FeatureAAScore(
-                    histogram, query, subject, connector.params)
+                    histogram, query, subject, connector.dbParams)
             elif scoreMethod == 'WeightedFeatureAAScore':
                 scorer = WeightedFeatureAAScore(
-                    histogram, query, subject, connector.params,
+                    histogram, query, subject, connector.dbParams,
                     findParams.weights)
             else:
                 raise ValueError('Unknown score method %r' % scoreMethod)
@@ -167,7 +167,7 @@ class Result(object):
                 scorer = BestBinScore(histogram, significantBins)
             elif overallScoreMethod == 'SignificantBinScore':
                 scorer = SignificantBinScore(significantBins, query, subject,
-                                             connector.params)
+                                             connector.dbParams)
             else:
                 raise ValueError('Unknown overall score method %r' %
                                  overallScoreMethod)
@@ -308,7 +308,7 @@ class Result(object):
 
         if printQuery:
             backend = Backend()
-            backend.configure(self.connector.params)
+            backend.configure(self.connector.dbParams)
             scannedQuery = backend.scan(self.query)
             append(scannedQuery.print_(printSequence=printSequences,
                                        printFeatures=printFeatures,

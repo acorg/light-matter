@@ -12,7 +12,7 @@ from Bio.File import as_handle
 from light.subject import Subject, SubjectStore
 from light.distance import scaleLog
 from light.checksum import Checksum
-from light.parameters import Parameters
+from light.parameters import DatabaseParameters
 from light.reads import ScannedRead
 from light.landmarks import landmarkNameFromHashkey
 from light.trig import trigNameFromHashkey
@@ -31,13 +31,13 @@ class Backend:
     """
 
     # Implementation note: There are various methods in this class that
-    # access self.params. But self.params is not put in place until the
+    # access self.dbParams. But self.dbParams is not put in place until the
     # 'configure' method has been called. We could add a 'checkConfigured'
     # method and call it on each function call if we wanted to be very
     # conservative and to supply good error messages if that happens.
     # Instead, we rely on the code that creates a Backend instance to
     # initialize it before trying to use it. If they do not, an
-    # AttributeError will be raised on an attempted use of self.params
+    # AttributeError will be raised on an attempted use of self.dbParams
     # below. Hopefully this comment will indicate what's going wrong.
 
     DEFAULT_NAME = 'backend'
@@ -59,11 +59,11 @@ class Backend:
         # defaultdict as a normal dict.
         self.d = {}
 
-    def configure(self, params, suggestedName=None, suggestedChecksum=None):
+    def configure(self, dbParams, suggestedName=None, suggestedChecksum=None):
         """
         Configure this backend.
 
-        @param params: A C{Parameters} instance.
+        @param dbParams: A C{DatabaseParameters} instance.
         @param suggestedName: The C{str} suggested name for this backend. If
             the backend has already been configured (from a file restore) with
             a different name, the suggested name is ignored.
@@ -78,12 +78,12 @@ class Backend:
             # via 'restore' or possibly because the WAMP connector has been
             # restarted. Check that the passed parameters match what we
             # already have in place.
-            if params.compare(self.params) is not None:
+            if dbParams.compare(self.dbParams) is not None:
                 fp = StringIO()
-                self.params._print(fp)
+                self.dbParams._print(fp)
                 original = fp.getvalue()
                 fp = StringIO()
-                params._print(fp)
+                dbParams._print(fp)
                 new = fp.getvalue()
                 error = ('Already configured backend passed different '
                          'parameters.\nOriginal parameters\n%s\nLater '
@@ -101,11 +101,11 @@ class Backend:
 
             logging.debug('configure called again, with correct parameters')
         else:
-            self.params = params
+            self.dbParams = dbParams
             self.name = suggestedName or self.DEFAULT_NAME
 
             if suggestedChecksum is None:
-                self._checksum = self.initialChecksum(params, self.name)
+                self._checksum = self.initialChecksum(dbParams, self.name)
             else:
                 self._checksum = Checksum(suggestedChecksum)
 
@@ -114,16 +114,16 @@ class Backend:
         return self.name, self.checksum(), self.subjectCount()
 
     @staticmethod
-    def initialChecksum(params, name):
+    def initialChecksum(dbParams, name):
         """
         Calculate an inital checksum for a backend.
 
-        @param params: A C{Parameters} instance.
+        @param dbParams: A C{DatabaseParameters} instance.
         @param name: The C{str} name of thd backend.
         @return: An initialized C{Checksum} instance for the given parameters
             and name.
         """
-        return Checksum(params.checksum).update([name])
+        return Checksum(dbParams.checksum).update([name])
 
     def checksum(self):
         """
@@ -226,7 +226,7 @@ class Backend:
             and the distance between them.
         """
         distance = scaleLog(trigPoint.offset - landmark.offset,
-                            self.params.distanceBase)
+                            self.dbParams.distanceBase)
         return '%s:%s:%s' % (landmark.hashkey(), trigPoint.hashkey(),
                              distance)
 
@@ -240,12 +240,12 @@ class Backend:
         scannedSequence = ScannedRead(sequence)
 
         append = scannedSequence.landmarks.append
-        for landmarkFinder in self.params.landmarkFinders:
+        for landmarkFinder in self.dbParams.landmarkFinders:
             for landmark in landmarkFinder.find(sequence):
                 append(landmark)
 
         append = scannedSequence.trigPoints.append
-        for trigFinder in self.params.trigPointFinders:
+        for trigFinder in self.dbParams.trigPointFinders:
             for trigPoint in trigFinder.find(sequence):
                 append(trigPoint)
 
@@ -260,9 +260,9 @@ class Backend:
             by C{light.reads.ScannedRead.getPairs}.
         """
         return scannedSequence.getPairs(
-            limitPerLandmark=self.params.limitPerLandmark,
-            maxDistance=self.params.maxDistance,
-            minDistance=self.params.minDistance)
+            limitPerLandmark=self.dbParams.limitPerLandmark,
+            maxDistance=self.dbParams.maxDistance,
+            minDistance=self.dbParams.minDistance)
 
     def getHashes(self, scannedSequence):
         """
@@ -398,7 +398,7 @@ class Backend:
         }
 
         with as_handle(saveFile, 'w') as fp:
-            self.params.save(fp)
+            self.dbParams.save(fp)
             self._subjectStore.save(fp)
             dump(state, fp)
             fp.write('\n')
@@ -424,12 +424,12 @@ class Backend:
             filePrefix = None
 
         with as_handle(saveFile) as fp:
-            params = Parameters.restore(fp)
+            dbParams = DatabaseParameters.restore(fp)
             subjectStore = SubjectStore.restore(fp)
             state = loads(fp.readline()[:-1])
 
         new = cls(subjectStore, filePrefix=filePrefix)
-        new.configure(params, suggestedName=state['name'],
+        new.configure(dbParams, suggestedName=state['name'],
                       suggestedChecksum=state['checksum'])
 
         for attr in ('d', '_totalCoveredResidues'):

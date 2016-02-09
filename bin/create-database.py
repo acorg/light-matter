@@ -7,6 +7,7 @@ import argparse
 from time import time
 
 from light.database import DatabaseSpecifier
+from light.parameters import DatabaseParameters
 
 
 if __name__ == '__main__':
@@ -20,12 +21,15 @@ if __name__ == '__main__':
     if args.filePrefix is None:
         parser.print_help()
         raise RuntimeError('You must supply a database save file prefix.')
-    startTime = time()
-    database = databaseSpecifier.getDatabaseFromArgs(args)
-    print(database.print_(), file=sys.stderr)
 
+    startTime = time()
+    dbParams = DatabaseParameters.fromArgs(args)
+    database = databaseSpecifier.getDatabaseFromArgs(args, dbParams)
+    print(database.print_(), file=sys.stderr)
     print('Database built in %.2f seconds. Saving...' % (
         time() - startTime), end=' ', file=sys.stderr)
+
+    # Save.
     saveStartTime = time()
     database.save()
     print('saved in %.2f seconds.' % (time() - saveStartTime), file=sys.stderr)

@@ -19,17 +19,15 @@ from Bio.File import as_handle
 from dark.fasta import combineReads, FastaReads
 from dark.reads import AAReadWithX
 
+from light.backend import Backend
 from light.connector import SimpleConnector
+from light.parameters import DatabaseParameters
+from light.string import MultilineString
+
 if six.PY3:
     from light.wamp import addArgsToParser as addWampArgsToParser
     from light.connector_wamp import WampServerConnector
     from light.database_wamp import getWampClientDatabase
-
-from light.backend import Backend
-from light.parameters import Parameters
-from light.landmarks import findLandmarks, DEFAULT_LANDMARK_CLASSES
-from light.trig import findTrigPoints, DEFAULT_TRIG_CLASSES
-from light.string import MultilineString
 
 logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
                     level=logging.INFO)
@@ -41,7 +39,8 @@ class Database:
     sequences (aka subjects) and provide for database insertion and look-up
     operations on them.
 
-    @param params: A C{Parameters} instance.
+    @param dbParams: A C{DatabaseParameters} instance or C{None} to use
+        default parameters.
     @param connector: A C{ligh.SimpleConnector} instance (or other connector)
         for connecting to the database backend(s).
     @param filePrefix: Either a C{str} file name prefix to use as a default
@@ -50,9 +49,9 @@ class Database:
 
     SAVE_SUFFIX = '.lmdb'
 
-    def __init__(self, params, connector=None, filePrefix=None):
-        self.params = params
-        self._connector = connector or SimpleConnector(params,
+    def __init__(self, dbParams=None, connector=None, filePrefix=None):
+        self.dbParams = dbParams or DatabaseParameters()
+        self._connector = connector or SimpleConnector(self.dbParams,
                                                        filePrefix=filePrefix)
         self._filePrefix = filePrefix
 
@@ -116,7 +115,7 @@ class Database:
         }
 
         with as_handle(saveFile, 'w') as fp:
-            self.params.save(fp)
+            self.dbParams.save(fp)
             dump(state, fp)
             fp.write('\n')
 
@@ -142,7 +141,7 @@ class Database:
             filePrefix = None
 
         with as_handle(saveFile) as fp:
-            params = Parameters.restore(fp)
+            dbParams = DatabaseParameters.restore(fp)
             state = loads(fp.readline()[:-1])
 
         connectorClassName = state['_connectorClassName']
@@ -154,7 +153,7 @@ class Database:
             raise ValueError('Unknown backend connector class %r.' %
                              connectorClassName)
 
-        new = cls(params, connector, filePrefix=filePrefix)
+        new = cls(dbParams, connector, filePrefix=filePrefix)
 
         return new
 
@@ -171,7 +170,7 @@ class Database:
         result = MultilineString(margin=margin)
         append = result.append
 
-        append(self.params.print_(margin=margin), verbatim=True)
+        append(self.dbParams.print_(margin=margin), verbatim=True)
 
         totalResidues = self.totalResidues()
         result.extend([
@@ -199,19 +198,23 @@ class Database:
 
 class DatabaseSpecifier:
     """
-    Helper class for creating or loading a database and populating it.
+    Helper class for 1) either creating a new database, loading one from
+    saved files, accessing one that's already in memory, or accessing one
+    remotely, and then, 2) optionally populating it.
 
-    @param allowCreation: If True, add options that permit the creation
+    @param allowCreation: If C{True}, add options that permit the creation
         of a new database.
-    @param allowPopulation: If True, add options that allow the automatic
+    @param allowPopulation: If C{True}, add options that allow the automatic
         addition of sequences to the database.
-    @param allowInMemory: If True, add the option that allows the user to
-        pass an in-memory database (e.g., as constructed in ipython or
+    @param allowInMemory: If C{True}, add the option that allows the user to
+        pass an in-memory database (e.g., as constructed in iPython or
         iPythonNotebook or programmatically).
-    @param allowWamp: If True, add options that allow the user to specify a
+    @param allowWamp: If C{True}, add options that allow the user to specify a
         WAMP-based distributed database. This option can only be used in
         Python 3.
-    @raise ValueError: If the allow options do not permit creation or loading.
+    @raise ValueError: If the allow* options do not permit creation, loading
+        from a file, or an in-memory database. Or if the use of WAMP is
+        attempted and we're not using Python 3.
     """
     def __init__(self, allowCreation=True, allowPopulation=True,
                  allowInMemory=True, allowWamp=six.PY3):
@@ -257,7 +260,7 @@ class DatabaseSpecifier:
             addWampArgsToParser(parser)
 
         if self._allowCreation:
-            Parameters.addArgsToParser(parser)
+            DatabaseParameters.addArgsToParser(parser)
 
         if self._allowPopulation:
             parser.add_argument(
@@ -272,46 +275,29 @@ class DatabaseSpecifier:
                       'sequence id will be the text up to the last space, if '
                       'any, otherwise will be automatically assigned.'))
 
-    def getDatabaseFromArgs(self, args):
+    def getDatabaseFromArgs(self, args, dbParams=None):
         """
         Read an existing database (if args.database is given) or create
-        one from args.
+        one from command-line arguments in C{args} and the database parameters
+        in C{dbParams}.
 
         There is an order of preference in examining the arguments used to
         specify a database: pre-existing in a file (via --filePrefix),
-        and then via the creation of a new database (many args). There are
-        currently no checks to make sure the user isn't trying to do
-        conflicting things, such as restoring from a file and also specifying
-        landmark finders, the one with the highest priority is silently
-        acted on first.
+        and then via the creation of a new database. There are currently no
+        checks to make sure the user isn't trying to do conflicting things,
+        such as restoring from a file and also specifying landmark finders,
+        the one with the highest priority is silently acted on first.
 
         @param args: Command line arguments as returned by the C{argparse}
             C{parse_args} method.
+        @param dbParams: A C{DatabaseParameters} instance or C{None} to use
+            default parameters.
         @raise ValueError: If a database cannot be found or created.
         @return: A C{light.database.Database} instance.
         """
-        def getParametersFromArgs(args):
-            landmarkClasses = (
-                DEFAULT_LANDMARK_CLASSES if args.defaultLandmarks
-                else findLandmarks(args.landmarkFinderNames))
-
-            trigClasses = (
-                DEFAULT_TRIG_CLASSES if args.defaultTrigPoints
-                else findTrigPoints(args.trigFinderNames))
-
-            if len(landmarkClasses) + len(trigClasses) == 0:
-                raise RuntimeError(
-                    'Not creating database as no landmark or trig point '
-                    'finders were specified. Use --landmark and/or --trig.')
-
-            return Parameters(landmarkClasses, trigClasses,
-                              limitPerLandmark=args.limitPerLandmark,
-                              maxDistance=args.maxDistance,
-                              minDistance=args.minDistance,
-                              distanceBase=args.distanceBase,
-                              featureLengthBase=args.featureLengthBase)
 
         database = None
+        dbParams = dbParams or DatabaseParameters()
         filePrefix = args.filePrefix
 
         if filePrefix:
@@ -354,10 +340,9 @@ class DatabaseSpecifier:
 
         if database is None and self._allowWamp:
             if args.wampServer:
-                params = getParametersFromArgs(args)
-                connector = WampServerConnector(params,
+                connector = WampServerConnector(dbParams,
                                                 filePrefix=filePrefix)
-                database = Database(params, connector=connector,
+                database = Database(dbParams, connector=connector,
                                     filePrefix=filePrefix)
             elif args.wampClient:
                 database = getWampClientDatabase(args)
@@ -365,8 +350,7 @@ class DatabaseSpecifier:
         if database is None and self._allowCreation:
             # A new in-memory database, with a simple connector and a local
             # backend.
-            params = getParametersFromArgs(args)
-            database = Database(params, filePrefix=filePrefix)
+            database = Database(dbParams, filePrefix=filePrefix)
 
         if database is None and self._allowWamp:
             # Last try: guess that they might be wanting to talk to a WAMP
@@ -375,48 +359,26 @@ class DatabaseSpecifier:
 
         if database is None:
             raise RuntimeError(
-                'Not enough information given to specify a database, and no '
-                'remote WAMP database could be found.')
+                'Not enough information given to specify a database, %sand no '
+                'remote WAMP database could be found.' %
+                ('' if self._allowCreation else
+                 'database creation is not enabled, '))
 
         if self._allowPopulation:
-            for read in combineReads(args.databaseFasta,
-                                     args.databaseSequences,
-                                     readClass=AAReadWithX):
+            for read in combineReads(
+                    args.databaseFasta, args.databaseSequences,
+                    readClass=AAReadWithX, upperCase=True):
                 database.addSubject(read)
 
         return database
 
-    def getDatabaseFromKeywords(
-            self, landmarkNames=None, trigPointNames=None,
-            defaultLandmarks=False, defaultTrigPoints=False,
-            limitPerLandmark=Parameters.DEFAULT_LIMIT_PER_LANDMARK,
-            maxDistance=Parameters.DEFAULT_MAX_DISTANCE,
-            minDistance=Parameters.DEFAULT_MIN_DISTANCE,
-            distanceBase=Parameters.DEFAULT_DISTANCE_BASE,
-            featureLengthBase=Parameters.DEFAULT_FEATURE_LENGTH_BASE,
-            database=None, databaseFasta=None, subjects=None, filePrefix=None):
+    def getDatabaseFromKeywords(self, database=None, databaseFasta=None,
+                                subjects=None, filePrefix=None,
+                                wampServer=False, wampClient=False, **kwargs):
         """
         Use Python function keywords to build an argument parser that can
         used to find or create a database using getDatabaseFromArgs
 
-        @param landmarkNames: a C{list} of C{str} of landmark finder names.
-        @param trigPointNames: a C{list} of C{str} of trig finder names.
-        @param defaultLandmarks: If C{True}, use the default landmark finders.
-        @param defaultTrigPoints: If C{True}, use the default trig point
-            finders.
-        @param limitPerLandmark: An C{int} limit on the number of pairs to
-            yield per landmark.
-        @param maxDistance: The C{int} maximum distance permitted between
-            yielded pairs.
-        @param minDistance: The C{int} minimum distance permitted between
-            yielded pairs.
-        @param distanceBase: The distance between a landmark and a trig point
-            is scaled to be its logarithm using this C{float} base. This
-            reduces sensitivity to relatively small differences in distance.
-        @param featureLengthBase: The length of a landmark is scaled to be its
-            logarithm using this C{float} base, for the purpose of matching
-            landmarks via hashes. This reduces sensitivity to relatively small
-            differences in lengths.
         @param database: An instance of C{light.database.Database}.
         @param databaseFasta: The name of a FASTA file containing subject
             sequences that should be added to the database.
@@ -425,59 +387,54 @@ class DatabaseSpecifier:
         @param filePrefix: The C{str} prefix of the name of a file containing
             saved data. A suffix will be added to get the various file names
             of the database hash index, the connector, the parameters, etc.
-        @raise ValueError: If a database cannot be found or created.
+        @param wampServer: If C{True} the database should act as WAMP server.
+        @param wampClient: If C{True} create a database that is actually a
+            client connection to a WAMP database.
+        @param kwargs: Additional arguments specifying values for database
+            parameters (some of which may be used by specific feature finders).
+            To see the available database parameters, see the docstring of
+            the DatabaseParameters class.
+        @raise ValueError: If 1) a database cannot be found or created, or 2)
+            an in-memory database is passed but C{self.allowInMemory} is
+            C{False}, or 3) if population is attempted but
+            C{self.allowPopulation} is C{False}.
         @return: A C{light.database.Database} instance.
         """
-        parser = argparse.ArgumentParser()
-        self.addArgsToParser(parser)
-        commandLine = []
-
-        # An in-memory database gets returned immediately, after adding any
-        # optional sequences to it.
         if database is not None:
-            assert self._allowInMemory, (
-                'In-memory database specification not enabled')
-            if self._allowPopulation:
-                if databaseFasta is not None:
-                    for read in FastaReads(databaseFasta,
-                                           readClass=AAReadWithX,
-                                           upperCase=True):
-                        database.addSubject(read)
-                if subjects is not None:
-                    for subject in subjects:
-                        database.addSubject(subject)
-            return database
+            # A pre-existing in-memory database.
+            if not self._allowInMemory:
+                raise ValueError(
+                    'In-memory database specification not enabled.')
+        else:
+            # Use self.getDatabaseFromArgs to get the database. Here we
+            # build and parse a command line to get args to pass to it.
+            dbParams = DatabaseParameters(**kwargs)
+            parser = argparse.ArgumentParser()
+            self.addArgsToParser(parser)
+            commandLine = []
 
-        if filePrefix is not None:
-            commandLine.extend(['--filePrefix', filePrefix])
+            if filePrefix is not None:
+                commandLine.extend(['--filePrefix', filePrefix])
 
-        if landmarkNames is not None:
-            for landmarkName in landmarkNames:
-                commandLine.extend(['--landmark', landmarkName])
+            if wampServer:
+                commandLine.append('--wampServer')
 
-        if trigPointNames is not None:
-            for trigPointName in trigPointNames:
-                commandLine.extend(['--trig', trigPointName])
+            if wampClient:
+                commandLine.append('--wampClient')
 
-        if defaultLandmarks:
-            commandLine.append('--defaultLandmarks')
+            args = parser.parse_args(commandLine)
+            database = self.getDatabaseFromArgs(args, dbParams)
 
-        if defaultTrigPoints:
-            commandLine.append('--defaultTrigPoints')
-
-        commandLine.extend(['--limitPerLandmark', str(limitPerLandmark),
-                            '--maxDistance', str(maxDistance),
-                            '--minDistance', str(minDistance),
-                            '--distanceBase', str(distanceBase),
-                            '--featureLengthBase', str(featureLengthBase)])
-
-        if self._allowPopulation and databaseFasta is not None:
-            commandLine.extend(['--databaseFasta', databaseFasta])
-
-        database = self.getDatabaseFromArgs(parser.parse_args(commandLine))
-
-        if self._allowPopulation and subjects is not None:
-            for subject in subjects:
-                database.addSubject(subject)
+        if self._allowPopulation:
+            if databaseFasta:
+                for read in FastaReads(databaseFasta,
+                                       readClass=AAReadWithX,
+                                       upperCase=True):
+                    database.addSubject(read)
+            if subjects is not None:
+                for subject in subjects:
+                    database.addSubject(subject)
+        elif databaseFasta or subjects is not None:
+            raise ValueError('Database population is not enabled.')
 
         return database

@@ -1,16 +1,20 @@
 from __future__ import print_function
 
 import sys
-from operator import attrgetter
 try:
     from ujson import dumps, loads
 except ImportError:
     from json import dumps, loads
 
+from six import string_types
+
 from light.checksum import Checksum
 from light.landmarks import (
-    findLandmark, DEFAULT_LANDMARK_CLASSES, ALL_LANDMARK_CLASSES)
-from light.trig import findTrigPoint, DEFAULT_TRIG_CLASSES, ALL_TRIG_CLASSES
+    findLandmark, findLandmarks, DEFAULT_LANDMARK_CLASSES,
+    ALL_LANDMARK_CLASSES_EVEN_BAD_ONES)
+from light.trig import (
+    findTrigPoint, findTrigPoints, DEFAULT_TRIG_CLASSES,
+    ALL_TRIG_CLASSES_EVEN_BAD_ONES)
 from light.bin_score import MinHashesScore, ALL_BIN_SCORE_CLASSES
 from light.significance import HashFraction, ALL_SIGNIFICANCE_CLASSES
 from light.overall_score import BestBinScore, ALL_OVERALL_SCORE_CLASSES
@@ -107,6 +111,10 @@ class FindParameters(object):
         self.scoreMethod = (
             self.DEFAULT_SCORE_METHOD if scoreMethod is None else scoreMethod)
 
+        self.overallScoreMethod = (
+            self.DEFAULT_OVERALL_SCORE_METHOD if overallScoreMethod is
+            None else overallScoreMethod)
+
         self.featureMatchScore = (
             self.DEFAULT_FEATURE_MATCH_SCORE if featureMatchScore is None
             else featureMatchScore)
@@ -116,10 +124,6 @@ class FindParameters(object):
             else featureMismatchScore)
 
         self.weights = self.DEFAULT_WEIGHTS if weights is None else weights
-
-        self.overallScoreMethod = (
-            self.DEFAULT_OVERALL_SCORE_METHOD if overallScoreMethod is
-            None else overallScoreMethod)
 
         self.deltaScale = (
             self.DEFAULT_DELTA_SCALE if deltaScale is None else deltaScale)
@@ -156,6 +160,13 @@ class FindParameters(object):
                   'histogram bin which is considered significant.'))
 
         parser.add_argument(
+            '--overallScoreMethod',
+            default=FindParameters.DEFAULT_OVERALL_SCORE_METHOD,
+            choices=[cls.__name__ for cls in ALL_OVERALL_SCORE_CLASSES],
+            help=('The name of the method used to calculate the overall '
+                  'score of all histogram bins.'))
+
+        parser.add_argument(
             '--featureMatchScore', type=float,
             default=FindParameters.DEFAULT_FEATURE_MATCH_SCORE,
             help=('The contribution (usually positive) to a score when a '
@@ -171,13 +182,6 @@ class FindParameters(object):
             '--weights', action='append',
             help=('A string with the landmark name as the first element and '
                   'the weight as the second, separated by a space.'))
-
-        parser.add_argument(
-            '--overallScoreMethod',
-            default=FindParameters.DEFAULT_OVERALL_SCORE_METHOD,
-            choices=[cls.__name__ for cls in ALL_OVERALL_SCORE_CLASSES],
-            help=('The name of the method used to calculate the overall '
-                  'score of all histogram bins.'))
 
         parser.add_argument(
             '--deltaScale', type=float,
@@ -225,19 +229,22 @@ class FindParameters(object):
             'Weights: '
         ])
         result.indent()
-        for key in sorted(self.weights.keys()):
+        for key in sorted(self.weights):
             result.append('%s: %f' % (key, self.weights[key]))
         return str(result)
 
 
-class Parameters(object):
+class DatabaseParameters(object):
     """
-    Hold a collection of database parameter settings.
+    Hold a collection of database parameter settings, including parameters
+    used by feature finders.
 
-    @param landmarkClasses: A C{list} of landmark finder classes, or C{None}
-        to use the default set of landmark finder classes.
-    @param trigPointClasses: A C{list} of trig point finder classes, or C{None}
-        to use the default set of trig point finder classes.
+    @param landmarks: Either C{None} (to use the default landmark finders) or
+        a mixed C{list} of landmark finder classes or C{str} landmark finder
+        names. To specify no landmark finders, pass an empty list.
+    @param trigPoints: Either C{None} (to use the default trig point finders)
+        or a mixed C{list} of trig point finder classes or C{str} trig point
+        finder names. To specify no trig point finders, pass an empty list.
     @param limitPerLandmark: An C{int} limit on the number of pairs to
         yield per landmark.
     @param maxDistance: The C{int} maximum distance permitted between
@@ -251,11 +258,13 @@ class Parameters(object):
         logarithm using this C{float} base, for the purpose of matching
         landmarks via hashes. This reduces sensitivity to relatively small
         differences in lengths.
+    @param randomLandmarkDensity: The C{float} density of random length-1
+        landmarks to generate.
+    @param randomTrigPointDensity: The C{float} density of random trig points
+        to generate.
+    @raise ValueError: If an unknown landmark or trig point finder name is
+        given in C{landmarks} or C{trigPoints}.
     """
-
-    PARAMS = ('landmarkClasses', 'trigPointClasses', 'limitPerLandmark',
-              'maxDistance', 'minDistance', 'distanceBase',
-              'featureLengthBase')
 
     # Database defaults (see explanations in the above docstring).
     DEFAULT_LIMIT_PER_LANDMARK = 10
@@ -263,10 +272,24 @@ class Parameters(object):
     DEFAULT_MIN_DISTANCE = 1
     DEFAULT_DISTANCE_BASE = 1.1
     DEFAULT_FEATURE_LENGTH_BASE = 1.35
+    DEFAULT_RANDOM_LANDMARK_DENSITY = 0.1
+    DEFAULT_RANDOM_TRIG_POINT_DENSITY = 0.1
 
-    def __init__(self, landmarkClasses, trigPointClasses,
+    def __init__(self, landmarks=None, trigPoints=None,
                  limitPerLandmark=None, maxDistance=None, minDistance=None,
-                 distanceBase=None, featureLengthBase=None):
+                 distanceBase=None, featureLengthBase=None,
+                 randomLandmarkDensity=None, randomTrigPointDensity=None):
+
+        # First set the simple scalar parameters.
+        self.limitPerLandmark = (
+            self.DEFAULT_LIMIT_PER_LANDMARK if limitPerLandmark is None
+            else limitPerLandmark)
+
+        self.maxDistance = (
+            self.DEFAULT_MAX_DISTANCE if maxDistance is None else maxDistance)
+
+        self.minDistance = (
+            self.DEFAULT_MIN_DISTANCE if minDistance is None else minDistance)
 
         self.distanceBase = (
             self.DEFAULT_DISTANCE_BASE if distanceBase is None
@@ -282,29 +305,54 @@ class Parameters(object):
         if self.featureLengthBase <= 0:
             raise ValueError('featureLengthBase must be > 0.')
 
-        self.landmarkClasses = (
-            DEFAULT_LANDMARK_CLASSES if landmarkClasses is None
-            else landmarkClasses)
+        self.randomLandmarkDensity = (
+            self.DEFAULT_RANDOM_LANDMARK_DENSITY if
+            randomLandmarkDensity is None else randomLandmarkDensity)
 
-        self.landmarkFinders = [landmarkClass(self.featureLengthBase)
-                                for landmarkClass in self.landmarkClasses]
+        self.randomTrigPointDensity = (
+            self.DEFAULT_RANDOM_TRIG_POINT_DENSITY if
+            randomTrigPointDensity is None else randomTrigPointDensity)
 
-        self.trigPointClasses = (
-            DEFAULT_TRIG_CLASSES if trigPointClasses is None
-            else trigPointClasses)
+        if landmarks is None:
+            landmarkClasses = DEFAULT_LANDMARK_CLASSES
+        else:
+            landmarkClasses = set()
+            for landmark in landmarks:
+                if isinstance(landmark, string_types):
+                    cls = findLandmark(landmark)
+                    if cls:
+                        landmarkClasses.add(cls)
+                    else:
+                        raise ValueError(
+                            'Could not find landmark finder class %r.'
+                            % landmark)
+                else:
+                    # Assume this is already a landmark class.
+                    landmarkClasses.add(landmark)
 
-        self.trigPointFinders = [trigPointClass(self.featureLengthBase)
-                                 for trigPointClass in self.trigPointClasses]
+        if trigPoints is None:
+            trigPointClasses = DEFAULT_TRIG_CLASSES
+        else:
+            trigPointClasses = set()
+            for trigPoint in trigPoints:
+                if isinstance(trigPoint, string_types):
+                    cls = findTrigPoint(trigPoint)
+                    if cls:
+                        trigPointClasses.add(cls)
+                    else:
+                        raise ValueError(
+                            'Could not find trig point finder class %r.'
+                            % trigPoint)
+                else:
+                    # Assume this is already a trig point class.
+                    trigPointClasses.add(trigPoint)
 
-        self.limitPerLandmark = (
-            self.DEFAULT_LIMIT_PER_LANDMARK if limitPerLandmark is None
-            else limitPerLandmark)
-
-        self.maxDistance = (
-            self.DEFAULT_MAX_DISTANCE if maxDistance is None else maxDistance)
-
-        self.minDistance = (
-            self.DEFAULT_MIN_DISTANCE if minDistance is None else minDistance)
+        # The finders instantiated here are not used in this file. They are
+        # used by the backend. We make sorted lists of them so we're guaranteed
+        # to always process them in the same order (in printing, in checksums,
+        # etc).
+        self.landmarkFinders = sorted(cls(self) for cls in landmarkClasses)
+        self.trigPointFinders = sorted(cls(self) for cls in trigPointClasses)
 
     @property
     def checksum(self):
@@ -316,17 +364,16 @@ class Parameters(object):
         # with the same finders will have identical parameter checksums
         # (all else being equal).
         checksum = Checksum()
-        key = attrgetter('NAME')
-        landmarkFinders = sorted(self.landmarkFinders, key=key)
-        trigPointFinders = sorted(self.trigPointFinders, key=key)
         checksum.update(
-            [f.NAME for f in landmarkFinders] +
-            [f.SYMBOL for f in landmarkFinders] +
-            [f.NAME for f in trigPointFinders] +
-            [f.SYMBOL for f in trigPointFinders] +
+            [f.NAME for f in self.landmarkFinders] +
+            [f.SYMBOL for f in self.landmarkFinders] +
+            [f.NAME for f in self.trigPointFinders] +
+            [f.SYMBOL for f in self.trigPointFinders] +
             list(map(str, (self.limitPerLandmark, self.maxDistance,
                            self.minDistance, self.distanceBase,
-                           self.featureLengthBase))))
+                           self.featureLengthBase,
+                           self.randomLandmarkDensity,
+                           self.randomTrigPointDensity))))
         return checksum.value
 
     @staticmethod
@@ -337,47 +384,50 @@ class Parameters(object):
         @param parser: An C{argparse.ArgumentParser} instance.
         """
         parser.add_argument(
-            '--landmark', action='append', dest='landmarkFinderNames',
-            choices=sorted(cl.NAME for cl in ALL_LANDMARK_CLASSES),
+            '--landmark', action='append', dest='landmarks',
+            choices=sorted(c.NAME for c in ALL_LANDMARK_CLASSES_EVEN_BAD_ONES),
             help=('The name of a landmark finder to use. May be specified '
-                  'multiple times.'))
+                  'multiple times. If no landmark finders are '
+                  'given (and --noLandmarks is not specified), the default '
+                  'set of landmark finders (%s) will be used.' %
+                  ', '.join(sorted(c.NAME for c in DEFAULT_LANDMARK_CLASSES))))
 
         parser.add_argument(
-            '--trig', action='append', dest='trigFinderNames',
-            choices=sorted(cl.NAME for cl in ALL_TRIG_CLASSES),
+            '--noLandmarks', action='store_true', default=False,
+            help='If specified, no landmark finders will be used.')
+
+        parser.add_argument(
+            '--trig', action='append', dest='trigPoints',
+            choices=sorted(c.NAME for c in ALL_TRIG_CLASSES_EVEN_BAD_ONES),
             help=('The name of a trig point finder to use. May be '
-                  'specified multiple times.'))
+                  'specified multiple times. If no trig point finders are '
+                  'given (and --noTrigPoints is not specified), the default '
+                  'set of trig point finders (%s) will be used.' %
+                  ', '.join(sorted(c.NAME for c in DEFAULT_TRIG_CLASSES))))
 
         parser.add_argument(
-            '--defaultLandmarks', action='store_true', default=False,
-            help=('If specified, use the default landmark finders: %s' %
-                  sorted(cl.NAME for cl in
-                         DEFAULT_LANDMARK_CLASSES)))
-
-        parser.add_argument(
-            '--defaultTrigPoints', action='store_true', default=False,
-            help=('If specified, use the default trig point finders: %s' %
-                  sorted(cl.NAME for cl in DEFAULT_TRIG_CLASSES)))
+            '--noTrigPoints', action='store_true', default=False,
+            help='If specified, no trig point finders will be used.')
 
         parser.add_argument(
             '--limitPerLandmark', type=int,
-            default=Parameters.DEFAULT_LIMIT_PER_LANDMARK,
+            default=DatabaseParameters.DEFAULT_LIMIT_PER_LANDMARK,
             help=('A limit on the number of pairs to yield per landmark '
                   'per read.'))
 
         parser.add_argument(
             '--maxDistance', type=int,
-            default=Parameters.DEFAULT_MAX_DISTANCE,
+            default=DatabaseParameters.DEFAULT_MAX_DISTANCE,
             help='The maximum distance permitted between yielded pairs.')
 
         parser.add_argument(
             '--minDistance', type=int,
-            default=Parameters.DEFAULT_MIN_DISTANCE,
+            default=DatabaseParameters.DEFAULT_MIN_DISTANCE,
             help='The minimum distance permitted between yielded pairs.')
 
         parser.add_argument(
             '--distanceBase', type=float,
-            default=Parameters.DEFAULT_DISTANCE_BASE,
+            default=DatabaseParameters.DEFAULT_DISTANCE_BASE,
             help=('The distance between a landmark and a trig point is '
                   'scaled to be its logarithm using this base. This '
                   'reduces sensitivity to relatively small differences in '
@@ -385,11 +435,65 @@ class Parameters(object):
 
         parser.add_argument(
             '--featureLengthBase', type=float,
-            default=Parameters.DEFAULT_FEATURE_LENGTH_BASE,
+            default=DatabaseParameters.DEFAULT_FEATURE_LENGTH_BASE,
             help=('The length of landmarks, for the purpose of matching '
                   'hashes, is scaled to be the logarithm of the landmark '
                   'length using this base. This reduces sensitivity to '
                   'relatively small differences in landmark length.'))
+
+        parser.add_argument(
+            '--randomLandmarkDensity', type=float,
+            default=DatabaseParameters.DEFAULT_RANDOM_LANDMARK_DENSITY,
+            help=('The (float) density of random length-1 landmarks to '
+                  'generate.'))
+
+        parser.add_argument(
+            '--randomTrigPointDensity', type=float,
+            default=DatabaseParameters.DEFAULT_RANDOM_TRIG_POINT_DENSITY,
+            help=('The (float) density of random trig points to generate.'))
+
+    @classmethod
+    def fromArgs(cls, args):
+        if args.noLandmarks:
+            if args.landmarks:
+                raise RuntimeError(
+                    'You cannot use both --noLandmarks and --landmark.')
+            else:
+                landmarkClasses = []
+        elif args.landmarks:
+            landmarkClasses = findLandmarks(args.landmarks)
+        else:
+            landmarkClasses = DEFAULT_LANDMARK_CLASSES
+
+        if args.noTrigPoints:
+            if args.trigPoints:
+                raise RuntimeError(
+                    'You cannot use both --noTrigPoints and --trig.')
+            else:
+                trigPointClasses = []
+        elif args.trigPoints:
+            trigPointClasses = findTrigPoints(args.trigPoints)
+        else:
+            trigPointClasses = DEFAULT_TRIG_CLASSES
+
+        # Flag an error if no landmark or trig point finders were given. We
+        # test this here instead of in __init__ because we want to allow
+        # programmers (e.g., writing tests) to have no finders. But a user
+        # giving command line arguments should probably be warned /
+        # restricted.
+        if len(landmarkClasses) + len(trigPointClasses) == 0:
+            raise RuntimeError(
+                'Cannot create database parameters as no landmark or trig '
+                'point finders were specified. Use --landmark and/or --trig.')
+
+        return cls(landmarks=landmarkClasses, trigPoints=trigPointClasses,
+                   limitPerLandmark=args.limitPerLandmark,
+                   maxDistance=args.maxDistance,
+                   minDistance=args.minDistance,
+                   distanceBase=args.distanceBase,
+                   featureLengthBase=args.featureLengthBase,
+                   randomLandmarkDensity=args.randomLandmarkDensity,
+                   randomTrigPointDensity=args.randomTrigPointDensity)
 
     def save(self, fp=sys.stdout):
         """
@@ -398,16 +502,19 @@ class Parameters(object):
         @param fp: A file pointer.
         @return: The C{fp} we were passed (this is useful in testing).
         """
-        print(dumps({
-            'landmarkClassNames': [cls.NAME for cls in self.landmarkClasses],
-            'trigPointClassNames': [cls.NAME for cls in self.trigPointClasses],
+        state = {
+            'landmarks': [finder.NAME for finder in self.landmarkFinders],
+            'trigPoints': [finder.NAME for finder in self.trigPointFinders],
             'limitPerLandmark': self.limitPerLandmark,
             'maxDistance': self.maxDistance,
             'minDistance': self.minDistance,
             'distanceBase': self.distanceBase,
             'featureLengthBase': self.featureLengthBase,
-        }), file=fp)
+            'randomLandmarkDensity': self.randomLandmarkDensity,
+            'randomTrigPointDensity': self.randomTrigPointDensity,
+        }
 
+        print(dumps(state), file=fp)
         return fp
 
     @staticmethod
@@ -416,40 +523,13 @@ class Parameters(object):
         Load parameters from a file.
 
         @param fp: A file pointer.
-        @return: An instance of L{Parameters}.
+        @return: An instance of L{DatabaseParameters}.
         @raises ValueError: If a now non-existent landmark or trig point name
             is found in the saved parameters file. Or if valid JSON cannot be
             loaded from C{fp}.
         """
         state = loads(fp.readline()[:-1])
-
-        landmarkClasses = []
-        for landmarkClassName in state['landmarkClassNames']:
-            cls = findLandmark(landmarkClassName)
-            if cls:
-                landmarkClasses.append(cls)
-            else:
-                raise ValueError(
-                    'Could not find landscape finder class %s. Has that '
-                    'class been renamed or removed?' % landmarkClassName)
-
-        trigPointClasses = []
-        for trigPointClassName in state['trigPointClassNames']:
-            cls = findTrigPoint(trigPointClassName)
-            if cls:
-                trigPointClasses.append(cls)
-            else:
-                raise ValueError(
-                    'Could not find trig point finder class %s. Has that '
-                    'class been renamed or removed?' % trigPointClassName)
-
-        return Parameters(
-            landmarkClasses, trigPointClasses,
-            limitPerLandmark=state['limitPerLandmark'],
-            maxDistance=state['maxDistance'],
-            minDistance=state['minDistance'],
-            distanceBase=state['distanceBase'],
-            featureLengthBase=state['featureLengthBase'])
+        return DatabaseParameters(**state)
 
     def print_(self, margin=''):
         """
@@ -461,7 +541,6 @@ class Parameters(object):
         """
         result = MultilineString(margin=margin)
         append = result.append
-        extend = result.extend
 
         append('Parameters:')
         result.indent()
@@ -469,7 +548,8 @@ class Parameters(object):
         if self.landmarkFinders:
             append('Landmark finders:')
             result.indent()
-            extend(sorted(finder.NAME for finder in self.landmarkFinders))
+            for finder in self.landmarkFinders:
+                append(finder.__class__.__name__)
             result.outdent()
         else:
             append('Landmark finders: none')
@@ -477,35 +557,76 @@ class Parameters(object):
         if self.trigPointFinders:
             append('Trig point finders:')
             result.indent()
-            extend(sorted(finder.NAME for finder in self.trigPointFinders))
+            for finder in self.trigPointFinders:
+                append(finder.__class__.__name__)
             result.outdent()
         else:
             append('Trig point finders: none')
 
-        extend([
+        result.extend([
             'Limit per landmark: %d' % self.limitPerLandmark,
             'Max distance: %d' % self.maxDistance,
             'Min distance: %d' % self.minDistance,
             'Distance base: %f' % self.distanceBase,
             'Feature length base: %f' % self.featureLengthBase,
+            'Random landmark density: %f' % self.randomLandmarkDensity,
+            'Random trig point density: %f' % self.randomTrigPointDensity,
         ])
 
         return str(result)
 
     def compare(self, other):
         """
-        Compare our parameters against another Parameters instance.
+        Compare our parameters against another C{DatabaseParameters} instance.
 
-        @param other: A C{Parameters} instance.
+        @param other: A C{DatabaseParameters} instance.
         @return: A C{str} summary of the parameter differences if any, else
             C{None}.
         """
-        err = []
-        for param in self.PARAMS:
-            ours = getattr(self, param)
-            theirs = getattr(other, param)
-            if ours != theirs:
-                err.append('\tParam %r values %r and %r differ.' %
-                           (param, ours, theirs))
+        err = MultilineString()
+        err.append('Summary of differences:')
+        err.indent()
 
-        return 'Summary of differences:\n%s' % '\n'.join(err) if err else None
+        ourLandmarks = self.landmarkFinderNames()
+        otherLandmarks = other.landmarkFinderNames()
+        if ourLandmarks != otherLandmarks:
+            err.append("Param 'landmarks' values %r and %r differ." %
+                       (ourLandmarks, otherLandmarks))
+
+        ourTrigPoints = self.trigPointFinderNames()
+        otherTrigPoints = other.trigPointFinderNames()
+        if ourTrigPoints != otherTrigPoints:
+            err.append("Param 'trigPoints' values %r and %r differ." %
+                       (ourTrigPoints, otherTrigPoints))
+
+        for param in (
+                'limitPerLandmark', 'maxDistance', 'minDistance',
+                'distanceBase', 'featureLengthBase', 'randomLandmarkDensity',
+                'randomTrigPointDensity'):
+            ours = getattr(self, param)
+            others = getattr(other, param)
+            if ours != others:
+                err.append('Param %r values %r and %r differ.' %
+                           (param, ours, others))
+
+        # We have an error if the multi-line string result has more than
+        # the initial 'Summary of differences' heading line.
+        return str(err) if err.lineCount() > 1 else None
+
+    def landmarkFinderNames(self):
+        """
+        Get a list of the names of our landmark finders.
+
+        @return: A C{list} of C{str} landmark finder names. These will be in
+            the sorted order of landmark finders set in our __init__.
+        """
+        return [finder.__class__.NAME for finder in self.landmarkFinders]
+
+    def trigPointFinderNames(self):
+        """
+        Get a list of the names of our trig point finders.
+
+        @return: A C{list} of C{str} trig point finder names. These will be in
+            the sorted order of trig point finders set in our __init__.
+        """
+        return [finder.__class__.NAME for finder in self.trigPointFinders]

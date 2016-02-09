@@ -20,7 +20,7 @@ class TestAffinityMatrix(TestCase):
         matrix must be returned.
         """
         reads = Reads()
-        matrix = affinityMatrix(reads, landmarkNames=['AlphaHelix'])
+        matrix = affinityMatrix(reads, landmarks=['AlphaHelix'])
         self.assertTrue(np.array_equal(np.zeros((0, 0)), matrix))
 
     def testSequenceWithNoFeaturesAgainstItself(self):
@@ -32,7 +32,7 @@ class TestAffinityMatrix(TestCase):
         reads = Reads()
         read = AARead('id1', 'AAA')
         reads.add(read)
-        matrix = affinityMatrix(reads, landmarkNames=['AlphaHelix'],
+        matrix = affinityMatrix(reads, landmarks=['AlphaHelix'],
                                 computeDiagonal=True)
         self.assertEqual([[0.0]], matrix)
 
@@ -44,7 +44,7 @@ class TestAffinityMatrix(TestCase):
         reads = Reads()
         read = AARead('id1', 'AAA')
         reads.add(read)
-        matrix = affinityMatrix(reads, landmarkNames=['AlphaHelix'],
+        matrix = affinityMatrix(reads, landmarks=['AlphaHelix'],
                                 diagonalValue=2.0)
         self.assertEqual([[2.0]], matrix)
 
@@ -57,7 +57,7 @@ class TestAffinityMatrix(TestCase):
         reads = Reads()
         read = AARead('id1', 'FRRRFRRRFAAAFRRRFRRRF')
         reads.add(read)
-        matrix = affinityMatrix(reads, landmarkNames=['AlphaHelix'],
+        matrix = affinityMatrix(reads, landmarks=['AlphaHelix'],
                                 computeDiagonal=True)
         self.assertEqual([[1.0]], matrix)
 
@@ -71,7 +71,7 @@ class TestAffinityMatrix(TestCase):
         subjects.add(AARead('id2', 'FRRRFRRRFAAAFRRRFRRRF'))
         subjects.add(AARead('id3', 'FRRRFRRRFAAAFRRRFRRRF'))
         subjects.add(AARead('id4', 'FRRRFRRRFAAAFRRRFRRRF'))
-        matrix = affinityMatrix(reads, landmarkNames=['AlphaHelix'],
+        matrix = affinityMatrix(reads, landmarks=['AlphaHelix'],
                                 subjects=subjects, computeDiagonal=True)
         self.assertTrue(np.array_equal(np.zeros((0, 3)), matrix))
 
@@ -84,7 +84,7 @@ class TestAffinityMatrix(TestCase):
         read = AARead('id1', 'FRRRFRRRFAAAFRRRFRRRF')
         reads.add(read)
         subjects = Reads()
-        matrix = affinityMatrix(reads, landmarkNames=['AlphaHelix'],
+        matrix = affinityMatrix(reads, landmarks=['AlphaHelix'],
                                 subjects=subjects, computeDiagonal=True)
         self.assertTrue(np.array_equal(np.zeros((1, 0)), matrix))
 
@@ -100,7 +100,7 @@ class TestAffinityMatrix(TestCase):
         subjects.add(AARead('id2', 'FRRRFRRRFAAAFRRRFRRRF'))
         subjects.add(AARead('id3', 'FRRRFRRRFAAAFRRRFRRRF'))
         subjects.add(AARead('id4', 'FRRRFRRRFAAAFRRRFRRRF'))
-        matrix = affinityMatrix(reads, landmarkNames=['AlphaHelix'],
+        matrix = affinityMatrix(reads, landmarks=['AlphaHelix'],
                                 subjects=subjects, computeDiagonal=True)
         self.assertTrue(np.array_equal([[1.0, 1.0, 1.0]], matrix))
 
@@ -122,7 +122,7 @@ class TestAffinityMatrix(TestCase):
         def progress(i, query):
             output.append((i, query.id))
 
-        affinityMatrix(reads, landmarkNames=['AlphaHelix'],
+        affinityMatrix(reads, landmarks=['AlphaHelix'],
                        subjects=subjects, computeDiagonal=True,
                        progressFunc=progress)
 
@@ -141,7 +141,7 @@ class TestAffinityMatrix(TestCase):
         subjects.add(AARead('id2', 'FRRRFRRRFAAAFRRRFRRRF'))
         subjects.add(AARead('id3', 'FRRRFRRRFAAAFRRRFRRRF'))
         subjects.add(AARead('id4', 'FRRRFRRRFAAAFRRRFRRRF'))
-        matrix = affinityMatrix(reads, landmarkNames=['AlphaHelix'],
+        matrix = affinityMatrix(reads, landmarks=['AlphaHelix'],
                                 subjects=subjects, computeDiagonal=True)
         self.assertTrue(np.array_equal(
             [
@@ -227,9 +227,9 @@ class TestAffinityMatrix(TestCase):
         findParams = FindParameters(significanceFraction=0.05)
         self._checkSymmetry(
             sequences, findParams, distanceBase=1.0,
-            landmarkNames=[cls.NAME for cls in ALL_LANDMARK_CLASSES if
-                           cls.NAME != 'PredictedStructure'],
-            trigPointNames=[cls.NAME for cls in ALL_TRIG_CLASSES],
+            landmarks=[cls.NAME for cls in ALL_LANDMARK_CLASSES if
+                       cls.NAME != 'PredictedStructure'],
+            trigPoints=[cls.NAME for cls in ALL_TRIG_CLASSES],
             limitPerLandmark=50, minDistance=1, maxDistance=100,
             symmetric=False)
 
@@ -275,9 +275,9 @@ class TestAffinityMatrix(TestCase):
         findParams = FindParameters(significanceFraction=0.05)
         self._checkSymmetry(
             sequences, findParams, distanceBase=1.0,
-            landmarkNames=[cls.NAME for cls in ALL_LANDMARK_CLASSES if
-                           cls.NAME != 'PredictedStructure'],
-            trigPointNames=[cls.NAME for cls in ALL_TRIG_CLASSES],
+            landmarks=[cls.NAME for cls in ALL_LANDMARK_CLASSES if
+                       cls.NAME != 'PredictedStructure'],
+            trigPoints=[cls.NAME for cls in ALL_TRIG_CLASSES],
             limitPerLandmark=50, minDistance=1, maxDistance=100)
 
     def testSandraSymmetry_259(self):
@@ -311,7 +311,7 @@ class TestAffinityMatrix(TestCase):
         findParams = FindParameters(significanceFraction=0.01)
         self._checkSymmetry(
             sequences, findParams, distanceBase=1.025,
-            landmarkNames=['GOR4AlphaHelix', 'GOR4Coil'],
-            trigPointNames=['Peaks', 'Troughs'],
+            landmarks=['GOR4AlphaHelix', 'GOR4Coil'],
+            trigPoints=['Peaks', 'Troughs'],
             limitPerLandmark=50, minDistance=1, maxDistance=100,
             symmetric=False)

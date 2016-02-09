@@ -20,8 +20,8 @@ class TestPlotHashesInSubjectAndRead(TestCase):
         subject = AARead('subject', 'RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR')
         query = AARead('query', 'AAAAAAAAAAAAAAAAAAAAAAA')
         hashes = PlotHashesInSubjectAndRead(
-            query, subject, landmarkNames=['AlphaHelix', 'AlphaHelix_3_10'],
-            trigPointNames=['Peaks'])
+            query, subject, landmarks=['AlphaHelix', 'AlphaHelix_3_10'],
+            trigPoints=['Peaks'])
         self.assertEqual(0, len(list(hashes.matchingHashes)))
         self.assertEqual(0, len(list(hashes.queryHashes)))
         self.assertEqual(0, len(list(hashes.subjectHashes)))
@@ -34,8 +34,8 @@ class TestPlotHashesInSubjectAndRead(TestCase):
         subject = AARead('subject', 'FRRFRRFRRFAAAAAAAAAAAAASARRRRRRRRRRRRRR')
         query = AARead('query', 'FRRFRRFAAASAAAAAAAAAAAAA')
         hashes = PlotHashesInSubjectAndRead(
-            query, subject, landmarkNames=['AlphaHelix', 'AlphaHelix_3_10'],
-            trigPointNames=['Peaks'])
+            query, subject, landmarks=['AlphaHelix', 'AlphaHelix_3_10'],
+            trigPoints=['Peaks'])
         self.assertEqual(0, len(list(hashes.matchingHashes)))
         self.assertEqual(1, len(list(hashes.queryHashes)))
         self.assertEqual(1, len(list(hashes.subjectHashes)))
@@ -48,8 +48,8 @@ class TestPlotHashesInSubjectAndRead(TestCase):
         subject = AARead('subject', 'FRRFRRFRRFAAAAAAAAAAAASARRRRFRRFRRFAAASA')
         query = AARead('query', 'ASARRRRFRRFRRFAAASA')
         hashes = PlotHashesInSubjectAndRead(
-            query, subject, landmarkNames=['AlphaHelix', 'AlphaHelix_3_10'],
-            trigPointNames=['Peaks'])
+            query, subject, landmarks=['AlphaHelix', 'AlphaHelix_3_10'],
+            trigPoints=['Peaks'])
         self.assertEqual(2, len(hashes.matchingHashes))
         self.assertEqual(0, len(hashes.queryHashes))
         self.assertEqual(3, len(hashes.subjectHashes))
@@ -62,8 +62,8 @@ class TestPlotHashesInSubjectAndRead(TestCase):
         subject = AARead('subject', 'FRRFRRFRRFAAAAAAAAAAAASA')
         query = AARead('query', 'FRRFRRFRRFAAAAAAAAAAAASARRRRFRRFRRFAAASA')
         hashes = PlotHashesInSubjectAndRead(
-            query, subject, landmarkNames=['AlphaHelix', 'AlphaHelix_3_10'],
-            trigPointNames=['Peaks'])
+            query, subject, landmarks=['AlphaHelix', 'AlphaHelix_3_10'],
+            trigPoints=['Peaks'])
         self.assertEqual(1, len(hashes.matchingHashes))
         self.assertEqual(4, len(hashes.queryHashes))
         self.assertEqual(0, len(hashes.subjectHashes))
@@ -76,16 +76,16 @@ class TestPlotHashesInSubjectAndRead(TestCase):
 
         # Showing the significant:
         hashes = PlotHashesInSubjectAndRead(
-            seq, seq, landmarkNames=['AlphaHelix', 'BetaStrand'],
-            trigPointNames=['Peaks'])
+            seq, seq, landmarks=['AlphaHelix', 'BetaStrand'],
+            trigPoints=['Peaks'])
         self.assertEqual(13, len(hashes.matchingHashes))
         self.assertEqual(0, len(hashes.queryHashes))
         self.assertEqual(0, len(hashes.subjectHashes))
 
         # Same input, but hiding the significant:
         hashes = PlotHashesInSubjectAndRead(
-            seq, seq, landmarkNames=['AlphaHelix', 'BetaStrand'],
-            trigPointNames=['Peaks'], showSignificant=False)
+            seq, seq, landmarks=['AlphaHelix', 'BetaStrand'],
+            trigPoints=['Peaks'], showSignificant=False)
         self.assertEqual(1, len(hashes.matchingHashes))
         self.assertEqual(0, len(hashes.queryHashes))
         self.assertEqual(12, len(hashes.subjectHashes))
@@ -99,16 +99,16 @@ class TestPlotHashesInSubjectAndRead(TestCase):
 
         # Showing the insignificant:
         hashes = PlotHashesInSubjectAndRead(
-            query, subject, landmarkNames=['AlphaHelix', 'BetaStrand'],
-            trigPointNames=['Peaks'])
+            query, subject, landmarks=['AlphaHelix', 'BetaStrand'],
+            trigPoints=['Peaks'])
         self.assertEqual(2, len(hashes.matchingHashes))
         self.assertEqual(11, len(hashes.queryHashes))
         self.assertEqual(7, len(hashes.subjectHashes))
 
         # Same input, but hiding the significant:
         hashes = PlotHashesInSubjectAndRead(
-            query, subject, landmarkNames=['AlphaHelix', 'BetaStrand'],
-            trigPointNames=['Peaks'], showInsignificant=False)
+            query, subject, landmarks=['AlphaHelix', 'BetaStrand'],
+            trigPoints=['Peaks'], showInsignificant=False)
         self.assertEqual(0, len(hashes.matchingHashes))
         self.assertEqual(11, len(hashes.queryHashes))
         self.assertEqual(9, len(hashes.subjectHashes))
@@ -130,7 +130,7 @@ class TestPlotHashesInSubjectAndRead(TestCase):
         # There are 11 significant bins.
         hashes = PlotHashesInSubjectAndRead(
             query, subject, findParams,
-            landmarkNames=['AlphaHelix', 'AlphaHelix_pi'], trigPointNames=[],
+            landmarks=['AlphaHelix', 'AlphaHelix_pi'], trigPoints=[],
             distanceBase=1.025, limitPerLandmark=50, minDistance=1,
             maxDistance=100, showInsignificant=False)
         self.assertEqual(11, len(hashes.bins))
@@ -141,7 +141,7 @@ class TestPlotHashesInSubjectAndRead(TestCase):
         # significant bin:
         hashes = PlotHashesInSubjectAndRead(
             query, subject, findParams,
-            landmarkNames=['AlphaHelix', 'AlphaHelix_pi'], trigPointNames=[],
+            landmarks=['AlphaHelix', 'AlphaHelix_pi'], trigPoints=[],
             distanceBase=1.025, limitPerLandmark=50, minDistance=1,
             maxDistance=100, showInsignificant=False, showBestBinOnly=True)
         self.assertEqual(1, len(hashes.bins))
@@ -169,8 +169,8 @@ class TestPlotHashesInSubjectAndRead(TestCase):
             warnings.simplefilter('always')
             PlotHashesInSubjectAndRead(
                 query, subject, findParams,
-                landmarkNames=['AlphaHelix', 'AlphaHelix_pi'],
-                trigPointNames=[], distanceBase=1.025, limitPerLandmark=50,
+                landmarks=['AlphaHelix', 'AlphaHelix_pi'],
+                trigPoints=[], distanceBase=1.025, limitPerLandmark=50,
                 minDistance=1, maxDistance=100, showInsignificant=False,
                 showBestBinOnly=True)
 
@@ -191,8 +191,8 @@ class TestSequenceFeatureAnalysis(TestCase):
         must return the correct value.
         """
         read = AARead('id', 'FRRRFRRRF')
-        s = SequenceFeatureAnalysis(read, landmarkNames=['AlphaHelix'],
-                                    trigPointNames=['Peaks'])
+        s = SequenceFeatureAnalysis(read, landmarks=['AlphaHelix'],
+                                    trigPoints=['Peaks'])
         self.assertEqual(
             {
                 'AlphaHelix': {0, 1, 2, 3, 4, 5, 6, 7, 8},
@@ -206,8 +206,8 @@ class TestSequenceFeatureAnalysis(TestCase):
         offsets method must return the correct value.
         """
         read = AARead('id', 'FRRRFRRRFW')
-        s = SequenceFeatureAnalysis(read, landmarkNames=['AlphaHelix'],
-                                    trigPointNames=['AminoAcids'])
+        s = SequenceFeatureAnalysis(read, landmarks=['AlphaHelix'],
+                                    trigPoints=['AminoAcids'])
         self.assertEqual(
             {
                 'AlphaHelix': {0, 1, 2, 3, 4, 5, 6, 7, 8},
@@ -222,8 +222,8 @@ class TestSequenceFeatureAnalysis(TestCase):
         correct value.
         """
         read = AARead('id', 'XXFRRRFRRRFXXWX')
-        s = SequenceFeatureAnalysis(read, landmarkNames=['AlphaHelix'],
-                                    trigPointNames=['AminoAcids'])
+        s = SequenceFeatureAnalysis(read, landmarks=['AlphaHelix'],
+                                    trigPoints=['AminoAcids'])
         self.assertEqual(
             {
                 'AlphaHelix': {2, 3, 4, 5, 6, 7, 8, 9, 10},
@@ -239,8 +239,8 @@ class TestSequenceFeatureAnalysis(TestCase):
         """
         read = AARead('id', 'AGYGSTWT')
         s = SequenceFeatureAnalysis(read,
-                                    landmarkNames=['AlphaHelix', 'Prosite'],
-                                    trigPointNames=['AminoAcids'])
+                                    landmarks=['AlphaHelix', 'Prosite'],
+                                    trigPoints=['AminoAcids'])
         # There is an AminoAcid trig point at offset 6, but that's also in
         # the Prosite feature, so offset 6 is not unique to either finder.
         self.assertEqual(
@@ -259,8 +259,8 @@ class TestSequenceFeatureAnalysis(TestCase):
         """
         read = AARead('id', 'FRRRFRRRFWNPNW')
         s = SequenceFeatureAnalysis(read,
-                                    landmarkNames=['AlphaHelix', 'BetaTurn'],
-                                    trigPointNames=['AminoAcids'])
+                                    landmarks=['AlphaHelix', 'BetaTurn'],
+                                    trigPoints=['AminoAcids'])
         self.assertEqual(set(['AlphaHelix', 'BetaTurn']), s.landmarkNames)
         self.assertEqual(set(['AminoAcids']), s.trigPointNames)
 
@@ -272,8 +272,8 @@ class TestSequenceFeatureAnalysis(TestCase):
         """
         read = AARead('id', 'FRRRFRRRF')
         s = SequenceFeatureAnalysis(read,
-                                    landmarkNames=['AlphaHelix', 'BetaTurn'],
-                                    trigPointNames=['AminoAcids'])
+                                    landmarks=['AlphaHelix', 'BetaTurn'],
+                                    trigPoints=['AminoAcids'])
         self.assertEqual(set(['BetaTurn']), s.landmarksNotFound)
         self.assertEqual(set(['AminoAcids']), s.trigPointsNotFound)
 
@@ -284,8 +284,8 @@ class TestSequenceFeatureAnalysis(TestCase):
         """
         read = AARead('id', 'FRRRFRRRFWNPNW')
         s = SequenceFeatureAnalysis(read,
-                                    landmarkNames=['AlphaHelix', 'BetaTurn'],
-                                    trigPointNames=['AminoAcids'])
+                                    landmarks=['AlphaHelix', 'BetaTurn'],
+                                    trigPoints=['AminoAcids'])
         self.assertEqual(
             {
                 'AlphaHelix': {0, 1, 2, 3, 4, 5, 6, 7, 8},
@@ -301,8 +301,8 @@ class TestSequenceFeatureAnalysis(TestCase):
         """
         read = AARead('id', 'FRRRFRRRFWNPNW')
         s = SequenceFeatureAnalysis(read,
-                                    landmarkNames=['AlphaHelix', 'BetaTurn'],
-                                    trigPointNames=['AminoAcids'])
+                                    landmarks=['AlphaHelix', 'BetaTurn'],
+                                    trigPoints=['AminoAcids'])
         # The order in the overlaps array is AlphaHelix, BetaTurn,
         # AminoAcids, so the 0.2 value corresponds to the
         self.assertTrue(np.array_equal(
@@ -320,8 +320,8 @@ class TestSequenceFeatureAnalysis(TestCase):
         read = AARead('id', 'AAFRRRFRRRFWNPNWXX')
         s = SequenceFeatureAnalysis(
             read,
-            landmarkNames=['AlphaHelix', 'AlphaHelix_pi', 'BetaTurn'],
-            trigPointNames=['AminoAcids'])
+            landmarks=['AlphaHelix', 'AlphaHelix_pi', 'BetaTurn'],
+            trigPoints=['AminoAcids'])
         # Note that AlphaHelix_pi does not appear in the output as it finds
         # no features (it will be present in s.landmarksNotFound). Arguably
         # it should also be in the output.

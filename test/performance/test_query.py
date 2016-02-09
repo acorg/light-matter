@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from dark.reads import Reads, AARead
 
-from light.parameters import Parameters
+from light.parameters import DatabaseParameters
 from light.database import Database
 from light.performance.query import queryDatabase
 from light.landmarks import AlphaHelix
@@ -22,8 +22,9 @@ class TestQueryDatabase(TestCase):
         """
         No matches should be found if the database is empty.
         """
-        params = Parameters([AlphaHelix], [Peaks], maxDistance=11)
-        database = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix],
+                                      trigPoints=[Peaks], maxDistance=11)
+        database = Database(dbParams)
         subjects = Reads()
         queries = Reads()
         queries.add(AARead('query', 'FRRRFRRRFASAASA'))
@@ -35,8 +36,9 @@ class TestQueryDatabase(TestCase):
         One matching and significant subject must be found if the
         significanceFraction is sufficiently low.
         """
-        params = Parameters([AlphaHelix], [Peaks], maxDistance=11)
-        database = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix],
+                                      trigPoints=[Peaks], maxDistance=11)
+        database = Database(dbParams)
         subjects = Reads()
         subjects.add(AARead('subject', 'AFRRRFRRRFASAASA'))
         queries = Reads()

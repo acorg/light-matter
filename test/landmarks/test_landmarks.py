@@ -3,9 +3,10 @@ from unittest import TestCase
 
 from light.landmarks import (
     findLandmark, findLandmarks, landmarkNameFromHashkey,
-    ALL_LANDMARK_CLASSES, DEFAULT_LANDMARK_CLASSES, AlphaHelix,
-    AlphaHelix_3_10, AlphaHelix_pi, AminoAcids, BetaStrand, BetaTurn,
-    GOR4AlphaHelix, GOR4BetaStrand, GOR4Coil, PredictedStructure, Prosite)
+    ALL_LANDMARK_CLASSES, ALL_LANDMARK_CLASSES_EVEN_BAD_ONES,
+    DEFAULT_LANDMARK_CLASSES, AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi,
+    AminoAcids, BetaStrand, BetaTurn, GOR4AlphaHelix, GOR4BetaStrand,
+    GOR4Coil, PredictedStructure, Prosite, RandomLandmark)
 
 
 class TestFindLandmark(TestCase):
@@ -109,6 +110,28 @@ class TestAllLandmarkClasses(TestCase):
              BetaStrand, BetaTurn, GOR4AlphaHelix, GOR4BetaStrand, GOR4Coil,
              PredictedStructure, Prosite],
             ALL_LANDMARK_CLASSES)
+
+
+class TestAllLandmarkClassesEvenBadOnes(TestCase):
+    """
+    Trivial tests for the ALL_LANDMARK_CLASSES_EVEN_BAD_ONES list.
+    """
+
+    def testIsAList(self):
+        """
+        ALL_LANDMARK_CLASSES_EVEN_BAD_ONES must be a list (not a set).
+        """
+        self.assertTrue(isinstance(ALL_LANDMARK_CLASSES_EVEN_BAD_ONES, list))
+
+    def testAllClasses(self):
+        """
+        The ALL_LANDMARK_CLASSES_EVEN_BAD_ONES list must be as expected.
+        """
+        self.assertEqual(
+            [AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, AminoAcids,
+             BetaStrand, BetaTurn, GOR4AlphaHelix, GOR4BetaStrand, GOR4Coil,
+             PredictedStructure, Prosite, RandomLandmark],
+            ALL_LANDMARK_CLASSES_EVEN_BAD_ONES)
 
 
 class TestDefaultLandmarkClasses(TestCase):

@@ -1,5 +1,6 @@
 from light.distance import scaleLog
-from light.features import Landmark, Finder
+from light.features import Landmark
+from light.finder import Finder
 
 
 class GOR4Coil(Finder):
@@ -23,6 +24,7 @@ class GOR4Coil(Finder):
         @return: A generator that yields C{Landmark} instances.
         """
         predictions = read.gor4()['predictions']
+        featureLengthBase = self._dbParams.featureLengthBase
         length = 0
         for offset, prediction in enumerate(predictions):
             if prediction == 'C':
@@ -36,10 +38,10 @@ class GOR4Coil(Finder):
                 if length:
                     # We were in a string of C's, but it has just ended.
                     yield Landmark(self.NAME, self.SYMBOL, start, length,
-                                   scaleLog(length, self._featureLengthBase))
+                                   scaleLog(length, featureLengthBase))
                     length = 0
 
         if length:
             # We reached the end of the string still in a coil.
             yield Landmark(self.NAME, self.SYMBOL, start, length,
-                           scaleLog(length, self._featureLengthBase))
+                           scaleLog(length, featureLengthBase))

@@ -3,10 +3,13 @@ from light.trig.troughs import Troughs
 from light.trig.amino_acids import AminoAcids
 from light.trig.individual_peaks import IndividualPeaks
 from light.trig.individual_troughs import IndividualTroughs
+from light.trig.random import RandomTrigPoint
 from light.trig.volume import Volume
 
 ALL_TRIG_CLASSES = [
     AminoAcids, IndividualPeaks, IndividualTroughs, Peaks, Troughs, Volume]
+
+ALL_TRIG_CLASSES_EVEN_BAD_ONES = ALL_TRIG_CLASSES + [RandomTrigPoint]
 
 DEFAULT_TRIG_CLASSES = [AminoAcids]
 

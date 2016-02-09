@@ -5,7 +5,7 @@ import asyncio
 from autobahn.wamp.exception import ApplicationError
 
 from light.autobahn.component import Component
-from light.parameters import Parameters
+from light.parameters import DatabaseParameters
 from light.exceptions import WampDbOffline
 
 
@@ -31,5 +31,5 @@ class ClientComponent(Component):
             else:
                 raise
         else:
-            params = Parameters.restore(StringIO(paramsStr))
+            params = DatabaseParameters.restore(StringIO(paramsStr))
             future.set_result(WampDatabaseClient(params, self))

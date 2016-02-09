@@ -6,7 +6,7 @@ from dark.reads import AARead
 from light.exceptions import BackendException
 from light.landmarks import AlphaHelix, BetaStrand
 from light.trig import Peaks, Troughs
-from light.parameters import Parameters
+from light.parameters import DatabaseParameters
 from light.database import Database
 from light.connector import SimpleConnector
 from light.checksum import Checksum
@@ -22,8 +22,8 @@ class TestSimpleConnector(TestCase):
         If one subject is added, addSubject must return the correct
         pre-existing status and subject index.
         """
-        params = Parameters([AlphaHelix], [])
-        sc = SimpleConnector(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix])
+        sc = SimpleConnector(dbParams)
         subject = AARead('id', 'FRRRFRRRF')
         preExisting, subjectIndex, hashCount = sc.addSubject(subject)
         self.assertFalse(preExisting)
@@ -34,17 +34,18 @@ class TestSimpleConnector(TestCase):
         """
         The print_ function should produce the expected output.
         """
-        params = Parameters([AlphaHelix, BetaStrand], [Peaks, Troughs],
-                            limitPerLandmark=16, maxDistance=10, minDistance=0,
-                            distanceBase=1)
-        sc = SimpleConnector(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, BetaStrand],
+                                      trigPoints=[Peaks, Troughs],
+                                      limitPerLandmark=16, maxDistance=10,
+                                      minDistance=0, distanceBase=1)
+        sc = SimpleConnector(dbParams)
         subject = AARead('subject-id', 'FRRRFRRRFASAASA')
         sc.addSubject(subject)
         expected = (
             'Backends:\n'
             '  Name: backend\n'
             '  Hash count: 3\n'
-            '  Checksum: 1474134342\n'
+            '  Checksum: 2842633337\n'
             '  Subjects (with offsets) by hash:\n'
             '    A2:P:10\n'
             '      0 [[0, 9, 10, 1]]\n'
@@ -66,8 +67,8 @@ class UnusedConnectorTests:
         """
         If an unknown backend is added, a BackendException must be raised.
         """
-        params = Parameters([AlphaHelix], [])
-        db = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix])
+        db = Database(dbParams)
         error = "^Unknown backend 'name'\.$"
         six.assertRaisesRegex(self, BackendException, error, db.addBackend,
                               'name')
@@ -77,9 +78,9 @@ class UnusedConnectorTests:
         If a backend tries to connect but re-uses an existing backend name,
         a BackendException must be raised.
         """
-        params = Parameters([AlphaHelix], [])
-        db = Database(params)
-        name, checksum, params = db.addBackend()
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix])
+        db = Database(dbParams)
+        name, checksum, dbParams = db.addBackend()
         error = "^Backend %r is already connected\.$" % name
         six.assertRaisesRegex(self, BackendException, error, db.addBackend,
                               name)
@@ -89,10 +90,11 @@ class UnusedConnectorTests:
         When a new backend is added, the returned parameters must be those of
         the database.
         """
-        params1 = Parameters([AlphaHelix], [Peaks])
-        db = Database(params1)
-        name, checksum, params2 = db.addBackend()
-        self.assertIs(params1, params2)
+        dbParams1 = DatabaseParameters(landmarks=[AlphaHelix],
+                                       trigPoints=[Peaks])
+        db = Database(dbParams1)
+        name, checksum, dbParams2 = db.addBackend()
+        self.assertIs(dbParams1, dbParams2)
 
     def testFindWithNoBackends(self):
         """
@@ -108,8 +110,8 @@ class UnusedConnectorTests:
             def __init__(self, database):
                 pass
 
-        params = Parameters([AlphaHelix], [])
-        db = Database(params, NoBackendConnector)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix])
+        db = Database(dbParams, NoBackendConnector)
         query = AARead('id', 'AAA')
         error = "^No backends available\.$"
         six.assertRaisesRegex(self, BackendException, error, db.find, query)
@@ -119,8 +121,8 @@ class UnusedConnectorTests:
         If a database has one unreconnected backend, calling find() must raise
         BackendException with the expected error message.
         """
-        params = Parameters([AlphaHelix], [])
-        db = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix])
+        db = Database(dbParams)
         db.disconnectedBackends['dummy'] = None
         query = AARead('id', 'AAA')
         error = "^Backend 'dummy' has not reconnected\.$"
@@ -131,8 +133,8 @@ class UnusedConnectorTests:
         If a database has two unreconnected backends, calling find() must raise
         BackendException with the expected error message.
         """
-        params = Parameters([AlphaHelix], [])
-        db = Database(params)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix])
+        db = Database(dbParams)
         db.disconnectedBackends['dummy1'] = None
         db.disconnectedBackends['dummy2'] = None
         query = AARead('id', 'AAA')
@@ -153,8 +155,8 @@ class UnusedConnectorTests:
             def __init__(self, database):
                 pass
 
-        params = Parameters([AlphaHelix], [])
-        db = Database(params, NoBackendConnector)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix])
+        db = Database(dbParams, NoBackendConnector)
         error = "^Database has no backends\.$"
         six.assertRaisesRegex(self, BackendException, error, db.addSubject,
                               None)
@@ -174,8 +176,8 @@ class UnusedConnectorTests:
                 database.addBackend()
                 database.addBackend()
 
-        params = Parameters([AlphaHelix], [])
-        db = Database(params, TwoBackendConnector)
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix])
+        db = Database(dbParams, TwoBackendConnector)
         self.assertEqual(['backend-0', 'backend-1'],
                          sorted(db.backends.keys()))
         self.assertEqual(Checksum().update('backend-0').checksum,

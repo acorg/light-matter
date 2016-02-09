@@ -1,17 +1,9 @@
-from six.moves import builtins
 from unittest import TestCase
-
-try:
-    from unittest.mock import patch
-except ImportError:
-    from mock import patch
-
-from test.mocking import mockOpen
 
 from dark.reads import AARead
 
 from light.features import Landmark
-from light.landmarks.prosite import Prosite
+from light.landmarks.prosite import Prosite, _DATABASE, _loadDatabase
 
 
 class TestProsite(TestCase):
@@ -19,158 +11,185 @@ class TestProsite(TestCase):
     Tests for the Landmark.Prosite class.
     """
 
-    # A simple prosite JSON db with three patterns, to save on reading the
-    # default large prosite file on every test.
-    SIMPLE_DB = (
-        '{"accession": "00016", "pattern": "RGD"}'
-        '\n'
-        '{"accession": "60002", "pattern": "EGGELGY"}'
-        '\n'
-        '{"accession": "00021", "pattern": "[FY]{1,2}C[RH].{3,4}[^WY]C"}'
-    )
-
     def testFindWithoutMotif(self):
         """
         The find method must return an empty generator when no motif is
         present.
         """
         read = AARead('id', 'FFFFFFFFFFFFFFFFFFFFFFFFFFF')
-        mockOpener = mockOpen(read_data=self.SIMPLE_DB)
-        with patch.object(builtins, 'open', mockOpener):
-            landmark = Prosite()
-            result = list(landmark.find(read))
-            self.assertEqual([], result)
+        finder = Prosite()
+        result = list(finder.find(read))
+        self.assertEqual([], result)
 
     def testFindOneMotifBeginning(self):
         """
         The find method must find one motif at the beginning of a sequence.
         """
         read = AARead('id', 'EGGELGYAAAAAAAA')
-        mockOpener = mockOpen(read_data=self.SIMPLE_DB)
-        with patch.object(builtins, 'open', mockOpener):
-            landmark = Prosite()
-            result = list(landmark.find(read))
-            self.assertEqual([Landmark('Prosite', 'PS', 0, 7, '60002')],
-                             result)
+        finder = Prosite()
+        result = list(finder.find(read))
+        self.assertEqual([Landmark('Prosite', 'PS', 1, 6, '00008'),
+                          Landmark('Prosite', 'PS', 0, 7, '60002')],
+                         result)
 
     def testFindOneMotifMiddle(self):
         """
-        The find method must find one motif in the middle of a sequence.
+        The find method must find a motif in the middle of a sequence.
         """
         read = AARead('id', 'AAAAAAAAEGGELGYAAAAAAAA')
-        mockOpener = mockOpen(read_data=self.SIMPLE_DB)
-        with patch.object(builtins, 'open', mockOpener):
-            landmark = Prosite()
-            result = list(landmark.find(read))
-            self.assertEqual([Landmark('Prosite', 'PS', 8, 7, '60002')],
-                             result)
+        finder = Prosite()
+        result = list(finder.find(read))
+        self.assertEqual([Landmark('Prosite', 'PS', 9, 6, '00008'),
+                          Landmark('Prosite', 'PS', 8, 7, '60002')],
+                         result)
 
     def testFindOneMotifEnd(self):
         """
-        The find method must find one motif at the end of a sequence.
+        The find method must find a motif at the end of a sequence.
         """
         read = AARead('id', 'AAAAAAAAEGGELGY')
-        mockOpener = mockOpen(read_data=self.SIMPLE_DB)
-        with patch.object(builtins, 'open', mockOpener):
-            landmark = Prosite()
-            result = list(landmark.find(read))
-            self.assertEqual([Landmark('Prosite', 'PS', 8, 7, '60002')],
-                             result)
+        finder = Prosite()
+        result = list(finder.find(read))
+        self.assertEqual([Landmark('Prosite', 'PS', 9, 6, '00008'),
+                          Landmark('Prosite', 'PS', 8, 7, '60002')],
+                         result)
 
     def testFindTwoIdenticalMotifsNotAdjacent(self):
         """
-        The find method must find two identical motifs.
+        The find method must find repeating identical motifs.
         """
         read = AARead('id', 'EGGELGYAAAAAAAAEGGELGY')
-        mockOpener = mockOpen(read_data=self.SIMPLE_DB)
-        with patch.object(builtins, 'open', mockOpener):
-            landmark = Prosite()
-            result = list(landmark.find(read))
-            self.assertEqual([Landmark('Prosite', 'PS', 0, 7, '60002'),
-                              Landmark('Prosite', 'PS', 15, 7, '60002')],
-                             result)
+        finder = Prosite()
+        result = list(finder.find(read))
+        self.assertEqual([Landmark('Prosite', 'PS', 1, 6, '00008'),
+                          Landmark('Prosite', 'PS', 16, 6, '00008'),
+                          Landmark('Prosite', 'PS', 0, 7, '60002'),
+                          Landmark('Prosite', 'PS', 15, 7, '60002')],
+                         result)
 
     def testFindTwoIdenticalMotifsAdjacent(self):
         """
         The find method must find two identical motifs.
         """
         read = AARead('id', 'EGGELGYEGGELGY')
-        mockOpener = mockOpen(read_data=self.SIMPLE_DB)
-        with patch.object(builtins, 'open', mockOpener):
-            landmark = Prosite()
-            result = list(landmark.find(read))
-            self.assertEqual([Landmark('Prosite', 'PS', 0, 7, '60002'),
-                              Landmark('Prosite', 'PS', 7, 7, '60002')],
-                             result)
+        finder = Prosite()
+        result = list(finder.find(read))
+        self.assertEqual([Landmark('Prosite', 'PS', 1, 6, '00008'),
+                          Landmark('Prosite', 'PS', 8, 6, '00008'),
+                          Landmark('Prosite', 'PS', 0, 7, '60002'),
+                          Landmark('Prosite', 'PS', 7, 7, '60002')],
+                         result)
 
-    def testFindTwoDifferentMotifs(self):
+    def testThreeDifferentMotifsTwoOccurences(self):
         """
-        The find method must find two different motifs.
-        """
-        read = AARead('id', 'RGDFRRRFEGGELGY')
-        mockOpener = mockOpen(read_data=self.SIMPLE_DB)
-        with patch.object(builtins, 'open', mockOpener):
-            landmark = Prosite()
-            result = list(landmark.find(read))
-            self.assertEqual([Landmark('Prosite', 'PS', 0, 3, '00016'),
-                              Landmark('Prosite', 'PS', 8, 7, '60002')],
-                             result)
-
-    def testTwoDifferentMotifsTwoOccurences(self):
-        """
-        The find method must find two different motifs with two occurences.
+        The find method must find three different motifs with two occurences
+        each.
         """
         read = AARead('id', 'EGGELGYARGDAAARGDAAEGGELGY')
-        mockOpener = mockOpen(read_data=self.SIMPLE_DB)
-        with patch.object(builtins, 'open', mockOpener):
-            landmark = Prosite()
-            result = list(landmark.find(read))
-            self.assertEqual([Landmark('Prosite', 'PS', 8, 3, '00016'),
-                              Landmark('Prosite', 'PS', 14, 3, '00016'),
-                              Landmark('Prosite', 'PS', 0, 7, '60002'),
-                              Landmark('Prosite', 'PS', 19, 7, '60002')],
-                             result)
+        finder = Prosite()
+        result = list(finder.find(read))
+        self.assertEqual([Landmark('Prosite', 'PS', 1, 6, '00008'),
+                          Landmark('Prosite', 'PS', 20, 6, '00008'),
+                          Landmark('Prosite', 'PS', 8, 3, '00016'),
+                          Landmark('Prosite', 'PS', 14, 3, '00016'),
+                          Landmark('Prosite', 'PS', 0, 7, '60002'),
+                          Landmark('Prosite', 'PS', 19, 7, '60002')],
+                         result)
 
-    def testFindWithPattern(self):
+    def testMatchAlteration(self):
         """
         The find method must work on a regex that contains alternation (e.g.,
-        [ABC]), negated alternation (e.g., [^ABC]), and repetition (e.g.,
-        .(7,8) or [ABC](1,3)).
+        [ABC]).
         """
-        # The pattern we're matching (see above) is [FY]{1,2}C[RH].{3,4}[^WY]C
-        mockOpener = mockOpen(read_data=self.SIMPLE_DB)
-        with patch.object(builtins, 'open', mockOpener):
-            landmark = Prosite()
-            # Put 2 X's in for .(3,4)
-            result = list(landmark.find(AARead('id', 'FCRXXBC')))
-            self.assertEqual([], result)
-            # Put 3 X's in for .(3,4)
-            result = list(landmark.find(AARead('id', 'FCRXXXBC')))
-            self.assertEqual([Landmark('Prosite', 'PS', 0, 8, '00021')],
-                             result)
-            # Put 4 X's in for .(3,4)
-            result = list(landmark.find(AARead('id', 'FCRXXXXBC')))
-            self.assertEqual([Landmark('Prosite', 'PS', 0, 9, '00021')],
-                             result)
-            # Put 5 X's in for .(3,4)
-            result = list(landmark.find(AARead('id', 'FCRXXXXXBC')))
-            self.assertEqual([], result)
-            # Put X in for [FY]
-            result = list(landmark.find(AARead('id', 'XCRXXXBC')))
-            self.assertEqual([], result)
-            # Put W in for [^WY]
-            result = list(landmark.find(AARead('id', 'FCRXXXXWC')))
-            self.assertEqual([], result)
-            # Put YY in for [FY](1,2)
-            result = list(landmark.find(AARead('id', 'YYCRXXXBC')))
-            self.assertEqual([Landmark('Prosite', 'PS', 0, 9, '00021')],
-                             result)
+        # Make sure we know what pattern is actually being matched.
+        self.assertEqual('[ST].[RK]', _DATABASE[2]['regex'].pattern)
+        self.assertEqual('00005', _DATABASE[2]['accession'])
 
-    def testDefaultDatabase(self):
+        finder = Prosite()
+
+        result = list(finder.find(AARead('id', 'SXR')))
+        self.assertEqual([Landmark('Prosite', 'PS', 0, 3, '00005')], result)
+
+        result = list(finder.find(AARead('id', 'TXR')))
+        self.assertEqual([Landmark('Prosite', 'PS', 0, 3, '00005')], result)
+
+        result = list(finder.find(AARead('id', 'SXK')))
+        self.assertEqual([Landmark('Prosite', 'PS', 0, 3, '00005')], result)
+
+    def testMatchNegatedAlteration(self):
         """
-        When no database file is passed to Prosite, it must find and open
-        the default database, which must have the correct length.
+        The find method must work on a regex that contains negated alternation
+        (e.g., [^ABC]).
         """
-        landmark = Prosite()
+        # Make sure we know what pattern is actually being matched.
+        self.assertEqual('G[^EDRKHPFYW].{2}[STAGCN][^P]',
+                         _DATABASE[5]['regex'].pattern)
+        self.assertEqual('00008', _DATABASE[5]['accession'])
+
+        finder = Prosite()
+
+        result = list(finder.find(AARead('id', 'GAXXSA')))
+        self.assertEqual([Landmark('Prosite', 'PS', 0, 6, '00008')], result)
+
+        result = list(finder.find(AARead('id', 'GEXXSA')))
+        self.assertEqual([], result)
+
+        result = list(finder.find(AARead('id', 'GAXXSP')))
+        self.assertEqual([], result)
+
+    def testMatchSpecificRepetition(self):
+        """
+        The find method must work on a regex that contains a pattern with a
+        fixed number of repeats (e.g., [RK]{2}.[ST]).
+        """
+        # Make sure we know what pattern is actually being matched.
+        self.assertEqual('[RK]{2}.[ST]',
+                         _DATABASE[1]['regex'].pattern)
+        self.assertEqual('00004', _DATABASE[1]['accession'])
+
+        finder = Prosite()
+
+        result = list(finder.find(AARead('id', 'RRXS')))
+        self.assertEqual([Landmark('Prosite', 'PS', 0, 4, '00004')], result)
+
+        result = list(finder.find(AARead('id', 'RRRRX')))
+        self.assertEqual([], result)
+
+    def testMatchRepetitionRange(self):
+        """
+        The find method must work on a regex that contains a pattern with a
+        variable number of repeats (e.g., [RK]{2,4}.[ST]).
+        """
+        # Make sure we know what pattern is actually being matched.
+        self.assertEqual('[RK].{2,3}[DE].{2,3}Y',
+                         _DATABASE[4]['regex'].pattern)
+        self.assertEqual('00007', _DATABASE[4]['accession'])
+
+        finder = Prosite()
+
+        result = list(finder.find(AARead('id', 'RXXDXXY')))
+        self.assertEqual([Landmark('Prosite', 'PS', 0, 7, '00007')], result)
+
+        result = list(finder.find(AARead('id', 'RXDXXY')))
+        self.assertEqual([], result)
+
+        result = list(finder.find(AARead('id', 'RXXXDXXY')))
+        self.assertEqual([Landmark('Prosite', 'PS', 0, 8, '00007')], result)
+
+        result = list(finder.find(AARead('id', 'RXXXDXXXY')))
+        self.assertEqual([Landmark('Prosite', 'PS', 0, 9, '00007')], result)
+
+        result = list(finder.find(AARead('id', 'RXXXDXXXXY')))
+        self.assertEqual([], result)
+
+    def testLoadDatabase(self):
+        """
+        The Prosite database loading function must work and produce the
+        expected result.
+        """
+        db = _loadDatabase()
         # The 1309 is based on Prosite database 20.119 of 14-Oct-2015
-        self.assertEqual(1309, len(landmark.database))
+        self.assertEqual(1309, len(db))
+        expectedKeys = {'regex', 'accession'}
+        for motif in db:
+            self.assertEqual(expectedKeys, set(motif.keys()))

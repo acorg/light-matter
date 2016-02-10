@@ -346,6 +346,113 @@ class SignificantBinScore(object):
         return str(result)
 
 
+def addBin(bin_, allQueryFeatures, allSubjectFeatures,
+           overallMatchedQueryOffsets, overallUnmatchedQueryOffsets,
+           queryOffsetsInBins, overallMatchedSubjectOffsets,
+           overallUnmatchedSbjctOffsets, subjectOffsetsInBins):
+    """
+    Add a bin to the overall score calculation.
+
+    @param bin_: A C{light.histogram.Histogram} bin.
+    @param allQueryFeatures: A C{set} of all features (landmarks and trig
+        points) that are in the pairs in the query.
+    @param allSubjectFeatures: A C{set} of all features (landmarks and trig
+        points) that are in the pairs in the query.
+    @param overallMatchedQueryOffsets: A C{set} of all int offsets that are in
+        matching features (and thus inside the matched region) in the query.
+    @param overallUnmatchedQueryOffsets: A C{set} of all int offsets that are
+        in features that don't match, but which are inside the matched region
+        in the query.
+    @param queryOffsetsInBins: A C{set} of all offsets in all bins in the query
+        (whether or not the offsets are in matched features, unmatched
+        features, or not in any feature).
+    @param overallMatchedSubjectOffsets: A C{set} of all int offsets that are
+        in matching features (and thus inside the matched region) in the
+        subject.
+    @param overallUnmatchedSbjctOffsets: A C{set} of all int offsets that are
+        in features that don't match, but which are inside the matched region
+        in the subject.
+    @param subjectOffsetsInBins: A C{set} of all offsets in all bins in the
+        subject (whether or not the offsets are in matched features, unmatched
+        features, or not in any feature).
+    """
+    binResult = {}
+    # Query.
+    matchedOffsets, unmatchedOffsets, minOffset, maxOffset = (
+        offsetsInBin(bin_, 'query', allQueryFeatures))
+    overallMatchedQueryOffsets.update(matchedOffsets)
+    overallUnmatchedQueryOffsets.update(unmatchedOffsets)
+    queryOffsetsInBins.update(range(minOffset, maxOffset + 1))
+
+    # Subject.
+    matchedOffsets, unmatchedOffsets, minOffset, maxOffset = (
+        offsetsInBin(bin_, 'subject', allSubjectFeatures))
+    overallMatchedSubjectOffsets.update(matchedOffsets)
+    overallUnmatchedSbjctOffsets.update(unmatchedOffsets)
+    subjectOffsetsInBins.update(range(minOffset, maxOffset + 1))
+
+    # Make sure none of the overall matched offsets are in the overall
+    # unmatchedOffsets.
+    overallMatchedQueryOffsets -= overallUnmatchedQueryOffsets
+    overallMatchedSubjectOffsets -= overallUnmatchedSbjctOffsets
+
+    # Overall score calculation step 1: the matched region score (MRS).
+    matchedOffsetCount = (len(overallMatchedQueryOffsets) +
+                          len(overallMatchedSubjectOffsets))
+    totalOffsetCount = (matchedOffsetCount +
+                        len(overallUnmatchedQueryOffsets) +
+                        len(overallUnmatchedSbjctOffsets))
+
+    try:
+        matchedRegionScore = matchedOffsetCount / totalOffsetCount
+    except ZeroDivisionError:
+        # A small optimization could be done here. If the MRS is zero,
+        # we already know the overall score will be zero, so we could
+        # return at this point. To keep things simple, for now, just
+        # continue with the overall calculation.
+        matchedRegionScore = 0.0
+
+    # Overall score calculation step 2: the length normalizer (LN).
+
+    normalizerQuery, numeratorQuery, denominatorQuery = (
+        computeLengthNormalizer(
+            allQueryFeatures, overallMatchedQueryOffsets,
+            overallUnmatchedQueryOffsets, queryOffsetsInBins))
+
+    # There is a small optimization that could be done at this point.
+    # If the query normalizer is 1.0, don't bother to compute a
+    # normalizer for the subject (due to the use of max() below and
+    # because a normalizer is always <= 1.0).  But to keep the code
+    # simpler, for now, we still compute both normalizers.
+    normalizerSubject, numeratorSubject, denominatorSubject = (
+        computeLengthNormalizer(
+            allSubjectFeatures, overallMatchedSubjectOffsets,
+            overallUnmatchedSbjctOffsets, subjectOffsetsInBins))
+
+    # Calculate the final score, as descibed in the docstring.
+    overallScore = matchedRegionScore * max(normalizerQuery,
+                                            normalizerSubject)
+
+    binResult['overallScore'] = overallScore
+    binResult['overallMatchedQueryOffsets'] = overallMatchedQueryOffsets
+    binResult['overallUnmatchedQueryOffsets'] = overallUnmatchedQueryOffsets
+    binResult['queryOffsetsInBins'] = queryOffsetsInBins
+    binResult['overallMatchedSubjectOffsets'] = overallMatchedSubjectOffsets
+    binResult['overallUnmatchedSbjctOffsets'] = overallUnmatchedSbjctOffsets
+    binResult['subjectOffsetsInBins'] = subjectOffsetsInBins
+    binResult['denominatorQuery'] = denominatorQuery
+    binResult['denominatorSubject'] = denominatorSubject
+    binResult['matchedOffsetCount'] = matchedOffsetCount
+    binResult['matchedRegionScore'] = matchedRegionScore
+    binResult['numeratorQuery'] = numeratorQuery
+    binResult['numeratorSubject'] = numeratorSubject
+    binResult['normalizerQuery'] = normalizerQuery
+    binResult['normalizerSubject'] = normalizerSubject
+    binResult['totalOffsetCount'] = totalOffsetCount
+
+    return binResult
+
+
 class GreedySignificantBinScore(object):
     """
     Calculate an overall score based on the significant bins that lead to an
@@ -408,11 +515,12 @@ class GreedySignificantBinScore(object):
             if there are no significant bins) and a C{dict} with information
             about the score.
         """
-        # Don't attempt to calculate an overall score if there are no
-        # significant bins.
-        # We could also do more checking here and use the FeatureAAScore of the
+        # We could do more checking here and use the FeatureAAScore of the
         # best bin as the overall score if there is only one significant bin or
         # if the score of the best bin is 1.0.
+
+        # Don't attempt to calculate an overall score if there are no
+        # significant bins.
         if not self._significantBins:
             analysis = {
                 'score': None,
@@ -444,7 +552,7 @@ class GreedySignificantBinScore(object):
         overallUnmatchedSubjectOffsets = set()
 
         # The set of all offsets in all bins (whether or not the offsets are in
-        # matched features, unmatched features, or not in any feature.
+        # matched features, unmatched features, or not in any feature).
         queryOffsetsInBins = set()
         subjectOffsetsInBins = set()
 
@@ -454,70 +562,59 @@ class GreedySignificantBinScore(object):
         # Keep track of the bins considered.
         index = 0
 
+        # Keep track of variables
+        denominatorQuery = 0.0
+        denominatorSubject = 0.0
+        matchedOffsetCount = 0
+        matchedRegionScore = 0.0
+        numeratorQuery = 0.0
+        numeratorSubject = 0.0
+        normalizerQuery = 0.0
+        normalizerSubject = 0.0
+        totalOffsetCount = 0
+
         # Consider the significantBins one by one until the overall score drops
         # below the bestBinScore, or we run out of bins.
         for bin_ in (sb['bin'] for sb in self._significantBins):
-            # Query.
-            matchedOffsets, unmatchedOffsets, minOffset, maxOffset = (
-                offsetsInBin(bin_, 'query', allQueryFeatures))
-            overallMatchedQueryOffsets.update(matchedOffsets)
-            overallUnmatchedQueryOffsets.update(unmatchedOffsets)
-            queryOffsetsInBins.update(range(minOffset, maxOffset + 1))
 
-            # Subject.
-            matchedOffsets, unmatchedOffsets, minOffset, maxOffset = (
-                offsetsInBin(bin_, 'subject', allSubjectFeatures))
-            overallMatchedSubjectOffsets.update(matchedOffsets)
-            overallUnmatchedSubjectOffsets.update(unmatchedOffsets)
-            subjectOffsetsInBins.update(range(minOffset, maxOffset + 1))
-
-            # Make sure none of the overall matched offsets are in the overall
-            # unmatchedOffsets.
-            overallMatchedQueryOffsets -= overallUnmatchedQueryOffsets
-            overallMatchedSubjectOffsets -= overallUnmatchedSubjectOffsets
-
-            # Overall score calculation step 1: the matched region score (MRS).
-            matchedOffsetCount = (len(overallMatchedQueryOffsets) +
-                                  len(overallMatchedSubjectOffsets))
-            totalOffsetCount = (matchedOffsetCount +
-                                len(overallUnmatchedQueryOffsets) +
-                                len(overallUnmatchedSubjectOffsets))
-
-            try:
-                matchedRegionScore = matchedOffsetCount / totalOffsetCount
-            except ZeroDivisionError:
-                # A small optimization could be done here. If the MRS is zero,
-                # we already know the overall score will be zero, so we could
-                # return at this point. To keep things simple, for now, just
-                # continue with the overall calculation.
-                matchedRegionScore = 0.0
-
-            # Overall score calculation step 2: the length normalizer (LN).
-
-            normalizerQuery, numeratorQuery, denominatorQuery = (
-                computeLengthNormalizer(
-                    allQueryFeatures, overallMatchedQueryOffsets,
-                    overallUnmatchedQueryOffsets, queryOffsetsInBins))
-
-            # There is a small optimization that could be done at this point.
-            # If the query normalizer is 1.0, don't bother to compute a
-            # normalizer for the subject (due to the use of max() below and
-            # because a normalizer is always <= 1.0).  But to keep the code
-            # simpler, for now, we still compute both normalizers.
-            normalizerSubject, numeratorSubject, denominatorSubject = (
-                computeLengthNormalizer(
-                    allSubjectFeatures, overallMatchedSubjectOffsets,
-                    overallUnmatchedSubjectOffsets, subjectOffsetsInBins))
-
-            # Calculate the final score, as descibed in the docstring.
-            newOverallScore = matchedRegionScore * max(normalizerQuery,
-                                                       normalizerSubject)
+            r = addBin(bin_, allQueryFeatures,
+                       allSubjectFeatures,
+                       overallMatchedQueryOffsets,
+                       overallUnmatchedQueryOffsets,
+                       queryOffsetsInBins,
+                       overallMatchedSubjectOffsets,
+                       overallUnmatchedSubjectOffsets,
+                       subjectOffsetsInBins)
 
             # Check if we can add more bins, or if we need to return here.
-            if newOverallScore >= overallScore:
+            if r['overallScore'] >= overallScore:
+                # The new overallScore is higher or equal to the current
+                # overallScore. Continue adding the next bin using the newly
+                # calculated values.
                 index += 1
-                overallScore = newOverallScore
+                overallScore = r['overallScore']
+                overallMatchedQueryOffsets = r['overallMatchedQueryOffsets']
+                overallUnmatchedQueryOffsets = (
+                    r['overallUnmatchedQueryOffsets'])
+                queryOffsetsInBins = r['queryOffsetsInBins']
+                overallMatchedSubjectOffsets = (
+                    r['overallMatchedSubjectOffsets'])
+                overallUnmatchedSubjectOffsets = (
+                    r['overallUnmatchedSbjctOffsets'])
+                subjectOffsetsInBins = r['subjectOffsetsInBins']
+                denominatorQuery = r['denominatorQuery']
+                denominatorSubject = r['denominatorSubject']
+                matchedOffsetCount = r['matchedOffsetCount']
+                matchedRegionScore = r['matchedRegionScore']
+                numeratorQuery = r['numeratorQuery']
+                numeratorSubject = r['numeratorSubject']
+                normalizerQuery = r['normalizerQuery']
+                normalizerSubject = r['normalizerSubject']
+                totalOffsetCount = r['totalOffsetCount']
             else:
+                # The new overallScore is lower than the current overallScore.
+                # Return the analysis using the values calculated for the
+                # previous bin.
                 analysis = {
                     'denominatorQuery': denominatorQuery,
                     'denominatorSubject': denominatorSubject,
@@ -539,6 +636,9 @@ class GreedySignificantBinScore(object):
                 }
                 return overallScore, analysis
 
+        # We have reached the last bin without returning beforehand, which
+        # means that the last overallScore was higher than the second to last
+        # overallScore. Return the score and the analysis using the new values.
         analysis = {
             'denominatorQuery': denominatorQuery,
             'denominatorSubject': denominatorSubject,

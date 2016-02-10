@@ -1,28 +1,25 @@
 from random import sample
 
-from light.features import Landmark, Finder
+from light.features import Landmark
+from light.finder import Finder
 
 
 class RandomLandmark(Finder):
     """
-    A class for computing random landmarks of length 1. This landmark finder
-    will generate random landmarks. The number of landarks is determined by the
-    density parameter.
+    A class for producing random landmarks of length 1. The number of landmarks
+    generated is determined by the database randomLandmarkDensity parameter.
     """
     NAME = 'RandomLandmark'
     SYMBOL = 'RL'
 
-    def find(self, read, density=None):
+    def find(self, read):
         """
         A function that returns a specified number of landmarks at random
         positions.
 
         @param read: An instance of C{dark.reads.AARead}.
-        @param density: A C{float} specifiying the density of landmarks to be
-            returned.
         """
-        density = density or 0.1
-        landmarkNumber = int(len(read) * density)
+        landmarkNumber = int(len(read) * self._dbParams.randomLandmarkDensity)
         offsets = sample(range(len(read)), landmarkNumber)
         for offset in offsets:
             yield Landmark(self.NAME, self.SYMBOL, offset, 1)

@@ -8,7 +8,7 @@ from dark.alignments import (
     Alignment, ReadsAlignments, ReadsAlignmentsParams, ReadAlignments)
 from dark.utils import numericallySortFilenames
 
-from light.parameters import Parameters
+from light.parameters import DatabaseParameters
 
 
 class LightAlignment(Alignment):
@@ -108,7 +108,7 @@ class LightReadsAlignments(ReadsAlignments):
                 reader = self._getReader(resultFilename)
                 differences = self.params.applicationParams.compare(
                     reader.params)
-                if differences:
+                if differences is not None:
                     raise ValueError(
                         'Incompatible light matter parameters found. The '
                         'parameters in %s differ from those originally found '
@@ -184,7 +184,7 @@ class JSONRecordsReader(object):
             self._fp = open(filename)
 
         try:
-            self.params = Parameters.restore(self._fp)
+            self.params = DatabaseParameters.restore(self._fp)
         except ValueError as e:
             raise ValueError(
                 'Could not convert first line of %r to JSON (%s).' % (

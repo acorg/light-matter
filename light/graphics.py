@@ -776,7 +776,7 @@ class PlotHashesInSubjectAndRead(object):
 
         self.queryHashes = self.result.nonMatchingHashes
         backend = Backend()
-        backend.configure(database.params)
+        backend.configure(database.dbParams)
         self.subjectHashes = backend.getHashes(backend.scan(subject))
         self.matchingHashes = defaultdict(list)
 
@@ -1263,7 +1263,7 @@ class SequenceFeatureAnalysis:
 
         db = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
         backend = Backend()
-        backend.configure(db.params)
+        backend.configure(db.dbParams)
         scannedSequence = backend.scan(sequence)
 
         self.offsets = defaultdict(set)
@@ -1279,10 +1279,10 @@ class SequenceFeatureAnalysis:
             self.offsets[feature.name].update(feature.coveredOffsets())
 
         self.landmarksNotFound = (
-            set(kwargs.get('landmarkNames', [])) - self.landmarkNames)
+            set(kwargs.get('landmarks', [])) - self.landmarkNames)
 
         self.trigPointsNotFound = (
-            set(kwargs.get('trigPointNames', [])) - self.trigPointNames)
+            set(kwargs.get('trigPoints', [])) - self.trigPointNames)
 
         self.allNames = (sorted(self.landmarkNames) +
                          sorted(self.trigPointNames))

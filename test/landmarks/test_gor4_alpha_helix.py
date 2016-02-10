@@ -2,9 +2,9 @@ from unittest import TestCase
 
 from dark.reads import AARead
 
-from light.distance import scale
+from light.distance import scaleLog
 from light.features import Landmark
-from light.parameters import Parameters
+from light.parameters import DatabaseParameters
 from light.backend import Backend
 from light.landmarks.gor4_alpha_helix import GOR4AlphaHelix
 from light.landmarks.gor4_beta_strand import GOR4BetaStrand
@@ -41,8 +41,8 @@ class TestGOR4AlphaHelix(TestCase):
         read = AARead('id', seq)
         landmark = GOR4AlphaHelix()
         result = list(landmark.find(read))
-        scaled7 = scale(7, Parameters.DEFAULT_FEATURE_LENGTH_BASE)
-        scaled11 = scale(11, Parameters.DEFAULT_FEATURE_LENGTH_BASE)
+        scaled7 = scaleLog(7, DatabaseParameters.DEFAULT_FEATURE_LENGTH_BASE)
+        scaled11 = scaleLog(11, DatabaseParameters.DEFAULT_FEATURE_LENGTH_BASE)
         # The GOR IV secondary structure prediction is
         # 'CCCCCCCCCCHHHHHHHCCHHHHHHHHHHHCCCCEEEEECCEEEEEEEEC'
         self.assertEqual([Landmark('GOR4AlphaHelix', 'GA', 10, 7, scaled7),
@@ -59,10 +59,11 @@ class TestGOR4AlphaHelix(TestCase):
         seq = 'DKATIPSESPFAAAEVADGAIVVDIAKMKYETPELHVKVGDTVTWINREA'
         read = AARead('id', seq)
         featureLengthBase = 1.5
-        landmark = GOR4AlphaHelix(featureLengthBase)
+        dbParams = DatabaseParameters(featureLengthBase=featureLengthBase)
+        landmark = GOR4AlphaHelix(dbParams)
         result = list(landmark.find(read))
-        scaled7 = scale(7, featureLengthBase)
-        scaled11 = scale(11, featureLengthBase)
+        scaled7 = scaleLog(7, featureLengthBase)
+        scaled11 = scaleLog(11, featureLengthBase)
         # The GOR IV secondary structure prediction is
         # 'CCCCCCCCCCHHHHHHHCCHHHHHHHHHHHCCCCEEEEECCEEEEEEEEC'
         self.assertEqual([Landmark('GOR4AlphaHelix', 'GA', 10, 7, scaled7),
@@ -75,10 +76,10 @@ class TestGOR4AlphaHelix(TestCase):
         """
         seq = 'DKATIPSESPFAAAEVAAIVFAAAEVAAIVVFAAAEVAAIVVDIAKMKYFAAAEVAAIVVDI'
         read = AARead('id', seq)
-        featureLengthBase = 1.5
-        landmark = GOR4AlphaHelix(featureLengthBase)
+        dbParams = DatabaseParameters(featureLengthBase=1.5)
+        landmark = GOR4AlphaHelix(dbParams)
         result = list(landmark.find(read))
-        scaled47 = scale(47, featureLengthBase)
+        scaled47 = scaleLog(47, 1.5)
         self.assertEqual([Landmark('GOR4AlphaHelix', 'GA', 10, 47, scaled47)],
                          result)
 
@@ -106,9 +107,11 @@ class TestGOR4BetaStrandOverlap(TestCase):
         base (currently 1.1).
         """
         alphaHelixBe = Backend()
-        alphaHelixBe.configure(Parameters([GOR4AlphaHelix], []))
+        alphaHelixBe.configure(DatabaseParameters(landmarks=[GOR4AlphaHelix],
+                                                  trigPoints=[]))
         betaStrandBe = Backend()
-        betaStrandBe.configure(Parameters([GOR4BetaStrand], []))
+        betaStrandBe.configure(DatabaseParameters(landmarks=[GOR4BetaStrand],
+                                                  trigPoints=[]))
         alphaHelixScanned = alphaHelixBe.scan(self.READ)
         betaStrandScanned = betaStrandBe.scan(self.READ)
         alphaHelixIndices = alphaHelixScanned.coveredIndices()
@@ -123,10 +126,12 @@ class TestGOR4BetaStrandOverlap(TestCase):
         """
         alphaHelixBe = Backend()
         alphaHelixBe.configure(
-            Parameters([GOR4AlphaHelix], [], distanceBase=1.0))
+            DatabaseParameters(landmarks=[GOR4AlphaHelix], trigPoints=[],
+                               distanceBase=1.0))
         betaStrandBe = Backend()
         betaStrandBe.configure(
-            Parameters([GOR4BetaStrand], [], distanceBase=1.0))
+            DatabaseParameters(landmarks=[GOR4BetaStrand], trigPoints=[],
+                               distanceBase=1.0))
         alphaHelixScanned = alphaHelixBe.scan(self.READ)
         betaStrandScanned = betaStrandBe.scan(self.READ)
         alphaHelixIndices = alphaHelixScanned.coveredIndices()
@@ -140,10 +145,11 @@ class TestGOR4BetaStrandOverlap(TestCase):
         """
         alphaHelixBe = Backend()
         alphaHelixBe.configure(
-            Parameters([GOR4AlphaHelix], [], distanceBase=1.5))
+            DatabaseParameters(landmarks=[GOR4AlphaHelix], trigPoints=[],
+                               distanceBase=1.5))
         betaStrandBe = Backend()
         betaStrandBe.configure(
-            Parameters([GOR4BetaStrand], [], distanceBase=1.5))
+            DatabaseParameters([GOR4BetaStrand], [], distanceBase=1.5))
         alphaHelixScanned = alphaHelixBe.scan(self.READ)
         betaStrandScanned = betaStrandBe.scan(self.READ)
         alphaHelixIndices = alphaHelixScanned.coveredIndices()

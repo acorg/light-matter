@@ -1,7 +1,9 @@
 import re
 
 from dark.aa import PROPERTIES, HYDROPHOBIC
-from light.features import Landmark, Finder
+
+from light.features import Landmark
+from light.finder import Finder
 
 ALPHA_HELIX_3_10 = re.compile('OIIO(?:IIO)+')
 

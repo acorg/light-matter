@@ -65,7 +65,7 @@ class MaxBinHeight(object):
         self._histogram = histogram
         # A top-level import of Database would be circular.
         from light.database import Database
-        db = Database(database.params)
+        db = Database(database.dbParams)
         _, subjectIndex, _ = db.addSubject(query)
         from light.parameters import FindParameters
         findParams = FindParameters(significanceMethod='Always')
@@ -103,7 +103,7 @@ class MeanBinHeight(object):
         self._histogram = histogram
         # A top-level import of Database would be circular.
         from light.database import Database
-        db = Database(database.params)
+        db = Database(database.dbParams)
         _, subjectIndex, _ = db.addSubject(query)
         from light.parameters import FindParameters
         findParams = FindParameters(significanceMethod='Always')

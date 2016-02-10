@@ -87,15 +87,15 @@ class CalculateOverlap(object):
                  'GOR4AlphaHelix', 'GOR4BetaStrand', 'GOR4Coil', 'Prosite',
                  'AminoAcids', 'IndividualPeaks', 'IndividualTroughs', 'Peaks',
                  'Troughs', 'H', 'G', 'I', 'E']
-        if 'landmarkNames' not in kwargs:
-            kwargs['landmarkNames'] = [c.NAME for c in ALL_LANDMARK_CLASSES]
-        if 'trigPointNames' not in kwargs:
-            kwargs['trigPointNames'] = ([c.NAME for c in ALL_TRIG_CLASSES if
-                                         c.NAME != 'Volume'])
+        if 'landmarks' not in kwargs:
+            kwargs['landmarks'] = [c.NAME for c in ALL_LANDMARK_CLASSES]
+        if 'trigPoints' not in kwargs:
+            kwargs['trigPoints'] = ([c.NAME for c in ALL_TRIG_CLASSES if
+                                     c.NAME != 'Volume'])
 
         db = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
         backend = Backend()
-        backend.configure(db.params)
+        backend.configure(db.dbParams)
 
         sequenceFeatures = defaultdict(set)
         totals = defaultdict(set)

@@ -213,11 +213,11 @@ class FeatureMatchingScore:
     @param query: A C{dark.reads.AARead} instance.
     @param subject: A C{light.subject.Subject} instance (a subclass of
         C{dark.reads.AARead}).
-    @param params: A C{Parameters} instance.
+    @param dbParams: A C{DatabaseParameters} instance.
     @param findParams: An instance of C{light.parameters.FindParameters} or
         C{None} to use default find parameters.
     """
-    def __init__(self, histogram, query, subject, params, findParams=None):
+    def __init__(self, histogram, query, subject, dbParams, findParams=None):
         self._histogram = histogram
         self._queryLen = len(query)
         self._subjectLen = len(subject)
@@ -225,7 +225,7 @@ class FeatureMatchingScore:
         self._findParams = findParams or FindParameters()
         from light.backend import Backend
         backend = Backend()
-        backend.configure(params)
+        backend.configure(dbParams)
         scannedQuery = backend.scan(query)
         self._allQueryFeatures = set(scannedQuery.landmarks +
                                      scannedQuery.trigPoints)
@@ -322,16 +322,16 @@ class FeatureAAScore:
     @param query: A C{dark.reads.AARead} instance.
     @param subject: A C{light.subject.Subject} instance (a subclass of
         C{dark.reads.AARead}).
-    @param params: A C{Parameters} instance.
+    @param dbParams: A C{DatabaseParameters} instance.
     """
-    def __init__(self, histogram, query, subject, params):
+    def __init__(self, histogram, query, subject, dbParams):
         self._histogram = histogram
         self._queryLen = len(query)
         self._subjectLen = len(subject)
 
         from light.backend import Backend
         backend = Backend()
-        backend.configure(params)
+        backend.configure(dbParams)
 
         scannedQuery = backend.scan(query)
         allQueryHashes = backend.getHashes(scannedQuery)
@@ -531,11 +531,11 @@ class WeightedFeatureAAScore:
     @param query: A C{dark.reads.AARead} instance.
     @param subject: A C{light.subject.Subject} instance (a subclass of
         C{dark.reads.AARead}).
-    @param params: A C{Parameters} instance.
+    @param dbParams: A C{DatabaseParameters} instance.
     @param weights: If not C{None}, a C{dict} of weights to be given to each
         feature.
     """
-    def __init__(self, histogram, query, subject, params, weights=None):
+    def __init__(self, histogram, query, subject, dbParams, weights=None):
         self._histogram = histogram
         self._queryLen = len(query)
         self._subjectLen = len(subject)
@@ -544,7 +544,7 @@ class WeightedFeatureAAScore:
 
         from light.backend import Backend
         backend = Backend()
-        backend.configure(params)
+        backend.configure(dbParams)
 
         scannedQuery = backend.scan(query)
         allQueryHashes = backend.getHashes(scannedQuery)

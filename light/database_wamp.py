@@ -51,7 +51,7 @@ class WampDatabaseClient:
     instance. I.e., anyone using this class should be able to treat it
     just like a regular Database.
 
-    @param params: A C{Parameters} instance.
+    @param dbParams: A C{DatabaseParameters} instance.
     @param component: A C{ligh.autobahn.ClientComponent} instance for
         communicating with a remote WAMP-based database.
     """

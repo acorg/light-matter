@@ -12,7 +12,7 @@ from light.trig.peaks import Peaks
 from light.overall_score import (
     BestBinScore, SignificantBinScore, offsetsInBin, computeLengthNormalizer,
     GreedySignificantBinScore)
-from light.parameters import Parameters, FindParameters
+from light.parameters import DatabaseParameters, FindParameters
 from light.subject import Subject
 
 
@@ -53,10 +53,10 @@ class TestBestBinScore(TestCase):
                                         'AALH')
 
         db = DatabaseSpecifier().getDatabaseFromKeywords(
-            landmarkNames=[
+            landmarks=[
                 'AlphaHelix', 'AlphaHelix_3_10', 'AlphaHelix_pi',
                 'AminoAcidsLm', 'BetaStrand', 'BetaTurn', 'Prosite'],
-            trigPointNames=['AminoAcids', 'Peaks', 'Troughs'],
+            trigPoints=['AminoAcids', 'Peaks', 'Troughs'],
             distanceBase=1.01, limitPerLandmark=50, minDistance=1,
             maxDistance=100)
         _, subjectIndex, _ = db.addSubject(pichninde)
@@ -93,7 +93,7 @@ class TestBestBinScore(TestCase):
         findParams = FindParameters(significanceFraction=0.01,
                                     scoreMethod='FeatureAAScore')
 
-        kwds = dict(landmarkNames=['Prosite'], trigPointNames=['Peaks'],
+        kwds = dict(landmarks=['Prosite'], trigPoints=['Peaks'],
                     distanceBase=1, limitPerLandmark=40, minDistance=1,
                     maxDistance=10000)
 
@@ -478,10 +478,10 @@ class TestSignificantBinScore(TestCase):
         """
         histogram = Histogram()
         histogram.finalize()
-        params = Parameters([], [])
+        dbParams = DatabaseParameters(landmarks=[], trigPoints=[])
         query = AARead('id1', 'A')
         subject = Subject('id2', 'A', 0)
-        sbs = SignificantBinScore([], query, subject, params)
+        sbs = SignificantBinScore([], query, subject, dbParams)
         score, analysis = sbs.calculateScore()
         self.assertIs(None, score)
         self.assertEqual({'score': None,
@@ -494,10 +494,10 @@ class TestSignificantBinScore(TestCase):
         """
         histogram = Histogram(1)
         histogram.finalize()
-        params = Parameters([AlphaHelix], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix], trigPoints=[])
         query = AARead('id', 'FRRRFRRRF')
         subject = Subject('id2', 'A', 0)
-        sbs = SignificantBinScore([], query, subject, params)
+        sbs = SignificantBinScore([], query, subject, dbParams)
         score, analysis = sbs.calculateScore()
         self.assertEqual(None, score)
         self.assertEqual({'score': None,
@@ -510,10 +510,10 @@ class TestSignificantBinScore(TestCase):
         """
         histogram = Histogram(1)
         histogram.finalize()
-        params = Parameters([AlphaHelix], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix], trigPoints=[])
         query = AARead('id', 'FRRRFRRRF')
         subject = Subject('id2', 'AAAAAAAAAAAAAAFRRRFRRRF', 0)
-        sbs = SignificantBinScore([], query, subject, params)
+        sbs = SignificantBinScore([], query, subject, dbParams)
         score, analysis = sbs.calculateScore()
         self.assertEqual(None, score)
         self.assertEqual({'score': None,
@@ -536,14 +536,14 @@ class TestSignificantBinScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([], [])
+        dbParams = DatabaseParameters(landmarks=[], trigPoints=[])
         query = AARead('id1', 'A')
         subject = Subject('id2', 'A', 0)
         significantBins = [
             {'index': 0, 'bin': histogram.bins[0], 'score': 1.0},
         ]
         sbs = SignificantBinScore(significantBins, query, subject,
-                                  params)
+                                  dbParams)
         score, analysis = sbs.calculateScore()
         self.assertEqual(1.0, score)
         self.assertEqual(
@@ -597,14 +597,15 @@ class TestSignificantBinScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint2,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix], [AminoAcids])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix],
+                                      trigPoints=[AminoAcids])
         query = AARead('id1', 'A')
         subject = Subject('id2', 'A', 0)
         significantBins = [
             {'index': 0, 'bin': histogram.bins[0], 'score': 1.0},
         ]
         sbs = SignificantBinScore(significantBins, query, subject,
-                                  params)
+                                  dbParams)
         score, analysis = sbs.calculateScore()
         self.assertEqual(1.0, score)
         self.assertEqual(
@@ -646,14 +647,15 @@ class TestSignificantBinScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix, AminoAcidsLm], [AminoAcids])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[AminoAcids])
         query = AARead('id', 300 * 'A' + 'FRRRFRRRFAAAC')
         subject = Subject('id', 30 * 'A', 0)
         significantBins = [
             {'index': 0, 'bin': histogram.bins[0], 'score': 1.0},
         ]
         sbs = SignificantBinScore(significantBins, query, subject,
-                                  params)
+                                  dbParams)
         score, analysis = sbs.calculateScore()
         self.assertEqual(1.0, score)
         self.assertEqual(
@@ -696,14 +698,15 @@ class TestSignificantBinScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix, AminoAcidsLm], [AminoAcids])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[AminoAcids])
         query = AARead('id', 'FRRRFRRRF' + ('F' * 200) + 'FRRRFRRRFAAACAAAW')
         subject = Subject('id2', 'A', 0)
         significantBins = [
             {'index': 0, 'bin': histogram.bins[0], 'score': 1.0},
         ]
         sbs = SignificantBinScore(significantBins, query, subject,
-                                  params)
+                                  dbParams)
         score, analysis = sbs.calculateScore()
         self.assertEqual(1.0, score)
         self.assertEqual(
@@ -745,14 +748,15 @@ class TestSignificantBinScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix, AminoAcidsLm], [AminoAcids])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[AminoAcids])
         query = AARead('id', 'FRRRFRRRF' + 'AAACAAAW')
         subject = Subject('id2', 'FRRRFRRRF' + 'AAAC', 0)
         significantBins = [
             {'index': 0, 'bin': histogram.bins[0], 'score': 2 / 3},
         ]
         sbs = SignificantBinScore(significantBins, query, subject,
-                                  params)
+                                  dbParams)
         score, analysis = sbs.calculateScore()
         self.assertAlmostEqual(2 / 3, score)
         self.assertEqual(
@@ -794,14 +798,15 @@ class TestSignificantBinScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix, AminoAcidsLm], [AminoAcids])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[AminoAcids])
         query = Subject('id2', 'FRRRFRRRF' + 'AAAC', 0)
         subject = AARead('id', 'FRRRFRRRF' + 'AAACAAAW')
         significantBins = [
             {'index': 0, 'bin': histogram.bins[0], 'score': 2 / 3},
         ]
         sbs = SignificantBinScore(significantBins, query, subject,
-                                  params)
+                                  dbParams)
         score, analysis = sbs.calculateScore()
         self.assertAlmostEqual(2 / 3, score)
         self.assertEqual(
@@ -843,14 +848,15 @@ class TestSignificantBinScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix, AminoAcidsLm], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[])
         query = AARead('id', 20 * 'A' + 'FRRRFRRRFAAC')
         subject = Subject('id2', 'A', 0)
         significantBins = [
             {'index': 0, 'bin': histogram.bins[0], 'score': 42 / 52},
         ]
         sbs = SignificantBinScore(significantBins, query, subject,
-                                  params)
+                                  dbParams)
         score, analysis = sbs.calculateScore()
         self.assertEqual((21 + 21) / (21 + 21 + 10), score)
         self.assertEqual(
@@ -893,14 +899,15 @@ class TestSignificantBinScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix, AminoAcidsLm], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[])
         query = AARead('id', 'FRRRFRRRFAAAAC')
         subject = Subject('id2', 'A', 0)
         significantBins = [
             {'index': 0, 'bin': histogram.bins[0], 'score': 1.0},
         ]
         sbs = SignificantBinScore(significantBins, query, subject,
-                                  params)
+                                  dbParams)
         score, analysis = sbs.calculateScore()
         self.assertEqual((9 + 9) / (9 + 9), score)
         self.assertEqual(
@@ -943,14 +950,15 @@ class TestSignificantBinScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix, AminoAcidsLm], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[])
         query = AARead('id', 'FRRRFRRRF' + 20 * 'A' + 'C')
         subject = Subject('id2', 'A', 0)
         significantBins = [
             {'index': 0, 'bin': histogram.bins[0], 'score': 1.0},
         ]
         sbs = SignificantBinScore(significantBins, query, subject,
-                                  params)
+                                  dbParams)
         score, analysis = sbs.calculateScore()
         self.assertEqual(1.0, score)
         # Note that the landmark in the unmatched hash completely overlaps
@@ -998,14 +1006,15 @@ class TestSignificantBinScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix, AminoAcidsLm], [AminoAcids])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[AminoAcids])
         query = AARead('id', 22 * 'A' + 'CAAW')
         subject = Subject('id2', 'A', 0)
         significantBins = [
             {'index': 0, 'bin': histogram.bins[0], 'score': 42 / 44},
         ]
         sbs = SignificantBinScore(significantBins, query, subject,
-                                  params)
+                                  dbParams)
         score, analysis = sbs.calculateScore()
         self.assertEqual(42 / 44, score)
         self.assertEqual(
@@ -1047,14 +1056,15 @@ class TestSignificantBinScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix, AminoAcidsLm], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[])
         query = AARead('id', 'FRRRFRRRFC')
         subject = Subject('id2', 'A', 0)
         significantBins = [
             {'index': 0, 'bin': histogram.bins[0], 'score': 1.0},
         ]
         sbs = SignificantBinScore(significantBins, query, subject,
-                                  params)
+                                  dbParams)
         score, analysis = sbs.calculateScore()
         self.assertEqual(1.0, score)
         self.assertEqual(
@@ -1096,14 +1106,15 @@ class TestSignificantBinScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix, AminoAcidsLm], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[])
         query = AARead('id', 'AAAFRRRFRRRFC')
         subject = Subject('id2', 'A', 0)
         significantBins = [
             {'index': 0, 'bin': histogram.bins[0], 'score': 1.0},
         ]
         sbs = SignificantBinScore(significantBins, query, subject,
-                                  params)
+                                  dbParams)
         score, analysis = sbs.calculateScore()
         self.assertEqual(1.0, score)
         self.assertEqual(
@@ -1157,13 +1168,14 @@ class TestSignificantBinScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint2,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix, AminoAcidsLm], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[])
         query = AARead('id', 20 * 'A' + 'FRRRFRRRFC')
         subject = Subject('id2', 25 * 'A' + 'FRRRFRRRFRRRFAAC', 0)
         significantBins = [
             {'index': 0, 'bin': histogram.bins[0], 'score': 20 / 44},
         ]
-        sbs = SignificantBinScore(significantBins, query, subject, params)
+        sbs = SignificantBinScore(significantBins, query, subject, dbParams)
         score, analysis = sbs.calculateScore()
         matched = (3 + 1) + (5 + 1) + (3 + 1) + (5 + 1)
         total = matched + (9 + 1) + (13 + 1)
@@ -1229,7 +1241,8 @@ class TestSignificantBinScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint3,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix, AminoAcidsLm], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[])
         query = AARead('id', 80 * 'A')
         subject = Subject('id2', 80 * 'A', 0)
         significantBins = [
@@ -1238,7 +1251,7 @@ class TestSignificantBinScore(TestCase):
             {'index': 2, 'bin': histogram.bins[2], 'score': 1.0},
         ]
         sbs = SignificantBinScore(significantBins, query, subject,
-                                  params)
+                                  dbParams)
         overallScore, overallAnalysis = sbs.calculateScore()
         self.maxDiff = None
         self.assertEqual(1.0, overallScore)
@@ -1304,7 +1317,8 @@ class TestSignificantBinScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint3,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix, AminoAcidsLm], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[])
         query = AARead('id', 80 * 'A' + 'FRRRFRRRFAAAC')
         subject = Subject('id2', 80 * 'A', 0)
         significantBins = [
@@ -1313,7 +1327,7 @@ class TestSignificantBinScore(TestCase):
             {'index': 2, 'bin': histogram.bins[2], 'score': 1.0},
         ]
         sbs = SignificantBinScore(significantBins, query, subject,
-                                  params)
+                                  dbParams)
         overallScore, overallAnalysis = sbs.calculateScore()
         self.maxDiff = None
         self.assertEqual(1.0, overallScore)
@@ -1380,7 +1394,8 @@ class TestSignificantBinScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint3,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix, AminoAcidsLm], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[])
         query = AARead('id', 80 * 'A' + 'FRRRFRRRF' + 'AAACAAAW')
         subject = Subject('id2', 80 * 'A' + 'FRRRFRRRF' + 'AAAC', 0)
         significantBins = [
@@ -1389,7 +1404,7 @@ class TestSignificantBinScore(TestCase):
             {'index': 2, 'bin': histogram.bins[2], 'score': 11 / 21},
         ]
         sbs = SignificantBinScore(significantBins, query, subject,
-                                  params)
+                                  dbParams)
         overallScore, overallAnalysis = sbs.calculateScore()
         self.maxDiff = None
         self.assertEqual(11 / 21, overallScore)
@@ -1455,7 +1470,8 @@ class TestSignificantBinScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint3,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix, AminoAcidsLm], [Peaks])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[Peaks])
         query = AARead('id', 40 * 'A' + 'FRRRFRRRFAAC' + 28 * 'A')
         subject = Subject('id2', 80 * 'A', 0)
         significantBins = [
@@ -1463,7 +1479,7 @@ class TestSignificantBinScore(TestCase):
             {'index': 1, 'bin': histogram.bins[1], 'score': 0.0},
             {'index': 2, 'bin': histogram.bins[2], 'score': 0.0},
         ]
-        sbs = SignificantBinScore(significantBins, query, subject, params)
+        sbs = SignificantBinScore(significantBins, query, subject, dbParams)
         overallScore, overallAnalysis = sbs.calculateScore()
         self.maxDiff = None
         self.assertEqual(22 / 27, overallScore)
@@ -1507,10 +1523,10 @@ class TestSignificantBinScore(TestCase):
                                         'AALH')
 
         db = DatabaseSpecifier().getDatabaseFromKeywords(
-            landmarkNames=[
+            landmarks=[
                 'AlphaHelix', 'AlphaHelix_3_10', 'AlphaHelix_pi',
                 'AminoAcidsLm', 'BetaStrand', 'BetaTurn', 'Prosite'],
-            trigPointNames=['AminoAcids', 'Peaks', 'Troughs'],
+            trigPoints=['AminoAcids', 'Peaks', 'Troughs'],
             distanceBase=1.01, limitPerLandmark=50, minDistance=1,
             maxDistance=100)
         _, subjectIndex, _ = db.addSubject(pichninde)
@@ -1536,7 +1552,7 @@ class TestSignificantBinScore(TestCase):
         sequence = AARead('id', 'NTKLTTRLIEDYS')
 
         db = DatabaseSpecifier().getDatabaseFromKeywords(
-            landmarkNames=['Prosite'], trigPointNames=['Troughs'],
+            landmarks=['Prosite'], trigPoints=['Troughs'],
             distanceBase=1.0, limitPerLandmark=5, minDistance=1,
             maxDistance=100)
         _, subjectIndex, _ = db.addSubject(sequence)
@@ -1576,7 +1592,7 @@ class TestSignificantBinScore(TestCase):
                                     scoreMethod='FeatureAAScore',
                                     overallScoreMethod='SignificantBinScore')
 
-        kwds = dict(landmarkNames=['Prosite'], trigPointNames=['Peaks'],
+        kwds = dict(landmarks=['Prosite'], trigPoints=['Peaks'],
                     distanceBase=1, limitPerLandmark=40, minDistance=1,
                     maxDistance=10000)
 
@@ -1611,14 +1627,15 @@ class TestSignificantBinScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix, AminoAcidsLm], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[])
         query = AARead('id', 'FRRRFRRRFC')
         subject = Subject('id2', 'A', 0)
         significantBins = [
             {'index': 0, 'bin': histogram.bins[0], 'score': 1.0},
         ]
         sbs = SignificantBinScore(significantBins, query, subject,
-                                  params)
+                                  dbParams)
         score, analysis = sbs.calculateScore()
         self.assertEqual(1.0, score)
         self.maxDiff = None
@@ -1666,7 +1683,7 @@ class TestGreedySignificantBinScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([], [])
+        params = DatabaseParameters([], [])
         query = AARead('id1', 'A')
         subject = Subject('id2', 'A', 0)
         significantBins = [
@@ -1724,12 +1741,12 @@ class TestGreedySignificantBinScore(TestCase):
             significanceFraction=0.01, scoreMethod='FeatureAAScore',
             overallScoreMethod='GreedySignificantBinScore')
 
-        kwds = dict(landmarkNames=[
+        kwds = dict(landmarks=[
             'AlphaHelix', 'AlphaHelix_3_10', 'AlphaHelix_pi', 'AminoAcidsLm',
             'BetaStrand', 'BetaTurn', 'Prosite', 'GOR4AlphaHelix',
             'GOR4BetaStrand'],
-            trigPointNames=['Peaks', 'Troughs', 'AminoAcids',
-                            'IndividualPeaks', 'IndividualTroughs'],
+            trigPoints=['Peaks', 'Troughs', 'AminoAcids',
+                        'IndividualPeaks', 'IndividualTroughs'],
             distanceBase=1.0, limitPerLandmark=50, minDistance=1,
             maxDistance=100, featureLengthBase=1.01)
 
@@ -1788,7 +1805,7 @@ class TestGreedySignificantBinScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix, AminoAcidsLm], [Peaks])
+        params = DatabaseParameters([AlphaHelix, AminoAcidsLm], [Peaks])
         query = AARead('id', 'FRRRFRRRFC')
         subject = Subject('id2', 'A', 0)
         significantBins = [

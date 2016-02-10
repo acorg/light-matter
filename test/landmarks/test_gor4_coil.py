@@ -2,10 +2,10 @@ from unittest import TestCase
 
 from dark.reads import AARead
 
-from light.distance import scale
+from light.distance import scaleLog
 from light.features import Landmark
-from light.parameters import Parameters
 from light.landmarks.gor4_coil import GOR4Coil
+from light.parameters import DatabaseParameters
 
 
 class TestGOR4Coil(TestCase):
@@ -27,7 +27,7 @@ class TestGOR4Coil(TestCase):
         read = AARead('id', 'VICVIC')
         landmark = GOR4Coil()
         result = list(landmark.find(read))
-        scaled1 = scale(1, Parameters.DEFAULT_FEATURE_LENGTH_BASE)
+        scaled1 = scaleLog(1, DatabaseParameters.DEFAULT_FEATURE_LENGTH_BASE)
         # The GOR IV secondary structure prediction is 'EECEEC'.
         self.assertEqual([Landmark('GOR4Coil', 'GC', 2, 1, scaled1),
                           Landmark('GOR4Coil', 'GC', 5, 1, scaled1)],
@@ -41,7 +41,7 @@ class TestGOR4Coil(TestCase):
         read = AARead('id', 'EA')
         landmark = GOR4Coil()
         result = list(landmark.find(read))
-        scaled2 = scale(2, Parameters.DEFAULT_FEATURE_LENGTH_BASE)
+        scaled2 = scaleLog(2, DatabaseParameters.DEFAULT_FEATURE_LENGTH_BASE)
         # The GOR IV secondary structure prediction is 'CC'.
         self.assertEqual([Landmark('GOR4Coil', 'GC', 0, 2, scaled2)],
                          result)
@@ -54,12 +54,12 @@ class TestGOR4Coil(TestCase):
         """
         seq = 'DKATIPSESPFAAAEVADGAIVVDIAKMKYETPELHVKVGDTVTWINREA'
         read = AARead('id', seq)
-        landmark = GOR4Coil(Parameters.DEFAULT_FEATURE_LENGTH_BASE)
+        landmark = GOR4Coil()
         result = list(landmark.find(read))
-        scaled1 = scale(1, Parameters.DEFAULT_FEATURE_LENGTH_BASE)
-        scaled2 = scale(2, Parameters.DEFAULT_FEATURE_LENGTH_BASE)
-        scaled4 = scale(4, Parameters.DEFAULT_FEATURE_LENGTH_BASE)
-        scaled10 = scale(10, Parameters.DEFAULT_FEATURE_LENGTH_BASE)
+        scaled1 = scaleLog(1, DatabaseParameters.DEFAULT_FEATURE_LENGTH_BASE)
+        scaled2 = scaleLog(2, DatabaseParameters.DEFAULT_FEATURE_LENGTH_BASE)
+        scaled4 = scaleLog(4, DatabaseParameters.DEFAULT_FEATURE_LENGTH_BASE)
+        scaled10 = scaleLog(10, DatabaseParameters.DEFAULT_FEATURE_LENGTH_BASE)
         # The GOR IV secondary structure prediction is
         # 'CCCCCCCCCCHHHHHHHCCHHHHHHHHHHHCCCCEEEEECCEEEEEEEEC'.
         self.assertEqual([Landmark('GOR4Coil', 'GC', 0, 10, scaled10),
@@ -79,12 +79,13 @@ class TestGOR4Coil(TestCase):
         seq = 'DKATIPSESPFAAAEVADGAIVVDIAKMKYETPELHVKVGDTVTWINREA'
         read = AARead('id', seq)
         featureLengthBase = 1.5
-        landmark = GOR4Coil(featureLengthBase)
+        dbParams = DatabaseParameters(featureLengthBase=featureLengthBase)
+        landmark = GOR4Coil(dbParams)
         result = list(landmark.find(read))
-        scaled1 = scale(1, featureLengthBase)
-        scaled2 = scale(2, featureLengthBase)
-        scaled4 = scale(4, featureLengthBase)
-        scaled10 = scale(10, featureLengthBase)
+        scaled1 = scaleLog(1, featureLengthBase)
+        scaled2 = scaleLog(2, featureLengthBase)
+        scaled4 = scaleLog(4, featureLengthBase)
+        scaled10 = scaleLog(10, featureLengthBase)
         # The GOR IV secondary structure prediction is
         # 'CCCCCCCCCCHHHHHHHCCHHHHHHHHHHHCCCCEEEEECCEEEEEEEEC'.
         self.assertEqual([Landmark('GOR4Coil', 'GC', 0, 10, scaled10),
@@ -101,8 +102,8 @@ class TestGOR4Coil(TestCase):
         read = AARead('id', 'DKATIPSESP')
         landmark = GOR4Coil()
         result = list(landmark.find(read))
-        scaled6 = scale(6, Parameters.DEFAULT_FEATURE_LENGTH_BASE)
-        scaled1 = scale(1, Parameters.DEFAULT_FEATURE_LENGTH_BASE)
+        scaled6 = scaleLog(6, DatabaseParameters.DEFAULT_FEATURE_LENGTH_BASE)
+        scaled1 = scaleLog(1, DatabaseParameters.DEFAULT_FEATURE_LENGTH_BASE)
         self.assertEqual([Landmark('GOR4Coil', 'GC', 0, 6, scaled6),
                           Landmark('GOR4Coil', 'GC', 9, 1, scaled1)],
                          result)

@@ -23,7 +23,7 @@ class TestClusterAnalysis(TestCase):
         reads = Reads()
         error = 'No sequences were found in'
         six.assertRaisesRegex(self, ValueError, error, ClusterAnalysis, reads,
-                              {}, landmarkNames=['AlphaHelix'])
+                              {}, landmarks=['AlphaHelix'])
 
     def testMissingLabelNoDefault(self):
         """
@@ -34,7 +34,7 @@ class TestClusterAnalysis(TestCase):
         reads.add(AARead('id', 'MMM'))
         error = "Read 'id' has no corresponding label"
         six.assertRaisesRegex(self, ValueError, error, ClusterAnalysis, reads,
-                              {}, landmarkNames=['AlphaHelix'])
+                              {}, landmarks=['AlphaHelix'])
 
     def testDefaultLabel(self):
         """
@@ -44,7 +44,7 @@ class TestClusterAnalysis(TestCase):
         reads = Reads()
         reads.add(AARead('id', 'MMM'))
         ca = ClusterAnalysis(reads, {}, defaultLabel=5,
-                             landmarkNames=['AlphaHelix'])
+                             landmarks=['AlphaHelix'])
         self.assertEqual([5], ca.trueLabels)
 
     def testOneReadAffinity(self):
@@ -55,7 +55,7 @@ class TestClusterAnalysis(TestCase):
         reads = Reads()
         reads.add(AARead('id', 'MMM'))
         ca = ClusterAnalysis(reads, {}, defaultLabel=5,
-                             landmarkNames=['AlphaHelix'])
+                             landmarks=['AlphaHelix'])
         self.assertEqual([[1.0]], ca.affinity)
 
     def testTwoReadsAffinity(self):
@@ -68,7 +68,7 @@ class TestClusterAnalysis(TestCase):
         reads.add(AARead('id1', 'MMM'))
         reads.add(AARead('id2', 'MMM'))
         ca = ClusterAnalysis(reads, {}, defaultLabel=5,
-                             landmarkNames=['AlphaHelix'])
+                             landmarks=['AlphaHelix'])
         expected = np.ones((2, 2))
         expected[0, 1] = expected[1, 0] = 0.0
         for row in range(2):
@@ -140,7 +140,7 @@ class TestAffinityPropagationAnalysis(TestCase):
         reads.add(AARead('id1', 'MMM'))
         reads.add(AARead('id2', 'MMM'))
         ap = AffinityPropagationAnalysis(reads, {}, defaultLabel=0,
-                                         landmarkNames=['AlphaHelix'])
+                                         landmarks=['AlphaHelix'])
         ap.cluster()
         self.assertTrue(isinstance(ap.affinityPropagation,
                                    AffinityPropagation))
@@ -154,7 +154,7 @@ class TestAffinityPropagationAnalysis(TestCase):
         reads.add(AARead('id1', 'MMM'))
         reads.add(AARead('id2', 'MMM'))
         ap = AffinityPropagationAnalysis(reads, {}, defaultLabel=0,
-                                         landmarkNames=['AlphaHelix'])
+                                         landmarks=['AlphaHelix'])
         ap.cluster()
         self.assertEqual(2, ap.nClusters)
 
@@ -168,7 +168,7 @@ class TestAffinityPropagationAnalysis(TestCase):
         reads.add(AARead('id1', 'FRRRFRRRF'))
         reads.add(AARead('id2', 'FRRRFRRRF'))
         ap = AffinityPropagationAnalysis(reads, {}, defaultLabel=0,
-                                         landmarkNames=['AlphaHelix'])
+                                         landmarks=['AlphaHelix'])
         ap.cluster()
         self.assertEqual([0, 1], list(ap.clusterLabels))
 
@@ -182,7 +182,7 @@ class TestAffinityPropagationAnalysis(TestCase):
         reads.add(AARead('id2', 'FRRRFRRRFAAAFRRRFRRRF'))
         reads.add(AARead('id3', 'MMM'))
         ap = AffinityPropagationAnalysis(reads, {}, defaultLabel=0,
-                                         landmarkNames=['AlphaHelix'])
+                                         landmarks=['AlphaHelix'])
         ap.cluster()
         self.assertEqual(2, ap.nClusters)
 
@@ -197,7 +197,7 @@ class TestAffinityPropagationAnalysis(TestCase):
         reads.add(AARead('id2', 'FRRRFRRRFAAAFRRRFRRRF'))
         reads.add(AARead('id3', 'MMM'))
         ap = AffinityPropagationAnalysis(reads, {}, defaultLabel=0,
-                                         landmarkNames=['AlphaHelix'])
+                                         landmarks=['AlphaHelix'])
         ap.cluster()
         self.assertEqual([0, 0, 1], list(ap.clusterLabels))
 
@@ -213,7 +213,7 @@ class TestAffinityPropagationAnalysis(TestCase):
         reads.add(AARead('id3', 'MMM'))
         reads.add(AARead('id4', 'MMM'))
         ap = AffinityPropagationAnalysis(reads, {}, defaultLabel=0,
-                                         landmarkNames=['AlphaHelix'])
+                                         landmarks=['AlphaHelix'])
         # Print without calling ap.cluster()
         self.assertEqual(
             'Estimated number of clusters: 2\n'
@@ -237,7 +237,7 @@ class TestAffinityPropagationAnalysis(TestCase):
         reads.add(AARead('id3', 'MMM'))
         reads.add(AARead('id4', 'MMM'))
         ap = AffinityPropagationAnalysis(reads, {}, defaultLabel=0,
-                                         landmarkNames=['AlphaHelix'])
+                                         landmarks=['AlphaHelix'])
         ap.cluster()
         self.assertEqual(
             'Estimated number of clusters: 2\n'
@@ -264,7 +264,7 @@ class TestKMeansAnalysis(TestCase):
         reads.add(AARead('id1', 'MMM'))
         reads.add(AARead('id2', 'MMM'))
         km = KMeansAnalysis(reads, {}, defaultLabel=0,
-                            landmarkNames=['AlphaHelix'])
+                            landmarks=['AlphaHelix'])
         km.cluster(1)
         self.assertTrue(isinstance(km.kMeans, KMeans))
 
@@ -276,7 +276,7 @@ class TestKMeansAnalysis(TestCase):
         reads = Reads()
         reads.add(AARead('id1', 'FRRRFRRRF'))
         km = KMeansAnalysis(reads, {}, defaultLabel=0,
-                            landmarkNames=['AlphaHelix'])
+                            landmarks=['AlphaHelix'])
         km.cluster(1)
         self.assertEqual(1, km.nClusters)
 
@@ -289,7 +289,7 @@ class TestKMeansAnalysis(TestCase):
         reads.add(AARead('id1', 'FRRRFRRRF'))
         reads.add(AARead('id2', 'FRRRFRRRF'))
         km = KMeansAnalysis(reads, {}, defaultLabel=0,
-                            landmarkNames=['AlphaHelix'])
+                            landmarks=['AlphaHelix'])
         km.cluster(2)
         self.assertEqual(2, km.nClusters)
 
@@ -302,7 +302,7 @@ class TestKMeansAnalysis(TestCase):
         reads.add(AARead('id1', 'FRRRFRRRF'))
         reads.add(AARead('id2', 'FRRRFRRRF'))
         km = KMeansAnalysis(reads, {}, defaultLabel=0,
-                            landmarkNames=['AlphaHelix'])
+                            landmarks=['AlphaHelix'])
         km.cluster(2)
         result = list(km.clusterLabels)
         self.assertNotEqual(result[0], result[1])
@@ -318,7 +318,7 @@ class TestKMeansAnalysis(TestCase):
         reads.add(AARead('id2', 'FRRRFRRRFAAAFRRRFRRRF'))
         reads.add(AARead('id3', 'MMM'))
         km = KMeansAnalysis(reads, {}, defaultLabel=0,
-                            landmarkNames=['AlphaHelix'])
+                            landmarks=['AlphaHelix'])
         km.cluster(2)
         result = list(km.clusterLabels)
         self.assertEqual(result[0], result[1])
@@ -337,7 +337,7 @@ class TestKMeansAnalysis(TestCase):
         reads.add(AARead('id3', 'MMM'))
         reads.add(AARead('id3', 'MMM'))
         km = KMeansAnalysis(reads, {}, defaultLabel=0,
-                            landmarkNames=['AlphaHelix'])
+                            landmarks=['AlphaHelix'])
         km.cluster(2)
         result = list(km.clusterLabels)
         self.assertEqual(result[0], result[1])
@@ -355,7 +355,7 @@ class TestKMeansAnalysis(TestCase):
         reads.add(AARead('id3', 'MMM'))
         reads.add(AARead('id4', 'MMM'))
         km = KMeansAnalysis(reads, {}, defaultLabel=0,
-                            landmarkNames=['AlphaHelix'])
+                            landmarks=['AlphaHelix'])
         six.assertRaisesRegex(self, RuntimeError, '', km.print_)
 
     def testFourReadsTwoIdenticalPrint(self):
@@ -370,7 +370,7 @@ class TestKMeansAnalysis(TestCase):
         reads.add(AARead('id3', 'MMM'))
         reads.add(AARead('id4', 'MMM'))
         km = KMeansAnalysis(reads, {}, defaultLabel=0,
-                            landmarkNames=['AlphaHelix'])
+                            landmarks=['AlphaHelix'])
         km.cluster(2)
         self.assertEqual(
             'Homogeneity: 1.000\n'

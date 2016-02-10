@@ -1,5 +1,7 @@
 from dark.aa import PROPERTY_DETAILS
-from light.features import TrigPoint, Finder
+
+from light.features import TrigPoint
+from light.finder import Finder
 
 
 class Peaks(Finder):

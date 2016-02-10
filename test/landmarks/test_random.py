@@ -3,6 +3,7 @@ from unittest import TestCase
 from dark.reads import AARead
 
 from light.landmarks.random import RandomLandmark
+from light.parameters import DatabaseParameters
 
 
 class TestRandomLandmark(TestCase):
@@ -11,8 +12,8 @@ class TestRandomLandmark(TestCase):
     """
     def testCorrectNumberOfLandmarksDefaultDensity(self):
         """
-        The correct number of landmarks must be returned, as specified by the
-        default density parameter.
+        The correct number of landmarks must be returned, based on the
+        default density parameter value (0.1).
         """
         read = AARead('id', 'FRFRFRFRFRFRFRFRFRFF')
         landmark = RandomLandmark()
@@ -25,8 +26,9 @@ class TestRandomLandmark(TestCase):
         density parameter.
         """
         read = AARead('id', 'FRFRFRFRFRFRFRFRFRFF')
-        landmark = RandomLandmark()
-        result = list(landmark.find(read, density=0.5))
+        dbParams = DatabaseParameters(randomLandmarkDensity=0.5)
+        landmark = RandomLandmark(dbParams)
+        result = list(landmark.find(read))
         self.assertEqual(10, len(result))
 
     def testAttributes(self):
@@ -34,8 +36,11 @@ class TestRandomLandmark(TestCase):
         The returned landmarks must have the correct attributes.
         """
         read = AARead('id', 'FRFRFRFRFRFRFRFRFRFF')
-        landmark = RandomLandmark()
-        result = list(landmark.find(read, density=0.05))[0]
+        # Use an extremely high density, to make sure the finder never
+        # fails to produce a random landmark.
+        dbParams = DatabaseParameters(randomLandmarkDensity=0.9)
+        landmark = RandomLandmark(dbParams)
+        result = list(landmark.find(read))[0]
         self.assertEqual('RandomLandmark', result.name)
         self.assertEqual('RL', result.symbol)
         self.assertEqual(1, result.length)

@@ -6,7 +6,7 @@ from six import StringIO
 
 from light.autobahn.component import Component
 from light.backend import Backend
-from light.parameters import Parameters
+from light.parameters import DatabaseParameters
 
 logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
                     level=logging.INFO)
@@ -37,7 +37,8 @@ class BackendComponent(Component):
             """
             Configure our backend and register its API methods.
 
-            @param paramsStr: The C{str} 'save' of a C{Parameters} instance.
+            @param paramsStr: The C{str} 'save' of a C{DatabaseParameters}
+                instance.
             @param suggestedName: The C{str} suggested name for this backend.
                 If the backend has already been configured (from a file
                 restore) with a different name, the suggested name is ignored.
@@ -49,9 +50,9 @@ class BackendComponent(Component):
                 configured).
             """
             fp = StringIO(paramsStr)
-            params = Parameters.restore(fp)
+            dbParams = DatabaseParameters.restore(fp)
             name, checksum, subjectCount = self._backend.configure(
-                params, suggestedName, suggestedChecksum)
+                dbParams, suggestedName, suggestedChecksum)
 
             if not self._ApiConfigured:
                 self._ApiConfigured = True

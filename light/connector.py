@@ -3,7 +3,7 @@ import logging
 from Bio.File import as_handle
 
 from light.backend import Backend
-from light.parameters import Parameters, FindParameters
+from light.parameters import DatabaseParameters, FindParameters
 from light.result import Result
 from light.string import MultilineString
 
@@ -16,7 +16,7 @@ class SimpleConnector:
     Provide a simple in-memory connection between a Database and a single
     Backend.
 
-    @param params: A C{Parameters} instance.
+    @param dbParams: A C{DatabaseParameters} instance.
     @param backend: A C{Backend} instance, or C{None} if a backend should be
         created.
     @param filePrefix: Either a C{str} file name prefix to use as a default
@@ -25,13 +25,13 @@ class SimpleConnector:
 
     SAVE_SUFFIX = '.lmco'
 
-    def __init__(self, params, backend=None, filePrefix=None):
-        self.params = params
+    def __init__(self, dbParams, backend=None, filePrefix=None):
+        self.dbParams = dbParams
         if backend:
             self._backend = backend
         else:
             self._backend = Backend(filePrefix=filePrefix)
-            self._backend.configure(params)
+            self._backend.configure(dbParams)
         self._filePrefix = filePrefix
 
         # Most of our implementation comes directly from our backend.
@@ -100,7 +100,7 @@ class SimpleConnector:
             saveFile = fpOrFilePrefix
 
         with as_handle(saveFile, 'w') as fp:
-            self.params.save(fp)
+            self.dbParams.save(fp)
 
         self._backend.save(fpOrFilePrefix)
 
@@ -123,9 +123,9 @@ class SimpleConnector:
             filePrefix = None
 
         with as_handle(saveFile) as fp:
-            params = Parameters.restore(fp)
+            dbParams = DatabaseParameters.restore(fp)
 
-        return cls(params, backend=Backend.restore(fpOrFilePrefix),
+        return cls(dbParams, backend=Backend.restore(fpOrFilePrefix),
                    filePrefix=filePrefix)
 
     def print_(self, printHashes=False, margin=''):

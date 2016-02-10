@@ -7,7 +7,7 @@ from collections import defaultdict
 from math import log10, ceil
 from operator import itemgetter
 
-from light.distance import scale
+from light.distance import scaleLinear
 from light.histogram import Histogram
 from light.significance import (
     Always, HashFraction, MaxBinHeight, MeanBinHeight, AAFraction)
@@ -52,12 +52,11 @@ class Result(object):
         self.nonMatchingHashes = nonMatchingHashes
         self._storeFullAnalysis = storeFullAnalysis
         self.analysis = defaultdict(dict)
-        distanceBase = connector.params.distanceBase
-        queryLen = len(query)
+        deltaScale = findParams.deltaScale
         scoreGetter = itemgetter('score')
         from light.backend import Backend
         be = Backend()
-        be.configure(connector.params)
+        be.configure(connector.dbParams)
 
         if findParams.significanceMethod == 'AAFraction':
             queryAACount = len(be.scan(query).coveredIndices())
@@ -69,9 +68,7 @@ class Result(object):
             subject = connector.getSubjectByIndex(subjectIndex)
             # Use a histogram to bin scaled (landmark, trigPoint) offset
             # deltas.
-            subjectLen = len(subject)
-            maxLen = max(queryLen, subjectLen)
-            nBins = scale(maxLen, distanceBase)
+            nBins = max(len(query), len(subject))
             # Make sure the number of bins is odd, else Histogram() will raise.
             nBins |= 0x1
             histogram = Histogram(nBins)
@@ -103,7 +100,7 @@ class Result(object):
                 # Add the information about this common landmark /
                 # trig point hash to the histogram bucket for the
                 # query landmark to subject landmark offset delta.
-                add(scale(delta, distanceBase), match)
+                add(scaleLinear(delta, deltaScale), match)
 
             histogram.finalize()
 
@@ -135,13 +132,13 @@ class Result(object):
                 scorer = MinHashesScore(histogram, minHashCount)
             elif scoreMethod == 'FeatureMatchingScore':
                 scorer = FeatureMatchingScore(
-                    histogram, query, subject, connector.params, findParams)
+                    histogram, query, subject, connector.dbParams, findParams)
             elif scoreMethod == 'FeatureAAScore':
                 scorer = FeatureAAScore(
-                    histogram, query, subject, connector.params)
+                    histogram, query, subject, connector.dbParams)
             elif scoreMethod == 'WeightedFeatureAAScore':
                 scorer = WeightedFeatureAAScore(
-                    histogram, query, subject, connector.params,
+                    histogram, query, subject, connector.dbParams,
                     findParams.weights)
             else:
                 raise ValueError('Unknown score method %r' % scoreMethod)
@@ -171,10 +168,10 @@ class Result(object):
                 scorer = BestBinScore(histogram, significantBins)
             elif overallScoreMethod == 'SignificantBinScore':
                 scorer = SignificantBinScore(significantBins, query, subject,
-                                             connector.params)
+                                             connector.dbParams)
             elif overallScoreMethod == 'GreedySignificantBinScore':
                 scorer = GreedySignificantBinScore(significantBins, query,
-                                                   subject, connector.params)
+                                                   subject, connector.dbParams)
             else:
                 raise ValueError('Unknown overall score method %r' %
                                  overallScoreMethod)
@@ -305,7 +302,7 @@ class Result(object):
 
         if printQuery:
             backend = Backend()
-            backend.configure(self.connector.params)
+            backend.configure(self.connector.dbParams)
             scannedQuery = backend.scan(self.query)
             append(scannedQuery.print_(printSequence=printSequences,
                                        printFeatures=printFeatures,

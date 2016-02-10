@@ -8,7 +8,7 @@ from dark.reads import AARead
 
 from light.database import DatabaseSpecifier
 from light.features import Landmark, TrigPoint
-from light.parameters import Parameters, FindParameters
+from light.parameters import DatabaseParameters, FindParameters
 from light.subject import Subject
 from light.bin_score import (
     NoneScore, MinHashesScore, FeatureMatchingScore, FeatureAAScore,
@@ -539,10 +539,10 @@ class TestFeatureMatchingScore(TestCase):
         """
         histogram = Histogram()
         histogram.finalize()
-        params = Parameters([], [])
+        dbParams = DatabaseParameters(landmarks=[], trigPoints=[])
         query = AARead('id1', 'A')
         subject = Subject('id2', 'A', 0)
-        fms = FeatureMatchingScore(histogram, query, subject, params)
+        fms = FeatureMatchingScore(histogram, query, subject, dbParams)
         score, analysis = fms.calculateScore(0)
         self.assertEqual(0.0, score)
         self.assertEqual(
@@ -566,10 +566,10 @@ class TestFeatureMatchingScore(TestCase):
         """
         histogram = Histogram(1)
         histogram.finalize()
-        params = Parameters([AlphaHelix], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix], trigPoints=[])
         query = AARead('id', 'FRRRFRRRF')
         subject = Subject('id2', 'A', 0)
-        fms = FeatureMatchingScore(histogram, query, subject, params)
+        fms = FeatureMatchingScore(histogram, query, subject, dbParams)
         score, analysis = fms.calculateScore(0)
         self.assertEqual(0.0, score)
         self.assertEqual(
@@ -605,10 +605,10 @@ class TestFeatureMatchingScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([], [])
+        dbParams = DatabaseParameters(landmarks=[], trigPoints=[])
         query = AARead('id1', 'A')
         subject = Subject('id2', 'A', 0)
-        fms = FeatureMatchingScore(histogram, query, subject, params)
+        fms = FeatureMatchingScore(histogram, query, subject, dbParams)
         score, analysis = fms.calculateScore(0)
         self.assertEqual(4 * FindParameters.DEFAULT_FEATURE_MATCH_SCORE,
                          score)
@@ -658,10 +658,10 @@ class TestFeatureMatchingScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint2,
         })
         histogram.finalize()
-        params = Parameters([], [])
+        dbParams = DatabaseParameters(landmarks=[], trigPoints=[])
         query = AARead('id1', 'A')
         subject = Subject('id2', 'A', 0)
-        fms = FeatureMatchingScore(histogram, query, subject, params)
+        fms = FeatureMatchingScore(histogram, query, subject, dbParams)
         score, analysis = fms.calculateScore(0)
         self.assertEqual(8 * FindParameters.DEFAULT_FEATURE_MATCH_SCORE,
                          score)
@@ -696,10 +696,10 @@ class TestFeatureMatchingScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix], trigPoints=[])
         query = AARead('id', 'FRRRFRRRF')
         subject = Subject('id2', 'A', 0)
-        fms = FeatureMatchingScore(histogram, query, subject, params)
+        fms = FeatureMatchingScore(histogram, query, subject, dbParams)
         score, analysis = fms.calculateScore(0)
         self.assertEqual(4 * FindParameters.DEFAULT_FEATURE_MATCH_SCORE,
                          score)
@@ -734,10 +734,10 @@ class TestFeatureMatchingScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix], trigPoints=[])
         query = AARead('id', 'FRRRFRRRF' + ('F' * 200) + 'FRRRFRRRF')
         subject = Subject('id2', 'A', 0)
-        fms = FeatureMatchingScore(histogram, query, subject, params)
+        fms = FeatureMatchingScore(histogram, query, subject, dbParams)
         score, analysis = fms.calculateScore(0)
         self.assertEqual(4 * FindParameters.DEFAULT_FEATURE_MATCH_SCORE,
                          score)
@@ -772,10 +772,10 @@ class TestFeatureMatchingScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix], trigPoints=[])
         query = AARead('id', 'FRRRFRRRF')
         subject = Subject('id2', ('F' * 200) + 'FRRRFRRRF', 0)
-        fms = FeatureMatchingScore(histogram, query, subject, params)
+        fms = FeatureMatchingScore(histogram, query, subject, dbParams)
         score, analysis = fms.calculateScore(0)
         self.assertEqual(4 * FindParameters.DEFAULT_FEATURE_MATCH_SCORE,
                          score)
@@ -810,10 +810,10 @@ class TestFeatureMatchingScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix], trigPoints=[])
         query = AARead('id', 'FRRRFRRRF')
         subject = Subject('id2', 'A', 0)
-        fms = FeatureMatchingScore(histogram, query, subject, params)
+        fms = FeatureMatchingScore(histogram, query, subject, dbParams)
         score, analysis = fms.calculateScore(0)
         self.assertEqual(
             4 * FindParameters.DEFAULT_FEATURE_MATCH_SCORE +
@@ -850,10 +850,10 @@ class TestFeatureMatchingScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix], trigPoints=[])
         query = AARead('id', 'FRRRFRRRF')
         subject = Subject('id2', 'A', 0)
-        fms = FeatureMatchingScore(histogram, query, subject, params)
+        fms = FeatureMatchingScore(histogram, query, subject, dbParams)
         score, analysis = fms.calculateScore(0)
         self.assertEqual(
             4 * FindParameters.DEFAULT_FEATURE_MATCH_SCORE +
@@ -890,10 +890,10 @@ class TestFeatureMatchingScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix], trigPoints=[])
         query = AARead('id', 'FRRRFRRRF')
         subject = Subject('id2', 'A', 0)
-        fms = FeatureMatchingScore(histogram, query, subject, params)
+        fms = FeatureMatchingScore(histogram, query, subject, dbParams)
         score, analysis = fms.calculateScore(0)
         self.assertEqual(
             4 * FindParameters.DEFAULT_FEATURE_MATCH_SCORE,
@@ -929,10 +929,10 @@ class TestFeatureMatchingScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix], trigPoints=[])
         query = AARead('id', 'FRRRFRRRFAFRRRFRRRF')
         subject = Subject('id2', 'A', 0)
-        fms = FeatureMatchingScore(histogram, query, subject, params)
+        fms = FeatureMatchingScore(histogram, query, subject, dbParams)
         score, analysis = fms.calculateScore(0)
         self.assertEqual(
             4 * FindParameters.DEFAULT_FEATURE_MATCH_SCORE +
@@ -971,10 +971,10 @@ class TestFeatureMatchingScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix], trigPoints=[])
         query = AARead('id', 'FRRRFRRRF')
         subject = Subject('id2', 'A', 0)
-        fms = FeatureMatchingScore(histogram, query, subject, params)
+        fms = FeatureMatchingScore(histogram, query, subject, dbParams)
         score, analysis = fms.calculateScore(0)
         self.assertEqual(
             4 * FindParameters.DEFAULT_FEATURE_MATCH_SCORE,
@@ -1011,10 +1011,10 @@ class TestFeatureMatchingScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix], trigPoints=[])
         query = AARead('id', 'AAAFRRRFRRRF')
         subject = Subject('id2', 'A', 0)
-        fms = FeatureMatchingScore(histogram, query, subject, params)
+        fms = FeatureMatchingScore(histogram, query, subject, dbParams)
         score, analysis = fms.calculateScore(0)
         self.assertEqual(
             4 * FindParameters.DEFAULT_FEATURE_MATCH_SCORE,
@@ -1052,12 +1052,12 @@ class TestFeatureMatchingScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix], trigPoints=[])
         findParams = FindParameters(featureMatchScore=3.1,
                                     featureMismatchScore=-1.2)
         query = AARead('id', 'FRRRFRRRF')
         subject = Subject('id2', 'A', 0)
-        fms = FeatureMatchingScore(histogram, query, subject, params,
+        fms = FeatureMatchingScore(histogram, query, subject, dbParams,
                                    findParams)
         score, analysis = fms.calculateScore(0)
         self.assertEqual(4 * 3.1 - 1.2, score)
@@ -1092,12 +1092,12 @@ class TestFeatureMatchingScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix], trigPoints=[])
         findParams = FindParameters(featureMatchScore=3.1,
                                     featureMismatchScore=-1.2)
         query = AARead('id', 'FRRRFRRRF')
         subject = Subject('id2', 'A', 0)
-        fms = FeatureMatchingScore(histogram, query, subject, params,
+        fms = FeatureMatchingScore(histogram, query, subject, dbParams,
                                    findParams)
         score, analysis = fms.calculateScore(0)
         expected = (
@@ -1126,10 +1126,10 @@ class TestFeatureAAScore(TestCase):
         """
         histogram = Histogram()
         histogram.finalize()
-        params = Parameters([], [])
+        dbParams = DatabaseParameters(landmarks=[], trigPoints=[])
         query = AARead('id1', 'A')
         subject = Subject('id2', 'A', 0)
-        faas = FeatureAAScore(histogram, query, subject, params)
+        faas = FeatureAAScore(histogram, query, subject, dbParams)
         score, analysis = faas.calculateScore(0)
         self.assertEqual(0.0, score)
         self.assertEqual(
@@ -1162,10 +1162,10 @@ class TestFeatureAAScore(TestCase):
         """
         histogram = Histogram(1)
         histogram.finalize()
-        params = Parameters([AlphaHelix], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix], trigPoints=[])
         query = AARead('id', 'FRRRFRRRF')
         subject = Subject('id2', 'A', 0)
-        faas = FeatureAAScore(histogram, query, subject, params)
+        faas = FeatureAAScore(histogram, query, subject, dbParams)
         score, analysis = faas.calculateScore(0)
         self.assertEqual(0.0, score)
         self.assertEqual(
@@ -1199,10 +1199,10 @@ class TestFeatureAAScore(TestCase):
         """
         histogram = Histogram(1)
         histogram.finalize()
-        params = Parameters([AlphaHelix], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix], trigPoints=[])
         query = AARead('id', 'FRRRFRRRF')
         subject = Subject('id2', 'AAAAAAAAAAAAAAFRRRFRRRF', 0)
-        faas = FeatureAAScore(histogram, query, subject, params)
+        faas = FeatureAAScore(histogram, query, subject, dbParams)
         score, analysis = faas.calculateScore(0)
         self.assertEqual(0.0, score)
         self.assertEqual(
@@ -1244,10 +1244,10 @@ class TestFeatureAAScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([], [])
+        dbParams = DatabaseParameters(landmarks=[], trigPoints=[])
         query = AARead('id1', 'A')
         subject = Subject('id2', 'A', 0)
-        faas = FeatureAAScore(histogram, query, subject, params)
+        faas = FeatureAAScore(histogram, query, subject, dbParams)
         score, analysis = faas.calculateScore(0)
         self.assertEqual(1.0, score)
         self.assertEqual(
@@ -1302,10 +1302,11 @@ class TestFeatureAAScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint2,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix], [AminoAcids])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix],
+                                      trigPoints=[AminoAcids])
         query = AARead('id1', 'A')
         subject = Subject('id2', 'A', 0)
-        faas = FeatureAAScore(histogram, query, subject, params)
+        faas = FeatureAAScore(histogram, query, subject, dbParams)
         score, analysis = faas.calculateScore(0)
         self.assertEqual(1.0, score)
         self.assertEqual(
@@ -1348,10 +1349,11 @@ class TestFeatureAAScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix, AminoAcidsLm], [AminoAcids])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[AminoAcids])
         query = AARead('id', 300 * 'A' + 'FRRRFRRRFAAAC')
         subject = Subject('id', 30 * 'A', 0)
-        faas = FeatureAAScore(histogram, query, subject, params)
+        faas = FeatureAAScore(histogram, query, subject, dbParams)
         score, analysis = faas.calculateScore(0)
         self.assertEqual(1.0, score)
         self.assertEqual(
@@ -1394,10 +1396,11 @@ class TestFeatureAAScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix, AminoAcidsLm], [AminoAcids])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[AminoAcids])
         query = AARead('id', 'FRRRFRRRF' + ('F' * 200) + 'FRRRFRRRFAAACAAAW')
         subject = Subject('id2', 'A', 0)
-        faas = FeatureAAScore(histogram, query, subject, params)
+        faas = FeatureAAScore(histogram, query, subject, dbParams)
         score, analysis = faas.calculateScore(0)
         self.assertEqual(1.0, score)
         self.assertEqual(
@@ -1439,10 +1442,11 @@ class TestFeatureAAScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix, AminoAcidsLm], [AminoAcids])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[AminoAcids])
         query = AARead('id', 'FRRRFRRRF' + 'AAACAAAW')
         subject = Subject('id2', 'FRRRFRRRF' + 'AAAC', 0)
-        faas = FeatureAAScore(histogram, query, subject, params)
+        faas = FeatureAAScore(histogram, query, subject, dbParams)
         score, analysis = faas.calculateScore(0)
         self.assertAlmostEqual(2 / 3, score)
         self.assertEqual(
@@ -1484,10 +1488,11 @@ class TestFeatureAAScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix, AminoAcidsLm], [AminoAcids])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[AminoAcids])
         query = Subject('id2', 'FRRRFRRRF' + 'AAAC', 0)
         subject = AARead('id', 'FRRRFRRRF' + 'AAACAAAW')
-        faas = FeatureAAScore(histogram, query, subject, params)
+        faas = FeatureAAScore(histogram, query, subject, dbParams)
         score, analysis = faas.calculateScore(0)
         self.assertAlmostEqual(2 / 3, score)
         self.assertEqual(
@@ -1530,10 +1535,11 @@ class TestFeatureAAScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix, AminoAcidsLm], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[])
         query = AARead('id', 20 * 'A' + 'FRRRFRRRFAAC')
         subject = Subject('id2', 'A', 0)
-        faas = FeatureAAScore(histogram, query, subject, params)
+        faas = FeatureAAScore(histogram, query, subject, dbParams)
         score, analysis = faas.calculateScore(0)
         self.assertEqual((21 + 21) / (21 + 21 + 10), score)
         self.assertEqual(
@@ -1577,10 +1583,11 @@ class TestFeatureAAScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix, AminoAcidsLm], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[])
         query = AARead('id', 'FRRRFRRRFAAAAC')
         subject = Subject('id2', 'A', 0)
-        faas = FeatureAAScore(histogram, query, subject, params)
+        faas = FeatureAAScore(histogram, query, subject, dbParams)
         score, analysis = faas.calculateScore(0)
         self.assertEqual((9 + 9) / (9 + 9), score)
         self.assertEqual(
@@ -1624,10 +1631,11 @@ class TestFeatureAAScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix, AminoAcidsLm], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[])
         query = AARead('id', 'FRRRFRRRF' + 20 * 'A' + 'C')
         subject = Subject('id2', 'A', 0)
-        faas = FeatureAAScore(histogram, query, subject, params)
+        faas = FeatureAAScore(histogram, query, subject, dbParams)
         score, analysis = faas.calculateScore(0)
         self.assertEqual(1.0, score)
         # Note that the landmark in the unmatched hash completely overlaps
@@ -1675,10 +1683,11 @@ class TestFeatureAAScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix, AminoAcidsLm], [AminoAcids])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[AminoAcids])
         query = AARead('id', 22 * 'A' + 'CAAW')
         subject = Subject('id2', 'A', 0)
-        faas = FeatureAAScore(histogram, query, subject, params)
+        faas = FeatureAAScore(histogram, query, subject, dbParams)
         score, analysis = faas.calculateScore(0)
         self.assertEqual(42 / 44, score)
         self.assertEqual(
@@ -1721,10 +1730,11 @@ class TestFeatureAAScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix, AminoAcidsLm], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[])
         query = AARead('id', 'FRRRFRRRFC')
         subject = Subject('id2', 'A', 0)
-        faas = FeatureAAScore(histogram, query, subject, params)
+        faas = FeatureAAScore(histogram, query, subject, dbParams)
         score, analysis = faas.calculateScore(0)
         self.assertEqual(1.0, score)
         self.assertEqual(
@@ -1767,10 +1777,11 @@ class TestFeatureAAScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix, AminoAcidsLm], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[])
         query = AARead('id', 'AAAFRRRFRRRFC')
         subject = Subject('id2', 'A', 0)
-        faas = FeatureAAScore(histogram, query, subject, params)
+        faas = FeatureAAScore(histogram, query, subject, dbParams)
         score, analysis = faas.calculateScore(0)
         self.assertEqual(1.0, score)
         self.assertEqual(
@@ -1824,10 +1835,11 @@ class TestFeatureAAScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint2,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix, AminoAcidsLm], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[])
         query = AARead('id', 20 * 'A' + 'FRRRFRRRFC')
         subject = Subject('id2', 25 * 'A' + 'FRRRFRRRFRRRFAAC', 0)
-        faas = FeatureAAScore(histogram, query, subject, params)
+        faas = FeatureAAScore(histogram, query, subject, dbParams)
         score, analysis = faas.calculateScore(0)
         matched = (3 + 1) + (5 + 1) + (3 + 1) + (5 + 1)
         total = matched + (9 + 1) + (13 + 1)
@@ -1871,10 +1883,10 @@ class TestFeatureAAScore(TestCase):
                                         'AALH')
 
         db = DatabaseSpecifier().getDatabaseFromKeywords(
-            landmarkNames=[
+            landmarks=[
                 'AlphaHelix', 'AlphaHelix_3_10', 'AlphaHelix_pi',
                 'AminoAcidsLm', 'BetaStrand', 'BetaTurn', 'Prosite'],
-            trigPointNames=['AminoAcids', 'Peaks', 'Troughs'],
+            trigPoints=['AminoAcids', 'Peaks', 'Troughs'],
             distanceBase=1.01, limitPerLandmark=50, minDistance=1,
             maxDistance=100)
         _, subjectIndex, _ = db.addSubject(pichninde)
@@ -1937,7 +1949,7 @@ class TestFeatureAAScore(TestCase):
         findParams = FindParameters(significanceFraction=0.01,
                                     scoreMethod='FeatureAAScore')
 
-        kwds = dict(landmarkNames=['Prosite'], trigPointNames=['Peaks'],
+        kwds = dict(landmarks=['Prosite'], trigPoints=['Peaks'],
                     distanceBase=1, limitPerLandmark=40, minDistance=1,
                     maxDistance=10000)
 
@@ -1970,10 +1982,11 @@ class TestFeatureAAScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix, AminoAcidsLm], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[])
         query = AARead('id', 'FRRRFRRRFC')
         subject = Subject('id2', 'A', 0)
-        faas = FeatureAAScore(histogram, query, subject, params)
+        faas = FeatureAAScore(histogram, query, subject, dbParams)
         score, analysis = faas.calculateScore(0)
         self.assertEqual(1.0, score)
 
@@ -2239,10 +2252,10 @@ class TestWeightedFeatureAAScore(TestCase):
         """
         histogram = Histogram()
         histogram.finalize()
-        params = Parameters([], [])
+        dbParams = DatabaseParameters(landmarks=[], trigPoints=[])
         query = AARead('id1', 'A')
         subject = Subject('id2', 'A', 0)
-        faas = WeightedFeatureAAScore(histogram, query, subject, params,
+        faas = WeightedFeatureAAScore(histogram, query, subject, dbParams,
                                       DEFAULT_WEIGHTS)
         score, analysis = faas.calculateScore(0)
         self.assertEqual(0.0, score)
@@ -2278,10 +2291,10 @@ class TestWeightedFeatureAAScore(TestCase):
         """
         histogram = Histogram(1)
         histogram.finalize()
-        params = Parameters([AlphaHelix], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix], trigPoints=[])
         query = AARead('id', 'FRRRFRRRF')
         subject = Subject('id2', 'A', 0)
-        faas = WeightedFeatureAAScore(histogram, query, subject, params,
+        faas = WeightedFeatureAAScore(histogram, query, subject, dbParams,
                                       DEFAULT_WEIGHTS)
         score, analysis = faas.calculateScore(0)
         self.assertEqual(0.0, score)
@@ -2318,10 +2331,10 @@ class TestWeightedFeatureAAScore(TestCase):
         """
         histogram = Histogram(1)
         histogram.finalize()
-        params = Parameters([AlphaHelix], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix], trigPoints=[])
         query = AARead('id', 'FRRRFRRRF')
         subject = Subject('id2', 'AAAAAAAAAAAAAAFRRRFRRRF', 0)
-        faas = WeightedFeatureAAScore(histogram, query, subject, params,
+        faas = WeightedFeatureAAScore(histogram, query, subject, dbParams,
                                       DEFAULT_WEIGHTS)
         score, analysis = faas.calculateScore(0)
         self.assertEqual(0.0, score)
@@ -2366,10 +2379,10 @@ class TestWeightedFeatureAAScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([], [])
+        dbParams = DatabaseParameters(landmarks=[], trigPoints=[])
         query = AARead('id1', 'A')
         subject = Subject('id2', 'A', 0)
-        faas = WeightedFeatureAAScore(histogram, query, subject, params,
+        faas = WeightedFeatureAAScore(histogram, query, subject, dbParams,
                                       TEST_WEIGHTS)
         score, analysis = faas.calculateScore(0)
         self.assertEqual(1.0, score)
@@ -2427,10 +2440,11 @@ class TestWeightedFeatureAAScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint2,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix], [AminoAcids])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix],
+                                      trigPoints=[AminoAcids])
         query = AARead('id1', 'A')
         subject = Subject('id2', 'A', 0)
-        faas = WeightedFeatureAAScore(histogram, query, subject, params,
+        faas = WeightedFeatureAAScore(histogram, query, subject, dbParams,
                                       TEST_WEIGHTS)
         score, analysis = faas.calculateScore(0)
         self.assertEqual(1.0, score)
@@ -2476,10 +2490,11 @@ class TestWeightedFeatureAAScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix, AminoAcidsLm], [AminoAcids])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[AminoAcids])
         query = AARead('id', 300 * 'A' + 'FRRRFRRRFAAAC')
         subject = Subject('id', 30 * 'A', 0)
-        faas = WeightedFeatureAAScore(histogram, query, subject, params,
+        faas = WeightedFeatureAAScore(histogram, query, subject, dbParams,
                                       TEST_WEIGHTS)
         score, analysis = faas.calculateScore(0)
         self.assertEqual(1.0, score)
@@ -2525,10 +2540,11 @@ class TestWeightedFeatureAAScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix, AminoAcidsLm], [AminoAcids])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[AminoAcids])
         query = AARead('id', 'FRRRFRRRF' + ('F' * 200) + 'FRRRFRRRFAAACAAAW')
         subject = Subject('id2', 'A', 0)
-        faas = WeightedFeatureAAScore(histogram, query, subject, params,
+        faas = WeightedFeatureAAScore(histogram, query, subject, dbParams,
                                       DEFAULT_WEIGHTS)
         score, analysis = faas.calculateScore(0)
         self.assertEqual(1.0, score)
@@ -2573,10 +2589,11 @@ class TestWeightedFeatureAAScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix, AminoAcidsLm], [AminoAcids])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[AminoAcids])
         query = AARead('id', 'FRRRFRRRF' + 'AAACAAAW')
         subject = Subject('id2', 'FRRRFRRRF' + 'AAAC', 0)
-        faas = WeightedFeatureAAScore(histogram, query, subject, params,
+        faas = WeightedFeatureAAScore(histogram, query, subject, dbParams,
                                       DEFAULT_WEIGHTS)
         score, analysis = faas.calculateScore(0)
         self.assertAlmostEqual(2 / 3, score)
@@ -2621,10 +2638,11 @@ class TestWeightedFeatureAAScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix, AminoAcidsLm], [AminoAcids])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[AminoAcids])
         query = Subject('id2', 'FRRRFRRRF' + 'AAAC', 0)
         subject = AARead('id', 'FRRRFRRRF' + 'AAACAAAW')
-        faas = WeightedFeatureAAScore(histogram, query, subject, params,
+        faas = WeightedFeatureAAScore(histogram, query, subject, dbParams,
                                       DEFAULT_WEIGHTS)
         score, analysis = faas.calculateScore(0)
         self.assertAlmostEqual(2 / 3, score)
@@ -2670,10 +2688,11 @@ class TestWeightedFeatureAAScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix, AminoAcidsLm], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[])
         query = AARead('id', 20 * 'A' + 'FRRRFRRRFAAC')
         subject = Subject('id2', 'A', 0)
-        faas = WeightedFeatureAAScore(histogram, query, subject, params,
+        faas = WeightedFeatureAAScore(histogram, query, subject, dbParams,
                                       DEFAULT_WEIGHTS)
         score, analysis = faas.calculateScore(0)
         self.assertEqual((21 + 21) / (21 + 21 + 10), score)
@@ -2720,10 +2739,11 @@ class TestWeightedFeatureAAScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix, AminoAcidsLm], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[])
         query = AARead('id', 'FRRRFRRRFAAAAC')
         subject = Subject('id2', 'A', 0)
-        faas = WeightedFeatureAAScore(histogram, query, subject, params,
+        faas = WeightedFeatureAAScore(histogram, query, subject, dbParams,
                                       DEFAULT_WEIGHTS)
         score, analysis = faas.calculateScore(0)
         self.assertEqual((9 + 9) / (9 + 9), score)
@@ -2770,10 +2790,11 @@ class TestWeightedFeatureAAScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix, AminoAcidsLm], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[])
         query = AARead('id', 'FRRRFRRRF' + 20 * 'A' + 'C')
         subject = Subject('id2', 'A', 0)
-        faas = WeightedFeatureAAScore(histogram, query, subject, params,
+        faas = WeightedFeatureAAScore(histogram, query, subject, dbParams,
                                       DEFAULT_WEIGHTS)
         score, analysis = faas.calculateScore(0)
         self.assertEqual(1.0, score)
@@ -2824,10 +2845,11 @@ class TestWeightedFeatureAAScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix, AminoAcidsLm], [AminoAcids])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[AminoAcids])
         query = AARead('id', 22 * 'A' + 'CAAW')
         subject = Subject('id2', 'A', 0)
-        faas = WeightedFeatureAAScore(histogram, query, subject, params,
+        faas = WeightedFeatureAAScore(histogram, query, subject, dbParams,
                                       DEFAULT_WEIGHTS)
         score, analysis = faas.calculateScore(0)
         self.assertEqual(42 / 44, score)
@@ -2873,10 +2895,11 @@ class TestWeightedFeatureAAScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix, AminoAcidsLm], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[])
         query = AARead('id', 'FRRRFRRRFC')
         subject = Subject('id2', 'A', 0)
-        faas = WeightedFeatureAAScore(histogram, query, subject, params,
+        faas = WeightedFeatureAAScore(histogram, query, subject, dbParams,
                                       DEFAULT_WEIGHTS)
         score, analysis = faas.calculateScore(0)
         self.assertEqual(1.0, score)
@@ -2922,10 +2945,11 @@ class TestWeightedFeatureAAScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix, AminoAcidsLm], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[])
         query = AARead('id', 'AAAFRRRFRRRFC')
         subject = Subject('id2', 'A', 0)
-        faas = WeightedFeatureAAScore(histogram, query, subject, params,
+        faas = WeightedFeatureAAScore(histogram, query, subject, dbParams,
                                       DEFAULT_WEIGHTS)
         score, analysis = faas.calculateScore(0)
         self.assertEqual(1.0, score)
@@ -2982,10 +3006,11 @@ class TestWeightedFeatureAAScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint2,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix, AminoAcidsLm], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[])
         query = AARead('id', 20 * 'A' + 'FRRRFRRRFC')
         subject = Subject('id2', 25 * 'A' + 'FRRRFRRRFRRRFAAC', 0)
-        faas = WeightedFeatureAAScore(histogram, query, subject, params,
+        faas = WeightedFeatureAAScore(histogram, query, subject, dbParams,
                                       DEFAULT_WEIGHTS)
         score, analysis = faas.calculateScore(0)
         matched = (3 + 1) + (5 + 1) + (3 + 1) + (5 + 1)
@@ -3032,10 +3057,10 @@ class TestWeightedFeatureAAScore(TestCase):
                                         'AALH')
 
         db = DatabaseSpecifier().getDatabaseFromKeywords(
-            landmarkNames=[
+            landmarks=[
                 'AlphaHelix', 'AlphaHelix_3_10', 'AlphaHelix_pi',
                 'AminoAcidsLm', 'BetaStrand', 'BetaTurn', 'Prosite'],
-            trigPointNames=['AminoAcids', 'Peaks', 'Troughs'],
+            trigPoints=['AminoAcids', 'Peaks', 'Troughs'],
             distanceBase=1.01, limitPerLandmark=50, minDistance=1,
             maxDistance=100)
         _, subjectIndex, _ = db.addSubject(pichninde)
@@ -3100,7 +3125,7 @@ class TestWeightedFeatureAAScore(TestCase):
         findParams = FindParameters(significanceFraction=0.01,
                                     scoreMethod='WeightedFeatureAAScore')
 
-        kwds = dict(landmarkNames=['Prosite'], trigPointNames=['Peaks'],
+        kwds = dict(landmarks=['Prosite'], trigPoints=['Peaks'],
                     distanceBase=1, limitPerLandmark=40, minDistance=1,
                     maxDistance=10000)
 
@@ -3133,10 +3158,11 @@ class TestWeightedFeatureAAScore(TestCase):
             'subjectTrigPoint': subjectTrigPoint,
         })
         histogram.finalize()
-        params = Parameters([AlphaHelix, AminoAcidsLm], [])
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[])
         query = AARead('id', 'FRRRFRRRFC')
         subject = Subject('id2', 'A', 0)
-        faas = WeightedFeatureAAScore(histogram, query, subject, params,
+        faas = WeightedFeatureAAScore(histogram, query, subject, dbParams,
                                       DEFAULT_WEIGHTS)
         score, analysis = faas.calculateScore(0)
         self.assertEqual(1.0, score)

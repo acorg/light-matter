@@ -2,17 +2,18 @@ from six import StringIO
 
 from dark.reads import AARead
 
-from light.parameters import FindParameters
-from light.database import Database, Parameters
+from light.parameters import DatabaseParameters, FindParameters
+from light.database import Database
 from light.landmarks.alpha_helix import AlphaHelix
 from light.landmarks.beta_strand import BetaStrand
 from light.trig.amino_acids import AminoAcids
 
 
-_params = Parameters([AlphaHelix, BetaStrand], [AminoAcids])
-DB = Database(_params)
+_dbParams = DatabaseParameters(landmarks=[AlphaHelix, BetaStrand],
+                               trigPoints=[AminoAcids])
+DB = Database(_dbParams)
 
-PARAMS = _params.save(StringIO()).getvalue()
+PARAMS = _dbParams.save(StringIO()).getvalue()
 
 _ALPHA = 'ADDDADDDAM'
 _BETA = 'VVVVVVM'

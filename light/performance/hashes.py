@@ -32,7 +32,7 @@ class HashesString(object):
 
         database = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
         backend = Backend()
-        backend.configure(database.params)
+        backend.configure(database.dbParams)
 
         # Make a dictionary where the keys are the sequence ids and the value
         # is an orderedDict of hashes as returned from getHashes().

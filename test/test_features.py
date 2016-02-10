@@ -2,8 +2,7 @@ from unittest import TestCase
 from random import shuffle as pyshuffle
 from copy import copy
 
-from light.features import (
-    _Feature, Landmark, TrigPoint, CombinedFeatureList, Finder)
+from light.features import Landmark, TrigPoint, CombinedFeatureList, _Feature
 
 
 def shuffle(l):
@@ -468,23 +467,3 @@ class TestSets(TestCase):
         trigPoint = TrigPoint('trig', 't', 44)
         s = set([(landmark, trigPoint)])
         self.assertIn((landmark, trigPoint), s)
-
-
-class TestFinder(TestCase):
-    """
-    Tests for the light.features.Finder class.
-    """
-    def testDefaultFeatureLengthBase(self):
-        """
-        An instance must have the right default feature length base.
-        """
-        finder = Finder()
-        self.assertEqual(1.35, finder._featureLengthBase)
-
-    def testNonDefaultFeatureLengthBase(self):
-        """
-        An instance made with a non-default feature length base must have the
-        right featureLengthBase set.
-        """
-        finder = Finder(featureLengthBase=1.5)
-        self.assertEqual(1.5, finder._featureLengthBase)

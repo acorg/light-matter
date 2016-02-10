@@ -38,7 +38,7 @@ class TestNJTree(TestCase):
         error = '^Data must be at least 1x1 in size\.$'
         six.assertRaisesRegex(self, DissimilarityMatrixError, error,
                               NJTree.fromSequences, [], sequences,
-                              landmarkNames=['AlphaHelix'])
+                              landmarks=['AlphaHelix'])
 
     def testFromSequencesWithNoLabels(self):
         """
@@ -52,7 +52,7 @@ class TestNJTree(TestCase):
                  'rows/columns in the data \(1\)\.$')
         six.assertRaisesRegex(self, DissimilarityMatrixError, error,
                               NJTree.fromSequences, [], sequences,
-                              landmarkNames=['AlphaHelix'])
+                              landmarks=['AlphaHelix'])
 
     def testFromSequencesWithOneSequenceRaisesValueError(self):
         """
@@ -65,7 +65,7 @@ class TestNJTree(TestCase):
                  'neighbor joining tree\.$')
         six.assertRaisesRegex(self, ValueError, error,
                               NJTree.fromSequences, ['x'], sequences,
-                              landmarkNames=['AlphaHelix'])
+                              landmarks=['AlphaHelix'])
 
     def testFromSequencesWithTwoSequencesRaisesValueError(self):
         """
@@ -79,7 +79,7 @@ class TestNJTree(TestCase):
                  'neighbor joining tree\.$')
         six.assertRaisesRegex(self, ValueError, error,
                               NJTree.fromSequences, ['x', 'y'], sequences,
-                              landmarkNames=['AlphaHelix'])
+                              landmarks=['AlphaHelix'])
 
     def testFromThreeSequences(self):
         """
@@ -94,7 +94,7 @@ class TestNJTree(TestCase):
         sequences.add(AARead('id3', 'A'))
         labels = ['x', 'y', 'z']
         njtree = NJTree.fromSequences(labels, sequences,
-                                      landmarkNames=['AlphaHelix'])
+                                      landmarks=['AlphaHelix'])
         self.assertTrue(np.array_equal(
             [
                 [0, 1, 1],

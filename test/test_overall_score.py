@@ -1739,7 +1739,7 @@ class TestGreedySignificantBinScore(TestCase):
 
         self.assertEqual(0.3023133221365436,
                          result.analysis[subjectIndex]['bestBinScore'])
-        self.assertAlmostEqual(0.5842663952304784,
+        self.assertAlmostEqual((350 / 575) * (max((288 / 301), (287 / 299))),
                                result.analysis[subjectIndex]['overallScore'])
         self.maxDiff = None
         analysis = result.analysis[subjectIndex]['overallScoreAnalysis']
@@ -1757,7 +1757,7 @@ class TestGreedySignificantBinScore(TestCase):
                 'normalizerQuery': 288 / 301,
                 'normalizerSubject': 287 / 299,
                 'numberOfBinsConsidered': 3,
-                'score': 0.5842663952304784,
+                'score': (350 / 575) * (max((288 / 301), (287 / 299))),
                 'scoreClass': GreedySignificantBinScore,
                 'subjectOffsetsInBins': 354,
                 'totalOffsetCount': 575,

@@ -1192,8 +1192,8 @@ def featureComparison(ssAARead, print_=True, **kwargs):
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    lmNames = [landmark.NAME for landmark in db.dbParams.landmarkClasses]
-    tpNames = [trigPoint.NAME for trigPoint in db.dbParams.trigPointClasses]
+    lmNames = db.dbParams.landmarkFinderNames()
+    tpNames = db.dbParams.trigPointFinderNames()
     yticks = ['S', 'T', 'E', 'B', 'I', 'G', 'H', ' '] + lmNames + tpNames
     ytickLabels = (['Bend', 'H-bonded turn', 'BetaStrand (?)', 'BetaBridge',
                     'AlphaHelixPi', 'AlphaHelix_3_10', 'AlphaHelix', ' '] +

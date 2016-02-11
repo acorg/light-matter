@@ -577,7 +577,7 @@ def plotFeatureSquare(read, significanceFraction=None, readsAx=None, **kwargs):
 
     database = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
     backend = Backend()
-    backend.configure(database.params)
+    backend.configure(database.dbParams)
     findParams = FindParameters(significanceFraction=significanceFraction)
     result = database.find(read, findParams, storeFullAnalysis=True)
     scannedQuery = backend.scan(result.query)
@@ -1049,7 +1049,7 @@ def plotLandmarksInSequences(sequences, maxTickLabelLength=None, **kwargs):
     nReads = len(reads)
     db = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
     backend = Backend()
-    backend.configure(db.params)
+    backend.configure(db.dbParams)
     fig = plt.figure(figsize=(15, nReads / 3.0))
     ax = fig.add_subplot(111)
     namesSeen = set()
@@ -1187,13 +1187,13 @@ def featureComparison(ssAARead, print_=True, **kwargs):
     # set up database and scan read.
     db = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
     backend = Backend()
-    backend.configure(db.params)
+    backend.configure(db.dbParams)
     scannedRead = backend.scan(ssAARead)
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    lmNames = [landmark.NAME for landmark in db.params.landmarkClasses]
-    tpNames = [trigPoint.NAME for trigPoint in db.params.trigPointClasses]
+    lmNames = [landmark.NAME for landmark in db.dbParams.landmarkClasses]
+    tpNames = [trigPoint.NAME for trigPoint in db.dbParams.trigPointClasses]
     yticks = ['S', 'T', 'E', 'B', 'I', 'G', 'H', ' '] + lmNames + tpNames
     ytickLabels = (['Bend', 'H-bonded turn', 'BetaStrand (?)', 'BetaBridge',
                     'AlphaHelixPi', 'AlphaHelix_3_10', 'AlphaHelix', ' '] +

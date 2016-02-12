@@ -1692,27 +1692,24 @@ class TestGreedySignificantBinScore(TestCase):
         gsbs = GreedySignificantBinScore(significantBins, query, subject,
                                          params)
         score, analysis = gsbs.calculateScore()
+
         self.assertEqual(1.0, score)
-        self.assertEqual(
-            {
-                'denominatorQuery': 20,
-                'denominatorSubject': 20,
-                'matchedOffsetCount': 40,
-                'matchedQueryOffsetCount': 20,
-                'matchedRegionScore': 1.0,
-                'matchedSubjectOffsetCount': 20,
-                'numeratorQuery': 20,
-                'numeratorSubject': 20,
-                'queryOffsetsInBins': 20,
-                'normalizerQuery': 1.0,
-                'normalizerSubject': 1.0,
-                'numberOfBinsConsidered': 1,
-                'score': score,
-                'scoreClass': GreedySignificantBinScore,
-                'subjectOffsetsInBins': 20,
-                'totalOffsetCount': 40,
-            },
-            analysis)
+        self.assertEqual(20, analysis['denominatorQuery'])
+        self.assertEqual(20, analysis['denominatorSubject'])
+        self.assertEqual(40, analysis['matchedOffsetCount'])
+        self.assertEqual(20, analysis['matchedQueryOffsetCount'])
+        self.assertEqual(1.0, analysis['matchedRegionScore'])
+        self.assertEqual(20, analysis['matchedSubjectOffsetCount'])
+        self.assertEqual(20, analysis['numeratorQuery'])
+        self.assertEqual(20, analysis['numeratorSubject'])
+        self.assertEqual(20, analysis['queryOffsetsInBinsCount'])
+        self.assertEqual(1.0, analysis['normalizerQuery'])
+        self.assertEqual(1.0, analysis['normalizerSubject'])
+        self.assertEqual(1, analysis['numberOfBinsConsidered'])
+        self.assertEqual(score, analysis['score'])
+        self.assertEqual(GreedySignificantBinScore, analysis['scoreClass'])
+        self.assertEqual(20, analysis['subjectOffsetsInBinsCount'])
+        self.assertEqual(40, analysis['totalOffsetCount'])
 
     def testCorrectScoresMustBeCalculated(self):
         """
@@ -1758,28 +1755,25 @@ class TestGreedySignificantBinScore(TestCase):
                          result.analysis[subjectIndex]['bestBinScore'])
         self.assertAlmostEqual((350 / 575) * (max((288 / 301), (287 / 299))),
                                result.analysis[subjectIndex]['overallScore'])
-        self.maxDiff = None
         analysis = result.analysis[subjectIndex]['overallScoreAnalysis']
-        self.assertEqual(
-            {
-                'denominatorQuery': 301,
-                'denominatorSubject': 299,
-                'matchedOffsetCount': 350,
-                'matchedQueryOffsetCount': 97,
-                'matchedRegionScore': 350 / 575,
-                'matchedSubjectOffsetCount': 99,
-                'numeratorQuery': 288,
-                'numeratorSubject': 287,
-                'queryOffsetsInBins': 355,
-                'normalizerQuery': 288 / 301,
-                'normalizerSubject': 287 / 299,
-                'numberOfBinsConsidered': 3,
-                'score': (350 / 575) * (max((288 / 301), (287 / 299))),
-                'scoreClass': GreedySignificantBinScore,
-                'subjectOffsetsInBins': 354,
-                'totalOffsetCount': 575,
-            },
-            analysis)
+
+        self.assertEqual(301, analysis['denominatorQuery'])
+        self.assertEqual(299, analysis['denominatorSubject'])
+        self.assertEqual(350, analysis['matchedOffsetCount'])
+        self.assertEqual(175, analysis['matchedQueryOffsetCount'])
+        self.assertEqual(350 / 575, analysis['matchedRegionScore'])
+        self.assertEqual(175, analysis['matchedSubjectOffsetCount'])
+        self.assertEqual(288, analysis['numeratorQuery'])
+        self.assertEqual(287, analysis['numeratorSubject'])
+        self.assertEqual(339, analysis['queryOffsetsInBinsCount'])
+        self.assertEqual(288 / 301, analysis['normalizerQuery'])
+        self.assertEqual(287 / 299, analysis['normalizerSubject'])
+        self.assertEqual(2, analysis['numberOfBinsConsidered'])
+        self.assertEqual((350 / 575) * (max((288 / 301), (287 / 299))),
+                         analysis['score'])
+        self.assertEqual(GreedySignificantBinScore, analysis['scoreClass'])
+        self.assertEqual(339, analysis['subjectOffsetsInBinsCount'])
+        self.assertEqual(575, analysis['totalOffsetCount'])
 
     def testPrintAnalysis(self):
         """

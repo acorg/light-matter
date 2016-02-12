@@ -169,8 +169,6 @@ class SignificantBinScore(object):
         self._query = query
         self._subject = subject
         self._dbParams = dbParams
-        if self._significantBins:
-            self._bestBinScore = significantBins[0]['score']
 
     def calculateScore(self):
         """
@@ -181,6 +179,9 @@ class SignificantBinScore(object):
             if there are no significant bins) and a C{dict} with information
             about the score.
         """
+        if self._significantBins:
+            bestBinScore = self._significantBins[0]['score']
+
         if not self._significantBins:
             analysis = {
                 'score': None,
@@ -279,8 +280,8 @@ class SignificantBinScore(object):
         # example when a sequence is compared against itself, where the
         # bestBinScore will be 1.0, but the overallScore can be lower,
         # because worse bins are taken into account. We don't allow that.
-        if score < self._bestBinScore:
-            overallScore = self._bestBinScore
+        if score < bestBinScore:
+            overallScore = bestBinScore
             adjusted = True
         else:
             overallScore = score
@@ -349,7 +350,7 @@ class SignificantBinScore(object):
 def addBin(bin_, allQueryFeatures, allSubjectFeatures,
            overallMatchedQueryOffsets, overallUnmatchedQueryOffsets,
            queryOffsetsInBins, overallMatchedSubjectOffsets,
-           overallUnmatchedSbjctOffsets, subjectOffsetsInBins):
+           overallUnmatchedSubjectOffsets, subjectOffsetsInBins):
     """
     Add a bin to the overall score calculation.
 
@@ -357,26 +358,25 @@ def addBin(bin_, allQueryFeatures, allSubjectFeatures,
     @param allQueryFeatures: A C{set} of all features (landmarks and trig
         points) that are in the pairs in the query.
     @param allSubjectFeatures: A C{set} of all features (landmarks and trig
-        points) that are in the pairs in the query.
-    @param overallMatchedQueryOffsets: A C{set} of all int offsets that are in
-        matching features (and thus inside the matched region) in the query.
-    @param overallUnmatchedQueryOffsets: A C{set} of all int offsets that are
-        in features that don't match, but which are inside the matched region
-        in the query.
-    @param queryOffsetsInBins: A C{set} of all offsets in all bins in the query
-        (whether or not the offsets are in matched features, unmatched
-        features, or not in any feature).
-    @param overallMatchedSubjectOffsets: A C{set} of all int offsets that are
-        in matching features (and thus inside the matched region) in the
+        points) that are in the pairs in the subject.
+    @param overallMatchedQueryOffsets: A C{set} of all C{int} offsets that are
+        in matching features (and thus inside the matched region) in the query.
+    @param overallUnmatchedQueryOffsets: A C{set} of all C{int} offsets that
+        are in features that don't match, but which are inside the matched
+        region in the query.
+    @param queryOffsetsInBins: A C{set} of all C{int} offsets in all bins in
+        the query (whether or not the offsets are in matched features,
+        unmatched features, or not in any feature).
+    @param overallMatchedSubjectOffsets: A C{set} of all C{int} offsets that
+        are in matching features (and thus inside the matched region) in the
         subject.
-    @param overallUnmatchedSbjctOffsets: A C{set} of all int offsets that are
-        in features that don't match, but which are inside the matched region
-        in the subject.
-    @param subjectOffsetsInBins: A C{set} of all offsets in all bins in the
-        subject (whether or not the offsets are in matched features, unmatched
-        features, or not in any feature).
+    @param overallUnmatchedSubjectOffsets: A C{set} of all C{int} offsets that
+        are in features that don't match, but which are inside the matched
+        region in the subject.
+    @param subjectOffsetsInBins: A C{set} of all C{int} offsets in all bins in
+        the subject (whether or not the offsets are in matched features,
+        unmatched features, or not in any feature).
     """
-    binResult = {}
     # Query.
     matchedOffsets, unmatchedOffsets, minOffset, maxOffset = (
         offsetsInBin(bin_, 'query', allQueryFeatures))
@@ -388,20 +388,20 @@ def addBin(bin_, allQueryFeatures, allSubjectFeatures,
     matchedOffsets, unmatchedOffsets, minOffset, maxOffset = (
         offsetsInBin(bin_, 'subject', allSubjectFeatures))
     overallMatchedSubjectOffsets.update(matchedOffsets)
-    overallUnmatchedSbjctOffsets.update(unmatchedOffsets)
+    overallUnmatchedSubjectOffsets.update(unmatchedOffsets)
     subjectOffsetsInBins.update(range(minOffset, maxOffset + 1))
 
     # Make sure none of the overall matched offsets are in the overall
     # unmatchedOffsets.
     overallMatchedQueryOffsets -= overallUnmatchedQueryOffsets
-    overallMatchedSubjectOffsets -= overallUnmatchedSbjctOffsets
+    overallMatchedSubjectOffsets -= overallUnmatchedSubjectOffsets
 
     # Overall score calculation step 1: the matched region score (MRS).
     matchedOffsetCount = (len(overallMatchedQueryOffsets) +
                           len(overallMatchedSubjectOffsets))
     totalOffsetCount = (matchedOffsetCount +
                         len(overallUnmatchedQueryOffsets) +
-                        len(overallUnmatchedSbjctOffsets))
+                        len(overallUnmatchedSubjectOffsets))
 
     try:
         matchedRegionScore = matchedOffsetCount / totalOffsetCount
@@ -427,30 +427,30 @@ def addBin(bin_, allQueryFeatures, allSubjectFeatures,
     normalizerSubject, numeratorSubject, denominatorSubject = (
         computeLengthNormalizer(
             allSubjectFeatures, overallMatchedSubjectOffsets,
-            overallUnmatchedSbjctOffsets, subjectOffsetsInBins))
+            overallUnmatchedSubjectOffsets, subjectOffsetsInBins))
 
     # Calculate the final score, as descibed in the docstring.
     overallScore = matchedRegionScore * max(normalizerQuery,
                                             normalizerSubject)
 
-    binResult['overallScore'] = overallScore
-    binResult['overallMatchedQueryOffsets'] = overallMatchedQueryOffsets
-    binResult['overallUnmatchedQueryOffsets'] = overallUnmatchedQueryOffsets
-    binResult['queryOffsetsInBins'] = queryOffsetsInBins
-    binResult['overallMatchedSubjectOffsets'] = overallMatchedSubjectOffsets
-    binResult['overallUnmatchedSbjctOffsets'] = overallUnmatchedSbjctOffsets
-    binResult['subjectOffsetsInBins'] = subjectOffsetsInBins
-    binResult['denominatorQuery'] = denominatorQuery
-    binResult['denominatorSubject'] = denominatorSubject
-    binResult['matchedOffsetCount'] = matchedOffsetCount
-    binResult['matchedRegionScore'] = matchedRegionScore
-    binResult['numeratorQuery'] = numeratorQuery
-    binResult['numeratorSubject'] = numeratorSubject
-    binResult['normalizerQuery'] = normalizerQuery
-    binResult['normalizerSubject'] = normalizerSubject
-    binResult['totalOffsetCount'] = totalOffsetCount
-
-    return binResult
+    return {
+        'overallScore': overallScore,
+        'overallMatchedQueryOffsets': overallMatchedQueryOffsets,
+        'overallUnmatchedQueryOffsets': overallUnmatchedQueryOffsets,
+        'queryOffsetsInBins': queryOffsetsInBins,
+        'overallMatchedSubjectOffsets': overallMatchedSubjectOffsets,
+        'overallUnmatchedSubjectOffsets': overallUnmatchedSubjectOffsets,
+        'subjectOffsetsInBins': subjectOffsetsInBins,
+        'denominatorQuery': denominatorQuery,
+        'denominatorSubject': denominatorSubject,
+        'matchedOffsetCount': matchedOffsetCount,
+        'matchedRegionScore': matchedRegionScore,
+        'numeratorQuery': numeratorQuery,
+        'numeratorSubject': numeratorSubject,
+        'normalizerQuery': normalizerQuery,
+        'normalizerSubject': normalizerSubject,
+        'totalOffsetCount': totalOffsetCount,
+    }
 
 
 class GreedySignificantBinScore(object):
@@ -496,15 +496,15 @@ class GreedySignificantBinScore(object):
     @param query: A C{dark.reads.AARead} instance.
     @param subject: A C{light.subject.Subject} instance (a subclass of
         C{dark.reads.AARead}).
-    @param params: A C{Parameters} instance.
+    @param dbParams: A C{DatabaseParameters} instance.
     """
-    def __init__(self, significantBins, query, subject, params):
+    def __init__(self, significantBins, query, subject, dbParams):
         # The only thing we do here is store what we have been passed. All
         # work happens in calculateScore (which is only called once).
         self._significantBins = significantBins
         self._query = query
         self._subject = subject
-        self._params = params
+        self._dbParams = dbParams
 
     def calculateScore(self):
         """
@@ -515,9 +515,9 @@ class GreedySignificantBinScore(object):
             if there are no significant bins) and a C{dict} with information
             about the score.
         """
-        # We could do more checking here and use the FeatureAAScore of the
-        # best bin as the overall score if there is only one significant bin or
-        # if the score of the best bin is 1.0.
+        # We could do more checking here and use the score of the best bin as
+        # the overall score if there is only one significant bin or if the
+        # score of the best bin is 1.0.
 
         # Don't attempt to calculate an overall score if there are no
         # significant bins.
@@ -531,7 +531,7 @@ class GreedySignificantBinScore(object):
 
         from light.backend import Backend
         backend = Backend()
-        backend.configure(self._params)
+        backend.configure(self._dbParams)
 
         allQueryFeatures = getHashFeatures(backend.getHashes(
             backend.scan(self._query)))
@@ -600,7 +600,7 @@ class GreedySignificantBinScore(object):
                 overallMatchedSubjectOffsets = (
                     r['overallMatchedSubjectOffsets'])
                 overallUnmatchedSubjectOffsets = (
-                    r['overallUnmatchedSbjctOffsets'])
+                    r['overallUnmatchedSubjectOffsets'])
                 subjectOffsetsInBins = r['subjectOffsetsInBins']
                 denominatorQuery = r['denominatorQuery']
                 denominatorSubject = r['denominatorSubject']

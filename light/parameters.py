@@ -49,7 +49,7 @@ class FindParameters(object):
         point) pairs for a scannedRead that need to fall into the same
         histogram bucket for that bucket to be considered a significant match
         with a database title.
-    @param scoreMethod: The C{str} name of the method used to calculate the
+    @param binScoreMethod: The C{str} name of the method used to calculate the
         score of a histogram bin which is considered significant.
     @param featureMatchScore: The C{float} contribution (usually positive) to
         a score when a feature in a query and subject are part of a match.
@@ -61,7 +61,7 @@ class FindParameters(object):
     """
     # The methods to be used to calculate match scores and whether matches
     # are significant (i.e., worth reporting).
-    DEFAULT_SCORE_METHOD = MinHashesScore.__name__
+    DEFAULT_BIN_SCORE_METHOD = MinHashesScore.__name__
     DEFAULT_SIGNIFICANCE_METHOD = HashFraction.__name__
     DEFAULT_OVERALL_SCORE_METHOD = BestBinScore.__name__
 
@@ -97,7 +97,7 @@ class FindParameters(object):
     }
 
     def __init__(self, significanceMethod=None, significanceFraction=None,
-                 scoreMethod=None, overallScoreMethod=None,
+                 binScoreMethod=None, overallScoreMethod=None,
                  featureMatchScore=None, featureMismatchScore=None,
                  weights=None, deltaScale=None):
         self.significanceMethod = (
@@ -108,8 +108,9 @@ class FindParameters(object):
             self.DEFAULT_SIGNIFICANCE_FRACTION if significanceFraction is None
             else significanceFraction)
 
-        self.scoreMethod = (
-            self.DEFAULT_SCORE_METHOD if scoreMethod is None else scoreMethod)
+        self.binScoreMethod = (
+            self.DEFAULT_BIN_SCORE_METHOD if binScoreMethod is None else
+            binScoreMethod)
 
         self.overallScoreMethod = (
             self.DEFAULT_OVERALL_SCORE_METHOD if overallScoreMethod is
@@ -154,7 +155,8 @@ class FindParameters(object):
                   'significant match with a database title.'))
 
         parser.add_argument(
-            '--scoreMethod', default=FindParameters.DEFAULT_SCORE_METHOD,
+            '--binScoreMethod',
+            default=FindParameters.DEFAULT_BIN_SCORE_METHOD,
             choices=[cls.__name__ for cls in ALL_BIN_SCORE_CLASSES],
             help=('The name of the method used to calculate the score of a '
                   'histogram bin which is considered significant.'))
@@ -200,7 +202,7 @@ class FindParameters(object):
         """
         return cls(significanceMethod=args.significanceMethod,
                    significanceFraction=args.significanceFraction,
-                   scoreMethod=args.scoreMethod,
+                   binScoreMethod=args.binScoreMethod,
                    featureMatchScore=args.featureMatchScore,
                    featureMismatchScore=args.featureMismatchScore,
                    weights=parseWeights(args.weights or {}),
@@ -221,7 +223,7 @@ class FindParameters(object):
         result.extend([
             'Significance method: %s' % self.significanceMethod,
             'Significance fraction: %f' % self.significanceFraction,
-            'Score method: %s' % self.scoreMethod,
+            'BinScoreMethod: %s' % self.binScoreMethod,
             'Feature match score: %f' % self.featureMatchScore,
             'Feature mismatch score: %f' % self.featureMismatchScore,
             'OverallScoreMethod: %s' % self.overallScoreMethod,

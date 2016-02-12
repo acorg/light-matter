@@ -7,7 +7,7 @@ from light.parameters import FindParameters
 
 def queryDatabase(
         subjects, queries, database,
-        scoreMethod=FindParameters.DEFAULT_SCORE_METHOD,
+        scoreMethod=FindParameters.DEFAULT_BIN_SCORE_METHOD,
         significanceMethod=FindParameters.DEFAULT_SIGNIFICANCE_METHOD,
         significanceFraction=FindParameters.DEFAULT_SIGNIFICANCE_FRACTION):
     """

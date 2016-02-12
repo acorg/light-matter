@@ -1892,7 +1892,7 @@ class TestFeatureAAScore(TestCase):
         _, subjectIndex, _ = db.addSubject(pichninde)
 
         findParams = FindParameters(significanceFraction=0.01,
-                                    scoreMethod='FeatureAAScore')
+                                    binScoreMethod='FeatureAAScore')
         result = db.find(pichninde, findParams, storeFullAnalysis=True)
         self.assertEqual(1.0, result.analysis[subjectIndex]['bestBinScore'])
 
@@ -1947,7 +1947,7 @@ class TestFeatureAAScore(TestCase):
                               'TNFIKEFVSLFNIYGEPFSVYGRFLLTAVG')
 
         findParams = FindParameters(significanceFraction=0.01,
-                                    scoreMethod='FeatureAAScore')
+                                    binScoreMethod='FeatureAAScore')
 
         kwds = dict(landmarks=['Prosite'], trigPoints=['Peaks'],
                     distanceBase=1, limitPerLandmark=40, minDistance=1,
@@ -3066,7 +3066,7 @@ class TestWeightedFeatureAAScore(TestCase):
         _, subjectIndex, _ = db.addSubject(pichninde)
 
         findParams = FindParameters(significanceFraction=0.01,
-                                    scoreMethod='WeightedFeatureAAScore')
+                                    binScoreMethod='WeightedFeatureAAScore')
         result = db.find(pichninde, findParams, storeFullAnalysis=True)
         self.assertEqual(1.0, result.analysis[subjectIndex]['bestBinScore'])
 
@@ -3123,7 +3123,7 @@ class TestWeightedFeatureAAScore(TestCase):
                               'TNFIKEFVSLFNIYGEPFSVYGRFLLTAVG')
 
         findParams = FindParameters(significanceFraction=0.01,
-                                    scoreMethod='WeightedFeatureAAScore')
+                                    binScoreMethod='WeightedFeatureAAScore')
 
         kwds = dict(landmarks=['Prosite'], trigPoints=['Peaks'],
                     distanceBase=1, limitPerLandmark=40, minDistance=1,

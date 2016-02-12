@@ -23,8 +23,8 @@ class TestFindParameters(TestCase):
         findParams = FindParameters()
         self.assertEqual(FindParameters.DEFAULT_SIGNIFICANCE_METHOD,
                          findParams.significanceMethod)
-        self.assertEqual(FindParameters.DEFAULT_SCORE_METHOD,
-                         findParams.scoreMethod)
+        self.assertEqual(FindParameters.DEFAULT_BIN_SCORE_METHOD,
+                         findParams.binScoreMethod)
         self.assertEqual(FindParameters.DEFAULT_OVERALL_SCORE_METHOD,
                          findParams.overallScoreMethod)
         self.assertEqual(FindParameters.DEFAULT_FEATURE_MATCH_SCORE,
@@ -43,7 +43,7 @@ class TestFindParameters(TestCase):
         self.assertEqual(HashFraction.__name__,
                          FindParameters.DEFAULT_SIGNIFICANCE_METHOD)
         self.assertEqual(MinHashesScore.__name__,
-                         FindParameters.DEFAULT_SCORE_METHOD)
+                         FindParameters.DEFAULT_BIN_SCORE_METHOD)
         self.assertEqual(BestBinScore.__name__,
                          FindParameters.DEFAULT_OVERALL_SCORE_METHOD)
         self.assertEqual(1.0, FindParameters.DEFAULT_FEATURE_MATCH_SCORE)
@@ -75,10 +75,11 @@ class TestFindParameters(TestCase):
         """
         findParams = FindParameters(
             significanceMethod='yyy', significanceFraction=0.5,
-            scoreMethod='xxx', featureMatchScore=3.4, featureMismatchScore=9.3)
+            binScoreMethod='xxx', featureMatchScore=3.4,
+            featureMismatchScore=9.3)
         self.assertEqual('yyy', findParams.significanceMethod)
         self.assertEqual(0.5, findParams.significanceFraction)
-        self.assertEqual('xxx', findParams.scoreMethod)
+        self.assertEqual('xxx', findParams.binScoreMethod)
         self.assertEqual(3.4, findParams.featureMatchScore)
         self.assertEqual(9.3, findParams.featureMismatchScore)
 
@@ -92,7 +93,7 @@ class TestFindParameters(TestCase):
         args = parser.parse_args([
             '--significanceMethod', 'Always',
             '--significanceFraction', '0.4',
-            '--scoreMethod', 'MinHashesScore',
+            '--binScoreMethod', 'MinHashesScore',
             '--featureMatchScore', '5',
             '--featureMismatchScore', '6',
             '--weights', 'AlphaHelix 2',
@@ -102,7 +103,7 @@ class TestFindParameters(TestCase):
         # Parsing must do the expected thing.
         self.assertEqual('Always', args.significanceMethod)
         self.assertEqual(0.4, args.significanceFraction)
-        self.assertEqual('MinHashesScore', args.scoreMethod)
+        self.assertEqual('MinHashesScore', args.binScoreMethod)
         self.assertEqual(5, args.featureMatchScore)
         self.assertEqual(6, args.featureMismatchScore)
         self.assertEqual(0.2, args.deltaScale)
@@ -111,7 +112,7 @@ class TestFindParameters(TestCase):
         findParams = FindParameters.fromArgs(args)
         self.assertEqual('Always', findParams.significanceMethod)
         self.assertEqual(0.4, findParams.significanceFraction)
-        self.assertEqual('MinHashesScore', findParams.scoreMethod)
+        self.assertEqual('MinHashesScore', findParams.binScoreMethod)
         self.assertEqual(5, findParams.featureMatchScore)
         self.assertEqual(6, findParams.featureMismatchScore)
         self.assertEqual(0.2, findParams.deltaScale)

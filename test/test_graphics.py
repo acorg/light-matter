@@ -163,7 +163,7 @@ class TestPlotHashesInSubjectAndRead(TestCase):
         query = AARead('query', 5 * A)
 
         findParams = FindParameters(significanceFraction=0.01,
-                                    scoreMethod='FeatureAAScore')
+                                    binScoreMethod='FeatureAAScore')
 
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter('always')

@@ -223,10 +223,10 @@ class FindParameters(object):
         result.extend([
             'Significance method: %s' % self.significanceMethod,
             'Significance fraction: %f' % self.significanceFraction,
-            'BinScoreMethod: %s' % self.binScoreMethod,
+            'Bin Score Method: %s' % self.binScoreMethod,
             'Feature match score: %f' % self.featureMatchScore,
             'Feature mismatch score: %f' % self.featureMismatchScore,
-            'OverallScoreMethod: %s' % self.overallScoreMethod,
+            'Overall Score Method: %s' % self.overallScoreMethod,
             'Delta scale: %f' % self.deltaScale,
             'Weights: '
         ])

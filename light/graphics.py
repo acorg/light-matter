@@ -1424,7 +1424,7 @@ class SequenceFeatureAnalysis:
         return unique
 
 
-def compareScores(subject, query, scoreMethods=None,
+def compareScores(subject, query, binScoreMethods=None,
                   plotHashesInSubjectAndRead=True, showBestBinOnly=True,
                   showHistogram=True, findParams=None, showInsignificant=False,
                   showFeatures=False, showScoreAnalysis=True,
@@ -1436,8 +1436,8 @@ def compareScores(subject, query, scoreMethods=None,
 
     @param subject: An C{AAReadWithX} instance.
     @param query: An C{AAReadWithX} instance.
-    @param scoreMethods: A C{list} of score methods to use, or C{None} to
-        use all score methods.
+    @param binScoreMethods: A C{list} of bin score methods to use, or C{None}
+        to use all score methods.
     @param plotHashesInSubjectAndRead: If C{True}, plot the hashes in the
         subject and read showing the match.
     @param showBestBinOnly: If C{True} (and C{PlotHashesInSubjectAndRead} is
@@ -1460,14 +1460,14 @@ def compareScores(subject, query, scoreMethods=None,
     """
     db = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
     _, subjectIndex, _ = db.addSubject(subject)
-    scoreMethods = scoreMethods or sorted(
+    binScoreMethods = binScoreMethods or sorted(
         cls.__name__ for cls in ALL_BIN_SCORE_CLASSES)
     findParams = findParams or FindParameters()
 
     # Calculate a score for each score method.
-    for scoreMethod in scoreMethods:
-        print('%s:' % scoreMethod)
-        findParams.scoreMethod = scoreMethod
+    for binScoreMethod in binScoreMethods:
+        print('%s:' % binScoreMethod)
+        findParams.binScoreMethod = binScoreMethod
         result = db.find(query, findParams, storeFullAnalysis=True).analysis
         if subjectIndex in result:
             significantBins = result[subjectIndex]['significantBins']

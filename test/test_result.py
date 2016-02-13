@@ -27,7 +27,7 @@ class TestResult(TestCase):
         database = Database(dbParams)
         hashCount = 0
         findParams = FindParameters(significanceMethod='HashFraction',
-                                    scoreMethod='MinHashesScore',
+                                    binScoreMethod='MinHashesScore',
                                     significanceFraction=0.1)
         result = Result(read, database, {}, hashCount, findParams)
         self.assertEqual({}, result.matches)
@@ -56,7 +56,7 @@ class TestResult(TestCase):
         hashCount = 1
         error = "^Unknown significance method 'xxx'$"
         findParams = FindParameters(significanceMethod='xxx',
-                                    scoreMethod='MinHashesScore',
+                                    binScoreMethod='MinHashesScore',
                                     significanceFraction=0.1)
         six.assertRaisesRegex(
             self, ValueError, error, Result, read, database._connector,
@@ -83,7 +83,7 @@ class TestResult(TestCase):
             ],
         }
         findParams = FindParameters(significanceMethod='HashFraction',
-                                    scoreMethod='MinHashesScore',
+                                    binScoreMethod='MinHashesScore',
                                     significanceFraction=0.1)
         result = Result(read, database, matches, hashCount, findParams)
         self.assertEqual(matches, result.matches)
@@ -116,7 +116,7 @@ class TestResult(TestCase):
             ],
         }
         findParams = FindParameters(significanceMethod='HashFraction',
-                                    scoreMethod='MinHashesScore',
+                                    binScoreMethod='MinHashesScore',
                                     significanceFraction=5)
         result = Result(read, database, matches, hashCount, findParams)
         self.assertEqual([], list(result.significantSubjects()))
@@ -155,7 +155,7 @@ class TestResult(TestCase):
             ],
         }
         findParams = FindParameters(significanceMethod='HashFraction',
-                                    scoreMethod='MinHashesScore',
+                                    binScoreMethod='MinHashesScore',
                                     significanceFraction=0.25)
         result = Result(read, database, matches, hashCount, findParams)
         self.assertEqual(['0'], list(result.significantSubjects()))
@@ -215,7 +215,7 @@ class TestResult(TestCase):
             ],
         }
         findParams = FindParameters(significanceMethod='HashFraction',
-                                    scoreMethod='MinHashesScore',
+                                    binScoreMethod='MinHashesScore',
                                     significanceFraction=0.3)
         result = Result(read, database, matches, hashCount, findParams)
         self.assertEqual(['0', '1'],
@@ -231,7 +231,7 @@ class TestResult(TestCase):
         dbParams = DatabaseParameters()
         database = Database(dbParams)
         findParams = FindParameters(significanceMethod='HashFraction',
-                                    scoreMethod='MinHashesScore',
+                                    binScoreMethod='MinHashesScore',
                                     significanceFraction=0.3)
         result = Result(read, database, [], 0, findParams, 'HashFraction',
                         'MinHashesScore')
@@ -254,7 +254,7 @@ class TestResult(TestCase):
         dbParams = DatabaseParameters()
         database = Database(dbParams)
         findParams = FindParameters(significanceMethod='HashFraction',
-                                    scoreMethod='MinHashesScore',
+                                    binScoreMethod='MinHashesScore',
                                     significanceFraction=0.1)
         result = Result(read, database, {}, 0, findParams)
         fp = StringIO()
@@ -290,7 +290,7 @@ class TestResult(TestCase):
             ],
         }
         findParams = FindParameters(significanceMethod='HashFraction',
-                                    scoreMethod='MinHashesScore',
+                                    binScoreMethod='MinHashesScore',
                                     significanceFraction=0.1)
         result = Result(read, database, matches, hashCount, findParams)
         fp = StringIO()
@@ -368,7 +368,7 @@ class TestResult(TestCase):
             ],
         }
         findParams = FindParameters(significanceMethod='HashFraction',
-                                    scoreMethod='MinHashesScore',
+                                    binScoreMethod='MinHashesScore',
                                     significanceFraction=0.1)
         result = Result(read, database, matches, hashCount, findParams,
                         storeFullAnalysis=True)
@@ -385,7 +385,7 @@ class TestResult(TestCase):
         database = Database(dbParams)
         database.addSubject(read)
         findParams = FindParameters(significanceFraction=0.1,
-                                    scoreMethod='MinHashesScore')
+                                    binScoreMethod='MinHashesScore')
         result = database.find(read, findParams, storeFullAnalysis=True)
 
         expected = ('Query title: read\n'
@@ -395,10 +395,10 @@ class TestResult(TestCase):
                     'Find parameters:\n'
                     '  Significance method: HashFraction\n'
                     '  Significance fraction: 0.100000\n'
-                    '  Score method: MinHashesScore\n'
+                    '  Bin Score Method: MinHashesScore\n'
                     '  Feature match score: 1.000000\n'
                     '  Feature mismatch score: -1.000000\n'
-                    '  OverallScoreMethod: BestBinScore\n'
+                    '  Overall Score Method: BestBinScore\n'
                     '  Delta scale: 1.000000\n'
                     '  Weights: \n'
                     '    AlphaHelix: 1.000000\n'
@@ -437,10 +437,10 @@ class TestResult(TestCase):
         expected = ('Find parameters:\n'
                     '  Significance method: HashFraction\n'
                     '  Significance fraction: 0.100000\n'
-                    '  Score method: MinHashesScore\n'
+                    '  Bin Score Method: MinHashesScore\n'
                     '  Feature match score: 1.000000\n'
                     '  Feature mismatch score: -1.000000\n'
-                    '  OverallScoreMethod: BestBinScore\n'
+                    '  Overall Score Method: BestBinScore\n'
                     '  Delta scale: 1.000000\n'
                     '  Weights: \n'
                     '    AlphaHelix: 1.000000\n'
@@ -478,10 +478,10 @@ class TestResult(TestCase):
         expected = ('Find parameters:\n'
                     '  Significance method: HashFraction\n'
                     '  Significance fraction: 0.250000\n'
-                    '  Score method: MinHashesScore\n'
+                    '  Bin Score Method: MinHashesScore\n'
                     '  Feature match score: 1.000000\n'
                     '  Feature mismatch score: -1.000000\n'
-                    '  OverallScoreMethod: BestBinScore\n'
+                    '  Overall Score Method: BestBinScore\n'
                     '  Delta scale: 1.000000\n'
                     '  Weights: \n'
                     '    AlphaHelix: 1.000000\n'
@@ -516,16 +516,16 @@ class TestResult(TestCase):
         database.addSubject(subject)
         query = AARead('query', sequence)
         findParams = FindParameters(significanceFraction=0.1,
-                                    scoreMethod='MinHashesScore')
+                                    binScoreMethod='MinHashesScore')
         result = database.find(query, findParams, storeFullAnalysis=True)
 
         expected = ('Find parameters:\n'
                     '  Significance method: HashFraction\n'
                     '  Significance fraction: 0.100000\n'
-                    '  Score method: MinHashesScore\n'
+                    '  Bin Score Method: MinHashesScore\n'
                     '  Feature match score: 1.000000\n'
                     '  Feature mismatch score: -1.000000\n'
-                    '  OverallScoreMethod: BestBinScore\n'
+                    '  Overall Score Method: BestBinScore\n'
                     '  Delta scale: 1.000000\n'
                     '  Weights: \n'
                     '    AlphaHelix: 1.000000\n'
@@ -576,16 +576,16 @@ class TestResult(TestCase):
         database.addSubject(subject)
         query = AARead('query', 'CACACA')
         findParams = FindParameters(significanceFraction=0.1,
-                                    scoreMethod='MinHashesScore')
+                                    binScoreMethod='MinHashesScore')
         result = database.find(query, findParams, storeFullAnalysis=True)
 
         expected = ('Find parameters:\n'
                     '  Significance method: HashFraction\n'
                     '  Significance fraction: 0.100000\n'
-                    '  Score method: MinHashesScore\n'
+                    '  Bin Score Method: MinHashesScore\n'
                     '  Feature match score: 1.000000\n'
                     '  Feature mismatch score: -1.000000\n'
-                    '  OverallScoreMethod: BestBinScore\n'
+                    '  Overall Score Method: BestBinScore\n'
                     '  Delta scale: 1.000000\n'
                     '  Weights: \n'
                     '    AlphaHelix: 1.000000\n'
@@ -653,16 +653,16 @@ class TestResult(TestCase):
         database.addSubject(subject)
         query = AARead('query', sequence)
         findParams = FindParameters(significanceFraction=0.1,
-                                    scoreMethod='MinHashesScore')
+                                    binScoreMethod='MinHashesScore')
         result = database.find(query, findParams)
 
         expected = ('Find parameters:\n'
                     '  Significance method: HashFraction\n'
                     '  Significance fraction: 0.100000\n'
-                    '  Score method: MinHashesScore\n'
+                    '  Bin Score Method: MinHashesScore\n'
                     '  Feature match score: 1.000000\n'
                     '  Feature mismatch score: -1.000000\n'
-                    '  OverallScoreMethod: BestBinScore\n'
+                    '  Overall Score Method: BestBinScore\n'
                     '  Delta scale: 1.000000\n'
                     '  Weights: \n'
                     '    AlphaHelix: 1.000000\n'
@@ -714,16 +714,16 @@ class TestResult(TestCase):
         database.addSubject(subject)
         query = AARead('query', sequence)
         findParams = FindParameters(significanceFraction=0.1,
-                                    scoreMethod='MinHashesScore')
+                                    binScoreMethod='MinHashesScore')
         result = database.find(query, findParams)
 
         expected = ('Find parameters:\n'
                     '  Significance method: HashFraction\n'
                     '  Significance fraction: 0.100000\n'
-                    '  Score method: MinHashesScore\n'
+                    '  Bin Score Method: MinHashesScore\n'
                     '  Feature match score: 1.000000\n'
                     '  Feature mismatch score: -1.000000\n'
-                    '  OverallScoreMethod: BestBinScore\n'
+                    '  Overall Score Method: BestBinScore\n'
                     '  Delta scale: 1.000000\n'
                     '  Weights: \n'
                     '    AlphaHelix: 1.000000\n'
@@ -771,16 +771,16 @@ class TestResult(TestCase):
         database.addSubject(subject)
         query = AARead('query', 'CACACA')
         findParams = FindParameters(significanceFraction=0.1,
-                                    scoreMethod='MinHashesScore')
+                                    binScoreMethod='MinHashesScore')
         result = database.find(query, findParams)
 
         expected = ('Find parameters:\n'
                     '  Significance method: HashFraction\n'
                     '  Significance fraction: 0.100000\n'
-                    '  Score method: MinHashesScore\n'
+                    '  Bin Score Method: MinHashesScore\n'
                     '  Feature match score: 1.000000\n'
                     '  Feature mismatch score: -1.000000\n'
-                    '  OverallScoreMethod: BestBinScore\n'
+                    '  Overall Score Method: BestBinScore\n'
                     '  Delta scale: 1.000000\n'
                     '  Weights: \n'
                     '    AlphaHelix: 1.000000\n'
@@ -834,16 +834,16 @@ class TestResult(TestCase):
         database.addSubject(subject)
         query = AARead('query', 'CACACA')
         findParams = FindParameters(significanceFraction=0.1,
-                                    scoreMethod='MinHashesScore')
+                                    binScoreMethod='MinHashesScore')
         result = database.find(query, findParams)
 
         expected = ('Find parameters:\n'
                     '  Significance method: HashFraction\n'
                     '  Significance fraction: 0.100000\n'
-                    '  Score method: MinHashesScore\n'
+                    '  Bin Score Method: MinHashesScore\n'
                     '  Feature match score: 1.000000\n'
                     '  Feature mismatch score: -1.000000\n'
-                    '  OverallScoreMethod: BestBinScore\n'
+                    '  Overall Score Method: BestBinScore\n'
                     '  Delta scale: 1.000000\n'
                     '  Weights: \n'
                     '    AlphaHelix: 1.000000\n'
@@ -897,17 +897,17 @@ class TestResult(TestCase):
         database.addSubject(subject)
         query = AARead('query', sequence)
         findParams = FindParameters(significanceFraction=0.1,
-                                    scoreMethod='MinHashesScore')
+                                    binScoreMethod='MinHashesScore')
         result = database.find(query, findParams)
 
         expected = (
             'Find parameters:\n'
             '  Significance method: HashFraction\n'
             '  Significance fraction: 0.100000\n'
-            '  Score method: MinHashesScore\n'
+            '  Bin Score Method: MinHashesScore\n'
             '  Feature match score: 1.000000\n'
             '  Feature mismatch score: -1.000000\n'
-            '  OverallScoreMethod: BestBinScore\n'
+            '  Overall Score Method: BestBinScore\n'
             '  Delta scale: 1.000000\n'
             '  Weights: \n'
             '    AlphaHelix: 1.000000\n'
@@ -1009,7 +1009,7 @@ class TestResult(TestCase):
             ],
         }
         findParams = FindParameters(significanceMethod='Always',
-                                    scoreMethod='MinHashesScore',
+                                    binScoreMethod='MinHashesScore',
                                     significanceFraction=0.1)
         result = Result(read, database, matches, hashCount, findParams,
                         storeFullAnalysis=True)
@@ -1068,7 +1068,7 @@ class TestResult(TestCase):
             ],
         }
         findParams = FindParameters(significanceMethod='HashFraction',
-                                    scoreMethod='MinHashesScore',
+                                    binScoreMethod='MinHashesScore',
                                     significanceFraction=0.3)
         result = Result(read, database, matches, hashCount, findParams,
                         storeFullAnalysis=True)
@@ -1101,7 +1101,7 @@ class TestResult(TestCase):
             ],
         }
         findParams = FindParameters(significanceMethod='AAFraction',
-                                    scoreMethod='MinHashesScore',
+                                    binScoreMethod='MinHashesScore',
                                     significanceFraction=0.1)
         result = Result(read, database, matches, hashCount, findParams)
         self.assertEqual(0.0, result.analysis['0']['bestBinScore'])

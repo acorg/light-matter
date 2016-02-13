@@ -61,7 +61,7 @@ class TestBestBinScore(TestCase):
         _, subjectIndex, _ = db.addSubject(pichninde)
 
         findParams = FindParameters(significanceFraction=0.01,
-                                    scoreMethod='FeatureAAScore',
+                                    binScoreMethod='FeatureAAScore',
                                     overallScoreMethod='BestBinScore')
         result = db.find(pichninde, findParams, storeFullAnalysis=True)
         self.assertEqual(1.0, result.analysis[subjectIndex]['overallScore'])
@@ -90,7 +90,7 @@ class TestBestBinScore(TestCase):
                               'TNFIKEFVSLFNIYGEPFSVYGRFLLTAVG')
 
         findParams = FindParameters(significanceFraction=0.01,
-                                    scoreMethod='FeatureAAScore')
+                                    binScoreMethod='FeatureAAScore')
 
         kwds = dict(landmarks=['Prosite'], trigPoints=['Peaks'],
                     distanceBase=1, limitPerLandmark=40, minDistance=1,
@@ -1514,7 +1514,7 @@ class TestSignificantBinScore(TestCase):
         _, subjectIndex, _ = db.addSubject(pichninde)
 
         findParams = FindParameters(significanceFraction=0.01,
-                                    scoreMethod='FeatureAAScore',
+                                    binScoreMethod='FeatureAAScore',
                                     overallScoreMethod='SignificantBinScore')
         result = db.find(pichninde, findParams, storeFullAnalysis=True)
         self.assertEqual(1.0, result.analysis[subjectIndex]['bestBinScore'])
@@ -1540,7 +1540,7 @@ class TestSignificantBinScore(TestCase):
         _, subjectIndex, _ = db.addSubject(sequence)
 
         findParams = FindParameters(significanceFraction=0.01,
-                                    scoreMethod='FeatureAAScore',
+                                    binScoreMethod='FeatureAAScore',
                                     overallScoreMethod='SignificantBinScore')
         result = db.find(sequence, findParams, storeFullAnalysis=True)
         self.assertEqual(
@@ -1571,7 +1571,7 @@ class TestSignificantBinScore(TestCase):
                               'TNFIKEFVSLFNIYGEPFSVYGRFLLTAVG')
 
         findParams = FindParameters(significanceFraction=0.01,
-                                    scoreMethod='FeatureAAScore',
+                                    binScoreMethod='FeatureAAScore',
                                     overallScoreMethod='SignificantBinScore')
 
         kwds = dict(landmarks=['Prosite'], trigPoints=['Peaks'],

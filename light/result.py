@@ -124,23 +124,23 @@ class Result(object):
                 raise ValueError('Unknown significance method %r' %
                                  significanceMethod)
 
-            scoreMethod = findParams.scoreMethod
-            if scoreMethod == 'NoneScore':
+            binScoreMethod = findParams.binScoreMethod
+            if binScoreMethod == 'NoneScore':
                 scorer = NoneScore()
-            elif scoreMethod == 'MinHashesScore':
+            elif binScoreMethod == 'MinHashesScore':
                 scorer = MinHashesScore(histogram, minHashCount)
-            elif scoreMethod == 'FeatureMatchingScore':
+            elif binScoreMethod == 'FeatureMatchingScore':
                 scorer = FeatureMatchingScore(
                     histogram, query, subject, connector.dbParams, findParams)
-            elif scoreMethod == 'FeatureAAScore':
+            elif binScoreMethod == 'FeatureAAScore':
                 scorer = FeatureAAScore(
                     histogram, query, subject, connector.dbParams)
-            elif scoreMethod == 'WeightedFeatureAAScore':
+            elif binScoreMethod == 'WeightedFeatureAAScore':
                 scorer = WeightedFeatureAAScore(
                     histogram, query, subject, connector.dbParams,
                     findParams.weights)
             else:
-                raise ValueError('Unknown score method %r' % scoreMethod)
+                raise ValueError('Unknown score method %r' % binScoreMethod)
 
             # Find bins with a significant number of elements and score them.
             significantBins = []

@@ -282,7 +282,7 @@ class SignificantBinScore(object):
         # example when a sequence is compared against itself, where the
         # bestBinScore will be 1.0, but the overallScore can be lower,
         # because worse bins are taken into account. We don't allow that.
-        if score < bestBinScore:
+        if bestBinScore is not None and score < bestBinScore:
             overallScore = bestBinScore
             adjusted = True
         else:
@@ -395,26 +395,24 @@ def addBin(bin_, allQueryFeatures, allSubjectFeatures, oldState):
     overallMatchedSubjectOffsets -= overallUnmatchedSubjectOffsets
 
     # Overall score calculation step 1: the matched region score (MRS).
-    state['matchedOffsetCount'] = (len(overallMatchedQueryOffsets) +
-                                   len(overallMatchedSubjectOffsets))
-    state['totalOffsetCount'] = (state['matchedOffsetCount'] +
-                                 len(overallUnmatchedQueryOffsets) +
-                                 len(overallUnmatchedSubjectOffsets))
+    matchedOffsetCount = (len(overallMatchedQueryOffsets) +
+                          len(overallMatchedSubjectOffsets))
+    totalOffsetCount = (matchedOffsetCount +
+                        len(overallUnmatchedQueryOffsets) +
+                        len(overallUnmatchedSubjectOffsets))
 
     try:
-        state['matchedRegionScore'] = (state['matchedOffsetCount'] /
-                                       state['totalOffsetCount'])
+        matchedRegionScore = matchedOffsetCount / totalOffsetCount
     except ZeroDivisionError:
         # A small optimization could be done here. If the MRS is zero,
         # we already know the overall score will be zero, so we could
         # return at this point. To keep things simple, for now, just
         # continue with the overall calculation.
-        state['matchedRegionScore'] = 0.0
+        matchedRegionScore = 0.0
 
     # Overall score calculation step 2: the length normalizer (LN).
 
-    (state['normalizerQuery'], state['numeratorQuery'],
-     state['denominatorQuery']) = (
+    normalizerQuery, numeratorQuery, denominatorQuery = (
         computeLengthNormalizer(
             allQueryFeatures, overallMatchedQueryOffsets,
             overallUnmatchedQueryOffsets, queryOffsetsInBins))
@@ -424,23 +422,31 @@ def addBin(bin_, allQueryFeatures, allSubjectFeatures, oldState):
     # normalizer for the subject (due to the use of max() below and
     # because a normalizer is always <= 1.0).  But to keep the code
     # simpler, for now, we still compute both normalizers.
-    (state['normalizerSubject'], state['numeratorSubject'],
-     state['denominatorSubject']) = (
+    normalizerSubject, numeratorSubject, denominatorSubject = (
         computeLengthNormalizer(
             allSubjectFeatures, overallMatchedSubjectOffsets,
             overallUnmatchedSubjectOffsets, subjectOffsetsInBins))
 
     # Calculate the final score, as descibed in the docstring.
-    state['score'] = (state['matchedRegionScore'] *
-                      max(state['normalizerQuery'],
-                          state['normalizerSubject']))
+    score = matchedRegionScore * max(normalizerQuery, normalizerSubject)
 
     # Add additional variables to the state dict.
-    state['queryOffsetsInBinsCount'] = len(queryOffsetsInBins)
-    state['subjectOffsetsInBinsCount'] = len(subjectOffsetsInBins)
-    state['matchedSubjectOffsetCount'] = len(overallMatchedSubjectOffsets)
-    state['matchedQueryOffsetCount'] = len(overallMatchedQueryOffsets)
-    state['numberOfBinsConsidered'] += 1
+    state.update({
+        'queryOffsetsInBinsCount': len(queryOffsetsInBins),
+        'subjectOffsetsInBinsCount': len(subjectOffsetsInBins),
+        'matchedSubjectOffsetCount': len(overallMatchedSubjectOffsets),
+        'matchedQueryOffsetCount': len(overallMatchedQueryOffsets),
+        'matchedOffsetCount': matchedOffsetCount,
+        'totalOffsetCount': totalOffsetCount,
+        'normalizerQuery': normalizerQuery,
+        'numeratorQuery': numeratorQuery,
+        'denominatorQuery': denominatorQuery,
+        'matchedRegionScore': matchedRegionScore,
+        'normalizerSubject': normalizerSubject,
+        'numeratorSubject': numeratorSubject,
+        'denominatorSubject': denominatorSubject,
+        'score': score,
+    })
 
     return state
 
@@ -500,8 +506,7 @@ class GreedySignificantBinScore(object):
 
     def calculateScore(self):
         """
-        Calculates the overall score, as described
-        above.
+        Calculates the overall score, as described above.
 
         @return: a C{float} overall score for all significant bins (or C{None}
             if there are no significant bins) and a C{dict} with information
@@ -566,7 +571,8 @@ class GreedySignificantBinScore(object):
 
         # Consider the significantBins one by one until the overall score drops
         # below the bestBinScore, or we run out of bins.
-        for bin_ in (sb['bin'] for sb in self._significantBins):
+        for i, bin_ in enumerate((sb['bin'] for sb in self._significantBins),
+                                 start=1):
 
             result = addBin(bin_, allQueryFeatures, allSubjectFeatures, state)
 
@@ -578,14 +584,12 @@ class GreedySignificantBinScore(object):
                 state.update(result)
             else:
                 # The new overallScore is lower than the current overallScore.
-                # Return the analysis using the values calculated for the
-                # previous bin.
-                return state['score'], state
+                break
 
         # We have reached the last bin without returning beforehand, which
         # means that the last overallScore was higher than the second to last
         # overallScore. Return the score and the analysis using the new values.
-        state.update(result)
+        state['numberOfBinsConsidered'] = i
         return state['score'], state
 
     @staticmethod

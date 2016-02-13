@@ -567,6 +567,53 @@ class TestSignificantBinScore(TestCase):
             },
             analysis)
 
+    def testOnePairInOneBinBestBinScoreIsNone(self):
+        """
+        If the bestBinScore is None, no TypeError must be raised.
+        """
+        queryLandmark = Landmark('AlphaHelix', 'A', 100, 20)
+        queryTrigPoint = TrigPoint('Peaks', 'P', 110)
+        subjectLandmark = Landmark('AlphaHelix', 'A', 100, 20)
+        subjectTrigPoint = TrigPoint('Peaks', 'P', 110)
+        histogram = Histogram(1)
+        histogram.add(44, {
+            'queryLandmark': queryLandmark,
+            'queryTrigPoint': queryTrigPoint,
+            'subjectLandmark': subjectLandmark,
+            'subjectTrigPoint': subjectTrigPoint,
+        })
+        histogram.finalize()
+        dbParams = DatabaseParameters(landmarks=[], trigPoints=[])
+        query = AARead('id1', 'A')
+        subject = Subject('id2', 'A', 0)
+        significantBins = [
+            {'index': 0, 'bin': histogram.bins[0], 'score': None},
+        ]
+        sbs = SignificantBinScore(significantBins, query, subject,
+                                  dbParams)
+        score, analysis = sbs.calculateScore()
+        self.assertEqual(1.0, score)
+        self.assertEqual(
+            {
+                'denominatorQuery': 20,
+                'denominatorSubject': 20,
+                'matchedOffsetCount': 40,
+                'matchedQueryOffsetCount': 20,
+                'matchedRegionScore': 1.0,
+                'matchedSubjectOffsetCount': 20,
+                'numeratorQuery': 20,
+                'numeratorSubject': 20,
+                'overallScoreAdjustedToBestBinScore': False,
+                'queryOffsetsInBins': 20,
+                'normalizerQuery': 1.0,
+                'normalizerSubject': 1.0,
+                'score': score,
+                'scoreClass': SignificantBinScore,
+                'subjectOffsetsInBins': 20,
+                'totalOffsetCount': 40,
+            },
+            analysis)
+
     def testOnePairInBinOccurringInTwoPlaces(self):
         """
         A match with one bin containing two pairs that occur in two places must
@@ -1694,22 +1741,38 @@ class TestGreedySignificantBinScore(TestCase):
         score, analysis = gsbs.calculateScore()
 
         self.assertEqual(1.0, score)
-        self.assertEqual(20, analysis['denominatorQuery'])
-        self.assertEqual(20, analysis['denominatorSubject'])
-        self.assertEqual(40, analysis['matchedOffsetCount'])
-        self.assertEqual(20, analysis['matchedQueryOffsetCount'])
-        self.assertEqual(1.0, analysis['matchedRegionScore'])
-        self.assertEqual(20, analysis['matchedSubjectOffsetCount'])
-        self.assertEqual(20, analysis['numeratorQuery'])
-        self.assertEqual(20, analysis['numeratorSubject'])
-        self.assertEqual(20, analysis['queryOffsetsInBinsCount'])
-        self.assertEqual(1.0, analysis['normalizerQuery'])
-        self.assertEqual(1.0, analysis['normalizerSubject'])
-        self.assertEqual(1, analysis['numberOfBinsConsidered'])
-        self.assertEqual(score, analysis['score'])
-        self.assertEqual(GreedySignificantBinScore, analysis['scoreClass'])
-        self.assertEqual(20, analysis['subjectOffsetsInBinsCount'])
-        self.assertEqual(40, analysis['totalOffsetCount'])
+        self.assertEqual({
+            'denominatorQuery': 20,
+            'denominatorSubject': 20,
+            'matchedOffsetCount': 40,
+            'matchedQueryOffsetCount': 20,
+            'matchedRegionScore': 1.0,
+            'matchedSubjectOffsetCount': 20,
+            'numeratorQuery': 20,
+            'numeratorSubject': 20,
+            'overallMatchedQueryOffsets': {100, 101, 102, 103, 104, 105, 106,
+                                           107, 108, 109, 110, 111, 112, 113,
+                                           114, 115, 116, 117, 118, 119},
+            'overallMatchedSubjectOffsets': {100, 101, 102, 103, 104, 105, 106,
+                                             107, 108, 109, 110, 111, 112, 113,
+                                             114, 115, 116, 117, 118, 119},
+            'overallUnmatchedQueryOffsets': set(),
+            'overallUnmatchedSubjectOffsets': set(),
+            'queryOffsetsInBinsCount': 20,
+            'normalizerQuery': 1.0,
+            'normalizerSubject': 1.0,
+            'numberOfBinsConsidered': 1,
+            'queryOffsetsInBins': {100, 101, 102, 103, 104, 105, 106, 107, 108,
+                                   109, 110, 111, 112, 113, 114, 115, 116, 117,
+                                   118, 119},
+            'score': score,
+            'scoreClass': GreedySignificantBinScore,
+            'subjectOffsetsInBins': {100, 101, 102, 103, 104, 105, 106, 107,
+                                     108, 109, 110, 111, 112, 113, 114, 115,
+                                     116, 117, 118, 119},
+            'subjectOffsetsInBinsCount': 20,
+            'totalOffsetCount': 40,
+        }, analysis)
 
     def testCorrectScoresMustBeCalculated(self):
         """
@@ -1757,23 +1820,182 @@ class TestGreedySignificantBinScore(TestCase):
                                result.analysis[subjectIndex]['overallScore'])
         analysis = result.analysis[subjectIndex]['overallScoreAnalysis']
 
-        self.assertEqual(301, analysis['denominatorQuery'])
-        self.assertEqual(299, analysis['denominatorSubject'])
-        self.assertEqual(350, analysis['matchedOffsetCount'])
-        self.assertEqual(175, analysis['matchedQueryOffsetCount'])
-        self.assertEqual(350 / 575, analysis['matchedRegionScore'])
-        self.assertEqual(175, analysis['matchedSubjectOffsetCount'])
-        self.assertEqual(288, analysis['numeratorQuery'])
-        self.assertEqual(287, analysis['numeratorSubject'])
-        self.assertEqual(339, analysis['queryOffsetsInBinsCount'])
-        self.assertEqual(288 / 301, analysis['normalizerQuery'])
-        self.assertEqual(287 / 299, analysis['normalizerSubject'])
-        self.assertEqual(2, analysis['numberOfBinsConsidered'])
-        self.assertEqual((350 / 575) * (max((288 / 301), (287 / 299))),
-                         analysis['score'])
-        self.assertEqual(GreedySignificantBinScore, analysis['scoreClass'])
-        self.assertEqual(339, analysis['subjectOffsetsInBinsCount'])
-        self.assertEqual(575, analysis['totalOffsetCount'])
+        self.maxDiff = None
+        self.assertEqual({
+            'denominatorQuery': 301,
+            'denominatorSubject': 299,
+            'matchedOffsetCount': 350,
+            'matchedQueryOffsetCount': 175,
+            'matchedRegionScore': 350 / 575,
+            'matchedSubjectOffsetCount': 175,
+            'numeratorQuery': 288,
+            'numeratorSubject': 287,
+            'overallMatchedQueryOffsets': {1, 3, 4, 6, 7, 8, 9, 14, 16, 18,
+                                           19, 20, 21, 24, 25, 28, 29, 30, 31,
+                                           32, 33, 34, 37, 39, 40, 42, 44, 46,
+                                           47, 48, 49, 55, 56, 57, 58, 61, 62,
+                                           63, 64, 66, 67, 68, 74, 76, 79, 82,
+                                           83, 84, 85, 86, 87, 90, 91, 92, 94,
+                                           96, 97, 99, 101, 103, 104, 106, 107,
+                                           108, 109, 112, 113, 114, 115, 116,
+                                           117, 118, 122, 123, 124, 125, 130,
+                                           131, 132, 133, 134, 135, 139, 140,
+                                           141, 142, 143, 144, 152, 153, 170,
+                                           171, 172, 174, 175, 177, 178, 179,
+                                           181, 184, 185, 186, 187, 190, 191,
+                                           192, 193, 199, 201, 234, 235, 236,
+                                           237, 239, 241, 242, 243, 247, 248,
+                                           249, 250, 254, 255, 256, 258, 262,
+                                           263, 264, 265, 266, 267, 268, 269,
+                                           270, 271, 275, 277, 278, 279, 280,
+                                           281, 282, 283, 285, 286, 287, 290,
+                                           292, 297, 302, 307, 311, 314, 319,
+                                           320, 321, 324, 326, 327, 329, 333,
+                                           334, 337, 338, 339, 342, 343, 346,
+                                           347, 350, 351, 352, 353, 354, 355},
+            'overallMatchedSubjectOffsets': {2, 4, 5, 7, 8, 9, 10, 15, 17, 19,
+                                             20, 21, 22, 25, 26, 29, 30, 31,
+                                             32, 33, 34, 35, 38, 40, 41, 43,
+                                             45, 47, 48, 49, 50, 56, 57, 58,
+                                             59, 62, 63, 64, 65, 67, 68, 69,
+                                             75, 77, 80, 83, 84, 85, 86, 87,
+                                             88, 91, 92, 93, 95, 97, 98, 100,
+                                             102, 104, 105, 107, 108, 109, 110,
+                                             113, 114, 115, 116, 117, 118, 119,
+                                             123, 124, 125, 126, 131, 132, 133,
+                                             134, 135, 136, 140, 141, 142, 143,
+                                             144, 145, 153, 154, 170, 171, 172,
+                                             174, 175, 177, 178, 179, 181, 184,
+                                             185, 186, 187, 190, 191, 192, 193,
+                                             199, 201, 234, 235, 236, 237, 239,
+                                             241, 242, 243, 247, 248, 249, 250,
+                                             254, 255, 256, 258, 262, 263, 264,
+                                             265, 266, 267, 268, 269, 270, 271,
+                                             275, 277, 278, 279, 280, 281, 282,
+                                             283, 285, 286, 287, 290, 292, 297,
+                                             302, 307, 311, 314, 319, 320, 321,
+                                             324, 326, 327, 329, 333, 334, 337,
+                                             338, 339, 342, 343, 346, 347, 350,
+                                             351, 352, 353, 354, 355},
+            'overallUnmatchedQueryOffsets': {5, 10, 11, 12, 13, 17, 35, 36, 38,
+                                             45, 50, 51, 52, 53, 54, 59, 60,
+                                             65, 69, 70, 71, 72, 73, 75, 77,
+                                             78, 80, 88, 89, 105, 111, 119,
+                                             120, 121, 126, 127, 128, 129, 137,
+                                             138, 145, 146, 147, 148, 149, 150,
+                                             151, 173, 180, 182, 183, 188, 189,
+                                             194, 195, 196, 197, 198, 200, 202,
+                                             203, 204, 205, 207, 208, 209, 210,
+                                             211, 213, 214, 215, 216, 217, 218,
+                                             219, 220, 221, 222, 223, 224, 225,
+                                             226, 227, 228, 230, 231, 240, 244,
+                                             245, 251, 252, 253, 257, 272, 273,
+                                             276, 284, 288, 289, 291, 298, 299,
+                                             300, 304, 305, 306, 312, 313, 315,
+                                             317, 318, 335, 336},
+            'overallUnmatchedSubjectOffsets': {11, 12, 13, 14, 18, 23, 24, 27,
+                                               28, 36, 37, 39, 51, 52, 53, 54,
+                                               55, 60, 61, 71, 72, 73, 74, 76,
+                                               78, 79, 81, 82, 89, 90, 111,
+                                               112, 120, 121, 122, 127, 128,
+                                               146, 147, 148, 149, 150, 151,
+                                               152, 173, 176, 180, 188, 189,
+                                               195, 196, 197, 198, 200, 202,
+                                               203, 204, 205, 206, 207, 210,
+                                               211, 213, 214, 215, 217, 219,
+                                               220, 223, 224, 225, 227, 228,
+                                               229, 230, 231, 232, 233, 244,
+                                               245, 252, 272, 273, 274, 276,
+                                               284, 288, 289, 291, 293, 294,
+                                               295, 298, 301, 303, 304, 305,
+                                               306, 308, 312, 313, 315, 316,
+                                               317, 318, 322, 323, 328, 335,
+                                               336, 348, 349},
+            'queryOffsetsInBins': {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
+                                   14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+                                   25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35,
+                                   36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46,
+                                   47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57,
+                                   58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68,
+                                   69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79,
+                                   80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90,
+                                   91, 92, 93, 94, 95, 96, 97, 98, 99, 100,
+                                   101, 102, 103, 104, 105, 106, 107, 108, 109,
+                                   110, 111, 112, 113, 114, 115, 116, 117, 118,
+                                   119, 120, 121, 122, 123, 124, 125, 126, 127,
+                                   128, 129, 130, 131, 132, 133, 134, 135, 136,
+                                   137, 138, 139, 140, 141, 142, 143, 144, 145,
+                                   146, 147, 148, 149, 150, 151, 152, 153, 170,
+                                   171, 172, 173, 174, 175, 176, 177, 178, 179,
+                                   180, 181, 182, 183, 184, 185, 186, 187, 188,
+                                   189, 190, 191, 192, 193, 194, 195, 196, 197,
+                                   198, 199, 200, 201, 202, 203, 204, 205, 206,
+                                   207, 208, 209, 210, 211, 212, 213, 214, 215,
+                                   216, 217, 218, 219, 220, 221, 222, 223, 224,
+                                   225, 226, 227, 228, 229, 230, 231, 232, 233,
+                                   234, 235, 236, 237, 238, 239, 240, 241, 242,
+                                   243, 244, 245, 246, 247, 248, 249, 250, 251,
+                                   252, 253, 254, 255, 256, 257, 258, 259, 260,
+                                   261, 262, 263, 264, 265, 266, 267, 268, 269,
+                                   270, 271, 272, 273, 274, 275, 276, 277, 278,
+                                   279, 280, 281, 282, 283, 284, 285, 286, 287,
+                                   288, 289, 290, 291, 292, 293, 294, 295, 296,
+                                   297, 298, 299, 300, 301, 302, 303, 304, 305,
+                                   306, 307, 308, 309, 310, 311, 312, 313, 314,
+                                   315, 316, 317, 318, 319, 320, 321, 322, 323,
+                                   324, 325, 326, 327, 328, 329, 330, 331, 332,
+                                   333, 334, 335, 336, 337, 338, 339, 340, 341,
+                                   342, 343, 344, 345, 346, 347, 348, 349, 350,
+                                   351, 352, 353, 354, 355},
+            'queryOffsetsInBinsCount': 339,
+            'normalizerQuery': 288 / 301,
+            'normalizerSubject': 287 / 299,
+            'numberOfBinsConsidered': 3,
+            'score': (350 / 575) * (max((288 / 301), (287 / 299))),
+            'scoreClass': GreedySignificantBinScore,
+            'subjectOffsetsInBins': {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
+                                     14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+                                     24, 25, 26, 27, 28, 29, 30, 31, 32, 33,
+                                     34, 35, 36, 37, 38, 39, 40, 41, 42, 43,
+                                     44, 45, 46, 47, 48, 49, 50, 51, 52, 53,
+                                     54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
+                                     64, 65, 66, 67, 68, 69, 70, 71, 72, 73,
+                                     74, 75, 76, 77, 78, 79, 80, 81, 82, 83,
+                                     84, 85, 86, 87, 88, 89, 90, 91, 92, 93,
+                                     94, 95, 96, 97, 98, 99, 100, 101, 102,
+                                     103, 104, 105, 106, 107, 108, 109, 110,
+                                     111, 112, 113, 114, 115, 116, 117, 118,
+                                     119, 120, 121, 122, 123, 124, 125, 126,
+                                     127, 128, 129, 130, 131, 132, 133, 134,
+                                     135, 136, 137, 138, 139, 140, 141, 142,
+                                     143, 144, 145, 146, 147, 148, 149, 150,
+                                     151, 152, 153, 154, 170, 171, 172, 173,
+                                     174, 175, 176, 177, 178, 179, 180, 181,
+                                     182, 183, 184, 185, 186, 187, 188, 189,
+                                     190, 191, 192, 193, 194, 195, 196, 197,
+                                     198, 199, 200, 201, 202, 203, 204, 205,
+                                     206, 207, 208, 209, 210, 211, 212, 213,
+                                     214, 215, 216, 217, 218, 219, 220, 221,
+                                     222, 223, 224, 225, 226, 227, 228, 229,
+                                     230, 231, 232, 233, 234, 235, 236, 237,
+                                     238, 239, 240, 241, 242, 243, 244, 245,
+                                     246, 247, 248, 249, 250, 251, 252, 253,
+                                     254, 255, 256, 257, 258, 259, 260, 261,
+                                     262, 263, 264, 265, 266, 267, 268, 269,
+                                     270, 271, 272, 273, 274, 275, 276, 277,
+                                     278, 279, 280, 281, 282, 283, 284, 285,
+                                     286, 287, 288, 289, 290, 291, 292, 293,
+                                     294, 295, 296, 297, 298, 299, 300, 301,
+                                     302, 303, 304, 305, 306, 307, 308, 309,
+                                     310, 311, 312, 313, 314, 315, 316, 317,
+                                     318, 319, 320, 321, 322, 323, 324, 325,
+                                     326, 327, 328, 329, 330, 331, 332, 333,
+                                     334, 335, 336, 337, 338, 339, 340, 341,
+                                     342, 343, 344, 345, 346, 347, 348, 349,
+                                     350, 351, 352, 353, 354, 355},
+            'subjectOffsetsInBinsCount': 339,
+            'totalOffsetCount': 575,
+        }, analysis)
 
     def testPrintAnalysis(self):
         """

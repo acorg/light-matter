@@ -1814,8 +1814,8 @@ class TestGreedySignificantBinScore(TestCase):
         _, subjectIndex, _ = db.addSubject(eel)
         result = db.find(ves, findParams, storeFullAnalysis=True)
 
-        self.assertEqual(0.3023133221365436,
-                         result.analysis[subjectIndex]['bestBinScore'])
+        self.assertAlmostEqual(
+            0.3023133221365436, result.analysis[subjectIndex]['bestBinScore'])
         self.assertAlmostEqual((350 / 575) * (max((288 / 301), (287 / 299))),
                                result.analysis[subjectIndex]['overallScore'])
         analysis = result.analysis[subjectIndex]['overallScoreAnalysis']

@@ -430,7 +430,6 @@ def addBin(bin_, allQueryFeatures, allSubjectFeatures, oldState):
     # Calculate the final score, as descibed in the docstring.
     score = matchedRegionScore * max(normalizerQuery, normalizerSubject)
 
-    # Add additional variables to the state dict.
     state.update({
         'queryOffsetsInBinsCount': len(queryOffsetsInBins),
         'subjectOffsetsInBinsCount': len(subjectOffsetsInBins),

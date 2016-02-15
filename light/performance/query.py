@@ -2,14 +2,8 @@ from collections import defaultdict
 
 from dark.fasta import FastaReads
 
-from light.parameters import FindParameters
 
-
-def queryDatabase(
-        subjects, queries, database,
-        scoreMethod=FindParameters.DEFAULT_BIN_SCORE_METHOD,
-        significanceMethod=FindParameters.DEFAULT_SIGNIFICANCE_METHOD,
-        significanceFraction=FindParameters.DEFAULT_SIGNIFICANCE_FRACTION):
+def queryDatabase(subjects, queries, database, findParams=None):
     """
     Add subjects to a database, query it, return results.
 
@@ -18,12 +12,8 @@ def queryDatabase(
     @param queries: Either an instance of C{dark.reads.Reads} or a C{str}
         filename with sequences that should be looked up in the database.
     @param database: A C{light.database.Database} instance.
-    @param significanceMethod: The name of the method used to calculate
-        which histogram bins are considered significant.
-    @param significanceFraction: The C{float} fraction of all (landmark,
-        trig point) pairs for a scannedRead that need to fall into the
-        same histogram bucket for that bucket to be considered a
-        significant match with a database title.
+    @param findParams: An instance of C{light.parameters.FindParameters} or
+        C{None} to use default find parameters.
     @return: A C{dict} whose keys are query ids and whose values are C{dict}s
         that map subject ids to scores. I.e., for each read we provide a
         C{dict} showing what subjects it matched, and with what score.
@@ -38,7 +28,6 @@ def queryDatabase(
 
     resultDict = defaultdict(dict)
 
-    findParams = FindParameters(significanceFraction=significanceFraction)
     for query in queries:
         result = database.find(query, findParams)
         for subjectIndex in result.significantSubjects():

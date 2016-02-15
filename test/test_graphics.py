@@ -9,14 +9,15 @@ import matplotlib
 # doesn't matter much, as long as it's not Wx.  See:
 # http://lists.open-bio.org/pipermail/biopython-dev/2012-April/009559.html
 matplotlib.use('ps')
+
 from matplotlib import pyplot
 
-from light.parameters import FindParameters
-from light.graphics import (PlotHashesInSubjectAndRead,
-                            SequenceFeatureAnalysis, plotHistogram,
-                            plotHistogramLine, plotHistogramLines)
-
 from dark.reads import AARead, Reads
+
+from light.parameters import FindParameters
+from light.graphics import (
+    PlotHashesInSubjectAndRead, SequenceFeatureAnalysis, plotHistogram,
+    plotHistogramLine, plotHistogramLines)
 
 GOLV = AARead('GOLV', 'RVDIFKKNQHGGLREIYVLDLASRIVQLCLEEISRAVCQELPIEMMMHPELKLKK'
                       'PQEHMYKAAISPESYKSNVSSSNDAKVWNQGHHVAKFAQFLCRLLSPEWHGLIVN'

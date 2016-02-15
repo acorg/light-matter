@@ -173,7 +173,8 @@ def plotHistogramPanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
         to cover the same range (the maximum range of all sub-plots).
     @param equalizeYAxes: if C{True}, adjust the Y axis on each sub-plot
         to cover the same range (the maximum range of all sub-plots).
-    @param findParams: A C{light.parameters.FindParameters} instance.
+    @param findParams: A C{light.parameters.FindParameters} instance or
+        C{None}, to use the default find parameters.
     @param showUpper: If C{True}, show the sub-plots in the upper triangle.
         of the panel.
     @param showLower: If C{True}, show the sub-plots in the lower triangle.
@@ -238,7 +239,8 @@ def plotHistogram(query, subject, findParams=None, readsAx=None,
     @param query: an AAReadWithX instance of the sequence of the query.
     @param subject: either an AAReadWithX instance of the sequence of the
         subject or a C{str} subject index in the database.
-    @param findParams: A C{light.parameters.FindParameters} instance.
+    @param findParams: A C{light.parameters.FindParameters} instance or
+        C{None}, to use the default find parameters.
     @param readsAx: If not None, use this as the subplot for displaying reads.
     @param showMean: If C{True} the mean will be plotted in red.
     @param showMedian: If C{True} the median will be plotted in orange.
@@ -283,7 +285,7 @@ def plotHistogram(query, subject, findParams=None, readsAx=None,
             readsAx.set_xlabel('Offset delta (subject - query)', fontsize=14)
             readsAx.xaxis.tick_bottom()
 
-        plt.vlines(centers, repeat(0, len(counts)), counts, color='blue',
+        plt.vlines(centers, list(repeat(0, len(counts))), counts, color='blue',
                    linewidth=2)
 
         if showSignificantBins:
@@ -353,7 +355,8 @@ def plotHistogramLinePanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
         to cover the same range (the maximum range of all sub-plots).
     @param equalizeYAxes: if C{True}, adjust the Y axis on each sub-plot
         to cover the same range (the maximum range of all sub-plots).
-    @param findParams: A C{light.parameters.FindParameters} instance.
+    @param findParams: A C{light.parameters.FindParameters} instance or
+        C{None}, to use the default find parameters.
     @param showUpper: If C{True}, show the sub-plots in the upper triangle.
         of the panel.
     @param showLower: If C{True}, show the sub-plots in the lower triangle.
@@ -414,7 +417,8 @@ def plotHistogramLine(query, subject, findParams=None, readsAx=None,
     @param query: an AAReadWithX instance of the sequence of the query.
     @param subject: either an AAReadWithX instance of the sequence of the
         subject or an C{int} subject index in the database.
-    @param findParams: A C{light.parameters.FindParameters} instance.
+    @param findParams: A C{light.parameters.FindParameters} instance or
+        C{None}, to use the default find parameters.
     @param readsAx: If not None, use this as the subplot for displaying reads.
     @param showMean: If C{True} the mean will be plotted in red.
     @param showMedian: If C{True} the median will be plotted in orange.
@@ -435,13 +439,11 @@ def plotHistogramLine(query, subject, findParams=None, readsAx=None,
     result = database.find(query, findParams, storeFullAnalysis=True)
 
     try:
-        analysis = result.analysis[subjectIndex]
+        histogram = result.analysis[subjectIndex]['histogram']
     except KeyError:
         print('Query %r and subject %r had no hashes in common.' % (
             query.id, subject.id))
     else:
-        histogram = analysis['histogram']
-
         counts = sorted(len(bin) for bin in histogram.bins)
         title = fill('%s vs %s' % (query.id, subject.id), FILL_WIDTH)
 
@@ -489,7 +491,8 @@ def plotHistogramLines(sequences, findParams=None, **kwargs):
 
     @param sequences: Either A C{str} filename of sequences to consider or
         a C{light.reads.Reads} instance.
-    @param findParams: A C{light.parameters.FindParameters} instance.
+    @param findParams: A C{light.parameters.FindParameters} instance or
+        C{None}, to use the default find parameters.
     @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
         for additional keywords, all of which are optional.
     """
@@ -531,7 +534,8 @@ def plotFeatureSquare(read, findParams=None, readsAx=None, **kwargs):
     square.
 
     @param read: A C{dark.reads.Read} instance.
-    @param findParams: A C{light.parameters.FindParameters} instance.
+    @param findParams: A C{light.parameters.FindParameters} instance or
+        C{None}, to use the default find parameters.
     @param readsAx: If not None, use this as the subplot for displaying reads.
     @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
         for additional keywords, all of which are optional.
@@ -608,7 +612,8 @@ def plotHorizontalPairPanel(sequences, findParams=None, equalizeXAxes=True,
 
     @param sequences: Either A C{str} filename of sequences to consider or
         a C{light.reads.Reads} instance.
-    @param findParams: An instance of C{FindParameters}.
+    @param findParams: An instance of C{FindParameters} or C{None}, to use the
+        default find parameters.
     @param equalizeXAxes: if C{True}, adjust the X axis on each sub-plot
         to cover the same range (the maximum range of all sub-plots).
     @param showSignificant: If C{True}, hashes from significant bins will
@@ -671,7 +676,8 @@ class PlotHashesInSubjectAndRead(object):
 
     @param query: An AAReadWithX instance of the sequence of the query.
     @param subject: An AAReadWithX instance of the sequence of the subject.
-    @param findParams: An instance of C{FindParameters}.
+    @param findParams: An instance of C{FindParameters} or C{None}, to use the
+        default find parameters.
     @param significanceFraction: The C{float} fraction of all (landmark,
         trig point) pairs for a scannedRead that need to fall into the
         same histogram bucket for that bucket to be considered a
@@ -1407,7 +1413,8 @@ def compareScores(subject, query, binScoreMethods=None,
         also C{True}), only show details of the best bin in the match between
         query and subject.
     @param showHistogram: If C{True}, plot the delta offset histogram.
-    @param findParams: A C{light.parameters.FindParameters} instance.
+    @param findParams: A C{light.parameters.FindParameters} instance or
+        C{None}, to use the default find parameters.
     @param showInsignificant: If C{True}, hashes from insignificant bins will
         be included in the set of hashes that match query and subject.
     @param showFeatures: If C{True}, show a separate plot of features in the
@@ -1489,7 +1496,8 @@ def scoreHeatmap(sequenceFileOrMatrix, labels, labelColors, findParams=None,
     @param labels: A C{list} of C{str} label names.
     @param labelColors: A C{dict} mapping each label in labels to a label
         color.
-    @param findParams: A C{light.parameters.FindParameters} instance.
+    @param findParams: A C{light.parameters.FindParameters} instance or
+        C{None}, to use the default find parameters.
     @param figureTitle: If not False, a C{str} title for the figure.
     @param fileTitle: If the figure should be saved to a file, the title of the
         file where the figure is saved to.

@@ -1,11 +1,83 @@
 import warnings
 from unittest import TestCase
 import numpy as np
+import matplotlib
+# The comment below is from
+# https://github.com/biopython/biopython/blob/master/Tests/test_Phylo_depend.py
+# Don't use the Wx backend for matplotlib, use the simpler postscript
+# backend -- we're not going to display or save the plot anyway, so it
+# doesn't matter much, as long as it's not Wx.  See:
+# http://lists.open-bio.org/pipermail/biopython-dev/2012-April/009559.html
+matplotlib.use('ps')
+from matplotlib import pyplot
 
 from light.parameters import FindParameters
-from light.graphics import PlotHashesInSubjectAndRead, SequenceFeatureAnalysis
+from light.graphics import (PlotHashesInSubjectAndRead,
+                            SequenceFeatureAnalysis, plotHistogram,
+                            plotHistogramLine, plotHistogramLines)
 
-from dark.reads import AARead
+from dark.reads import AARead, Reads
+
+GOLV = AARead('GOLV', 'RVDIFKKNQHGGLREIYVLDLASRIVQLCLEEISRAVCQELPIEMMMHPELKLKK'
+                      'PQEHMYKAAISPESYKSNVSSSNDAKVWNQGHHVAKFAQFLCRLLSPEWHGLIVN'
+                      'GLKLWTNKKIALPDGVMNILSRANTPLFRNSIHQAVHDSYKGITPMRWLRPGETF'
+                      'MRIESGMMQGILHYTSSLFHASLLMMRDSLWRSYSEQLGVKSITTDLVSSDDSSR'
+                      'MTDIFYRDSKNFKRGKIFARADHMAIEPLSRCFGIWMSPKSTYCCNGIMEFNSEY'
+                      'FFRASLYRPTLKWSYACLG')
+
+AKAV = AARead('AKAV', 'VFTYFNKGQKTAKDREIFVGEFEAKMCLYLVERISKERCKLNPDEMISEPGDGKL'
+                      'KKLEDMAEYEIRYTANTLKSMKDKALQEFSKFADDFNFKPHSTKIEINADMSKWS'
+                      'AQDVLFKYFWLFALDPALYKPEKERILYFLCNYMDKVLVIPDDVMTSILDQRVKR'
+                      'EKDIIYEMTNGLKQNWVSIKRNWLQGNLNYTSSYLHSCCMNVYKDIIKNVATLLE'
+                      'GDVLVNSMVHSDDNHTSITMIQDKFPDDIIIEYCIKLFEKICLSFGNQANMKKTY'
+                      'VTNFIKEFVSLFNIYGEPFSVYGRFLLTAVG')
+
+BUNV = AARead('BUNV', 'SFTFFNKGQKTAKDREIFVGEFEAKMCMYVVERISKERCKLNTDEMISEPGDSKL'
+                      'KILEKKAEEEIRYIVERTKDSIIKGDPSKALKLEINADMSKWSAQDVFYKYFWLI'
+                      'AMDPILYPAEKTRILYFMCNYMQKLLILPDDLIANILDQKRPYNDDLILEMTNGL'
+                      'NYNYVQIKRNWLQGNFNYISSYVHSCAMLVYKDILKECMKLLDGDCLINSMVHSD'
+                      'DNQTSLAIIQNKVSDQIVIQYAANTFESVCLTFGCQANMKKTYITHTCKEFVSLF'
+                      'NLHGEPLSVFGRFLLPSVG')
+
+
+class TestPlotHistogramFunctions(TestCase):
+    """
+    Tests for functions involved in plotting histograms.
+    """
+    def testPlotHistogramMustRun(self):
+        """
+        The plotHistogram function must run properly.
+        """
+        # Turn off interactive display
+        pyplot.ioff()
+        findParams = FindParameters(significanceMethod='HashFraction',
+                                    binScoreMethod='FeatureAAScore')
+        plotHistogram(GOLV, AKAV, findParams=findParams)
+
+    def testPlotHistogramLineMustRun(self):
+        """
+        The plotHistogramLine function must run properly.
+        """
+        # Turn off interactive display
+        pyplot.ioff()
+        findParams = FindParameters(significanceMethod='HashFraction',
+                                    binScoreMethod='FeatureAAScore')
+
+        plotHistogramLine(GOLV, AKAV, findParams=findParams)
+
+    def testPlotHistogramLinesMustRun(self):
+        """
+        The plotHistogramLines function must run properly.
+        """
+        # Turn off interactive display
+        pyplot.ioff()
+        findParams = FindParameters(significanceMethod='HashFraction',
+                                    binScoreMethod='FeatureAAScore')
+        reads = Reads()
+        reads.add(GOLV)
+        reads.add(AKAV)
+        reads.add(BUNV)
+        plotHistogramLines(reads, findParams=findParams)
 
 
 class TestPlotHashesInSubjectAndRead(TestCase):

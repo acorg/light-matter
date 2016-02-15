@@ -1,7 +1,7 @@
 import six
 from unittest import TestCase
 
-from dark.reads import AARead
+from dark.reads import AARead, AAReadWithX
 
 from light.database import DatabaseSpecifier
 from light.features import Landmark, TrigPoint
@@ -10,7 +10,8 @@ from light.landmarks import AlphaHelix, AminoAcids as AminoAcidsLm
 from light.trig.amino_acids import AminoAcids
 from light.trig.peaks import Peaks
 from light.overall_score import (
-    BestBinScore, SignificantBinScore, offsetsInBin, computeLengthNormalizer)
+    BestBinScore, SignificantBinScore, offsetsInBin, computeLengthNormalizer,
+    GreedySignificantBinScore)
 from light.parameters import DatabaseParameters, FindParameters
 from light.subject import Subject
 
@@ -539,7 +540,7 @@ class TestSignificantBinScore(TestCase):
         query = AARead('id1', 'A')
         subject = Subject('id2', 'A', 0)
         significantBins = [
-            {'index': 0, 'bin': histogram.bins[0]},
+            {'index': 0, 'bin': histogram.bins[0], 'score': 1.0},
         ]
         sbs = SignificantBinScore(significantBins, query, subject,
                                   dbParams)
@@ -555,6 +556,54 @@ class TestSignificantBinScore(TestCase):
                 'matchedSubjectOffsetCount': 20,
                 'numeratorQuery': 20,
                 'numeratorSubject': 20,
+                'overallScoreAdjustedToBestBinScore': False,
+                'queryOffsetsInBins': 20,
+                'normalizerQuery': 1.0,
+                'normalizerSubject': 1.0,
+                'score': score,
+                'scoreClass': SignificantBinScore,
+                'subjectOffsetsInBins': 20,
+                'totalOffsetCount': 40,
+            },
+            analysis)
+
+    def testOnePairInOneBinBestBinScoreIsNone(self):
+        """
+        If the bestBinScore is None, no TypeError must be raised.
+        """
+        queryLandmark = Landmark('AlphaHelix', 'A', 100, 20)
+        queryTrigPoint = TrigPoint('Peaks', 'P', 110)
+        subjectLandmark = Landmark('AlphaHelix', 'A', 100, 20)
+        subjectTrigPoint = TrigPoint('Peaks', 'P', 110)
+        histogram = Histogram(1)
+        histogram.add(44, {
+            'queryLandmark': queryLandmark,
+            'queryTrigPoint': queryTrigPoint,
+            'subjectLandmark': subjectLandmark,
+            'subjectTrigPoint': subjectTrigPoint,
+        })
+        histogram.finalize()
+        dbParams = DatabaseParameters(landmarks=[], trigPoints=[])
+        query = AARead('id1', 'A')
+        subject = Subject('id2', 'A', 0)
+        significantBins = [
+            {'index': 0, 'bin': histogram.bins[0], 'score': None},
+        ]
+        sbs = SignificantBinScore(significantBins, query, subject,
+                                  dbParams)
+        score, analysis = sbs.calculateScore()
+        self.assertEqual(1.0, score)
+        self.assertEqual(
+            {
+                'denominatorQuery': 20,
+                'denominatorSubject': 20,
+                'matchedOffsetCount': 40,
+                'matchedQueryOffsetCount': 20,
+                'matchedRegionScore': 1.0,
+                'matchedSubjectOffsetCount': 20,
+                'numeratorQuery': 20,
+                'numeratorSubject': 20,
+                'overallScoreAdjustedToBestBinScore': False,
                 'queryOffsetsInBins': 20,
                 'normalizerQuery': 1.0,
                 'normalizerSubject': 1.0,
@@ -600,7 +649,7 @@ class TestSignificantBinScore(TestCase):
         query = AARead('id1', 'A')
         subject = Subject('id2', 'A', 0)
         significantBins = [
-            {'index': 0, 'bin': histogram.bins[0]},
+            {'index': 0, 'bin': histogram.bins[0], 'score': 1.0},
         ]
         sbs = SignificantBinScore(significantBins, query, subject,
                                   dbParams)
@@ -616,6 +665,7 @@ class TestSignificantBinScore(TestCase):
                 'matchedSubjectOffsetCount': 20,
                 'numeratorQuery': 20,
                 'numeratorSubject': 20,
+                'overallScoreAdjustedToBestBinScore': False,
                 'queryOffsetsInBins': 31,
                 'normalizerQuery': 1.0,
                 'normalizerSubject': 1.0,
@@ -649,7 +699,7 @@ class TestSignificantBinScore(TestCase):
         query = AARead('id', 300 * 'A' + 'FRRRFRRRFAAAC')
         subject = Subject('id', 30 * 'A', 0)
         significantBins = [
-            {'index': 0, 'bin': histogram.bins[0]},
+            {'index': 0, 'bin': histogram.bins[0], 'score': 1.0},
         ]
         sbs = SignificantBinScore(significantBins, query, subject,
                                   dbParams)
@@ -665,6 +715,7 @@ class TestSignificantBinScore(TestCase):
                 'matchedSubjectOffsetCount': 10,
                 'numeratorQuery': 10,
                 'numeratorSubject': 10,
+                'overallScoreAdjustedToBestBinScore': False,
                 'queryOffsetsInBins': 11,
                 'normalizerQuery': 0.5,
                 'normalizerSubject': 1.0,
@@ -699,7 +750,7 @@ class TestSignificantBinScore(TestCase):
         query = AARead('id', 'FRRRFRRRF' + ('F' * 200) + 'FRRRFRRRFAAACAAAW')
         subject = Subject('id2', 'A', 0)
         significantBins = [
-            {'index': 0, 'bin': histogram.bins[0]},
+            {'index': 0, 'bin': histogram.bins[0], 'score': 1.0},
         ]
         sbs = SignificantBinScore(significantBins, query, subject,
                                   dbParams)
@@ -715,6 +766,7 @@ class TestSignificantBinScore(TestCase):
                 'matchedSubjectOffsetCount': 10,
                 'numeratorQuery': 10,
                 'numeratorSubject': 10,
+                'overallScoreAdjustedToBestBinScore': False,
                 'normalizerQuery': 10 / 21,
                 'normalizerSubject': 1.0,
                 'queryOffsetsInBins': 11,
@@ -727,7 +779,7 @@ class TestSignificantBinScore(TestCase):
 
     def testOnePairInBinQuery2Subject1PairOutsideMatch(self):
         """
-        A bin containing one pair must not have an overall score of 2 / 3 if
+        A bin containing one pair must have an overall score of 2 / 3 if
         the query has two and the subject one pair that are outside the match
         area.
         """
@@ -748,7 +800,7 @@ class TestSignificantBinScore(TestCase):
         query = AARead('id', 'FRRRFRRRF' + 'AAACAAAW')
         subject = Subject('id2', 'FRRRFRRRF' + 'AAAC', 0)
         significantBins = [
-            {'index': 0, 'bin': histogram.bins[0]},
+            {'index': 0, 'bin': histogram.bins[0], 'score': 2 / 3},
         ]
         sbs = SignificantBinScore(significantBins, query, subject,
                                   dbParams)
@@ -764,6 +816,7 @@ class TestSignificantBinScore(TestCase):
                 'matchedSubjectOffsetCount': 20,
                 'numeratorQuery': 20,
                 'numeratorSubject': 20,
+                'overallScoreAdjustedToBestBinScore': False,
                 'normalizerQuery': 20 / 31,
                 'normalizerSubject': 2 / 3,
                 'queryOffsetsInBins': 20,
@@ -776,7 +829,7 @@ class TestSignificantBinScore(TestCase):
 
     def testOneHashInBinQuery1Subject2PairOutsideMatch(self):
         """
-        A bin containing one pair must not have an overall score of 2 / 3 if
+        A bin containing one pair must have an overall score of 2 / 3 if
         the query has one and the subject two pairs that are outside the match
         area.
         """
@@ -797,7 +850,7 @@ class TestSignificantBinScore(TestCase):
         query = Subject('id2', 'FRRRFRRRF' + 'AAAC', 0)
         subject = AARead('id', 'FRRRFRRRF' + 'AAACAAAW')
         significantBins = [
-            {'index': 0, 'bin': histogram.bins[0]},
+            {'index': 0, 'bin': histogram.bins[0], 'score': 2 / 3},
         ]
         sbs = SignificantBinScore(significantBins, query, subject,
                                   dbParams)
@@ -813,6 +866,7 @@ class TestSignificantBinScore(TestCase):
                 'matchedSubjectOffsetCount': 20,
                 'numeratorQuery': 20,
                 'numeratorSubject': 20,
+                'overallScoreAdjustedToBestBinScore': False,
                 'normalizerQuery': 2 / 3,
                 'normalizerSubject': 20 / 31,
                 'queryOffsetsInBins': 20,
@@ -846,7 +900,7 @@ class TestSignificantBinScore(TestCase):
         query = AARead('id', 20 * 'A' + 'FRRRFRRRFAAC')
         subject = Subject('id2', 'A', 0)
         significantBins = [
-            {'index': 0, 'bin': histogram.bins[0]},
+            {'index': 0, 'bin': histogram.bins[0], 'score': 42 / 52},
         ]
         sbs = SignificantBinScore(significantBins, query, subject,
                                   dbParams)
@@ -862,6 +916,7 @@ class TestSignificantBinScore(TestCase):
                 'matchedSubjectOffsetCount': 21,
                 'numeratorQuery': 31,
                 'numeratorSubject': 21,
+                'overallScoreAdjustedToBestBinScore': False,
                 'normalizerQuery': 1.0,
                 'normalizerSubject': 1.0,
                 'queryOffsetsInBins': 51,
@@ -896,7 +951,7 @@ class TestSignificantBinScore(TestCase):
         query = AARead('id', 'FRRRFRRRFAAAAC')
         subject = Subject('id2', 'A', 0)
         significantBins = [
-            {'index': 0, 'bin': histogram.bins[0]},
+            {'index': 0, 'bin': histogram.bins[0], 'score': 1.0},
         ]
         sbs = SignificantBinScore(significantBins, query, subject,
                                   dbParams)
@@ -912,6 +967,7 @@ class TestSignificantBinScore(TestCase):
                 'matchedSubjectOffsetCount': 10,
                 'numeratorQuery': 10,
                 'numeratorSubject': 10,
+                'overallScoreAdjustedToBestBinScore': False,
                 'normalizerQuery': 1.0,
                 'normalizerSubject': 1.0,
                 'queryOffsetsInBins': 14,
@@ -946,7 +1002,7 @@ class TestSignificantBinScore(TestCase):
         query = AARead('id', 'FRRRFRRRF' + 20 * 'A' + 'C')
         subject = Subject('id2', 'A', 0)
         significantBins = [
-            {'index': 0, 'bin': histogram.bins[0]},
+            {'index': 0, 'bin': histogram.bins[0], 'score': 1.0},
         ]
         sbs = SignificantBinScore(significantBins, query, subject,
                                   dbParams)
@@ -967,6 +1023,7 @@ class TestSignificantBinScore(TestCase):
                 'matchedSubjectOffsetCount': 5,
                 'numeratorQuery': 5,
                 'numeratorSubject': 5,
+                'overallScoreAdjustedToBestBinScore': False,
                 'normalizerQuery': 0.5,
                 'normalizerSubject': 1.0,
                 'queryOffsetsInBins': 5,
@@ -1001,7 +1058,7 @@ class TestSignificantBinScore(TestCase):
         query = AARead('id', 22 * 'A' + 'CAAW')
         subject = Subject('id2', 'A', 0)
         significantBins = [
-            {'index': 0, 'bin': histogram.bins[0]},
+            {'index': 0, 'bin': histogram.bins[0], 'score': 42 / 44},
         ]
         sbs = SignificantBinScore(significantBins, query, subject,
                                   dbParams)
@@ -1017,6 +1074,7 @@ class TestSignificantBinScore(TestCase):
                 'matchedSubjectOffsetCount': 21,
                 'numeratorQuery': 23,
                 'numeratorSubject': 21,
+                'overallScoreAdjustedToBestBinScore': False,
                 'normalizerQuery': 1.0,
                 'normalizerSubject': 1.0,
                 'queryOffsetsInBins': 51,
@@ -1050,7 +1108,7 @@ class TestSignificantBinScore(TestCase):
         query = AARead('id', 'FRRRFRRRFC')
         subject = Subject('id2', 'A', 0)
         significantBins = [
-            {'index': 0, 'bin': histogram.bins[0]},
+            {'index': 0, 'bin': histogram.bins[0], 'score': 1.0},
         ]
         sbs = SignificantBinScore(significantBins, query, subject,
                                   dbParams)
@@ -1066,6 +1124,7 @@ class TestSignificantBinScore(TestCase):
                 'matchedSubjectOffsetCount': 20,
                 'numeratorQuery': 20,
                 'numeratorSubject': 20,
+                'overallScoreAdjustedToBestBinScore': False,
                 'normalizerQuery': 0.8,
                 'normalizerSubject': 1.0,
                 'queryOffsetsInBins': 20,
@@ -1099,7 +1158,7 @@ class TestSignificantBinScore(TestCase):
         query = AARead('id', 'AAAFRRRFRRRFC')
         subject = Subject('id2', 'A', 0)
         significantBins = [
-            {'index': 0, 'bin': histogram.bins[0]},
+            {'index': 0, 'bin': histogram.bins[0], 'score': 1.0},
         ]
         sbs = SignificantBinScore(significantBins, query, subject,
                                   dbParams)
@@ -1115,6 +1174,7 @@ class TestSignificantBinScore(TestCase):
                 'matchedSubjectOffsetCount': 4,
                 'numeratorQuery': 4,
                 'numeratorSubject': 4,
+                'overallScoreAdjustedToBestBinScore': False,
                 'normalizerQuery': 4 / 11,
                 'normalizerSubject': 1.0,
                 'queryOffsetsInBins': 4,
@@ -1160,7 +1220,7 @@ class TestSignificantBinScore(TestCase):
         query = AARead('id', 20 * 'A' + 'FRRRFRRRFC')
         subject = Subject('id2', 25 * 'A' + 'FRRRFRRRFRRRFAAC', 0)
         significantBins = [
-            {'index': 0, 'bin': histogram.bins[0]},
+            {'index': 0, 'bin': histogram.bins[0], 'score': 20 / 44},
         ]
         sbs = SignificantBinScore(significantBins, query, subject, dbParams)
         score, analysis = sbs.calculateScore()
@@ -1177,6 +1237,7 @@ class TestSignificantBinScore(TestCase):
                 'matchedSubjectOffsetCount': 10,
                 'numeratorQuery': 20,
                 'numeratorSubject': 24,
+                'overallScoreAdjustedToBestBinScore': False,
                 'normalizerQuery': 1.0,
                 'normalizerSubject': 1.0,
                 'queryOffsetsInBins': 59,
@@ -1232,9 +1293,9 @@ class TestSignificantBinScore(TestCase):
         query = AARead('id', 80 * 'A')
         subject = Subject('id2', 80 * 'A', 0)
         significantBins = [
-            {'index': 0, 'bin': histogram.bins[0]},
-            {'index': 1, 'bin': histogram.bins[1]},
-            {'index': 2, 'bin': histogram.bins[2]},
+            {'index': 0, 'bin': histogram.bins[0], 'score': 1.0},
+            {'index': 1, 'bin': histogram.bins[1], 'score': 1.0},
+            {'index': 2, 'bin': histogram.bins[2], 'score': 1.0},
         ]
         sbs = SignificantBinScore(significantBins, query, subject,
                                   dbParams)
@@ -1251,6 +1312,7 @@ class TestSignificantBinScore(TestCase):
                 'matchedSubjectOffsetCount': 11,
                 'numeratorQuery': 11,
                 'numeratorSubject': 11,
+                'overallScoreAdjustedToBestBinScore': False,
                 'normalizerQuery': 1.0,
                 'normalizerSubject': 1.0,
                 'queryOffsetsInBins': 40,
@@ -1307,9 +1369,9 @@ class TestSignificantBinScore(TestCase):
         query = AARead('id', 80 * 'A' + 'FRRRFRRRFAAAC')
         subject = Subject('id2', 80 * 'A', 0)
         significantBins = [
-            {'index': 0, 'bin': histogram.bins[0]},
-            {'index': 1, 'bin': histogram.bins[1]},
-            {'index': 2, 'bin': histogram.bins[2]},
+            {'index': 0, 'bin': histogram.bins[0], 'score': 1.0},
+            {'index': 1, 'bin': histogram.bins[1], 'score': 1.0},
+            {'index': 2, 'bin': histogram.bins[2], 'score': 1.0},
         ]
         sbs = SignificantBinScore(significantBins, query, subject,
                                   dbParams)
@@ -1326,6 +1388,7 @@ class TestSignificantBinScore(TestCase):
                 'matchedSubjectOffsetCount': 11,
                 'numeratorQuery': 11,
                 'numeratorSubject': 11,
+                'overallScoreAdjustedToBestBinScore': False,
                 'normalizerQuery': 0.5238095238095238,
                 'normalizerSubject': 1.0,
                 'queryOffsetsInBins': 40,
@@ -1340,7 +1403,7 @@ class TestSignificantBinScore(TestCase):
         """
         A match that consists of three significant bins with one pair in each
         bin and two additional non-matching pairs in the query and one
-        additional non-matching pair in the query must not return an overall
+        additional non-matching pair in the subject must not return an overall
         score of 1.0.
         """
         queryLandmark1 = Landmark('AlphaHelix_pi', 'C', 2, 3)
@@ -1383,9 +1446,9 @@ class TestSignificantBinScore(TestCase):
         query = AARead('id', 80 * 'A' + 'FRRRFRRRF' + 'AAACAAAW')
         subject = Subject('id2', 80 * 'A' + 'FRRRFRRRF' + 'AAAC', 0)
         significantBins = [
-            {'index': 0, 'bin': histogram.bins[0]},
-            {'index': 1, 'bin': histogram.bins[1]},
-            {'index': 2, 'bin': histogram.bins[2]},
+            {'index': 0, 'bin': histogram.bins[0], 'score': 11 / 21},
+            {'index': 1, 'bin': histogram.bins[1], 'score': 11 / 21},
+            {'index': 2, 'bin': histogram.bins[2], 'score': 11 / 21},
         ]
         sbs = SignificantBinScore(significantBins, query, subject,
                                   dbParams)
@@ -1402,6 +1465,7 @@ class TestSignificantBinScore(TestCase):
                 'matchedSubjectOffsetCount': 11,
                 'numeratorQuery': 11,
                 'numeratorSubject': 11,
+                'overallScoreAdjustedToBestBinScore': False,
                 'normalizerQuery': 11 / 21,
                 'normalizerSubject': 11 / 21,
                 'queryOffsetsInBins': 40,
@@ -1458,9 +1522,9 @@ class TestSignificantBinScore(TestCase):
         query = AARead('id', 40 * 'A' + 'FRRRFRRRFAAC' + 28 * 'A')
         subject = Subject('id2', 80 * 'A', 0)
         significantBins = [
-            {'index': 0, 'bin': histogram.bins[0]},
-            {'index': 1, 'bin': histogram.bins[1]},
-            {'index': 2, 'bin': histogram.bins[2]},
+            {'index': 0, 'bin': histogram.bins[0], 'score': 0.0},
+            {'index': 1, 'bin': histogram.bins[1], 'score': 0.0},
+            {'index': 2, 'bin': histogram.bins[2], 'score': 0.0},
         ]
         sbs = SignificantBinScore(significantBins, query, subject, dbParams)
         overallScore, overallAnalysis = sbs.calculateScore()
@@ -1476,6 +1540,7 @@ class TestSignificantBinScore(TestCase):
                 'matchedSubjectOffsetCount': 11,
                 'numeratorQuery': 16,
                 'numeratorSubject': 11,
+                'overallScoreAdjustedToBestBinScore': False,
                 'normalizerQuery': 1.0,
                 'normalizerSubject': 1.0,
                 'queryOffsetsInBins': 40,
@@ -1614,7 +1679,7 @@ class TestSignificantBinScore(TestCase):
         query = AARead('id', 'FRRRFRRRFC')
         subject = Subject('id2', 'A', 0)
         significantBins = [
-            {'index': 0, 'bin': histogram.bins[0]},
+            {'index': 0, 'bin': histogram.bins[0], 'score': 1.0},
         ]
         sbs = SignificantBinScore(significantBins, query, subject,
                                   dbParams)
@@ -1636,5 +1701,351 @@ class TestSignificantBinScore(TestCase):
             'Total query offsets that are in a bin: 20\n'
             'Total subject offsets that are in a bin: 20')
         self.assertEqual(expected, SignificantBinScore.printAnalysis(analysis))
+        self.assertEqual(expected,
+                         analysis['scoreClass'].printAnalysis(analysis))
+
+
+class TestGreedySignificantBinScore(TestCase):
+    """
+    Tests for the light.overall_score.GreedySignificantBinScore class.
+    """
+    def testOnePairInOneBin(self):
+        """
+        A match with one bin containing one pair must have an overall score of
+        1.0 if the query and subject have no additional (non-matching) hashes.
+        This test is already used in the test for the FeatureAAScore and the
+        BestBinScore. It's just here to make sure the basics work. Note that
+        the bestBinScore that is passed in is too low. This is to make sure the
+        GreedySignificantBinScore calculates a score of 1.0.
+        """
+        queryLandmark = Landmark('AlphaHelix', 'A', 100, 20)
+        queryTrigPoint = TrigPoint('Peaks', 'P', 110)
+        subjectLandmark = Landmark('AlphaHelix', 'A', 100, 20)
+        subjectTrigPoint = TrigPoint('Peaks', 'P', 110)
+        histogram = Histogram(1)
+        histogram.add(44, {
+            'queryLandmark': queryLandmark,
+            'queryTrigPoint': queryTrigPoint,
+            'subjectLandmark': subjectLandmark,
+            'subjectTrigPoint': subjectTrigPoint,
+        })
+        histogram.finalize()
+        params = DatabaseParameters([], [])
+        query = AARead('id1', 'A')
+        subject = Subject('id2', 'A', 0)
+        significantBins = [
+            {'index': 0, 'bin': histogram.bins[0], 'score': 0.0},
+        ]
+        gsbs = GreedySignificantBinScore(significantBins, query, subject,
+                                         params)
+        score, analysis = gsbs.calculateScore()
+
+        self.assertEqual(1.0, score)
+        self.assertEqual({
+            'denominatorQuery': 20,
+            'denominatorSubject': 20,
+            'matchedOffsetCount': 40,
+            'matchedQueryOffsetCount': 20,
+            'matchedRegionScore': 1.0,
+            'matchedSubjectOffsetCount': 20,
+            'numeratorQuery': 20,
+            'numeratorSubject': 20,
+            'overallMatchedQueryOffsets': {100, 101, 102, 103, 104, 105, 106,
+                                           107, 108, 109, 110, 111, 112, 113,
+                                           114, 115, 116, 117, 118, 119},
+            'overallMatchedSubjectOffsets': {100, 101, 102, 103, 104, 105, 106,
+                                             107, 108, 109, 110, 111, 112, 113,
+                                             114, 115, 116, 117, 118, 119},
+            'overallUnmatchedQueryOffsets': set(),
+            'overallUnmatchedSubjectOffsets': set(),
+            'queryOffsetsInBinsCount': 20,
+            'normalizerQuery': 1.0,
+            'normalizerSubject': 1.0,
+            'numberOfBinsConsidered': 1,
+            'queryOffsetsInBins': {100, 101, 102, 103, 104, 105, 106, 107, 108,
+                                   109, 110, 111, 112, 113, 114, 115, 116, 117,
+                                   118, 119},
+            'score': score,
+            'scoreClass': GreedySignificantBinScore,
+            'subjectOffsetsInBins': {100, 101, 102, 103, 104, 105, 106, 107,
+                                     108, 109, 110, 111, 112, 113, 114, 115,
+                                     116, 117, 118, 119},
+            'subjectOffsetsInBinsCount': 20,
+            'totalOffsetCount': 40,
+        }, analysis)
+
+    def testCorrectScoresMustBeCalculated(self):
+        """
+        When comparing two sequences, the correct score must be calculated.
+        """
+        eel = AAReadWithX('EelVirusEuropeanX',
+                          'SLETLDYINVTVVQDLTDCLTSKGKLPAYLGSKTSETTSILQPWEKETKIP'
+                          'VIRRAAKLRAAITWFVEPDSLLAQSILNNIESLTGEDWSASISGFKRTGSA'
+                          'LHRFTSARVSAGGFSAQSPARLTRMMATTDTFREIGSDNYDFMFQSLLLFA'
+                          'QMTTGEIYKRSPATNFHFHLSCHQCLRKIEEPTLNSDFAYNPIQRSDILDK'
+                          'WKPQTTDWSSERKAPEIEEGNWDRLTHQEQSFQVGKSIGFLFGDLTMTKNS'
+                          'HAQDSSIFPLSIQYKITAAEFLEGILDGIVKASALSTIHRRNFDHHSKYKS'
+                          'TVSGTVDYLIELISESAGFTNLTRNGPLKACLTIPHKIPPSYPLSQSDLGA'
+                          )
+        ves = AAReadWithX('VesicularStomatitisIndianaVirus',
+                          'TSGFNYVSVHCPDGIHDVFSSRGPLPAYLGSKTSESTSILQPWERESKVPL'
+                          'IKRATRLRDAISWFVEPDSKLAMTILSNIHSLTGEEWTKRQHGFKRTGSAL'
+                          'HRFSTSRMSHGGFASQSTAALTRLMATTDTMRDLGDQNFDFLFQATLLYAQ'
+                          'ITTTVARDGWITSCTDHYHIACKSCLRPIEEITLDSSMDYTPPDVSHVLKT'
+                          'WRNGEGSWGQEIKQIYPLEGNWKNLAPAEQSYQVGRCIGFLYGDLAYRKST'
+                          'HAEDSSLFPLSIQGRIRGRGFLKGLLDGLMRASCCQVIHRRSLAHLKRPAN'
+                          'AVYGGLIYLIDKLSVSPPFLSLTRSGPIRDELTIPHKIPTSYPTSNRDMGV'
+                          )
+
+        findParams = FindParameters(
+            significanceFraction=0.01, scoreMethod='FeatureAAScore',
+            overallScoreMethod='GreedySignificantBinScore')
+
+        kwds = dict(landmarks=[
+            'AlphaHelix', 'AlphaHelix_3_10', 'AlphaHelix_pi', 'AminoAcidsLm',
+            'BetaStrand', 'BetaTurn', 'Prosite', 'GOR4AlphaHelix',
+            'GOR4BetaStrand'],
+            trigPoints=['Peaks', 'Troughs', 'AminoAcids',
+                        'IndividualPeaks', 'IndividualTroughs'],
+            distanceBase=1.0, limitPerLandmark=50, minDistance=1,
+            maxDistance=100, featureLengthBase=1.01)
+
+        db = DatabaseSpecifier().getDatabaseFromKeywords(**kwds)
+        _, subjectIndex, _ = db.addSubject(eel)
+        result = db.find(ves, findParams, storeFullAnalysis=True)
+
+        self.assertAlmostEqual(
+            0.3023133221365436, result.analysis[subjectIndex]['bestBinScore'])
+        self.assertAlmostEqual((350 / 575) * (max((288 / 301), (287 / 299))),
+                               result.analysis[subjectIndex]['overallScore'])
+        analysis = result.analysis[subjectIndex]['overallScoreAnalysis']
+
+        self.maxDiff = None
+        self.assertEqual({
+            'denominatorQuery': 301,
+            'denominatorSubject': 299,
+            'matchedOffsetCount': 350,
+            'matchedQueryOffsetCount': 175,
+            'matchedRegionScore': 350 / 575,
+            'matchedSubjectOffsetCount': 175,
+            'numeratorQuery': 288,
+            'numeratorSubject': 287,
+            'overallMatchedQueryOffsets': {1, 3, 4, 6, 7, 8, 9, 14, 16, 18,
+                                           19, 20, 21, 24, 25, 28, 29, 30, 31,
+                                           32, 33, 34, 37, 39, 40, 42, 44, 46,
+                                           47, 48, 49, 55, 56, 57, 58, 61, 62,
+                                           63, 64, 66, 67, 68, 74, 76, 79, 82,
+                                           83, 84, 85, 86, 87, 90, 91, 92, 94,
+                                           96, 97, 99, 101, 103, 104, 106, 107,
+                                           108, 109, 112, 113, 114, 115, 116,
+                                           117, 118, 122, 123, 124, 125, 130,
+                                           131, 132, 133, 134, 135, 139, 140,
+                                           141, 142, 143, 144, 152, 153, 170,
+                                           171, 172, 174, 175, 177, 178, 179,
+                                           181, 184, 185, 186, 187, 190, 191,
+                                           192, 193, 199, 201, 234, 235, 236,
+                                           237, 239, 241, 242, 243, 247, 248,
+                                           249, 250, 254, 255, 256, 258, 262,
+                                           263, 264, 265, 266, 267, 268, 269,
+                                           270, 271, 275, 277, 278, 279, 280,
+                                           281, 282, 283, 285, 286, 287, 290,
+                                           292, 297, 302, 307, 311, 314, 319,
+                                           320, 321, 324, 326, 327, 329, 333,
+                                           334, 337, 338, 339, 342, 343, 346,
+                                           347, 350, 351, 352, 353, 354, 355},
+            'overallMatchedSubjectOffsets': {2, 4, 5, 7, 8, 9, 10, 15, 17, 19,
+                                             20, 21, 22, 25, 26, 29, 30, 31,
+                                             32, 33, 34, 35, 38, 40, 41, 43,
+                                             45, 47, 48, 49, 50, 56, 57, 58,
+                                             59, 62, 63, 64, 65, 67, 68, 69,
+                                             75, 77, 80, 83, 84, 85, 86, 87,
+                                             88, 91, 92, 93, 95, 97, 98, 100,
+                                             102, 104, 105, 107, 108, 109, 110,
+                                             113, 114, 115, 116, 117, 118, 119,
+                                             123, 124, 125, 126, 131, 132, 133,
+                                             134, 135, 136, 140, 141, 142, 143,
+                                             144, 145, 153, 154, 170, 171, 172,
+                                             174, 175, 177, 178, 179, 181, 184,
+                                             185, 186, 187, 190, 191, 192, 193,
+                                             199, 201, 234, 235, 236, 237, 239,
+                                             241, 242, 243, 247, 248, 249, 250,
+                                             254, 255, 256, 258, 262, 263, 264,
+                                             265, 266, 267, 268, 269, 270, 271,
+                                             275, 277, 278, 279, 280, 281, 282,
+                                             283, 285, 286, 287, 290, 292, 297,
+                                             302, 307, 311, 314, 319, 320, 321,
+                                             324, 326, 327, 329, 333, 334, 337,
+                                             338, 339, 342, 343, 346, 347, 350,
+                                             351, 352, 353, 354, 355},
+            'overallUnmatchedQueryOffsets': {5, 10, 11, 12, 13, 17, 35, 36, 38,
+                                             45, 50, 51, 52, 53, 54, 59, 60,
+                                             65, 69, 70, 71, 72, 73, 75, 77,
+                                             78, 80, 88, 89, 105, 111, 119,
+                                             120, 121, 126, 127, 128, 129, 137,
+                                             138, 145, 146, 147, 148, 149, 150,
+                                             151, 173, 180, 182, 183, 188, 189,
+                                             194, 195, 196, 197, 198, 200, 202,
+                                             203, 204, 205, 207, 208, 209, 210,
+                                             211, 213, 214, 215, 216, 217, 218,
+                                             219, 220, 221, 222, 223, 224, 225,
+                                             226, 227, 228, 230, 231, 240, 244,
+                                             245, 251, 252, 253, 257, 272, 273,
+                                             276, 284, 288, 289, 291, 298, 299,
+                                             300, 304, 305, 306, 312, 313, 315,
+                                             317, 318, 335, 336},
+            'overallUnmatchedSubjectOffsets': {11, 12, 13, 14, 18, 23, 24, 27,
+                                               28, 36, 37, 39, 51, 52, 53, 54,
+                                               55, 60, 61, 71, 72, 73, 74, 76,
+                                               78, 79, 81, 82, 89, 90, 111,
+                                               112, 120, 121, 122, 127, 128,
+                                               146, 147, 148, 149, 150, 151,
+                                               152, 173, 176, 180, 188, 189,
+                                               195, 196, 197, 198, 200, 202,
+                                               203, 204, 205, 206, 207, 210,
+                                               211, 213, 214, 215, 217, 219,
+                                               220, 223, 224, 225, 227, 228,
+                                               229, 230, 231, 232, 233, 244,
+                                               245, 252, 272, 273, 274, 276,
+                                               284, 288, 289, 291, 293, 294,
+                                               295, 298, 301, 303, 304, 305,
+                                               306, 308, 312, 313, 315, 316,
+                                               317, 318, 322, 323, 328, 335,
+                                               336, 348, 349},
+            'queryOffsetsInBins': {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
+                                   14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+                                   25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35,
+                                   36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46,
+                                   47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57,
+                                   58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68,
+                                   69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79,
+                                   80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90,
+                                   91, 92, 93, 94, 95, 96, 97, 98, 99, 100,
+                                   101, 102, 103, 104, 105, 106, 107, 108, 109,
+                                   110, 111, 112, 113, 114, 115, 116, 117, 118,
+                                   119, 120, 121, 122, 123, 124, 125, 126, 127,
+                                   128, 129, 130, 131, 132, 133, 134, 135, 136,
+                                   137, 138, 139, 140, 141, 142, 143, 144, 145,
+                                   146, 147, 148, 149, 150, 151, 152, 153, 170,
+                                   171, 172, 173, 174, 175, 176, 177, 178, 179,
+                                   180, 181, 182, 183, 184, 185, 186, 187, 188,
+                                   189, 190, 191, 192, 193, 194, 195, 196, 197,
+                                   198, 199, 200, 201, 202, 203, 204, 205, 206,
+                                   207, 208, 209, 210, 211, 212, 213, 214, 215,
+                                   216, 217, 218, 219, 220, 221, 222, 223, 224,
+                                   225, 226, 227, 228, 229, 230, 231, 232, 233,
+                                   234, 235, 236, 237, 238, 239, 240, 241, 242,
+                                   243, 244, 245, 246, 247, 248, 249, 250, 251,
+                                   252, 253, 254, 255, 256, 257, 258, 259, 260,
+                                   261, 262, 263, 264, 265, 266, 267, 268, 269,
+                                   270, 271, 272, 273, 274, 275, 276, 277, 278,
+                                   279, 280, 281, 282, 283, 284, 285, 286, 287,
+                                   288, 289, 290, 291, 292, 293, 294, 295, 296,
+                                   297, 298, 299, 300, 301, 302, 303, 304, 305,
+                                   306, 307, 308, 309, 310, 311, 312, 313, 314,
+                                   315, 316, 317, 318, 319, 320, 321, 322, 323,
+                                   324, 325, 326, 327, 328, 329, 330, 331, 332,
+                                   333, 334, 335, 336, 337, 338, 339, 340, 341,
+                                   342, 343, 344, 345, 346, 347, 348, 349, 350,
+                                   351, 352, 353, 354, 355},
+            'queryOffsetsInBinsCount': 339,
+            'normalizerQuery': 288 / 301,
+            'normalizerSubject': 287 / 299,
+            'numberOfBinsConsidered': 3,
+            'score': (350 / 575) * (max((288 / 301), (287 / 299))),
+            'scoreClass': GreedySignificantBinScore,
+            'subjectOffsetsInBins': {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
+                                     14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+                                     24, 25, 26, 27, 28, 29, 30, 31, 32, 33,
+                                     34, 35, 36, 37, 38, 39, 40, 41, 42, 43,
+                                     44, 45, 46, 47, 48, 49, 50, 51, 52, 53,
+                                     54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
+                                     64, 65, 66, 67, 68, 69, 70, 71, 72, 73,
+                                     74, 75, 76, 77, 78, 79, 80, 81, 82, 83,
+                                     84, 85, 86, 87, 88, 89, 90, 91, 92, 93,
+                                     94, 95, 96, 97, 98, 99, 100, 101, 102,
+                                     103, 104, 105, 106, 107, 108, 109, 110,
+                                     111, 112, 113, 114, 115, 116, 117, 118,
+                                     119, 120, 121, 122, 123, 124, 125, 126,
+                                     127, 128, 129, 130, 131, 132, 133, 134,
+                                     135, 136, 137, 138, 139, 140, 141, 142,
+                                     143, 144, 145, 146, 147, 148, 149, 150,
+                                     151, 152, 153, 154, 170, 171, 172, 173,
+                                     174, 175, 176, 177, 178, 179, 180, 181,
+                                     182, 183, 184, 185, 186, 187, 188, 189,
+                                     190, 191, 192, 193, 194, 195, 196, 197,
+                                     198, 199, 200, 201, 202, 203, 204, 205,
+                                     206, 207, 208, 209, 210, 211, 212, 213,
+                                     214, 215, 216, 217, 218, 219, 220, 221,
+                                     222, 223, 224, 225, 226, 227, 228, 229,
+                                     230, 231, 232, 233, 234, 235, 236, 237,
+                                     238, 239, 240, 241, 242, 243, 244, 245,
+                                     246, 247, 248, 249, 250, 251, 252, 253,
+                                     254, 255, 256, 257, 258, 259, 260, 261,
+                                     262, 263, 264, 265, 266, 267, 268, 269,
+                                     270, 271, 272, 273, 274, 275, 276, 277,
+                                     278, 279, 280, 281, 282, 283, 284, 285,
+                                     286, 287, 288, 289, 290, 291, 292, 293,
+                                     294, 295, 296, 297, 298, 299, 300, 301,
+                                     302, 303, 304, 305, 306, 307, 308, 309,
+                                     310, 311, 312, 313, 314, 315, 316, 317,
+                                     318, 319, 320, 321, 322, 323, 324, 325,
+                                     326, 327, 328, 329, 330, 331, 332, 333,
+                                     334, 335, 336, 337, 338, 339, 340, 341,
+                                     342, 343, 344, 345, 346, 347, 348, 349,
+                                     350, 351, 352, 353, 354, 355},
+            'subjectOffsetsInBinsCount': 339,
+            'totalOffsetCount': 575,
+        }, analysis)
+
+    def testPrintAnalysis(self):
+        """
+        The analysis of a score calculation must print correctly, whether
+        we print it using the class name explicitly or the score class that's
+        given in the analysis.
+        """
+        queryLandmark = Landmark('AlphaHelix', 'A', 5, 20)
+        queryTrigPoint = TrigPoint('Peaks', 'P', 10)
+        subjectLandmark = Landmark('AlphaHelix', 'A', 5, 20)
+        subjectTrigPoint = TrigPoint('Peaks', 'P', 10)
+        histogram = Histogram(3)
+        histogram.add(44, {
+            'queryLandmark': queryLandmark,
+            'queryTrigPoint': queryTrigPoint,
+            'subjectLandmark': subjectLandmark,
+            'subjectTrigPoint': subjectTrigPoint,
+        })
+        histogram.add(24, {
+            'queryLandmark': queryLandmark,
+            'queryTrigPoint': queryTrigPoint,
+            'subjectLandmark': subjectLandmark,
+            'subjectTrigPoint': subjectTrigPoint,
+        })
+        histogram.finalize()
+        params = DatabaseParameters([AlphaHelix, AminoAcidsLm], [Peaks])
+        query = AARead('id', 'FRRRFRRRFC')
+        subject = Subject('id2', 'A', 0)
+        significantBins = [
+            {'index': 0, 'bin': histogram.bins[0], 'score': 0.0},
+        ]
+        gsbs = GreedySignificantBinScore(significantBins, query, subject,
+                                         params)
+        score, analysis = gsbs.calculateScore()
+        expected = (
+            'Overall score method: GreedySignificantBinScore\n'
+            'Overall score: 1.0\n'
+            'Total (query+subject) AA offsets in matched pairs in all '
+            'bins: 40\n'
+            'Subject AA offsets in matched pairs in all bins: 20\n'
+            'Query AA offsets in matched pairs in all bins: 20\n'
+            'Total (query+subject) AA offsets in hashes in matched '
+            'region: 40\n'
+            'Matched region score 1.0000 (40 / 40)\n'
+            'Query normalizer: 0.8000 (20 / 25)\n'
+            'Subject normalizer: 1.0000 (20 / 20)\n'
+            'Total query offsets that are in a bin: 20\n'
+            'Total subject offsets that are in a bin: 20\n'
+            'Number of bins included in the score calculation: 1')
+        self.assertEqual(expected,
+                         GreedySignificantBinScore.printAnalysis(analysis))
         self.assertEqual(expected,
                          analysis['scoreClass'].printAnalysis(analysis))

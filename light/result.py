@@ -14,7 +14,8 @@ from light.significance import (
 from light.bin_score import (
     NoneScore, MinHashesScore, FeatureMatchingScore, FeatureAAScore,
     WeightedFeatureAAScore)
-from light.overall_score import BestBinScore, SignificantBinScore
+from light.overall_score import (BestBinScore, SignificantBinScore,
+                                 GreedySignificantBinScore)
 from light.backend import Backend
 from light.string import MultilineString
 
@@ -168,20 +169,14 @@ class Result(object):
             elif overallScoreMethod == 'SignificantBinScore':
                 scorer = SignificantBinScore(significantBins, query, subject,
                                              connector.dbParams)
+            elif overallScoreMethod == 'GreedySignificantBinScore':
+                scorer = GreedySignificantBinScore(significantBins, query,
+                                                   subject, connector.dbParams)
             else:
                 raise ValueError('Unknown overall score method %r' %
                                  overallScoreMethod)
 
             overallScore, overallScoreAnalysis = scorer.calculateScore()
-
-            # The overall score can be lower than the best bin score, for
-            # example when a sequence is compared against itself, where the
-            # bestBinScore will be 1.0, but the overallScore can be lower,
-            # because worse bins are taken into account. We don't allow that.
-            adjusted = False
-            if bestBinScore is not None and overallScore < bestBinScore:
-                overallScore = bestBinScore
-                adjusted = True
 
             if storeFullAnalysis:
                 self.analysis[subjectIndex] = {
@@ -191,7 +186,6 @@ class Result(object):
                     'overallScoreAnalysis': overallScoreAnalysis,
                     'significantBins': significantBins,
                     'significanceAnalysis': significance.analysis,
-                    'overallScoreAdjustedToBestBinScore': adjusted,
                 }
             elif significantBins:
                 self.analysis[subjectIndex] = {

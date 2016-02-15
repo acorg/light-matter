@@ -42,8 +42,8 @@ class MultilineString:
         @param verbatim: If C{True}, C{s} will be split on '\n' and the
             resulting strings will be added to this multi-line string as-is
             (with no margin or indent). This is useful for adding a
-            pre-formatted multi-line string (perhaps obtained from another
-            MultilineString instance).
+            pre-formatted multi-line string (perhaps obtained via a network
+            call).
         @return: self, to allow our caller to chain calls.
         """
         if verbatim:

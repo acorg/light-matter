@@ -437,15 +437,23 @@ class Backend:
 
         return new
 
-    def print_(self, margin=''):
+    def print_(self, margin='', result=None):
         """
         Print information about the database index.
 
         @param margin: A C{str} that should be inserted at the start of each
             line of output.
-        @return: A C{str} representation of the parameters.
+        @param result: A C{MultilineString} instance, or C{None} if a new
+            C{MultilineString} should be created.
+        @return: If C{result} was C{None}, return a C{str} representation of
+            the parameters, else C{None}.
         """
-        result = MultilineString(margin=margin)
+        if result is None:
+            result = MultilineString(margin=margin)
+            returnNone = False
+        else:
+            returnNone = True
+
         append = result.append
         indent = result.indent
         outdent = result.outdent
@@ -488,4 +496,5 @@ class Backend:
             append('%s (%s): %d' % (
                 trigNameFromHashkey(hash_), hash_, count))
 
-        return str(result)
+        if not returnNone:
+            return str(result)

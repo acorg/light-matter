@@ -157,7 +157,7 @@ class Database:
 
         return new
 
-    def print_(self, printHashes=False, margin=''):
+    def print_(self, printHashes=False, margin='', result=None):
         """
         Print information about the database.
 
@@ -165,12 +165,18 @@ class Database:
             subjects.
         @param margin: A C{str} that should be inserted at the start of each
             line of output.
-        @return: A C{str} representation of the database.
+        @param result: A C{MultilineString} instance, or C{None} if a new
+            C{MultilineString} should be created.
+        @return: If C{result} was C{None}, return a C{str} representation of
+            the database, else C{None}.
         """
-        result = MultilineString(margin=margin)
-        append = result.append
+        if result is None:
+            result = MultilineString(margin=margin)
+            returnNone = False
+        else:
+            returnNone = True
 
-        append(self.dbParams.print_(margin=margin), verbatim=True)
+        self.dbParams.print_(margin=margin, result=result)
 
         totalResidues = self.totalResidues()
         result.extend([
@@ -179,6 +185,8 @@ class Database:
             'Hash count: %d' % self.hashCount(),
             'Total residues: %d' % totalResidues,
         ])
+
+        append = result.append
 
         if totalResidues:
             append('Coverage: %.2f%%' % (
@@ -193,7 +201,8 @@ class Database:
         if connector:
             append(connector, verbatim=True)
 
-        return str(result)
+        if not returnNone:
+            return str(result)
 
 
 class DatabaseSpecifier:

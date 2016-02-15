@@ -82,7 +82,7 @@ class ScannedRead(object):
                         count += 1
 
     def print_(self, printSequence=False, printFeatures=False,
-               description='Read', margin=''):
+               description='Read', margin='', result=None):
         """
         Print the details of a scanned read.
 
@@ -97,10 +97,19 @@ class ScannedRead(object):
             a query or a subject.
         @param margin: A C{str} that should be inserted at the start of each
             line of output.
-        @return: A C{str} summary of the scanned read.
+        @param result: A C{MultilineString} instance, or C{None} if a new
+            C{MultilineString} should be created.
+        @return: If C{result} was C{None}, return a C{str} representation of
+            the scanned read, else C{None}.
         """
         read = self.read
-        result = MultilineString(margin=margin)
+
+        if result is None:
+            result = MultilineString(margin=margin)
+            returnNone = False
+        else:
+            returnNone = True
+
         append = result.append
         coveredIndices = len(self.coveredIndices())
 
@@ -124,4 +133,7 @@ class ScannedRead(object):
                 append(str(trigPoint))
             result.outdent()
 
-        return str(result)
+        result.outdent()
+
+        if not returnNone:
+            return str(result)

@@ -574,7 +574,6 @@ class GreedySignificantBinScore(object):
                                  start=1):
 
             result = addBin(bin_, allQueryFeatures, allSubjectFeatures, state)
-
             # Check if we can add more bins, or if we need to return here.
             if result['score'] >= state['score']:
                 # The new overallScore is higher or equal to the current
@@ -585,9 +584,6 @@ class GreedySignificantBinScore(object):
                 # The new overallScore is lower than the current overallScore.
                 break
 
-        # We have reached the last bin without returning beforehand, which
-        # means that the last overallScore was higher than the second to last
-        # overallScore. Return the score and the analysis using the new values.
         state['numberOfBinsConsidered'] = i
         return state['score'], state
 

@@ -158,11 +158,11 @@ def _rectangularPanel(rows, cols, title, makeSubPlot, equalizeXAxes=False,
 
 
 def plotHistogramPanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
-                       significanceMethod=None, significanceFraction=None,
-                       showUpper=True, showLower=False, showDiagonal=True,
-                       showMean=False, showMedian=False, showStdev=False,
-                       showSignificanceCutoff=False, showSignificantBins=True,
-                       saveAs=False, showFigure=True, **kwargs):
+                       findParams=None, showUpper=True, showLower=False,
+                       showDiagonal=True, showMean=False, showMedian=False,
+                       showStdev=False, showSignificanceCutoff=False,
+                       showSignificantBins=True, saveAs=False, showFigure=True,
+                       **kwargs):
     """
     Plot a square panel of histograms of matching hash offset deltas between
     all pairs of passed sequences.
@@ -173,12 +173,7 @@ def plotHistogramPanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
         to cover the same range (the maximum range of all sub-plots).
     @param equalizeYAxes: if C{True}, adjust the Y axis on each sub-plot
         to cover the same range (the maximum range of all sub-plots).
-    @param significanceMethod: The name of the method used to calculate
-        which histogram bins are considered significant.
-    @param significanceFraction: The C{float} fraction of all (landmark,
-        trig point) pairs for a scannedRead that need to fall into the
-        same histogram bucket for that bucket to be considered a
-        significant match with a database title.
+    @param findParams: A C{light.parameters.FindParameters} instance.
     @param showUpper: If C{True}, show the sub-plots in the upper triangle.
         of the panel.
     @param showLower: If C{True}, show the sub-plots in the lower triangle.
@@ -209,7 +204,9 @@ def plotHistogramPanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
     # be passed as we're going to use subject indices from 0 to nReads-1.
     # This shortcoming can be removed later.
     specifier = DatabaseSpecifier(allowInMemory=False)
-    database = specifier.getDatabaseFromKeywords(subjects=reads, **kwargs)
+    database = specifier.getDatabaseFromKeywords(subjects=reads,
+                                                 findParams=findParams,
+                                                 **kwargs)
 
     def makeSubPlot(row, col, ax):
         """
@@ -218,10 +215,9 @@ def plotHistogramPanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
         @param ax: The matplotlib axis for the sub-plot.
         """
         return plotHistogram(reads[row], reads[col],
-                             significanceMethod=significanceMethod,
-                             significanceFraction=significanceFraction,
-                             readsAx=ax, showMean=showMean,
-                             showMedian=showMedian, showStdev=showStdev,
+                             findParams=findParams, readsAx=ax,
+                             showMean=showMean, showMedian=showMedian,
+                             showStdev=showStdev,
                              showSignificanceCutoff=showSignificanceCutoff,
                              showSignificantBins=showSignificantBins,
                              database=database)
@@ -233,9 +229,8 @@ def plotHistogramPanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
         includeDiagonal=showDiagonal, saveAs=saveAs, showFigure=showFigure)
 
 
-def plotHistogram(query, subject, significanceMethod=None,
-                  significanceFraction=None, readsAx=None, showMean=False,
-                  showMedian=False, showStdev=False,
+def plotHistogram(query, subject, findParams=None, readsAx=None,
+                  showMean=False, showMedian=False, showStdev=False,
                   showSignificanceCutoff=False, showSignificantBins=False,
                   **kwargs):
     """
@@ -245,12 +240,7 @@ def plotHistogram(query, subject, significanceMethod=None,
     @param query: an AAReadWithX instance of the sequence of the query.
     @param subject: either an AAReadWithX instance of the sequence of the
         subject or a C{str} subject index in the database.
-    @param significanceMethod: The name of the method used to calculate
-        which histogram bins are considered significant.
-    @param significanceFraction: The C{float} fraction of all (landmark,
-        trig point) pairs for a scannedRead that need to fall into the
-        same histogram bucket for that bucket to be considered a
-        significant match with a database title.
+    @param findParams: A C{light.parameters.FindParameters} instance.
     @param readsAx: If not None, use this as the subplot for displaying reads.
     @param showMean: If C{True} the mean will be plotted in red.
     @param showMedian: If C{True} the median will be plotted in orange.
@@ -274,8 +264,6 @@ def plotHistogram(query, subject, significanceMethod=None,
     else:
         _, subjectIndex, subjectHashCount = database.addSubject(subject)
 
-    findParams = FindParameters(significanceMethod=significanceMethod,
-                                significanceFraction=significanceFraction)
     result = database.find(query, findParams, storeFullAnalysis=True)
 
     try:
@@ -353,11 +341,10 @@ def plotHistogram(query, subject, significanceMethod=None,
 
 
 def plotHistogramLinePanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
-                           significanceMethod=None, significanceFraction=None,
-                           showUpper=True, showLower=False, showDiagonal=True,
-                           showMean=False, showMedian=False, showStdev=False,
-                           showSignificanceCutoff=False, saveAs=False,
-                           showFigure=True, **kwargs):
+                           findParams=None, showUpper=True, showLower=False,
+                           showDiagonal=True, showMean=False, showMedian=False,
+                           showStdev=False, showSignificanceCutoff=False,
+                           saveAs=False, showFigure=True, **kwargs):
     """
     Plot a square panel of histogram line plots of matching hash offset deltas
     between all pairs of passed sequences.
@@ -368,12 +355,7 @@ def plotHistogramLinePanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
         to cover the same range (the maximum range of all sub-plots).
     @param equalizeYAxes: if C{True}, adjust the Y axis on each sub-plot
         to cover the same range (the maximum range of all sub-plots).
-    @param significanceMethod: The name of the method used to calculate
-        which histogram bins are considered significant.
-    @param significanceFraction: The C{float} fraction of all (landmark,
-        trig point) pairs for a scannedRead that need to fall into the
-        same histogram bucket for that bucket to be considered a
-        significant match with a database title.
+    @param findParams: A C{light.parameters.FindParameters} instance.
     @param showUpper: If C{True}, show the sub-plots in the upper triangle.
         of the panel.
     @param showLower: If C{True}, show the sub-plots in the lower triangle.
@@ -411,8 +393,7 @@ def plotHistogramLinePanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
         @param ax: The matplotlib axis for the sub-plot.
         """
         return plotHistogramLine(reads[row], reads[col],
-                                 significanceMethod=significanceMethod,
-                                 significanceFraction=significanceFraction,
+                                 findParams=findParams,
                                  readsAx=ax, showMean=showMean,
                                  showMedian=showMedian, showStdev=showStdev,
                                  showSignificanceCutoff=showSignificanceCutoff,
@@ -425,9 +406,8 @@ def plotHistogramLinePanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
         includeDiagonal=showDiagonal, saveAs=saveAs, showFigure=showFigure)
 
 
-def plotHistogramLine(query, subject, significanceMethod=False,
-                      significanceFraction=None, readsAx=None, showMean=False,
-                      showMedian=False, showStdev=False,
+def plotHistogramLine(query, subject, findParams=None, readsAx=None,
+                      showMean=False, showMedian=False, showStdev=False,
                       showSignificanceCutoff=False, **kwargs):
     """
     Plot a line where the height corresponds to the number of hashes in a
@@ -436,12 +416,7 @@ def plotHistogramLine(query, subject, significanceMethod=False,
     @param query: an AAReadWithX instance of the sequence of the query.
     @param subject: either an AAReadWithX instance of the sequence of the
         subject or an C{int} subject index in the database.
-    @param significanceMethod: The name of the method used to calculate
-        which histogram bins are considered significant.
-    @param significanceFraction: The C{float} fraction of all (landmark,
-        trig point) pairs for a scannedRead that need to fall into the
-        same histogram bucket for that bucket to be considered a
-        significant match with a database title.
+    @param findParams: A C{light.parameters.FindParameters} instance.
     @param readsAx: If not None, use this as the subplot for displaying reads.
     @param showMean: If C{True} the mean will be plotted in red.
     @param showMedian: If C{True} the median will be plotted in orange.
@@ -459,8 +434,6 @@ def plotHistogramLine(query, subject, significanceMethod=False,
 
     _, subjectIndex, _ = database.addSubject(subject)
 
-    findParams = FindParameters(significanceMethod=significanceMethod,
-                                significanceFraction=significanceFraction)
     result = database.find(query, findParams, storeFullAnalysis=True)
 
     try:
@@ -511,17 +484,14 @@ def plotHistogramLine(query, subject, significanceMethod=False,
         }
 
 
-def plotHistogramLines(sequences, significanceFraction=None, **kwargs):
+def plotHistogramLines(sequences, findParams=None, **kwargs):
     """
     Plot lines where the height corresponds to the number of hashes in a
     histogram bin, but sorted by height, do that for many reads.
 
     @param sequences: Either A C{str} filename of sequences to consider or
         a C{light.reads.Reads} instance.
-    @param significanceFraction: The C{float} fraction of all (landmark,
-        trig point) pairs for a scannedRead that need to fall into the
-        same histogram bucket for that bucket to be considered a
-        significant match with a database title.
+    @param findParams: A C{light.parameters.FindParameters} instance.
     @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
         for additional keywords, all of which are optional.
     """
@@ -537,7 +507,6 @@ def plotHistogramLines(sequences, significanceFraction=None, **kwargs):
     # This shortcoming can be removed later.
     specifier = DatabaseSpecifier(allowInMemory=False)
     database = specifier.getDatabaseFromKeywords(subjects=reads, **kwargs)
-    findParams = FindParameters(significanceFraction=significanceFraction)
 
     for read in reads:
         result = database.find(read, findParams, storeFullAnalysis=True)
@@ -558,16 +527,13 @@ def plotHistogramLines(sequences, significanceFraction=None, **kwargs):
     readsAx.xaxis.tick_bottom()
 
 
-def plotFeatureSquare(read, significanceFraction=None, readsAx=None, **kwargs):
+def plotFeatureSquare(read, findParams=None, readsAx=None, **kwargs):
     """
     Plot the positions of landmark and trigpoint pairs on a sequence in a
     square.
 
     @param read: A C{dark.reads.Read} instance.
-    @param significanceFraction: The C{float} fraction of all (landmark,
-        trig point) pairs for a scannedRead that need to fall into the
-        same histogram bucket for that bucket to be considered a
-        significant match with a database title.
+    @param findParams: A C{light.parameters.FindParameters} instance.
     @param readsAx: If not None, use this as the subplot for displaying reads.
     @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
         for additional keywords, all of which are optional.
@@ -578,7 +544,6 @@ def plotFeatureSquare(read, significanceFraction=None, readsAx=None, **kwargs):
     database = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
     backend = Backend()
     backend.configure(database.dbParams)
-    findParams = FindParameters(significanceFraction=significanceFraction)
     result = database.find(read, findParams, storeFullAnalysis=True)
     scannedQuery = backend.scan(result.query)
 

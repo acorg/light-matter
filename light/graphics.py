@@ -204,9 +204,7 @@ def plotHistogramPanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
     # be passed as we're going to use subject indices from 0 to nReads-1.
     # This shortcoming can be removed later.
     specifier = DatabaseSpecifier(allowInMemory=False)
-    database = specifier.getDatabaseFromKeywords(subjects=reads,
-                                                 findParams=findParams,
-                                                 **kwargs)
+    database = specifier.getDatabaseFromKeywords(subjects=reads, **kwargs)
 
     def makeSubPlot(row, col, ax):
         """

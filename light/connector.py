@@ -3,7 +3,7 @@ import logging
 from Bio.File import as_handle
 
 from light.backend import Backend
-from light.parameters import DatabaseParameters, FindParameters
+from light.parameters import DatabaseParameters
 from light.result import Result
 from light.string import MultilineString
 
@@ -46,7 +46,8 @@ class SimpleConnector:
         Check which database sequences a read matches.
 
         @param read: A C{dark.read.AARead} instance.
-        @param findParams: An instance of C{light.parameters.FindParameters}.
+        @param findParams: An instance of C{light.parameters.FindParameters} or
+            C{None} to use default find parameters.
         @param storeFullAnalysis: A C{bool}. If C{True} the intermediate
             significance analysis computed in the Result will be stored.
         @param subjectIndices: A C{set} of subject indices, or C{None}. If a
@@ -59,8 +60,7 @@ class SimpleConnector:
             read, storeFullAnalysis=storeFullAnalysis,
             subjectIndices=subjectIndices)
 
-        return Result(read, self, matches, hashCount,
-                      findParams or FindParameters(),
+        return Result(read, self, matches, hashCount, findParams,
                       nonMatchingHashes=nonMatchingHashes,
                       storeFullAnalysis=storeFullAnalysis)
 

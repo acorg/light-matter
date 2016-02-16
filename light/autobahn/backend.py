@@ -96,34 +96,17 @@ class BackendComponent(Component):
                                      '%s-%s' % (method, self._sessionId))
             logging.info('Registered %s method.', method)
 
-    def find(self, read, significanceMethod=None, scoreMethod=None,
-             significanceFraction=None, storeFullAnalysis=False):
+    def find(self, read, storeFullAnalysis=False, subjectIndices=None):
         """
         Check which database sequences a read matches.
 
         @param read: A C{dark.read.AARead} instance.
-        @param significanceMethod: The name of the method used to calculate
-            which histogram bins are considered significant.
-        @param scoreMethod: The C{str} name of the method used to calculate the
-            score of a bin which is considered significant.
-        @param significanceFraction: The C{float} fraction of all (landmark,
-            trig point) pairs for a scannedRead that need to fall into the
-            same histogram bucket for that bucket to be considered a
-            significant match with a database title.
         @param storeFullAnalysis: A C{bool}. If C{True} the intermediate
             significance analysis computed in the Result will be stored.
-        @return: The result of calling 'find' on our backend: a triple of
-            matches, hash count, and non-matching hashes.
+        @param subjectIndices: A C{set} of subject indices, or C{None}. If a
+            set is passed, only subject indices in the set will be returned
+            in the results. If C{None}, all matching subject indices are
+            returned.
+        @return: The result of calling 'find' on our backend.
         """
-        if significanceMethod is None:
-            significanceMethod = self.params.DEFAULT_SIGNIFICANCE_METHOD
-        if scoreMethod is None:
-            scoreMethod = self.params.DEFAULT_SCORE_METHOD
-        if significanceFraction is None:
-            significanceFraction = self.params.DEFAULT_SIGNIFICANCE_FRACTION
-
-        matches, hashCount, nonMatchingHashes = self._backend.find(
-            read, significanceMethod, scoreMethod, significanceFraction,
-            storeFullAnalysis)
-
-        return matches, hashCount, nonMatchingHashes
+        return self._backend.find(read, storeFullAnalysis, subjectIndices)

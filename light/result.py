@@ -7,16 +7,17 @@ from collections import defaultdict
 from math import log10, ceil
 from operator import itemgetter
 
-from light.distance import scaleLinear
-from light.histogram import Histogram
-from light.significance import (
-    Always, HashFraction, MaxBinHeight, MeanBinHeight, AAFraction)
+from light.backend import Backend
 from light.bin_score import (
     NoneScore, MinHashesScore, FeatureMatchingScore, FeatureAAScore,
     WeightedFeatureAAScore)
-from light.overall_score import (BestBinScore, SignificantBinScore,
-                                 GreedySignificantBinScore)
-from light.backend import Backend
+from light.distance import scaleLinear
+from light.histogram import Histogram
+from light.overall_score import (
+    BestBinScore, SignificantBinScore, GreedySignificantBinScore)
+from light.parameters import FindParameters
+from light.significance import (
+    Always, HashFraction, MaxBinHeight, MeanBinHeight, AAFraction)
 from light.string import MultilineString
 
 
@@ -34,7 +35,8 @@ class Result(object):
         'subjectLandmark', and 'subjectTrigPoint'.
     @param queryHashCount: The C{int} number of hashes that the query has
         (including those that were not found in the database).
-    @param findParams: An instance of C{light.parameters.FindParameters}.
+    @param findParams: An instance of C{light.parameters.FindParameters} or
+        C{None} to use default find parameters.
     @param nonMatchingHashes: A C{dict} whose keys are hashes that were found
         in the scanned C{query} but that did not match any subject. Each value
         is a list of lists which contains [landmark, trigPoint] pairs.
@@ -42,12 +44,14 @@ class Result(object):
         analysis of each matched subject will be stored.
     @raises ValueError: If a non-existent significanceMethod is specified.
     """
-    def __init__(self, query, connector, matches, queryHashCount, findParams,
-                 nonMatchingHashes=None, storeFullAnalysis=False):
+    def __init__(self, query, connector, matches, queryHashCount,
+                 findParams=None, nonMatchingHashes=None,
+                 storeFullAnalysis=False):
         self.query = query
         self.connector = connector
         self.matches = matches  # Only saved on self for testing.
         self.queryHashCount = queryHashCount
+        findParams = findParams or FindParameters()
         self._findParams = findParams
         self.nonMatchingHashes = nonMatchingHashes
         self._storeFullAnalysis = storeFullAnalysis

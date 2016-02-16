@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from dark.reads import Reads, AARead
 
-from light.parameters import DatabaseParameters
+from light.parameters import DatabaseParameters, FindParameters
 from light.database import Database
 from light.performance.query import queryDatabase
 from light.landmarks import AlphaHelix
@@ -44,7 +44,7 @@ class TestQueryDatabase(TestCase):
         queries = Reads()
         queries.add(AARead('query', 'FRRRFRRRFASAASA'))
         result = queryDatabase(subjects, queries, database,
-                               significanceFraction=0.1)
+                               FindParameters(significanceFraction=0.1))
         self.assertEqual(
             {
                 'query': {

@@ -309,42 +309,32 @@ class WampServerConnector:
 
         return False, subjectIndex
 
-    # TODO: The signature of this find method needs to be fixed to be in
-    #       line with SimpleConnector above.
     @asyncio.coroutine
-    def find(self, read, significanceMethod=None, scoreMethod=None,
-             significanceFraction=None, storeFullAnalysis=False):
+    def find(self, read, findParams=None, storeFullAnalysis=False,
+             subjectIndices=None):
         """
         Check which database sequences a read matches.
 
         @param read: A C{dark.read.AARead} instance.
-        @param significanceMethod: The name of the method used to calculate
-            which histogram bins are considered significant.
-        @param scoreMethod: The C{str} name of the method used to calculate the
-            score of a bin which is considered significant.
-        @param significanceFraction: The C{float} fraction of all (landmark,
-            trig point) pairs for a scannedRead that need to fall into the
-            same histogram bucket for that bucket to be considered a
-            significant match with a database title.
+        @param findParams: An instance of C{light.parameters.FindParameters} or
+            C{None} to use default find parameters.
         @param storeFullAnalysis: A C{bool}. If C{True} the intermediate
             significance analysis computed in the Result will be stored.
+        @param subjectIndices: A C{set} of subject indices, or C{None}. If a
+            set is passed, only subject indices in the set will be returned
+            in the results. If C{None}, all matching subject indices are
+            returned.
         @return: A C{light.result.Result} instance.
         """
-        if significanceFraction is None:
-            significanceFraction = self.dbParams.DEFAULT_SIGNIFICANCE_FRACTION
-        if significanceMethod is None:
-            significanceMethod = self.dbParams.DEFAULT_SIGNIFICANCE_METHOD
-        if scoreMethod is None:
-            scoreMethod = self.dbParams.DEFAULT_SCORE_METHOD
-
         allMatches = defaultdict(list)
         allNonMatchingHashes = {}
         hashCount = 0
 
         calls = [
             self._component.call(
-                'find-%d' % sessionId, read, significanceMethod, scoreMethod,
-                significanceFraction, storeFullAnalysis)
+                # TODO: Does subjectIndices need to be serialized for the
+                # remote call?
+                'find-%d' % sessionId, read, storeFullAnalysis, subjectIndices)
             for sessionId in self._sessionIdToName]
         results = yield from asyncio.gather(*calls)
 
@@ -363,9 +353,8 @@ class WampServerConnector:
                 assert(intSubjectIndex not in allMatches)
                 allMatches[intSubjectIndex] = matches[subjectIndex]
 
-        return Result(read, self, allMatches, hashCount,
-                      significanceMethod, scoreMethod, significanceFraction,
-                      allNonMatchingHashes,
+        return Result(read, self, allMatches, hashCount, findParams,
+                      nonMatchingHash=allNonMatchingHashes,
                       storeFullAnalysis=storeFullAnalysis)
 
     @asyncio.coroutine

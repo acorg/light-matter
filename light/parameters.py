@@ -209,15 +209,23 @@ class FindParameters(object):
                    overallScoreMethod=args.overallScoreMethod,
                    deltaScale=args.deltaScale)
 
-    def print_(self, margin=''):
+    def print_(self, margin='', result=None):
         """
         Print find parameter values.
 
         @param margin: A C{str} that should be inserted at the start of each
             line of output.
-        @return: A C{str} representation of the parameters.
+        @param result: A C{MultilineString} instance, or C{None} if a new
+            C{MultilineString} should be created.
+        @return: If C{result} was C{None}, return a C{str} representation of
+            the parameters, else C{None}.
         """
-        result = MultilineString(margin=margin)
+        if result is None:
+            result = MultilineString(margin=margin)
+            returnNone = False
+        else:
+            returnNone = True
+
         result.append('Find parameters:')
         result.indent()
         result.extend([
@@ -233,7 +241,12 @@ class FindParameters(object):
         result.indent()
         for key in sorted(self.weights):
             result.append('%s: %f' % (key, self.weights[key]))
-        return str(result)
+
+        result.outdent()
+        result.outdent()
+
+        if not returnNone:
+            return str(result)
 
 
 class DatabaseParameters(object):
@@ -533,15 +546,23 @@ class DatabaseParameters(object):
         state = loads(fp.readline()[:-1])
         return DatabaseParameters(**state)
 
-    def print_(self, margin=''):
+    def print_(self, margin='', result=None):
         """
         Print parameter values.
 
         @param margin: A C{str} that should be inserted at the start of each
             line of output.
-        @return: A C{str} representation of the parameters.
+        @param result: A C{MultilineString} instance, or C{None} if a new
+            C{MultilineString} should be created.
+        @return: If C{result} was C{None}, return a C{str} representation of
+            the parameters, else C{None}.
         """
-        result = MultilineString(margin=margin)
+        if result is None:
+            result = MultilineString(margin=margin)
+            returnNone = False
+        else:
+            returnNone = True
+
         append = result.append
 
         append('Parameters:')
@@ -575,7 +596,10 @@ class DatabaseParameters(object):
             'Random trig point density: %f' % self.randomTrigPointDensity,
         ])
 
-        return str(result)
+        result.outdent()
+
+        if not returnNone:
+            return str(result)
 
     def compare(self, other):
         """

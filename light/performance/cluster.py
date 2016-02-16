@@ -129,14 +129,17 @@ class AffinityPropagationAnalysis(ClusterAnalysis):
                                                 self.clusterLabels)
         return affinityPropagation
 
-    def print_(self, margin=''):
+    def print_(self, margin='', result=None):
         """
         Print details of the clustering.
 
         @param margin: A C{str} that should be inserted at the start of each
             line of output.
-        @return: A C{str} representation of the statistical measures from
-            running the affinity propagation clustering.
+        @param result: A C{MultilineString} instance, or C{None} if a new
+            C{MultilineString} should be created.
+        @return: If C{result} was C{None}, return a C{str} representation of
+            the statistical measures from running the affinity propagation
+            clustering, else C{None}.
         """
         try:
             self.clusterLabels
@@ -144,7 +147,12 @@ class AffinityPropagationAnalysis(ClusterAnalysis):
             # Looks like clustering has not been run. Run it.
             self.cluster()
 
-        result = MultilineString(margin=margin)
+        if result is None:
+            result = MultilineString(margin=margin)
+            returnNone = False
+        else:
+            returnNone = True
+
         append = result.append
 
         trueLabels, clusterLabels = self.trueLabels, self.clusterLabels
@@ -169,7 +177,8 @@ class AffinityPropagationAnalysis(ClusterAnalysis):
         append('Silhouette Coefficient: %0.3f' % silhouette_score(
             self.affinity, clusterLabels, metric='sqeuclidean'))
 
-        return str(result)
+        if not returnNone:
+            return str(result)
 
 
 class KMeansAnalysis(ClusterAnalysis):
@@ -190,14 +199,17 @@ class KMeansAnalysis(ClusterAnalysis):
                                                 self.clusterLabels)
         return self.kMeans
 
-    def print_(self, margin=''):
+    def print_(self, margin='', result=None):
         """
         Print details of the clustering.
 
         @param margin: A C{str} that should be inserted at the start of each
             line of output.
-        @return: A C{str} representation of the statistical measures from
-            running the k-means clustering.
+        @param result: A C{MultilineString} instance, or C{None} if a new
+            C{MultilineString} should be created.
+        @return: If C{result} was C{None}, return a C{str} representation of
+            the statistical measures from running the k-means clustering, else
+            C{None}.
         """
         try:
             trueLabels, clusterLabels = self.trueLabels, self.clusterLabels
@@ -206,7 +218,12 @@ class KMeansAnalysis(ClusterAnalysis):
             # seeing as we don't want to silently use a default value of k.
             raise RuntimeError('Did you forget to run cluster()?')
 
-        result = MultilineString()
+        if result is None:
+            result = MultilineString(margin=margin)
+            returnNone = False
+        else:
+            returnNone = True
+
         append = result.append
 
         append('Homogeneity: %0.3f' % (
@@ -228,4 +245,5 @@ class KMeansAnalysis(ClusterAnalysis):
             self.affinity, clusterLabels, metric='sqeuclidean',
             sample_size=300))
 
-        return str(result)
+        if not returnNone:
+            return str(result)

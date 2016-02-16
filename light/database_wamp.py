@@ -9,6 +9,7 @@ from twisted.internet.error import ConnectionRefusedError
 from light.autobahn.runner import ApplicationRunner
 from light.exceptions import WampDbOffline
 from light.autobahn.client import ClientComponent
+from light.string import MultilineString
 
 
 def getWampClientDatabase(args):
@@ -73,7 +74,7 @@ class WampDatabaseClient:
         # return (await self._component.call('checksum'))
         return self._component.call('checksum')
 
-    def print_(self, printHashes=False, margin=''):
+    def print_(self, printHashes=False, margin='', result=None):
         """
         Print information about the database.
 
@@ -81,12 +82,24 @@ class WampDatabaseClient:
             subjects.
         @param margin: A C{str} that should be inserted at the start of each
             line of output.
-        @return: A C{str} representation of the database.
+        @param result: A C{MultilineString} instance, or C{None} if a new
+            C{MultilineString} should be created.
+        @return: If C{result} was C{None}, return a C{str} representation of
+            the database, else C{None}.
         """
+        if result is None:
+            result = MultilineString(margin=margin)
+            returnNone = False
+        else:
+            returnNone = True
+
         coro = self._component.call('print_', printHashes=printHashes,
                                     margin=margin)
         loop = asyncio.get_event_loop()
-        return loop.run_until_complete(coro)
+        result.append(loop.run_until_complete(coro), verbatim=True)
+
+        if not returnNone:
+            return str(result)
 
     def subjectCount(self):
         """

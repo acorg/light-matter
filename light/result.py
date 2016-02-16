@@ -276,7 +276,7 @@ class Result(object):
     def print_(self, printQuery=True, printSequences=False,
                printFeatures=False, printHistograms=False,
                queryDescription='Query title', sortHSPsByScore=True,
-               margin=''):
+               margin='', result=None):
         """
         Print a result in a human-readable format. If self._storeFullAnalysis
         is True, full information about all matched subjects (i.e., including
@@ -296,9 +296,17 @@ class Result(object):
             histogram bin number.
         @param margin: A C{str} that should be inserted at the start of each
             line of output.
-        @return: A C{str} summary of the scanned read.
+        @param result: A C{MultilineString} instance, or C{None} if a new
+            C{MultilineString} should be created.
+        @return: If C{result} was C{None}, return a C{str} representation of
+            the scanned read, else C{None}.
         """
-        result = MultilineString(margin=margin)
+        if result is None:
+            result = MultilineString(margin=margin)
+            returnNone = False
+        else:
+            returnNone = True
+
         append = result.append
         extend = result.extend
         indent = result.indent
@@ -308,12 +316,12 @@ class Result(object):
             backend = Backend()
             backend.configure(self.connector.dbParams)
             scannedQuery = backend.scan(self.query)
-            append(scannedQuery.print_(printSequence=printSequences,
-                                       printFeatures=printFeatures,
-                                       description=queryDescription),
-                   verbatim=True)
+            scannedQuery.print_(printSequence=printSequences,
+                                printFeatures=printFeatures,
+                                description=queryDescription,
+                                margin=margin, result=result)
 
-        append(self._findParams.print_(), verbatim=True)
+        self._findParams.print_(margin=margin, result=result)
 
         # Sort matched subjects (if any) in order of decreasing score so we
         # can print them in a useful order.
@@ -443,4 +451,5 @@ class Result(object):
                     outdent()
                 outdent()
 
-        return str(result)
+        if not returnNone:
+            return str(result)

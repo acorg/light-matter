@@ -128,7 +128,7 @@ class SimpleConnector:
         return cls(dbParams, backend=Backend.restore(fpOrFilePrefix),
                    filePrefix=filePrefix)
 
-    def print_(self, printHashes=False, margin=''):
+    def print_(self, printHashes=False, margin='', result=None):
         """
         Print information about this connector.
 
@@ -136,13 +136,22 @@ class SimpleConnector:
             subjects from the backend.
         @param margin: A C{str} that should be inserted at the start of each
             line of output.
-        @return: A C{str} representation of the parameters.
+        @param result: A C{MultilineString} instance, or C{None} if a new
+            C{MultilineString} should be created.
+        @return: If C{result} was C{None}, return a C{str} representation of
+            the connector, else C{None}.
         """
-        result = MultilineString(margin=margin)
+        if result is None:
+            result = MultilineString(margin=margin)
+            returnNone = False
+        else:
+            returnNone = True
 
         if printHashes:
             result.append('Backends:')
-            result.append(self._backend.print_(margin=margin + '  '),
-                          verbatim=True)
+            result.indent()
+            self._backend.print_(margin=margin, result=result)
+            result.outdent()
 
-        return str(result)
+        if not returnNone:
+            return str(result)

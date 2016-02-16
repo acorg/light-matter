@@ -455,7 +455,7 @@ class WampServerConnector:
                    filePrefix=filePrefix)
 
     @asyncio.coroutine
-    def print_(self, printHashes=False, margin=''):
+    def print_(self, printHashes=False, margin='', result=None):
         """
         Print information about this connector and its backends.
 
@@ -463,29 +463,37 @@ class WampServerConnector:
             subjects from the backends.
         @param margin: A C{str} that should be inserted at the start of each
             line of output.
-        @return: A C{str} representation of the parameters.
+        @param result: A C{MultilineString} instance, or C{None} if a new
+            C{MultilineString} should be created.
+        @return: If C{result} was C{None}, return a C{str} representation of
+            the connector, else C{None}.
         """
-        finalResult = MultilineString(margin=margin)
+        if result is None:
+            result = MultilineString(margin=margin)
+            returnNone = False
+        else:
+            returnNone = True
 
         if printHashes:
-            extend = finalResult.extend
-            append = finalResult.append
-            finalResult.append('Backends:')
+            extend = result.extend
+            append = result.append
+            append('Backends:')
 
             sessionIds = [self._sessionIdToName.keys()]
             names = [self._sessionIdToName[sessionId]
                      for sessionId in sessionIds]
             calls = [self.call('print_-%d' % sessionId, margin=margin + '    ')
                      for sessionId in sessionIds]
-            results = yield from asyncio.gather(*calls)
+            callResults = yield from asyncio.gather(*calls)
 
-            for name, result in zip(names, results):
-                finalResult.indent()
+            for name, callResult in zip(names, callResults):
+                result.indent()
                 extend([
                     'Backend name: %s' % name,
                     'Backend details:',
                 ])
-                append(result, verbatim=True)
-                finalResult.outdent()
+                append(callResult, verbatim=True)
+                result.outdent()
 
-        return str(finalResult)
+        if not returnNone:
+            return str(result)

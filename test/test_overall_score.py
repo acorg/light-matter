@@ -1798,7 +1798,7 @@ class TestGreedySignificantBinScore(TestCase):
                           )
 
         findParams = FindParameters(
-            significanceFraction=0.01, scoreMethod='FeatureAAScore',
+            significanceFraction=0.01, binScoreMethod='FeatureAAScore',
             overallScoreMethod='GreedySignificantBinScore')
 
         kwds = dict(landmarks=[

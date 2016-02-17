@@ -19,7 +19,7 @@ from light.landmarks import ALL_LANDMARK_CLASSES
 from light.parameters import FindParameters
 from light.performance.overlap import CalculateOverlap
 from light.performance import affinity
-from light.bin_score import ALL_BIN_SCORE_CLASSES
+from light.bin_score import ALL_BIN_SCORE_CLASSES, histogramBinFeatures
 from light.string import MultilineString
 from light.significance import (
     Always, HashFraction, MaxBinHeight, MeanBinHeight)
@@ -1532,3 +1532,111 @@ def scoreHeatmap(sequenceFileOrMatrix, labels, labelColors, findParams=None,
         plt.savefig(fileTitle, bbox_inches='tight')
     else:
         plt.show()
+
+
+def alignmentGraphMultipleQueries(queries, subject, findParams=None,
+                                  showBestBinOnly=False, colors=None,
+                                  createFigure=True, showFigure=True,
+                                  graphAx=None, **kwargs):
+    """
+    Plots an alignment graph showing multiple queries matched against one
+    subject, similar to the alignmentPanel in dark matter.
+
+    @param queries: An C{dark.Reads} instance of C{dark.Read.AARead} query
+        sequences.
+    @param subject: An C{dark.Read.AARead} instance of the subject sequence.
+    @param findParams: An instance of C{FindParameters} or C{None}, to use the
+        default find parameters.
+    @param showBestBinOnly: If C{True} only the best bin will be plotted for
+        each query.
+    @param colors: A C{dict} where keys are {str} query names and values are
+        colors in which that query should be colored.
+    @param createFigure: If C{True}, create a figure and give it a title.
+    @param showFigure: If C{True}, show the created figure. Set this to
+        C{False} if you're creating a panel of figures.
+    @param graphAx: If not C{None}, use this as the subplot for displaying
+        reads.
+    @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
+        for additional keywords, all of which are optional.
+    """
+    if createFigure:
+        width = 20
+        figure = plt.figure(figsize=(width, 20))
+        graphAx = graphAx or plt.subplot(111)
+
+    findParams = findParams or FindParameters()
+
+    database = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
+    _, subjectIndex, _ = database.addSubject(subject)
+
+    binCount = 0
+    colors = colors or {}
+    scoreName = findParams.binScoreMethod
+    maxScore = 0.0
+    minX = 0.0
+    maxX = len(subject)
+    for query in queries:
+        result = database.find(query, findParams, storeFullAnalysis=True)
+        try:
+            if showBestBinOnly:
+                sigBins = [result.analysis[subjectIndex]['significantBins'][0]]
+            else:
+                sigBins = result.analysis[subjectIndex]['significantBins']
+        except KeyError:
+            print('Query %r and subject %r had no hashes in common.' % (
+                query.id, subject.id))
+        else:
+            for binInfo in sigBins:
+                binCount += 1
+                score = binInfo['score']
+                bin_ = binInfo['bin']
+
+                allSubjectFeatures, allSubjectOffsets = histogramBinFeatures(
+                    bin_, 'subject')
+                minSubjectOffset = min(allSubjectOffsets)
+                maxSubjectOffset = max(allSubjectOffsets)
+
+                allQueryFeatures, allQueryOffsets = histogramBinFeatures(
+                    bin_, 'query')
+                minQueryOffset = min(allQueryOffsets)
+
+                minQueryOffsetInSubject = minSubjectOffset - minQueryOffset
+                maxQueryOffsetInSubject = minQueryOffsetInSubject + len(query)
+
+                # Plot the horizontal colored lines to indicate where the bins
+                # are and the horizontal grey lines to indicate the whole query
+                # sequence.
+                graphAx.plot([minQueryOffsetInSubject,
+                              maxQueryOffsetInSubject],
+                             [score, score], '-', color='grey')
+                graphAx.plot([minSubjectOffset, maxSubjectOffset],
+                             [score, score], '-',
+                             color=colors.get(query.id, 'blue'))
+
+                if minQueryOffsetInSubject < minX:
+                    minX = minQueryOffsetInSubject
+                if maxQueryOffsetInSubject > maxX:
+                    maxX = maxQueryOffsetInSubject
+
+    # Plot vertical lines at the start and end of the subject sequence and set
+    # the xlims and ylims.
+    graphAx.vlines([0.0], [0.0], [1.0], color='grey', linewidth=0.5)
+    graphAx.vlines([len(subject)], [0.0], [1.0], color='grey', linewidth=0.5)
+    graphAx.set_xlim([minX - 5, maxX + 5])
+    graphAx.set_ylim([-0.01, 1.01])
+
+    # Labels and titles
+    figure.suptitle('Subject: %s\nmax score: %.4f, '
+                    'queries: %d, bin count: %d' % (
+                        subject.id, maxScore, len(queries), binCount),
+                    fontsize=20)
+    graphAx.set_ylabel(scoreName, fontsize=12)
+    graphAx.set_xlabel('Sequence length (AA)', fontsize=12)
+    graphAx.grid()
+    if createFigure:
+        if showFigure:
+            plt.show()
+    return {
+        'minX': minX,
+        'maxX': maxX,
+    }

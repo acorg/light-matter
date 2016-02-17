@@ -17,7 +17,7 @@ from dark.reads import AARead, Reads
 from light.parameters import FindParameters
 from light.graphics import (
     PlotHashesInSubjectAndRead, SequenceFeatureAnalysis, plotHistogram,
-    plotHistogramLine, plotHistogramLines)
+    plotHistogramLine, plotHistogramLines, alignmentGraph)
 
 GOLV = AARead('GOLV', 'RVDIFKKNQHGGLREIYVLDLASRIVQLCLEEISRAVCQELPIEMMMHPELKLKK'
                       'PQEHMYKAAISPESYKSNVSSSNDAKVWNQGHHVAKFAQFLCRLLSPEWHGLIVN'
@@ -410,3 +410,55 @@ class TestSequenceFeatureAnalysis(TestCase):
                 'feature.'
             ),
             s.printDensities())
+
+
+class TestAlignmentGraph(TestCase):
+    """
+    Tests for the alignmentGraph function.
+    """
+    def testAlignmentGraphOnlyMustRun(self):
+        """
+        The alignmentGraph function only showing the alignment graph must run
+        properly.
+        """
+        # Turn off interactive display
+        pyplot.ioff()
+        findParams = FindParameters(significanceMethod='HashFraction',
+                                    binScoreMethod='FeatureAAScore')
+        alignmentGraph(GOLV, AKAV, showHistogram=False, showHorizontal=False,
+                       findParams=findParams)
+
+    def testAlignmentGraphWithHistogramWithHorizontalMustRun(self):
+        """
+        The alignmentGraph function must run properly when the histogram and
+        the horizontal plot are shown too.
+        """
+        # Turn off interactive display
+        pyplot.ioff()
+        findParams = FindParameters(significanceMethod='HashFraction',
+                                    binScoreMethod='FeatureAAScore')
+        alignmentGraph(GOLV, AKAV, showHistogram=True, showHorizontal=True,
+                       findParams=findParams)
+
+    def testAlignmentGraphWithHistogramMustRun(self):
+        """
+        The alignmentGraph function showing the histogram must run properly.
+        """
+        # Turn off interactive display
+        pyplot.ioff()
+        findParams = FindParameters(significanceMethod='HashFraction',
+                                    binScoreMethod='FeatureAAScore')
+        alignmentGraph(GOLV, AKAV, showHistogram=True, showHorizontal=False,
+                       findParams=findParams)
+
+    def testAlignmentGraphWithHorizontalMustRun(self):
+        """
+        The alignmentGraph function showing the horizontal plot must run
+        properly.
+        """
+        # Turn off interactive display
+        pyplot.ioff()
+        findParams = FindParameters(significanceMethod='HashFraction',
+                                    binScoreMethod='FeatureAAScore')
+        alignmentGraph(GOLV, AKAV, showHistogram=False, showHorizontal=True,
+                       findParams=findParams)

@@ -3,7 +3,7 @@ from __future__ import division
 from warnings import warn
 from random import uniform
 import matplotlib.pyplot as plt
-from matplotlib import patches
+from matplotlib import patches, gridspec
 import numpy as np
 from operator import attrgetter
 from textwrap import fill
@@ -285,8 +285,8 @@ def plotHistogram(query, subject, findParams=None, readsAx=None,
             readsAx.set_xlabel('Offset delta (subject - query)', fontsize=14)
             readsAx.xaxis.tick_bottom()
 
-        plt.vlines(centers, list(repeat(0, len(counts))), counts, color='blue',
-                   linewidth=2)
+        readsAx.vlines(centers, list(repeat(0, len(counts))), counts,
+                       color='blue', linewidth=2)
 
         if showSignificantBins:
             significanceMethod = findParams.significanceMethod
@@ -308,8 +308,8 @@ def plotHistogram(query, subject, findParams=None, readsAx=None,
 
             for binIndex, bin_ in enumerate(histogram.bins):
                 if significance.isSignificant(binIndex):
-                    plt.vlines(centers[binIndex], 0, len(bin_), color='red',
-                               linewidth=2)
+                    readsAx.vlines(centers[binIndex], 0, len(bin_),
+                                   color='red', linewidth=2)
 
         mean = np.mean(counts)
         if showMean:
@@ -678,10 +678,6 @@ class PlotHashesInSubjectAndRead(object):
     @param subject: An AAReadWithX instance of the sequence of the subject.
     @param findParams: An instance of C{FindParameters} or C{None}, to use the
         default find parameters.
-    @param significanceFraction: The C{float} fraction of all (landmark,
-        trig point) pairs for a scannedRead that need to fall into the
-        same histogram bucket for that bucket to be considered a
-        significant match with a database title.
     @param showSignificant: If C{True}, hashes from significant bins will
         be included in the set of hashes that match query and subject.
     @param showInsignificant: If C{True}, hashes from insignificant bins will
@@ -704,7 +700,7 @@ class PlotHashesInSubjectAndRead(object):
 
         # Use an 'in' test here, as self.result.analysis is a defaultdict.
         # Relying on a KeyError via directly accessing
-        # self.result.analysis[subjectIndex] wont work as the key would
+        # self.result.analysis[subjectIndex] won't work as the key would
         # just be created and no KeyError occurs.
         if subjectIndex in self.result.analysis:
             analysis = self.result.analysis[subjectIndex]
@@ -726,17 +722,19 @@ class PlotHashesInSubjectAndRead(object):
                          'Displaying just one of them.' %
                          analysis['significantBins'][0]['score'],
                          RuntimeWarning)
-            else:
+            elif showSignificant:
+                if showInsignificant:
+                    self.bins = [bin_ for bin_ in analysis['histogram'].bins]
+                else:
+                    self.bins = [bin_['bin'] for bin_ in
+                                 analysis['significantBins']]
+            elif showInsignificant and not showSignificant:
                 significantBinIndices = set(
                     [bin_['index'] for bin_ in analysis['significantBins']])
-                self.bins = bins = []
-                for binIndex, bin_ in enumerate(analysis['histogram'].bins):
-                    if binIndex in significantBinIndices:
-                        if showSignificant:
-                            bins.append(bin_)
-                    else:
-                        if showInsignificant:
-                            bins.append(bin_)
+                self.bins = [bin_ for i, bin_ in
+                             enumerate(analysis['histogram'].bins) if i not
+                             in significantBinIndices]
+
         else:
             # The subject was not matched.
             self.score = 0.0
@@ -976,7 +974,6 @@ class PlotHashesInSubjectAndRead(object):
                           ncol=2, borderaxespad=0.5)
             ax.set_xlabel(fill('%s (top) vs %s (bottom)' %
                                (self.subject.id, self.query.id)), fontsize=14)
-        print(self.subject.id, self.query.id)
         minX = -horizontalPad
         maxX = maxLen + horizontalPad
         ax.set_xlim(minX, maxX)
@@ -993,6 +990,8 @@ class PlotHashesInSubjectAndRead(object):
             'maxY': maxY,
             'title': fill('%s vs %s' % (self.subject.id[:20],
                                         self.query.id[:20])),
+            'colors': binColors,
+            'namesSeen': namesSeen,
         }
 
 
@@ -1532,3 +1531,159 @@ def scoreHeatmap(sequenceFileOrMatrix, labels, labelColors, findParams=None,
         plt.savefig(fileTitle, bbox_inches='tight')
     else:
         plt.show()
+
+
+def alignmentGraph(query, subject, findParams=None, createFigure=True,
+                   showHistogram=True, showHorizontal=True, graphAx=None,
+                   **kwargs):
+    """
+    Plots an alignment graph similar to the one in dark matter.
+
+    @param query: An AARead instance of the sequence of the query.
+    @param subject: An AARead instance of the sequence of the subject.
+    @param findParams: An instance of C{FindParameters} or C{None}, to use the
+        default find parameters.
+    @param createFigure: If C{True}, create a figure and give it a title.
+    @param showHistogram: If C{True}, show the histogram of the match.
+    @param showHorizontal: If C{True}, show the horizontal line plot.
+    @param graphAx: If not None, use this as the subplot for displaying reads.
+    @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
+        for additional keywords, all of which are optional.
+    """
+    if createFigure:
+        width = 20
+        figure = plt.figure(figsize=(width, 20))
+
+    if showHistogram:
+        if showHorizontal:
+            gs = gridspec.GridSpec(3, 1, height_ratios=[4, 4, 12])
+            histogramAx = plt.subplot(gs[0, 0])
+            horizontalAx = plt.subplot(gs[1, 0])
+            graphAx = graphAx or plt.subplot(gs[2, 0])
+        else:
+            gs = gridspec.GridSpec(2, 1, height_ratios=[1, 4])
+            histogramAx = plt.subplot(gs[0, 0])
+            graphAx = graphAx or plt.subplot(gs[1, 0])
+    else:
+        if showHorizontal:
+            gs = gridspec.GridSpec(2, 1, height_ratios=[1, 4])
+            horizontalAx = plt.subplot(gs[0, 0])
+            graphAx = graphAx or plt.subplot(gs[1, 0])
+        else:
+            graphAx = graphAx or plt.subplot(111)
+
+    horizontalResult = False
+    findParams = findParams or FindParameters()
+    if showHistogram:
+        plotHistogram(query, subject, findParams=findParams,
+                      readsAx=histogramAx, showMean=False, showMedian=False,
+                      showStdev=False, showSignificanceCutoff=False,
+                      showSignificantBins=True, **kwargs)
+        histogramAx.set_title('Histogram plot (significant bins are red)',
+                              fontsize=15)
+    if showHorizontal:
+        horizontal = PlotHashesInSubjectAndRead(
+            subject, query, showSignificant=True, showInsignificant=False,
+            showBestBinOnly=False, findParams=findParams, **kwargs)
+        horizontalResult = horizontal.plotHorizontal(ax=horizontalAx)
+        horizontalAx.set_title('Horizontal plot (top: %s, bottom: %s)' % (
+                               query.id, subject.id), fontsize=15)
+        horizontalAx.legend(
+            handles=legendHandles(horizontalResult['namesSeen']),
+            bbox_to_anchor=(0.005, 0.3, 0.5, 0.05), loc=3, ncol=2,
+            borderaxespad=0.1, prop={'size': 8})
+
+    graphAx.set_title('Bin alignments', fontsize=15)
+
+    database = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
+    _, subjectIndex, _ = database.addSubject(subject)
+    result = database.find(query, findParams, storeFullAnalysis=True)
+
+    if subjectIndex not in result.analysis:
+        graphAx.text(len(subject) / 2, 0.5, 'No match was found.',
+                     horizontalalignment='center', verticalalignment='center',
+                     fontsize=15)
+        maxScore = 0.0
+        nSignificantBins = 0.0
+        significantBins = []
+    elif not result.analysis[subjectIndex]['significantBins']:
+        graphAx.text(len(subject) / 2, 0.5, 'No significant bin was found.',
+                     horizontalalignment='center', verticalalignment='center',
+                     fontsize=15)
+        maxScore = 0.0
+        nSignificantBins = 0.0
+        significantBins = []
+    else:
+        significantBins = result.analysis[subjectIndex]['significantBins']
+        maxScore = significantBins[0]['score']
+        nSignificantBins = len(significantBins)
+
+    if horizontalResult:
+        cols = horizontalResult['colors']
+    else:
+        cols = colors.color_palette('hls', len(significantBins))
+
+    scoreName = findParams.binScoreMethod
+
+    totalXMin = 0
+    totalXMax = len(subject)
+    for i, binInfo in enumerate(significantBins):
+        score = binInfo['score']
+        bin_ = binInfo['bin']
+        binMin = Landmark('A', len(subject), len(subject), len(subject))
+        binMax = Landmark('A', 0, 0, 0)
+        minFeature = None
+
+        for match in bin_:
+            lm = match['subjectLandmark']
+            tp = match['subjectTrigPoint']
+            # Plot the matching features.
+            graphAx.plot([lm.offset, lm.offset + lm.length - 1],
+                         [score, score], '-', color=COLORS[lm.symbol],
+                         linewidth=3)
+            graphAx.plot([tp.offset, tp.offset],
+                         [score + 0.005, score - 0.005], '-',
+                         color=COLORS[tp.symbol], linewidth=2)
+            if lm.offset > binMax.offset:
+                binMax = lm
+            elif lm.offset < binMin.offset:
+                binMin = lm
+                minFeature = match['queryLandmark']
+            if tp.offset > binMax.offset:
+                binMax = tp
+            elif tp.offset < binMin.offset:
+                binMin = tp
+                minFeature = match['queryTrigPoint']
+        minBinX = binMin.offset - minFeature.offset
+        maxBinX = minBinX + len(query)
+        if minBinX < totalXMin:
+            totalXMin = minBinX
+        if maxBinX > totalXMax:
+            totalXMax = maxBinX
+        # plot the horizontal colored lines to indicate where the bins are
+        # and the horizontal grey lines to indicate the whole query sequence.
+        graphAx.plot([minBinX, maxBinX], [score, score], '-', color='grey')
+        graphAx.plot([binMin.offset, binMax.offset], [score, score], '-',
+                     color=cols[i], linewidth=1.5)
+
+    # Plot vertical lines at the start and end of the subject sequence and set
+    # the xlims and ylims.
+    if showHorizontal:
+        horizontalAx.set_xlim([totalXMin - 5, totalXMax + 5])
+        horizontalAx.vlines([0.0], [0.0], [1.0], color='grey', linewidth=0.5)
+        horizontalAx.vlines([len(subject)], [0.0], [1.0], color='grey',
+                            linewidth=0.5)
+    graphAx.vlines([0.0], [0.0], [1.0], color='grey', linewidth=0.5)
+    graphAx.vlines([len(subject)], [0.0], [1.0], color='grey', linewidth=0.5)
+    graphAx.set_xlim([totalXMin - 5, totalXMax + 5])
+    graphAx.set_ylim([-0.01, 1.01])
+
+    # Labels and titles
+    figure.suptitle('Query: %s, Subject: %s\nmax score: %.4f, '
+                    'significant bins: %d' % (
+                        query.id, subject.id, maxScore, nSignificantBins),
+                    fontsize=20)
+    graphAx.set_ylabel(scoreName, fontsize=12)
+    graphAx.set_xlabel('Sequence length (AA)', fontsize=12)
+    graphAx.grid()
+    figure.show()

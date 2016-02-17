@@ -1560,8 +1560,7 @@ def alignmentGraphMultipleQueries(queries, subject, findParams=None,
         for additional keywords, all of which are optional.
     """
     if createFigure:
-        width = 20
-        figure = plt.figure(figsize=(width, 20))
+        figure = plt.figure()
         graphAx = graphAx or plt.subplot(111)
 
     findParams = findParams or FindParameters()
@@ -1578,15 +1577,17 @@ def alignmentGraphMultipleQueries(queries, subject, findParams=None,
     for query in queries:
         result = database.find(query, findParams, storeFullAnalysis=True)
         try:
-            if showBestBinOnly:
-                sigBins = [result.analysis[subjectIndex]['significantBins'][0]]
-            else:
-                sigBins = result.analysis[subjectIndex]['significantBins']
+            significantBins = result.analysis[subjectIndex]['significantBins']
         except KeyError:
             print('Query %r and subject %r had no hashes in common.' % (
                 query.id, subject.id))
         else:
-            for binInfo in sigBins:
+            if showBestBinOnly:
+                binsToPlot = [significantBins[0]]
+            else:
+                binsToPlot = significantBins
+
+            for binInfo in binsToPlot:
                 binCount += 1
                 score = binInfo['score']
                 bin_ = binInfo['bin']

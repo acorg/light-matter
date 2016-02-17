@@ -17,7 +17,7 @@ from dark.reads import AARead, Reads
 from light.parameters import FindParameters
 from light.graphics import (
     PlotHashesInSubjectAndRead, SequenceFeatureAnalysis, plotHistogram,
-    plotHistogramLine, plotHistogramLines)
+    plotHistogramLine, plotHistogramLines, alignmentGraphMultipleQueries)
 
 GOLV = AARead('GOLV', 'RVDIFKKNQHGGLREIYVLDLASRIVQLCLEEISRAVCQELPIEMMMHPELKLKK'
                       'PQEHMYKAAISPESYKSNVSSSNDAKVWNQGHHVAKFAQFLCRLLSPEWHGLIVN'
@@ -410,3 +410,36 @@ class TestSequenceFeatureAnalysis(TestCase):
                 'feature.'
             ),
             s.printDensities())
+
+
+class TestAlignmentGraphMultipleQueries(TestCase):
+    """
+    Tests for the alignmentGraphMultipleQueries function.
+    """
+    def xtestAlignmentGraphMultipleQueries(self):
+        """
+        The plotHistogram function must run properly.
+        """
+        # Turn off interactive display
+        pyplot.ioff()
+        findParams = FindParameters(significanceMethod='HashFraction',
+                                    binScoreMethod='FeatureAAScore')
+        reads = Reads()
+        reads.add(GOLV)
+        reads.add(AKAV)
+        alignmentGraphMultipleQueries(reads, BUNV, findParams=findParams)
+
+    def xtestAlignmentGraphMultipleQueriesShowBestBinOnly(self):
+        """
+        The plotHistogram function must run properly.
+        """
+        # Turn off interactive display
+        pyplot.ioff()
+        findParams = FindParameters(significanceMethod='HashFraction',
+                                    binScoreMethod='FeatureAAScore',
+                                    significanceFraction=0.0)
+        reads = Reads()
+        reads.add(GOLV)
+        reads.add(AKAV)
+        alignmentGraphMultipleQueries(reads, BUNV, showBestBinOnly=True,
+                                      findParams=findParams)

@@ -230,7 +230,7 @@ def plotHistogramPanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
 def plotHistogram(query, subject, findParams=None, readsAx=None,
                   showMean=False, showMedian=False, showStdev=False,
                   showSignificanceCutoff=False, showSignificantBins=False,
-                  customColors={}, **kwargs):
+                  customColors=None, **kwargs):
     """
     Plot a histogram of matching hash offset deltas between a query and a
     subject.
@@ -249,8 +249,8 @@ def plotHistogram(query, subject, findParams=None, readsAx=None,
         plotted in green.
     @param showSignificantBins: If C{True} the significant bins will be plotted
         in red.
-    @param customColors: A C{dict} where the key is a histogram bin index and
-        the values are colors in which the bin should be plotted as.
+    @param customColors: A C{dict} where the key is an C{int} histogram bin
+        index and the values are colors in which the bin should be plotted as.
     @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
         for additional keywords, all of which are optional.
     @return: The C{light.result.Result} from running the database find.
@@ -258,6 +258,8 @@ def plotHistogram(query, subject, findParams=None, readsAx=None,
         exist in the database.
     """
     database = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
+
+    customColors = customColors or {}
 
     if isinstance(subject, str):
         subjectIndex = subject
@@ -311,8 +313,9 @@ def plotHistogram(query, subject, findParams=None, readsAx=None,
 
             for binIndex, bin_ in enumerate(histogram.bins):
                 if significance.isSignificant(binIndex):
-                    readsAx.vlines(centers[binIndex], 0, len(bin_),
-                                   color='red', linewidth=2)
+                    readsAx.vlines(centers[binIndex], 0.0, len(bin_),
+                                   color=customColors.get(binIndex, 'red'),
+                                   linewidth=2)
 
         mean = np.mean(counts)
         if showMean:
@@ -731,7 +734,7 @@ class PlotHashesInSubjectAndRead(object):
                 else:
                     self.bins = [bin_['bin'] for bin_ in
                                  analysis['significantBins']]
-            elif showInsignificant and not showSignificant:
+            elif showInsignificant:
                 significantBinIndices = set(
                     [bin_['index'] for bin_ in analysis['significantBins']])
                 self.bins = [bin_ for i, bin_ in
@@ -1549,13 +1552,13 @@ def alignmentGraph(query, subject, findParams=None, createFigure=True,
     @param createFigure: If C{True}, create a figure and give it a title.
     @param showHistogram: If C{True}, show the histogram of the match.
     @param showHorizontal: If C{True}, show the horizontal line plot.
-    @param graphAx: If not None, use this as the subplot for displaying reads.
+    @param graphAx: If not C{None}, use this as the subplot for displaying
+        reads.
     @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
         for additional keywords, all of which are optional.
     """
     if createFigure:
-        width = 20
-        figure = plt.figure(figsize=(width, 20))
+        figure = plt.figure()
 
     if showHistogram:
         if showHorizontal:
@@ -1596,24 +1599,26 @@ def alignmentGraph(query, subject, findParams=None, createFigure=True,
     _, subjectIndex, _ = database.addSubject(subject)
     result = database.find(query, findParams, storeFullAnalysis=True)
 
-    if subjectIndex not in result.analysis:
+    if subjectIndex in result.analysis:
+        if result.analysis[subjectIndex]['significantBins']:
+            significantBins = result.analysis[subjectIndex]['significantBins']
+            maxScore = significantBins[0]['score']
+            nSignificantBins = len(significantBins)
+        else:
+            graphAx.text(len(subject) / 2, 0.5,
+                         'No significant bin was found.',
+                         horizontalalignment='center',
+                         verticalalignment='center', fontsize=15)
+            maxScore = 0.0
+            nSignificantBins = 0.0
+            significantBins = []
+    else:
         graphAx.text(len(subject) / 2, 0.5, 'No match was found.',
                      horizontalalignment='center', verticalalignment='center',
                      fontsize=15)
         maxScore = 0.0
         nSignificantBins = 0.0
         significantBins = []
-    elif not result.analysis[subjectIndex]['significantBins']:
-        graphAx.text(len(subject) / 2, 0.5, 'No significant bin was found.',
-                     horizontalalignment='center', verticalalignment='center',
-                     fontsize=15)
-        maxScore = 0.0
-        nSignificantBins = 0.0
-        significantBins = []
-    else:
-        significantBins = result.analysis[subjectIndex]['significantBins']
-        maxScore = significantBins[0]['score']
-        nSignificantBins = len(significantBins)
 
     if horizontalResult:
         cols = horizontalResult['colors']
@@ -1623,28 +1628,30 @@ def alignmentGraph(query, subject, findParams=None, createFigure=True,
     scoreName = findParams.binScoreMethod
 
     significantBinColors = {}
+    # Keep track of the absolute x limits of the plot.
     totalXMin = 0
     totalXMax = len(subject)
     for i, binInfo in enumerate(significantBins):
         score = binInfo['score']
         bin_ = binInfo['bin']
         significantBinColors[binInfo['index']] = cols[i]
-        binMin = Landmark('A', len(subject), len(subject), len(subject))
-        binMax = Landmark('A', 0, 0, 0)
+        # Keep track of the x limits of the current bin.
+        binMin = None
+        binMax = None
         minFeature = None
 
         for match in bin_:
             lm = match['subjectLandmark']
             tp = match['subjectTrigPoint']
 
-            if lm.offset > binMax.offset:
+            if binMax is None or lm.offset > binMax.offset:
                 binMax = lm
-            elif lm.offset < binMin.offset:
+            elif binMin is None or lm.offset < binMin.offset:
                 binMin = lm
                 minFeature = match['queryLandmark']
-            if tp.offset > binMax.offset:
+            if binMax is None or tp.offset > binMax.offset:
                 binMax = tp
-            elif tp.offset < binMin.offset:
+            elif binMin is None or tp.offset < binMin.offset:
                 binMin = tp
                 minFeature = match['queryTrigPoint']
         minBinX = binMin.offset - minFeature.offset
@@ -1657,7 +1664,7 @@ def alignmentGraph(query, subject, findParams=None, createFigure=True,
         # and the horizontal grey lines to indicate the whole query sequence.
         graphAx.plot([minBinX, maxBinX], [score, score], '-', color='grey')
         graphAx.plot([binMin.offset, binMax.offset], [score, score], '-',
-                     color=cols[i], linewidth=3)
+                     color=cols[i])
 
     if showHistogram:
         plotHistogram(query, subject, findParams=findParams,

@@ -18,7 +18,7 @@ from light.landmarks import ALL_LANDMARK_CLASSES
 from light.parameters import FindParameters
 from light.performance.overlap import CalculateOverlap
 from light.performance import affinity
-from light.bin_score import ALL_BIN_SCORE_CLASSES
+from light.bin_score import ALL_BIN_SCORE_CLASSES, histogramBinFeatures
 from light.string import MultilineString
 from light.significance import (
     Always, HashFraction, MaxBinHeight, MeanBinHeight)
@@ -1629,42 +1629,35 @@ def alignmentGraph(query, subject, findParams=None, createFigure=True,
 
     significantBinColors = {}
     # Keep track of the absolute x limits of the plot.
-    totalXMin = 0
-    totalXMax = len(subject)
+    minX = 0
+    maxX = len(subject)
     for i, binInfo in enumerate(significantBins):
         score = binInfo['score']
         bin_ = binInfo['bin']
         significantBinColors[binInfo['index']] = cols[i]
-        # Keep track of the x limits of the current bin.
-        binMin = None
-        binMax = None
-        minFeature = None
 
-        for match in bin_:
-            lm = match['subjectLandmark']
-            tp = match['subjectTrigPoint']
+        allSubjectFeatures, allSubjectOffsets = histogramBinFeatures(bin_,
+                                                                     'subject')
+        minSubjectOffset = min(allSubjectOffsets)
+        maxSubjectOffset = max(allSubjectOffsets)
 
-            if binMax is None or lm.offset > binMax.offset:
-                binMax = lm
-            elif binMin is None or lm.offset < binMin.offset:
-                binMin = lm
-                minFeature = match['queryLandmark']
-            if binMax is None or tp.offset > binMax.offset:
-                binMax = tp
-            elif binMin is None or tp.offset < binMin.offset:
-                binMin = tp
-                minFeature = match['queryTrigPoint']
-        minBinX = binMin.offset - minFeature.offset
-        maxBinX = minBinX + len(query)
-        if minBinX < totalXMin:
-            totalXMin = minBinX
-        if maxBinX > totalXMax:
-            totalXMax = maxBinX
-        # plot the horizontal colored lines to indicate where the bins are
+        allQueryFeatures, allQueryOffsets = histogramBinFeatures(bin_, 'query')
+        minQueryOffset = min(allQueryOffsets)
+
+        minQueryOffsetInSubject = minSubjectOffset - minQueryOffset
+        maxQueryOffsetInSubject = minQueryOffsetInSubject + len(query)
+
+        # Plot the horizontal colored lines to indicate where the bins are
         # and the horizontal grey lines to indicate the whole query sequence.
-        graphAx.plot([minBinX, maxBinX], [score, score], '-', color='grey')
-        graphAx.plot([binMin.offset, binMax.offset], [score, score], '-',
+        graphAx.plot([minQueryOffsetInSubject, maxQueryOffsetInSubject],
+                     [score, score], '-', color='grey')
+        graphAx.plot([minSubjectOffset, maxSubjectOffset], [score, score], '-',
                      color=cols[i])
+
+        if minQueryOffsetInSubject < minX:
+            minX = minQueryOffsetInSubject
+        if maxQueryOffsetInSubject > maxX:
+            maxX = maxQueryOffsetInSubject
 
     if showHistogram:
         plotHistogram(query, subject, findParams=findParams,
@@ -1678,13 +1671,13 @@ def alignmentGraph(query, subject, findParams=None, createFigure=True,
     # Plot vertical lines at the start and end of the subject sequence and set
     # the xlims and ylims.
     if showHorizontal:
-        horizontalAx.set_xlim([totalXMin - 5, totalXMax + 5])
+        horizontalAx.set_xlim([minX - 5, maxX + 5])
         horizontalAx.vlines([0.0], [0.0], [1.0], color='grey', linewidth=0.5)
         horizontalAx.vlines([len(subject)], [0.0], [1.0], color='grey',
                             linewidth=0.5)
     graphAx.vlines([0.0], [0.0], [1.0], color='grey', linewidth=0.5)
     graphAx.vlines([len(subject)], [0.0], [1.0], color='grey', linewidth=0.5)
-    graphAx.set_xlim([totalXMin - 5, totalXMax + 5])
+    graphAx.set_xlim([minX - 5, maxX + 5])
     graphAx.set_ylim([-0.01, 1.01])
 
     # Labels and titles

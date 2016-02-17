@@ -9,7 +9,6 @@ from operator import attrgetter
 from textwrap import fill
 from collections import defaultdict
 from math import log10
-from itertools import repeat
 
 from light.backend import Backend
 from light.colors import colors
@@ -231,7 +230,7 @@ def plotHistogramPanel(sequences, equalizeXAxes=True, equalizeYAxes=False,
 def plotHistogram(query, subject, findParams=None, readsAx=None,
                   showMean=False, showMedian=False, showStdev=False,
                   showSignificanceCutoff=False, showSignificantBins=False,
-                  **kwargs):
+                  customColors={}, **kwargs):
     """
     Plot a histogram of matching hash offset deltas between a query and a
     subject.
@@ -250,6 +249,8 @@ def plotHistogram(query, subject, findParams=None, readsAx=None,
         plotted in green.
     @param showSignificantBins: If C{True} the significant bins will be plotted
         in red.
+    @param customColors: A C{dict} where the key is a histogram bin index and
+        the values are colors in which the bin should be plotted as.
     @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
         for additional keywords, all of which are optional.
     @return: The C{light.result.Result} from running the database find.
@@ -285,8 +286,10 @@ def plotHistogram(query, subject, findParams=None, readsAx=None,
             readsAx.set_xlabel('Offset delta (subject - query)', fontsize=14)
             readsAx.xaxis.tick_bottom()
 
-        readsAx.vlines(centers, list(repeat(0, len(counts))), counts,
-                       color='blue', linewidth=2)
+        for binIndex, bin_ in enumerate(histogram.bins):
+            readsAx.vlines(centers[binIndex], 0.0, counts[binIndex],
+                           color=customColors.get(binIndex, 'black'),
+                           linewidth=2)
 
         if showSignificantBins:
             significanceMethod = findParams.significanceMethod
@@ -1574,13 +1577,7 @@ def alignmentGraph(query, subject, findParams=None, createFigure=True,
 
     horizontalResult = False
     findParams = findParams or FindParameters()
-    if showHistogram:
-        plotHistogram(query, subject, findParams=findParams,
-                      readsAx=histogramAx, showMean=False, showMedian=False,
-                      showStdev=False, showSignificanceCutoff=False,
-                      showSignificantBins=True, **kwargs)
-        histogramAx.set_title('Histogram plot (significant bins are red)',
-                              fontsize=15)
+
     if showHorizontal:
         horizontal = PlotHashesInSubjectAndRead(
             subject, query, showSignificant=True, showInsignificant=False,
@@ -1625,11 +1622,13 @@ def alignmentGraph(query, subject, findParams=None, createFigure=True,
 
     scoreName = findParams.binScoreMethod
 
+    significantBinColors = {}
     totalXMin = 0
     totalXMax = len(subject)
     for i, binInfo in enumerate(significantBins):
         score = binInfo['score']
         bin_ = binInfo['bin']
+        significantBinColors[binInfo['index']] = cols[i]
         binMin = Landmark('A', len(subject), len(subject), len(subject))
         binMax = Landmark('A', 0, 0, 0)
         minFeature = None
@@ -1637,13 +1636,7 @@ def alignmentGraph(query, subject, findParams=None, createFigure=True,
         for match in bin_:
             lm = match['subjectLandmark']
             tp = match['subjectTrigPoint']
-            # Plot the matching features.
-            graphAx.plot([lm.offset, lm.offset + lm.length - 1],
-                         [score, score], '-', color=COLORS[lm.symbol],
-                         linewidth=3)
-            graphAx.plot([tp.offset, tp.offset],
-                         [score + 0.005, score - 0.005], '-',
-                         color=COLORS[tp.symbol], linewidth=2)
+
             if lm.offset > binMax.offset:
                 binMax = lm
             elif lm.offset < binMin.offset:
@@ -1664,7 +1657,16 @@ def alignmentGraph(query, subject, findParams=None, createFigure=True,
         # and the horizontal grey lines to indicate the whole query sequence.
         graphAx.plot([minBinX, maxBinX], [score, score], '-', color='grey')
         graphAx.plot([binMin.offset, binMax.offset], [score, score], '-',
-                     color=cols[i], linewidth=1.5)
+                     color=cols[i], linewidth=3)
+
+    if showHistogram:
+        plotHistogram(query, subject, findParams=findParams,
+                      readsAx=histogramAx, showMean=False, showMedian=False,
+                      showStdev=False, showSignificanceCutoff=False,
+                      showSignificantBins=False,
+                      customColors=significantBinColors, **kwargs)
+        histogramAx.set_title('Histogram plot (significant bins are colored)',
+                              fontsize=15)
 
     # Plot vertical lines at the start and end of the subject sequence and set
     # the xlims and ylims.

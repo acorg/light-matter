@@ -418,7 +418,7 @@ class TestAlignmentGraphMultipleQueries(TestCase):
     """
     def xtestAlignmentGraphMultipleQueries(self):
         """
-        The plotHistogram function must run properly.
+        The alignmentGraphMultipleQueries function must run properly.
         """
         # Turn off interactive display
         pyplot.ioff()
@@ -431,7 +431,8 @@ class TestAlignmentGraphMultipleQueries(TestCase):
 
     def xtestAlignmentGraphMultipleQueriesShowBestBinOnly(self):
         """
-        The plotHistogram function must run properly.
+        The alignmentGraphMultipleQueries function with showBestBinOnly must
+        run properly.
         """
         # Turn off interactive display
         pyplot.ioff()

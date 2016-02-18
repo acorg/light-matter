@@ -14,11 +14,12 @@ from light.backend import Backend
 from light.colors import colors
 from light.database import DatabaseSpecifier
 from light.features import Landmark
+from light.hsp import normalizeBin
 from light.landmarks import ALL_LANDMARK_CLASSES
 from light.parameters import FindParameters
 from light.performance.overlap import CalculateOverlap
 from light.performance import affinity
-from light.bin_score import ALL_BIN_SCORE_CLASSES, histogramBinFeatures
+from light.bin_score import ALL_BIN_SCORE_CLASSES
 from light.string import MultilineString
 from light.significance import (
     Always, HashFraction, MaxBinHeight, MeanBinHeight)
@@ -1578,7 +1579,6 @@ def alignmentGraph(query, subject, findParams=None, createFigure=True,
         else:
             graphAx = graphAx or plt.subplot(111)
 
-    horizontalResult = False
     findParams = findParams or FindParameters()
 
     if showHorizontal:
@@ -1620,12 +1620,10 @@ def alignmentGraph(query, subject, findParams=None, createFigure=True,
         nSignificantBins = 0.0
         significantBins = []
 
-    if horizontalResult:
+    if showHorizontal:
         cols = horizontalResult['colors']
     else:
         cols = colors.color_palette('hls', len(significantBins))
-
-    scoreName = findParams.binScoreMethod
 
     significantBinColors = {}
     # Keep track of the absolute x limits of the plot.
@@ -1636,28 +1634,20 @@ def alignmentGraph(query, subject, findParams=None, createFigure=True,
         bin_ = binInfo['bin']
         significantBinColors[binInfo['index']] = cols[i]
 
-        allSubjectFeatures, allSubjectOffsets = histogramBinFeatures(bin_,
-                                                                     'subject')
-        minSubjectOffset = min(allSubjectOffsets)
-        maxSubjectOffset = max(allSubjectOffsets)
-
-        allQueryFeatures, allQueryOffsets = histogramBinFeatures(bin_, 'query')
-        minQueryOffset = min(allQueryOffsets)
-
-        minQueryOffsetInSubject = minSubjectOffset - minQueryOffset
-        maxQueryOffsetInSubject = minQueryOffsetInSubject + len(query)
+        toPlot = normalizeBin(bin_, len(query))
 
         # Plot the horizontal colored lines to indicate where the bins are
         # and the horizontal grey lines to indicate the whole query sequence.
-        graphAx.plot([minQueryOffsetInSubject, maxQueryOffsetInSubject],
+        graphAx.plot([toPlot['queryStartInSubject'],
+                      toPlot['queryEndInSubject']],
                      [score, score], '-', color='grey')
-        graphAx.plot([minSubjectOffset, maxSubjectOffset], [score, score], '-',
-                     color=cols[i])
+        graphAx.plot([toPlot['subjectBinStart'], toPlot['subjectBinEnd']],
+                     [score, score], '-', color=cols[i])
 
-        if minQueryOffsetInSubject < minX:
-            minX = minQueryOffsetInSubject
-        if maxQueryOffsetInSubject > maxX:
-            maxX = maxQueryOffsetInSubject
+        if toPlot['queryStartInSubject'] < minX:
+            minX = toPlot['queryStartInSubject']
+        if toPlot['queryEndInSubject'] > maxX:
+            maxX = toPlot['queryEndInSubject']
 
     if showHistogram:
         plotHistogram(query, subject, findParams=findParams,
@@ -1685,7 +1675,7 @@ def alignmentGraph(query, subject, findParams=None, createFigure=True,
                     'significant bins: %d' % (
                         query.id, subject.id, maxScore, nSignificantBins),
                     fontsize=20)
-    graphAx.set_ylabel(scoreName, fontsize=12)
+    graphAx.set_ylabel(findParams.binScoreMethod, fontsize=12)
     graphAx.set_xlabel('Sequence length (AA)', fontsize=12)
     graphAx.grid()
     figure.show()

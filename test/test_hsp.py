@@ -1,6 +1,7 @@
 from unittest import TestCase
 
-from light.hsp import normalizeHSP
+from light.hsp import normalizeBin
+from light.features import Landmark, TrigPoint
 
 
 class Template(object):
@@ -10,32 +11,36 @@ class Template(object):
         if len(template[0]) == 0:
             template = template[1:]
 
-        # Analyze the template hit.
+        # Analyze the template hit (subject).
         self.hit = template[0].rstrip()
         (spacesLen, leadingDotsLen, matchLen, trailingDotsLen) = \
             self._analyze(self.hit)
         origin = spacesLen
         self.matchLen = matchLen
         self.subjectLength = len(self.hit) - spacesLen
-        self.hitMatchStart = leadingDotsLen
+        self.subjectLandmarkOffset = leadingDotsLen
+        self.subjectTrigPointOffset = leadingDotsLen + matchLen
 
-        # Analyze the template read.
+        # Analyze the template read (query).
         self.read = template[1].rstrip()
         (spacesLen, leadingDotsLen, matchLen, trailingDotsLen) = \
             self._analyze(self.read)
         assert self.matchLen == matchLen
-        self.readLen = len(self.read) - spacesLen
-        self.readMatchStart = leadingDotsLen
+        self.matchLen = matchLen
+        self.queryLength = len(self.read) - spacesLen
+        self.queryLandmarkOffset = leadingDotsLen
+        self.queryTrigPointOffset = leadingDotsLen + matchLen
 
         # Analyze the template read result.
         self.readResult = template[2].rstrip()
         (spacesLen, leadingDotsLen, matchLen, trailingDotsLen) = \
             self._analyze(self.readResult)
         assert self.matchLen == matchLen
-        self.readResultStart = spacesLen - origin
-        self.readResultLen = len(self.readResult) - spacesLen
-        assert self.readResultLen == self.readLen
-        self.readResultMatchStart = leadingDotsLen
+        self.queryResultStart = spacesLen - origin
+        self.queryResultLen = len(self.readResult) - spacesLen
+        assert self.queryResultLen == self.queryLength
+        self.queryResultLandmarkOffset = leadingDotsLen
+        self.queryResultTrigPointOffset = leadingDotsLen + matchLen
 
     def _leadingCharMatchLen(self, str, chars=' '):
         return len(str) - len(str.lstrip(chars))
@@ -50,15 +55,22 @@ class Template(object):
         trailingDotsLen = self._leadingCharMatchLen(str[offset:], '.')
         return (spacesLen, leadingDotsLen, matchLen, trailingDotsLen)
 
-    def hsp(self):
+    def bin_(self):
         """
-        Make an HSP.
+        Make a bin. To make life easy, assume that the bin only has one pair.
         """
-        return {
-            'readOffset': self.readMatchStart,
-            'subjectOffset': self.hitMatchStart,
-            'landmarkLength': self.matchLen,
-        }
+        queryLandmark = Landmark('AlphaHelix', 'A', self.queryLandmarkOffset,
+                                 1)
+        queryTrigPoint = TrigPoint('Peaks', 'P', self.queryTrigPointOffset)
+        subjectLandmark = Landmark('AlphaHelix', 'A',
+                                   self.subjectLandmarkOffset, 1)
+        subjectTrigPoint = TrigPoint('Peaks', 'P', self.subjectTrigPointOffset)
+        return [{
+            'queryLandmark': queryLandmark,
+            'queryTrigPoint': queryTrigPoint,
+            'subjectLandmark': subjectLandmark,
+            'subjectTrigPoint': subjectTrigPoint,
+        }]
 
 
 class TestTemplate(TestCase):
@@ -75,33 +87,36 @@ class TestTemplate(TestCase):
         self.assertEqual(3, template.matchLen)
 
         self.assertEqual(18, template.subjectLength)
-        self.assertEqual(4, template.hitMatchStart)
+        self.assertEqual(4, template.subjectLandmarkOffset)
 
-        self.assertEqual(20, template.readLen)
-        self.assertEqual(2, template.readMatchStart)
+        self.assertEqual(20, template.queryLength)
+        self.assertEqual(2, template.queryLandmarkOffset)
 
-        self.assertEqual(20, template.readResultLen)
-        self.assertEqual(-11, template.readResultStart)
-        self.assertEqual(15, template.readResultMatchStart)
+        self.assertEqual(20, template.queryResultLen)
+        self.assertEqual(-11, template.queryResultStart)
+        self.assertEqual(15, template.queryResultLandmarkOffset)
 
-        hsp = template.hsp()
-        self.assertEqual(4, hsp['subjectOffset'])
-        self.assertEqual(2, hsp['readOffset'])
-        self.assertEqual(3, hsp['landmarkLength'])
+        bin_ = template.bin_()
+        self.assertEqual(4, bin_[0]['subjectLandmark'].offset)
+        self.assertEqual(2, bin_[0]['queryLandmark'].offset)
+        self.assertEqual(3, (bin_[0]['queryTrigPoint'].offset -
+                         bin_[0]['queryLandmark'].offset))
 
 
-class TestHSP(TestCase):
+class TestBin(TestCase):
 
     def check(self, templateStr):
         template = Template(templateStr)
-        normalized = normalizeHSP(template.hsp(), template.readLen)
+        normalized = normalizeBin(template.bin_(), template.queryLength)
         self.assertEqual({
-            'subjectStart': template.hitMatchStart,
-            'subjectEnd': template.hitMatchStart + template.matchLen,
-            'readStart': template.readMatchStart,
-            'readEnd': template.readMatchStart + template.matchLen,
-            'readStartInSubject': template.readResultStart,
-            'readEndInSubject': template.readResultStart + template.readLen,
+            'subjectBinStart': template.subjectLandmarkOffset,
+            'subjectBinEnd': (template.subjectLandmarkOffset +
+                              template.matchLen),
+            'queryBinStart': template.queryLandmarkOffset,
+            'queryBinEnd': template.queryLandmarkOffset + template.matchLen,
+            'queryStartInSubject': template.queryResultStart,
+            'queryEndInSubject': (template.queryResultStart +
+                                  template.queryLength),
         }, normalized)
 
     def testIdentical1(self):

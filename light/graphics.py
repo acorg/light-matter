@@ -1475,7 +1475,7 @@ def compareScores(subject, query, binScoreMethods=None,
         if showHistogram:
             plotHistogram(
                 query, subject, showSignificanceCutoff=True,
-                significanceFraction=findParams.significanceFraction, **kwargs)
+                findParams=findParams, **kwargs)
         else:
             print('Subject %r was not matched.', subject.id)
         print()

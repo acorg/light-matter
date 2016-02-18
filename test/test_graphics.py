@@ -16,7 +16,7 @@ from light.parameters import FindParameters
 from light.graphics import (
     PlotHashesInSubjectAndRead, SequenceFeatureAnalysis, plotHistogram,
     plotHistogramLine, plotHistogramLines, alignmentGraph,
-    alignmentGraphMultipleQueries)
+    alignmentGraphMultipleQueries, alignmentPanel)
 
 GOLV = AARead('GOLV', 'RVDIFKKNQHGGLREIYVLDLASRIVQLCLEEISRAVCQELPIEMMMHPELKLKK'
                       'PQEHMYKAAISPESYKSNVSSSNDAKVWNQGHHVAKFAQFLCRLLSPEWHGLIVN'
@@ -434,6 +434,17 @@ class TestAlignmentGraphMultipleQueries(TestCase):
         reads.add(AKAV)
         alignmentGraphMultipleQueries(reads, BUNV, showBestBinOnly=True,
                                       findParams=findParams, showFigure=False)
+
+    def testAlignmentPanel(self):
+        """
+        The alignmentPanel function must work properly.
+        """
+        findParams = FindParameters(significanceMethod='HashFraction',
+                                    binScoreMethod='FeatureAAScore')
+        reads = Reads()
+        reads.add(GOLV)
+        reads.add(AKAV)
+        alignmentPanel(reads, reads, findParams=findParams)
 
 
 class TestAlignmentGraph(TestCase):

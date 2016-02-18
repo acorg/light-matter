@@ -1716,15 +1716,17 @@ def alignmentGraphMultipleQueries(queries, subject, findParams=None,
     _, subjectIndex, _ = database.addSubject(subject)
 
     binCount = 0
+    queryCount = 0
     colors = colors or {}
-    scoreName = findParams.binScoreMethod
     maxScore = 0.0
     minX = 0.0
     maxX = len(subject)
+    scores = []
     for query in queries:
         result = database.find(query, findParams, storeFullAnalysis=True)
         try:
             significantBins = result.analysis[subjectIndex]['significantBins']
+            queryCount += 1
         except KeyError:
             print('Query %r and subject %r had no hashes in common.' % (
                 query.id, subject.id))
@@ -1736,6 +1738,7 @@ def alignmentGraphMultipleQueries(queries, subject, findParams=None,
 
             for binInfo in binsToPlot:
                 score = binInfo['score']
+                scores.append(score)
                 bin_ = binInfo['bin']
 
                 toPlot = normalizeBin(bin_, len(query))
@@ -1764,12 +1767,13 @@ def alignmentGraphMultipleQueries(queries, subject, findParams=None,
     graphAx.set_ylim([-0.01, 1.01])
 
     # Labels and titles
-    figure.suptitle('Subject: %s\nmax score: %.4f, '
-                    'queries: %d, bin count: %d' % (
-                        subject.id, maxScore, len(queries), binCount),
-                    fontsize=20)
-    graphAx.set_ylabel(scoreName, fontsize=12)
-    graphAx.set_xlabel('Sequence length (AA)', fontsize=12)
+    if createFigure:
+        figure.suptitle('Subject: %s\nmax score: %.4f, '
+                        'queries: %d, bin count: %d' % (
+                            subject.id, maxScore, queryCount, binCount),
+                        fontsize=20)
+        graphAx.set_ylabel(findParams.binScoreMethod, fontsize=12)
+        graphAx.set_xlabel('Sequence length (AA)', fontsize=12)
     graphAx.grid()
     if createFigure:
         if showFigure:
@@ -1777,4 +1781,93 @@ def alignmentGraphMultipleQueries(queries, subject, findParams=None,
     return {
         'minX': minX,
         'maxX': maxX,
+        'queryCount': queryCount,
+        'binCount': binCount,
+        'scores': scores,
     }
+
+
+def alignmentPanel(queries, subjects, findParams=None, showBestBinOnly=False,
+                   colors=None, equalizeXAxes=False, show=True, **kwargs):
+    """
+    Produces a rectangular panel of graphs that each contain an alignment graph
+    against a given sequence.
+
+    @param queries: An C{dark.Reads} instance of C{dark.Read.AARead} query.
+        sequences.
+    @param subjects: An C{dark.Reads} instance of C{dark.Read.AARead} subject.
+    @param findParams: An instance of C{FindParameters} or C{None}, to use the
+        default find parameters.
+    @param showBestBinOnly: If C{True} only the best bin will be plotted for
+        each query.
+    @param colors: A C{dict} where keys are {str} query names and values are
+        colors in which that query should be colored.
+    @param equalizeXAxes: if C{True}, adjust the X axis on each alignment plot
+        to be the same.
+    @param show: If C{True}, show the created figure. Set this to
+        C{False} if you're creating a panel of figures.
+    @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
+        for additional keywords, all of which are optional.
+    """
+    cols = 5
+    rows = int(len(subjects) / cols) + (0 if len(subjects) % cols == 0 else 1)
+    figure, ax = plt.subplots(rows, cols, squeeze=False)
+    allGraphInfo = {}
+
+    coords = dimensionalIterator((rows, cols))
+
+    for i, subject in enumerate(subjects):
+        row, col = next(coords)
+        graphInfo = alignmentGraphMultipleQueries(
+            queries, subject, findParams=findParams,
+            showBestBinOnly=showBestBinOnly, colors=colors,
+            createFigure=False, showFigure=False, graphAx=ax[row][col],
+            **kwargs)
+
+        allGraphInfo[subject.id] = graphInfo
+        queryCount = graphInfo['queryCount']
+        binCount = graphInfo['binCount']
+        plotTitle = ('%d: %s\nLength %d, %d read%s, %d HSP%s.' % (
+            i, subject.id[:40], len(subject),
+            queryCount, '' if queryCount == 1 else 's',
+            binCount, '' if binCount == 1 else 's'))
+
+        if binCount:
+            plotTitle += '\nmax %.2f, median %.2f' % (
+                max(graphInfo['scores']), np.median(graphInfo['scores']))
+
+        ax[row][col].set_title(plotTitle, fontsize=10)
+
+    maxX = max(graphInfo['maxX'] for graphInfo in allGraphInfo.values())
+    minX = min(graphInfo['minX'] for graphInfo in allGraphInfo.values())
+
+    # Post-process graphs to adjust axes, etc.
+
+    coords = dimensionalIterator((rows, cols))
+    for subject in subjects:
+        row, col = next(coords)
+        a = ax[row][col]
+        if equalizeXAxes:
+            a.set_xlim([minX, maxX])
+        a.set_yticks([])
+        a.set_xticks([])
+
+        # Add a line on the right of each sub-plot so we can see where the
+        # sequence ends (as all panel graphs have the same width and we
+        # otherwise couldn't tell).
+        subjectLen = len(subject)
+        a.axvline(x=subjectLen, color='#cccccc')
+
+    # Hide the final panel graphs (if any) that have no content. We do this
+    # because the panel is a rectangular grid and some of the plots at the
+    # end of the last row may be unused.
+    for row, col in coords:
+        ax[row][col].axis('off')
+
+    plt.subplots_adjust(hspace=0.4)
+    figure.suptitle('X: %d to %d, Y (%s): %d to %d' %
+                    (minX, maxX, findParams.binScoreMethod, 0.0, 1.0),
+                    fontsize=20)
+    figure.set_size_inches(5 * cols, 3 * rows, forward=True)
+    if show:
+        figure.show()

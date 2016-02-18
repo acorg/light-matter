@@ -1544,7 +1544,8 @@ def alignmentGraph(query, subject, findParams=None, createFigure=True,
                    showHistogram=True, showHorizontal=True, graphAx=None,
                    **kwargs):
     """
-    Plots an alignment graph similar to the one in dark matter.
+    Plots an alignment graph similar to the one in dark matter
+    (https://github.com/acorg/dark-matter).
 
     @param query: An AARead instance of the sequence of the query.
     @param subject: An AARead instance of the sequence of the subject.

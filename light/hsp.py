@@ -1,8 +1,3 @@
-# NOTE: This code is not yet in use. But there are tests for it based on
-#       light matter mini-HSP-like objects (the info found in the 'matches'
-#       info dicts passed to a Result by Database.find). So it will become
-#       useful when we want to display those details.
-
 from light.bin_score import histogramBinFeatures
 
 
@@ -13,12 +8,12 @@ def printBin(bin_, indent=''):
 
 def normalizeBin(bin_, queryLen):
     """
-    Examine the sense of a bin_ and return information about where the
-    query and the bin begin and end.  Return a dict with keys that allow the
-    query and the bin to be displayed relative to the subject orientation
-    (i.e., with start < stop for both the read and the match). The returned
-    query indices are offsets into the subject. I.e., they indicate where on
-    the subject the query lies.
+    Examine a bin and return information about where the query and the subject
+    begin and end. Return a dict with keys that allow the query and the subject
+    to be displayed relative to the subject orientation (i.e., with start <
+    stop for both the read and the match). The returned query indices are
+    offsets into the subject. I.e., they indicate where on the subject the
+    query lies.
 
     The diagram below shows a possible way in which the query and the subject
     can align and the terminology used. Note that this doesn't display all

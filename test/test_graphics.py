@@ -10,8 +10,6 @@ import matplotlib
 # http://lists.open-bio.org/pipermail/biopython-dev/2012-April/009559.html
 matplotlib.use('ps')
 
-from matplotlib import pyplot
-
 from dark.reads import AARead, Reads
 
 from light.parameters import FindParameters
@@ -49,8 +47,6 @@ class TestPlotHistogramFunctions(TestCase):
         """
         The plotHistogram function must run properly.
         """
-        # Turn off interactive display
-        pyplot.ioff()
         findParams = FindParameters(significanceMethod='HashFraction',
                                     binScoreMethod='FeatureAAScore')
         plotHistogram(GOLV, AKAV, findParams=findParams)
@@ -59,8 +55,6 @@ class TestPlotHistogramFunctions(TestCase):
         """
         The plotHistogramLine function must run properly.
         """
-        # Turn off interactive display
-        pyplot.ioff()
         findParams = FindParameters(significanceMethod='HashFraction',
                                     binScoreMethod='FeatureAAScore')
 
@@ -70,8 +64,6 @@ class TestPlotHistogramFunctions(TestCase):
         """
         The plotHistogramLines function must run properly.
         """
-        # Turn off interactive display
-        pyplot.ioff()
         findParams = FindParameters(significanceMethod='HashFraction',
                                     binScoreMethod='FeatureAAScore')
         reads = Reads()
@@ -421,8 +413,6 @@ class TestAlignmentGraph(TestCase):
         The alignmentGraph function only showing the alignment graph must run
         properly.
         """
-        # Turn off interactive display
-        pyplot.ioff()
         findParams = FindParameters(significanceMethod='HashFraction',
                                     binScoreMethod='FeatureAAScore')
         alignmentGraph(GOLV, AKAV, showHistogram=False, showHorizontal=False,
@@ -433,8 +423,6 @@ class TestAlignmentGraph(TestCase):
         The alignmentGraph function must run properly when the histogram and
         the horizontal plot are shown too.
         """
-        # Turn off interactive display
-        pyplot.ioff()
         findParams = FindParameters(significanceMethod='HashFraction',
                                     binScoreMethod='FeatureAAScore')
         alignmentGraph(GOLV, AKAV, showHistogram=True, showHorizontal=True,
@@ -444,8 +432,6 @@ class TestAlignmentGraph(TestCase):
         """
         The alignmentGraph function showing the histogram must run properly.
         """
-        # Turn off interactive display
-        pyplot.ioff()
         findParams = FindParameters(significanceMethod='HashFraction',
                                     binScoreMethod='FeatureAAScore')
         alignmentGraph(GOLV, AKAV, showHistogram=True, showHorizontal=False,
@@ -456,8 +442,6 @@ class TestAlignmentGraph(TestCase):
         The alignmentGraph function showing the horizontal plot must run
         properly.
         """
-        # Turn off interactive display
-        pyplot.ioff()
         findParams = FindParameters(significanceMethod='HashFraction',
                                     binScoreMethod='FeatureAAScore')
         alignmentGraph(GOLV, AKAV, showHistogram=False, showHorizontal=True,

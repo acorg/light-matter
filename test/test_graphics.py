@@ -416,7 +416,7 @@ class TestAlignmentGraphMultipleQueries(TestCase):
     """
     Tests for the alignmentGraphMultipleQueries function.
     """
-    def xtestAlignmentGraphMultipleQueries(self):
+    def testAlignmentGraphMultipleQueries(self):
         """
         The alignmentGraphMultipleQueries function must run properly.
         """
@@ -427,9 +427,10 @@ class TestAlignmentGraphMultipleQueries(TestCase):
         reads = Reads()
         reads.add(GOLV)
         reads.add(AKAV)
-        alignmentGraphMultipleQueries(reads, BUNV, findParams=findParams)
+        alignmentGraphMultipleQueries(reads, BUNV, findParams=findParams,
+                                      showFigure=False)
 
-    def xtestAlignmentGraphMultipleQueriesShowBestBinOnly(self):
+    def testAlignmentGraphMultipleQueriesShowBestBinOnly(self):
         """
         The alignmentGraphMultipleQueries function with showBestBinOnly must
         run properly.
@@ -443,4 +444,4 @@ class TestAlignmentGraphMultipleQueries(TestCase):
         reads.add(GOLV)
         reads.add(AKAV)
         alignmentGraphMultipleQueries(reads, BUNV, showBestBinOnly=True,
-                                      findParams=findParams)
+                                      findParams=findParams, showFigure=False)

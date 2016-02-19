@@ -435,6 +435,11 @@ class TestAlignmentGraphMultipleQueries(TestCase):
         alignmentGraphMultipleQueries(reads, BUNV, showBestBinOnly=True,
                                       findParams=findParams, showFigure=False)
 
+
+class TestAlignmentPanel(TestCase):
+    """
+    Tests for the alignmentPanel function.
+    """
     def testAlignmentPanel(self):
         """
         The alignmentPanel function must work properly.
@@ -444,7 +449,7 @@ class TestAlignmentGraphMultipleQueries(TestCase):
         reads = Reads()
         reads.add(GOLV)
         reads.add(AKAV)
-        alignmentPanel(reads, reads, findParams=findParams)
+        alignmentPanel(reads, reads, findParams=findParams, showFigure=False)
 
 
 class TestAlignmentGraph(TestCase):
@@ -459,7 +464,7 @@ class TestAlignmentGraph(TestCase):
         findParams = FindParameters(significanceMethod='HashFraction',
                                     binScoreMethod='FeatureAAScore')
         alignmentGraph(GOLV, AKAV, showHistogram=False, showHorizontal=False,
-                       findParams=findParams)
+                       findParams=findParams, showFigure=False)
 
     def testAlignmentGraphWithHistogramWithHorizontalMustRun(self):
         """
@@ -469,7 +474,7 @@ class TestAlignmentGraph(TestCase):
         findParams = FindParameters(significanceMethod='HashFraction',
                                     binScoreMethod='FeatureAAScore')
         alignmentGraph(GOLV, AKAV, showHistogram=True, showHorizontal=True,
-                       findParams=findParams)
+                       findParams=findParams, showFigure=False)
 
     def testAlignmentGraphWithHistogramMustRun(self):
         """
@@ -478,7 +483,7 @@ class TestAlignmentGraph(TestCase):
         findParams = FindParameters(significanceMethod='HashFraction',
                                     binScoreMethod='FeatureAAScore')
         alignmentGraph(GOLV, AKAV, showHistogram=True, showHorizontal=False,
-                       findParams=findParams)
+                       findParams=findParams, showFigure=False)
 
     def testAlignmentGraphWithHorizontalMustRun(self):
         """
@@ -488,4 +493,4 @@ class TestAlignmentGraph(TestCase):
         findParams = FindParameters(significanceMethod='HashFraction',
                                     binScoreMethod='FeatureAAScore')
         alignmentGraph(GOLV, AKAV, showHistogram=False, showHorizontal=True,
-                       findParams=findParams)
+                       findParams=findParams, showFigure=False)

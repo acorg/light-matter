@@ -1542,7 +1542,7 @@ def scoreHeatmap(sequenceFileOrMatrix, labels, labelColors, findParams=None,
 
 def alignmentGraph(query, subject, findParams=None, createFigure=True,
                    showHistogram=True, showHorizontal=True, graphAx=None,
-                   **kwargs):
+                   showFigure=True, **kwargs):
     """
     Plots an alignment graph similar to the one in dark matter
     (https://github.com/acorg/dark-matter).
@@ -1556,6 +1556,8 @@ def alignmentGraph(query, subject, findParams=None, createFigure=True,
     @param showHorizontal: If C{True}, show the horizontal line plot.
     @param graphAx: If not C{None}, use this as the subplot for displaying
         reads.
+    @param showFigure: If C{True}, show the created figure. It's useful to
+        set this to C{False} when testing.
     @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
         for additional keywords, all of which are optional.
     """
@@ -1679,7 +1681,9 @@ def alignmentGraph(query, subject, findParams=None, createFigure=True,
     graphAx.set_ylabel(findParams.binScoreMethod, fontsize=12)
     graphAx.set_xlabel('Sequence length (AA)', fontsize=12)
     graphAx.grid()
-    figure.show()
+
+    if showFigure:
+        figure.show()
 
 
 def alignmentGraphMultipleQueries(queries, subject, findParams=None,

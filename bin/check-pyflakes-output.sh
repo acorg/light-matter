@@ -36,7 +36,7 @@ else
     # Python 2. If the output is exactly what we expect, ignore it and exit 0.
     # Else, cat the output and exit non-zero.
     cat >$expected <<EOF
-./light/autobahn/backend.py:58:26: invalid syntax
+./light/autobahn/backend.py:59:26: invalid syntax
                 yield from self.registerAPIMethods()
                          ^
 ./light/autobahn/client.py:26:34: invalid syntax
@@ -51,7 +51,7 @@ else
 ./light/autobahn/shutdown.py:25:22: invalid syntax
             yield from self.call('shutdown',
                      ^
-./light/connector_wamp.py:120:49: invalid syntax
+./light/connector_wamp.py:121:49: invalid syntax
         name, checksum, subjectCount = yield from self._component.call(
                                                 ^
 EOF

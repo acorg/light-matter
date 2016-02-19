@@ -32,21 +32,39 @@ class CalculateOverlap(object):
     A class which calculates the overlap between the features found by our
     finders and the secondary structures found by DSSP. The secondary
     structures found by DSSP were downloaded from
-    http://www.rcsb.org/pdb/files/ss.txt on the 11/11/2015.
+    http://www.rcsb.org/pdb/files/ss.txt on 11/11/2015 (also: see the NOTE
+    below).
 
-    @param pdbFile: The C{str} filename of the file from pdb containing the
+    @param pdbFile: The C{str} filename of the file from PDB containing the
         sequence and structural information.
+    @raise ValueError: If C{pdbFile} has an odd number of records.
     """
     def __init__(self, pdbFile):
         # The pdb file is in fasta format. For each structure it contains the
         # amino acid sequence on one line and the predicted secondary structure
         # sequence on the other.
+        #
+        # IMPORTANT NOTE: the ss.txt file contains spaces in the structure
+        # records.  SeqIO.parse will silently collapse these to nothing,
+        # which will result in unequal length sequence and structure
+        # strings. So you will need to replace the spaces with something
+        # else, like '-', to make sure the structure information has the
+        # correct length and alignment with the sequence.
         self.SSAAReads = Reads()
-        records = list(SeqIO.parse(pdbFile, 'fasta'))
-        for i in range(0, len(records), 2):
-            record = records[i]
+        records = SeqIO.parse(pdbFile, 'fasta')
+        while True:
+            try:
+                record = next(records)
+            except StopIteration:
+                break
+            try:
+                structureRecord = next(records)
+            except StopIteration:
+                raise ValueError('Structure file %r has an odd number of '
+                                 'records.' % pdbFile)
+
             read = SSAARead(record.id, str(record.seq),
-                            str(records[i + 1].seq))
+                            str(structureRecord.seq))
             self.SSAAReads.add(read)
 
     def calculateOverlap(self):

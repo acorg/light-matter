@@ -1740,7 +1740,6 @@ def alignmentGraphMultipleQueries(queries, subject, findParams=None,
                     # There are no significantBins, an empty plot will be
                     # shown.
                     binsToPlot = []
-                    pass
             else:
                 binsToPlot = significantBins
 
@@ -1835,7 +1834,7 @@ def alignmentPanel(queries, subjects, findParams=None, showBestBinOnly=True,
     # This shortcoming can be removed later.
     specifier = DatabaseSpecifier(allowInMemory=False)
     database = specifier.getDatabaseFromKeywords(subjects=subjects, **kwargs)
-    sbjcts = list(subjects)
+    subjects = list(subjects)
 
     def makeSubPlot(row, col, ax):
         """
@@ -1843,8 +1842,7 @@ def alignmentPanel(queries, subjects, findParams=None, showBestBinOnly=True,
         @param col: The C{int} panel column.
         @param ax: The matplotlib axis for the sub-plot.
         """
-        print(len(sbjcts), col)
-        return alignmentGraphMultipleQueries(queries, sbjcts[col],
+        return alignmentGraphMultipleQueries(queries, subjects[col],
                                              findParams=findParams, graphAx=ax,
                                              showBestBinOnly=showBestBinOnly,
                                              colors=colors, createFigure=False,

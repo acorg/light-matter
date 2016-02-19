@@ -15,7 +15,8 @@ from dark.reads import AARead, Reads
 from light.parameters import FindParameters
 from light.graphics import (
     PlotHashesInSubjectAndRead, SequenceFeatureAnalysis, plotHistogram,
-    plotHistogramLine, plotHistogramLines, alignmentGraph)
+    plotHistogramLine, plotHistogramLines, alignmentGraph,
+    alignmentGraphMultipleQueries, alignmentPanel)
 
 GOLV = AARead('GOLV', 'RVDIFKKNQHGGLREIYVLDLASRIVQLCLEEISRAVCQELPIEMMMHPELKLKK'
                       'PQEHMYKAAISPESYKSNVSSSNDAKVWNQGHHVAKFAQFLCRLLSPEWHGLIVN'
@@ -402,6 +403,48 @@ class TestSequenceFeatureAnalysis(TestCase):
                 'feature.'
             ),
             s.printDensities())
+
+
+class TestAlignmentGraphMultipleQueries(TestCase):
+    """
+    Tests for the alignmentGraphMultipleQueries function.
+    """
+    def testAlignmentGraphMultipleQueries(self):
+        """
+        The alignmentGraphMultipleQueries function must run properly.
+        """
+        findParams = FindParameters(significanceMethod='HashFraction',
+                                    binScoreMethod='FeatureAAScore')
+        reads = Reads()
+        reads.add(GOLV)
+        reads.add(AKAV)
+        alignmentGraphMultipleQueries(reads, BUNV, findParams=findParams,
+                                      showFigure=False)
+
+    def testAlignmentGraphMultipleQueriesShowBestBinOnly(self):
+        """
+        The alignmentGraphMultipleQueries function with showBestBinOnly must
+        run properly.
+        """
+        findParams = FindParameters(significanceMethod='HashFraction',
+                                    binScoreMethod='FeatureAAScore',
+                                    significanceFraction=0.0)
+        reads = Reads()
+        reads.add(GOLV)
+        reads.add(AKAV)
+        alignmentGraphMultipleQueries(reads, BUNV, showBestBinOnly=True,
+                                      findParams=findParams, showFigure=False)
+
+    def testAlignmentPanel(self):
+        """
+        The alignmentPanel function must work properly.
+        """
+        findParams = FindParameters(significanceMethod='HashFraction',
+                                    binScoreMethod='FeatureAAScore')
+        reads = Reads()
+        reads.add(GOLV)
+        reads.add(AKAV)
+        alignmentPanel(reads, reads, findParams=findParams)
 
 
 class TestAlignmentGraph(TestCase):

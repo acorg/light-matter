@@ -103,7 +103,7 @@ def _rectangularPanel(rows, cols, title, makeSubPlot, equalizeXAxes=False,
     @param saveAs: A C{str} name for the file that the figure will be saved to.
     @param showFigure: If C{True} show the figure.
     """
-    figure, ax = plt.subplots(rows, cols, squeeze=False, figsize=(150, 100))
+    figure, ax = plt.subplots(rows, cols, squeeze=False)
     subplots = {}
 
     for row, col in dimensionalIterator((rows, cols)):
@@ -150,8 +150,8 @@ def _rectangularPanel(rows, cols, title, makeSubPlot, equalizeXAxes=False,
             a.axis('off')
 
     figure.suptitle(title, fontsize=20)
+    figure.set_size_inches(5 * cols, 3 * rows, forward=True)
     if saveAs:
-        figure.set_size_inches(150, 100, forward=True, dpi=(300))
         figure.savefig(saveAs)
     if showFigure:
         figure.show()
@@ -1546,6 +1546,7 @@ def alignmentGraph(query, subject, findParams=None, createFigure=True,
     """
     Plots an alignment graph similar to the one in dark matter
     (https://github.com/acorg/dark-matter).
+
     @param query: An AARead instance of the sequence of the query.
     @param subject: An AARead instance of the sequence of the subject.
     @param findParams: An instance of C{FindParameters} or C{None}, to use the
@@ -1687,7 +1688,8 @@ def alignmentGraphMultipleQueries(queries, subject, findParams=None,
                                   graphAx=None, **kwargs):
     """
     Plots an alignment graph showing multiple queries matched against one
-    subject, similar to the alignmentPanel in dark matter.
+    subject, similar to the alignmentGraph in dark matter
+    (https://github.com/acorg/dark-matter).
 
     @param queries: An C{dark.Reads} instance of C{dark.Read.AARead} query
         sequences.
@@ -1718,12 +1720,12 @@ def alignmentGraphMultipleQueries(queries, subject, findParams=None,
     binCount = 0
     queryCount = 0
     colors = colors or {}
-    maxScore = 0.0
     minX = 0.0
     maxX = len(subject)
     scores = []
     for query in queries:
         result = database.find(query, findParams, storeFullAnalysis=True)
+        queryCount += 1
         try:
             significantBins = result.analysis[subjectIndex]['significantBins']
             queryCount += 1
@@ -1732,7 +1734,13 @@ def alignmentGraphMultipleQueries(queries, subject, findParams=None,
                 query.id, subject.id))
         else:
             if showBestBinOnly:
-                binsToPlot = [significantBins[0]]
+                try:
+                    binsToPlot = [significantBins[0]]
+                except IndexError:
+                    # There are no significantBins, an empty plot will be
+                    # shown.
+                    binsToPlot = []
+                    pass
             else:
                 binsToPlot = significantBins
 
@@ -1740,6 +1748,7 @@ def alignmentGraphMultipleQueries(queries, subject, findParams=None,
                 score = binInfo['score']
                 scores.append(score)
                 bin_ = binInfo['bin']
+                binCount += 1
 
                 toPlot = normalizeBin(bin_, len(query))
 
@@ -1767,107 +1776,83 @@ def alignmentGraphMultipleQueries(queries, subject, findParams=None,
     graphAx.set_ylim([-0.01, 1.01])
 
     # Labels and titles
+    title = ('%s:\nLength %d, %d read%s, %d bin%s.' % (
+             subject.id[:40], len(subject),
+             queryCount, '' if queryCount == 1 else 's',
+             binCount, '' if binCount == 1 else 's'))
+    if binCount:
+        title += '\nmaxScore %.2f, medianScore %.2f' % (
+            max(scores), np.median(scores))
+
     if createFigure:
-        figure.suptitle('Subject: %s\nmax score: %.4f, '
-                        'queries: %d, bin count: %d' % (
-                            subject.id, maxScore, queryCount, binCount),
-                        fontsize=20)
         graphAx.set_ylabel(findParams.binScoreMethod, fontsize=12)
         graphAx.set_xlabel('Sequence length (AA)', fontsize=12)
-    graphAx.grid()
-    if createFigure:
-        if showFigure:
+        graphAx.grid()
+        figure.suptitle(title, fontsize=20)
+
+    if createFigure and showFigure:
             plt.show()
     return {
         'minX': minX,
         'maxX': maxX,
-        'queryCount': queryCount,
-        'binCount': binCount,
-        'scores': scores,
+        'minY': 0.0,
+        'maxY': 1.01,
+        'title': title,
     }
 
 
-def alignmentPanel(queries, subjects, findParams=None, showBestBinOnly=False,
-                   colors=None, equalizeXAxes=False, show=True, **kwargs):
+def alignmentPanel(queries, subjects, findParams=None, showBestBinOnly=True,
+                   colors=None, equalizeXAxes=True, equalizeYAxes=True,
+                   saveAs=False, showFigure=True, **kwargs):
     """
-    Produces a rectangular panel of graphs that each contain an alignment graph
-    against a given sequence.
+    Produces a panel of graphs that each contain an alignment graph against a
+    given sequence.
 
     @param queries: An C{dark.Reads} instance of C{dark.Read.AARead} query.
         sequences.
     @param subjects: An C{dark.Reads} instance of C{dark.Read.AARead} subject.
-    @param findParams: An instance of C{FindParameters} or C{None}, to use the
-        default find parameters.
+        to cover the same range (the maximum range of all sub-plots).
+    @param findParams: A C{light.parameters.FindParameters} instance or
+        C{None}, to use the default find parameters.
     @param showBestBinOnly: If C{True} only the best bin will be plotted for
         each query.
     @param colors: A C{dict} where keys are {str} query names and values are
         colors in which that query should be colored.
-    @param equalizeXAxes: if C{True}, adjust the X axis on each alignment plot
-        to be the same.
-    @param show: If C{True}, show the created figure. Set this to
-        C{False} if you're creating a panel of figures.
+    @param equalizeXAxes: if C{True}, adjust the X axis on each sub-plot
+        to cover the same range (the maximum range of all sub-plots).
+    @param equalizeYAxes: if C{True}, adjust the Y axis on each sub-plot
+        to cover the same range (the maximum range of all sub-plots).
+    @param saveAs: A C{str} name for the file that the figure will be saved to.
+    @param showFigure: If C{True} show the figure.
     @param kwargs: See C{database.DatabaseSpecifier.getDatabaseFromKeywords}
         for additional keywords, all of which are optional.
+    @return: The C{light.result.Result} from running the database find.
     """
-    cols = 5
+    cols = len(subjects) if len(subjects) < 5 else 5
     rows = int(len(subjects) / cols) + (0 if len(subjects) % cols == 0 else 1)
-    figure, ax = plt.subplots(rows, cols, squeeze=False)
-    allGraphInfo = {}
+    # Make a new database. For now we don't allow an existing database to
+    # be passed as we're going to use subject indices from 0 to nReads-1.
+    # This shortcoming can be removed later.
+    specifier = DatabaseSpecifier(allowInMemory=False)
+    database = specifier.getDatabaseFromKeywords(subjects=subjects, **kwargs)
+    sbjcts = list(subjects)
 
-    coords = dimensionalIterator((rows, cols))
+    def makeSubPlot(row, col, ax):
+        """
+        @param row: The C{int} panel row.
+        @param col: The C{int} panel column.
+        @param ax: The matplotlib axis for the sub-plot.
+        """
+        print(len(sbjcts), col)
+        return alignmentGraphMultipleQueries(queries, sbjcts[col],
+                                             findParams=findParams, graphAx=ax,
+                                             showBestBinOnly=showBestBinOnly,
+                                             colors=colors, createFigure=False,
+                                             showFigure=False,
+                                             database=database)
 
-    for i, subject in enumerate(subjects):
-        row, col = next(coords)
-        graphInfo = alignmentGraphMultipleQueries(
-            queries, subject, findParams=findParams,
-            showBestBinOnly=showBestBinOnly, colors=colors,
-            createFigure=False, showFigure=False, graphAx=ax[row][col],
-            **kwargs)
-
-        allGraphInfo[subject.id] = graphInfo
-        queryCount = graphInfo['queryCount']
-        binCount = graphInfo['binCount']
-        plotTitle = ('%d: %s\nLength %d, %d read%s, %d HSP%s.' % (
-            i, subject.id[:40], len(subject),
-            queryCount, '' if queryCount == 1 else 's',
-            binCount, '' if binCount == 1 else 's'))
-
-        if binCount:
-            plotTitle += '\nmax %.2f, median %.2f' % (
-                max(graphInfo['scores']), np.median(graphInfo['scores']))
-
-        ax[row][col].set_title(plotTitle, fontsize=10)
-
-    maxX = max(graphInfo['maxX'] for graphInfo in allGraphInfo.values())
-    minX = min(graphInfo['minX'] for graphInfo in allGraphInfo.values())
-
-    # Post-process graphs to adjust axes, etc.
-
-    coords = dimensionalIterator((rows, cols))
-    for subject in subjects:
-        row, col = next(coords)
-        a = ax[row][col]
-        if equalizeXAxes:
-            a.set_xlim([minX, maxX])
-        a.set_yticks([])
-        a.set_xticks([])
-
-        # Add a line on the right of each sub-plot so we can see where the
-        # sequence ends (as all panel graphs have the same width and we
-        # otherwise couldn't tell).
-        subjectLen = len(subject)
-        a.axvline(x=subjectLen, color='#cccccc')
-
-    # Hide the final panel graphs (if any) that have no content. We do this
-    # because the panel is a rectangular grid and some of the plots at the
-    # end of the last row may be unused.
-    for row, col in coords:
-        ax[row][col].axis('off')
-
-    plt.subplots_adjust(hspace=0.4)
-    figure.suptitle('X: %d to %d, Y (%s): %d to %d' %
-                    (minX, maxX, findParams.binScoreMethod, 0.0, 1.0),
-                    fontsize=20)
-    figure.set_size_inches(5 * cols, 3 * rows, forward=True)
-    if show:
-        figure.show()
+    return _rectangularPanel(
+        rows, cols, 'Alignment panel', makeSubPlot,
+        equalizeXAxes=equalizeXAxes, equalizeYAxes=equalizeYAxes,
+        includeUpper=True, includeLower=True,
+        includeDiagonal=True, saveAs=saveAs, showFigure=showFigure)

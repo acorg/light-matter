@@ -6,37 +6,11 @@ try:
 except ImportError:
     from mock import patch
 
-from light.performance.overlap import SSAARead, CalculateOverlap
+from dark.reads import Reads, SSAARead
 
-from dark.reads import Reads
+from light.performance.overlap import CalculateOverlap
 
 from ..mocking import mockOpen
-
-
-class TestSSAARead(TestCase):
-    """
-    Tests for the SSAARead class.
-    """
-    def testSSAAReadCorrectAttributes(self):
-        """
-        An SSAARead must have the correct attributes.
-        """
-        read = SSAARead('id', 'AFGGCED', 'HHH  HH')
-        self.assertEqual('id', read.id)
-        self.assertEqual('AFGGCED', read.sequence)
-        self.assertEqual('HHH  HH', read.structure)
-
-    def testReadsWithSSAAReads(self):
-        """
-        It must be possible to make a dark.Reads object out of SSAAReads
-        with the right length.
-        """
-        reads = Reads()
-        read1 = SSAARead('id1', 'AFGGCED', 'HHHHHHH')
-        read2 = SSAARead('id2', 'AFGGKLL', 'HHHHIII')
-        reads.add(read1)
-        reads.add(read2)
-        self.assertEqual(2, len(reads))
 
 
 class TestCalculateOverlap(TestCase):

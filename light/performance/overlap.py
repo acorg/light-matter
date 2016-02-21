@@ -1,4 +1,3 @@
-import six
 from collections import defaultdict
 from Bio import SeqIO
 
@@ -7,24 +6,7 @@ from light.database import DatabaseSpecifier
 from light.landmarks import ALL_LANDMARK_CLASSES
 from light.trig import ALL_TRIG_CLASSES
 
-from dark.reads import Reads, AARead
-
-
-class SSAARead(AARead):
-    """
-    Hold information to work with AAReads that have secondary structure
-    information attached to them.
-
-    @param id: A C{str} describing the read.
-    @param sequence: A C{str} of sequence information.
-    @param structure: A C{str} of structure information.
-    """
-    def __init__(self, id, sequence, structure):
-        if six.PY3:
-            super().__init__(id, sequence)
-        else:
-            AARead.__init__(self, id, sequence)
-        self.structure = structure
+from dark.reads import Reads, SSAARead
 
 
 class CalculateOverlap(object):

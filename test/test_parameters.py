@@ -311,7 +311,10 @@ class TestDatabaseParameters(TestCase):
         fp = StringIO()
         dbParams.save(fp)
         newSave = fp.getvalue().replace('AlphaHelix', 'Non-existent')
-        error = '^Could not find landmark finder class \'Non-existent\'\.$'
+        if six.PY3:
+            error = "^Could not find landmark finder class 'Non-existent'\.$"
+        else:
+            error = "^Could not find landmark finder class u'Non-existent'\.$"
         six.assertRaisesRegex(self, ValueError, error,
                               DatabaseParameters.restore, StringIO(newSave))
 
@@ -325,7 +328,10 @@ class TestDatabaseParameters(TestCase):
         fp = StringIO()
         dbParams.save(fp)
         newSave = fp.getvalue().replace('Peaks', 'Non-existent')
-        error = '^Could not find trig point finder class \'Non-existent\'.$'
+        if six.PY3:
+            error = "^Could not find trig point finder class 'Non-existent'.$"
+        else:
+            error = "^Could not find trig point finder class u'Non-existent'.$"
         six.assertRaisesRegex(self, ValueError, error,
                               DatabaseParameters.restore, StringIO(newSave))
 

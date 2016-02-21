@@ -1,3 +1,4 @@
+import six
 from six.moves import builtins
 from unittest import TestCase
 
@@ -68,6 +69,20 @@ class TestCalculateOverlap(TestCase):
                              list(co.SSAAReads)[0].sequence)
             self.assertEqual(read.structure,
                              list(co.SSAAReads)[0].structure)
+
+    def testOddNumberOfRecords(self):
+        """
+        Trying to parse a PDB file with an odd number of records must raise a
+        ValueError.
+        """
+        data = '\n'.join(['>seq1', 'REDD',
+                          '>str1', 'HH--',
+                          '>seq2', 'REAA'])
+        mockOpener = mockOpen(read_data=data)
+        with patch.object(builtins, 'open', mockOpener):
+            error = "^Structure file 'x.fasta' has an odd number of records\.$"
+            six.assertRaisesRegex(self, ValueError, error, CalculateOverlap,
+                                  'x.fasta')
 
     def testTwoReadsFileParsing(self):
         """

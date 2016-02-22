@@ -1106,15 +1106,15 @@ def featureComparison(ssAARead, print_=True, **kwargs):
     predicted secondary structures from PDB and our features.
 
     Abbreviations in the pdb secondary structures:
-    H = alpha-helix
-    B = residue in isolated beta-bridge
-    E = extended strand, participates in beta ladder
-    G = 3-helix (310 helix)
-    I = 5-helix (pi-helix)
-    T = hydrogen bonded turn
-    S = bend
+        H = alpha-helix
+        B = residue in isolated beta-bridge
+        E = extended strand, participates in beta ladder
+        G = 3-helix (310 helix)
+        I = 5-helix (pi-helix)
+        T = hydrogen bonded turn
+        S = bend
 
-    @param ssAARead: A C{light.performance.overlap.SSAARead} instance.
+    @param ssAARead: A C{dark.reads.SSAARead} instance.
     @param print_: A C{bool} indicating if the result of the overlap
         calculation should be printed.
     @param kwargs: See
@@ -1139,7 +1139,7 @@ def featureComparison(ssAARead, print_=True, **kwargs):
     previous = None
     start = 0
     for i, item in enumerate(ssStructure):
-        # item is the last item of the sequence
+        # Item is the last item of the sequence.
         try:
             ssStructure[i + 1]
         except IndexError:
@@ -1150,16 +1150,16 @@ def featureComparison(ssAARead, print_=True, **kwargs):
             break
         if item == previous and ssStructure[i + 1] != item:
             all_[item].append([start, i])
-        # item is the only item of the sequence
+        # Item is the only item of the sequence.
         elif item != previous and ssStructure[i + 1] != item:
             previous = item
             all_[item].append([i, i])
-        # item is the first one in the sequence:
+        # Item is the first one in the sequence.
         elif item != previous and ssStructure[i + 1] == item:
             previous = item
             start = i
 
-    # set up database and scan read.
+    # Set up database and scan read.
     db = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
     backend = Backend()
     backend.configure(db.dbParams)
@@ -1215,10 +1215,12 @@ def featureComparison(ssAARead, print_=True, **kwargs):
     ax.set_xlim(0, len(ssAARead.sequence))
 
     if print_:
-        aaSeqF, ssSeqF, intersects = CalculateOverlap.getFeatures(ssAARead,
-                                                                  **kwargs)
-        CalculateOverlap.calculateFraction(aaSeqF, ssSeqF, intersects,
-                                           print_=True)
+        co = CalculateOverlap(**kwargs)
+        features, intersection, union = co.getFeatures(ssAARead)
+        # This method doesn't seem to exist any longer. So nothing is being
+        # printed. Delete?
+        # CalculateOverlap.calculateFraction(features, intersection, union,
+        #                                    print_=True)
 
 
 class SequenceFeatureAnalysis:

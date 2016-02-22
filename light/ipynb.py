@@ -88,4 +88,7 @@ __all__ = [
     'plotLandmarksInSequences', 'confusionMatrix', 'featureComparison',
     'SequenceFeatureAnalysis', 'compareScores', 'scoreHeatmap',
     'alignmentGraph', 'alignmentGraphMultipleQueries', 'alignmentPanel',
+
+    # From parameters.
+    'FindParameters', 'DatabaseParameters',
 ]

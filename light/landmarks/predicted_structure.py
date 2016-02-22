@@ -54,7 +54,7 @@ class PredictedStructure(Finder):
         """
         A function that returns landmarks based on known secondary structures.
 
-        @param read: An instance of C{light.performance.overlap.SSAARead}.
+        @param read: An instance of C{dark.reads.SSAARead}.
         @param structureNames: A C{set} of structure names that should be
             considered.
         """

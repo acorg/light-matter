@@ -91,8 +91,8 @@ class CalculateOverlap(object):
 
         # Get the overlap between all features.
         seen = set()
-        for i, name1 in enumerate(names):
-            for j, name2 in enumerate(names):
+        for name1 in names:
+            for name2 in names:
                 if name2 not in seen:
                     common = sequenceFeatures[name1] & sequenceFeatures[name2]
                     total = sequenceFeatures[name1] | sequenceFeatures[name2]

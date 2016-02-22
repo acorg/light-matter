@@ -17,7 +17,6 @@ from light.features import Landmark
 from light.hsp import normalizeBin
 from light.landmarks import ALL_LANDMARK_CLASSES
 from light.parameters import FindParameters
-from light.performance.overlap import CalculateOverlap
 from light.performance import affinity
 from light.bin_score import ALL_BIN_SCORE_CLASSES
 from light.string import MultilineString
@@ -1100,23 +1099,21 @@ def confusionMatrix(confusionMatrix):
     ax.spines['left'].set_linewidth(0)
 
 
-def featureComparison(ssAARead, print_=True, **kwargs):
+def featureComparison(ssAARead, **kwargs):
     """
     A function which provides plotting options for sequences, given the
     predicted secondary structures from PDB and our features.
 
     Abbreviations in the pdb secondary structures:
-    H = alpha-helix
-    B = residue in isolated beta-bridge
-    E = extended strand, participates in beta ladder
-    G = 3-helix (310 helix)
-    I = 5-helix (pi-helix)
-    T = hydrogen bonded turn
-    S = bend
+        H = alpha-helix
+        B = residue in isolated beta-bridge
+        E = extended strand, participates in beta ladder
+        G = 3-helix (310 helix)
+        I = 5-helix (pi-helix)
+        T = hydrogen bonded turn
+        S = bend
 
-    @param ssAARead: A C{light.performance.overlap.SSAARead} instance.
-    @param print_: A C{bool} indicating if the result of the overlap
-        calculation should be printed.
+    @param ssAARead: A C{dark.reads.SSAARead} instance.
     @param kwargs: See
         C{database.DatabaseSpecifier.getDatabaseFromKeywords} for
         additional keywords, all of which are optional.
@@ -1139,7 +1136,7 @@ def featureComparison(ssAARead, print_=True, **kwargs):
     previous = None
     start = 0
     for i, item in enumerate(ssStructure):
-        # item is the last item of the sequence
+        # Item is the last item of the sequence.
         try:
             ssStructure[i + 1]
         except IndexError:
@@ -1150,16 +1147,16 @@ def featureComparison(ssAARead, print_=True, **kwargs):
             break
         if item == previous and ssStructure[i + 1] != item:
             all_[item].append([start, i])
-        # item is the only item of the sequence
+        # Item is the only item of the sequence.
         elif item != previous and ssStructure[i + 1] != item:
             previous = item
             all_[item].append([i, i])
-        # item is the first one in the sequence:
+        # Item is the first one in the sequence.
         elif item != previous and ssStructure[i + 1] == item:
             previous = item
             start = i
 
-    # set up database and scan read.
+    # Set up database and scan read.
     db = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
     backend = Backend()
     backend.configure(db.dbParams)
@@ -1213,12 +1210,6 @@ def featureComparison(ssAARead, print_=True, **kwargs):
     ax.xaxis.grid()
     ax.set_ylim(-0.1, len(yticks) - 1 + 0.1)
     ax.set_xlim(0, len(ssAARead.sequence))
-
-    if print_:
-        aaSeqF, ssSeqF, intersects = CalculateOverlap.getFeatures(ssAARead,
-                                                                  **kwargs)
-        CalculateOverlap.calculateFraction(aaSeqF, ssSeqF, intersects,
-                                           print_=True)
 
 
 class SequenceFeatureAnalysis:

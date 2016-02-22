@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from light.performance.overlap import SSAARead
+from dark.fasta_ss import SSAARead
 
 from light.features import Landmark
 from light.landmarks.predicted_structure import PredictedStructure

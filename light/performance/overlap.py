@@ -1,71 +1,47 @@
 from collections import defaultdict
-from Bio import SeqIO
 
 from light.backend import Backend
 from light.database import DatabaseSpecifier
 from light.landmarks import ALL_LANDMARK_CLASSES
 from light.trig import ALL_TRIG_CLASSES
 
-from dark.reads import Reads, SSAARead
+from dark.fasta_ss import SSFastaReads
 
 
 class CalculateOverlap(object):
     """
-    A class which calculates the overlap between the features found by our
-    finders and the secondary structures found by DSSP. The secondary
-    structures found by DSSP were downloaded from
-    http://www.rcsb.org/pdb/files/ss.txt on 11/11/2015 (also: see the NOTE
-    below).
+    Calculate the overlap between the features found by our finders and the
+    secondary structures found by DSSP. The secondary structures found by
+    DSSP were downloaded from http://www.rcsb.org/pdb/files/ss.txt on
+    11/11/2015 (also: see the NOTE below).
 
     @param pdbFile: The C{str} filename of the file from PDB containing the
-        sequence and structural information.
-    @raise ValueError: If C{pdbFile} has an odd number of records.
+        sequence and structural information. See the file C{dark/fasta_ss.py}
+        in the dark matter repository at https://github.com/acorg/dark-matter
+        for information about the file format.
+    @raise ValueError: If C{pdbFile} has an odd number of FASTA records.
     """
     def __init__(self, pdbFile):
-        # The pdb file is in fasta format. For each structure it contains the
-        # amino acid sequence on one line and the predicted secondary structure
-        # sequence on the other.
-        #
-        # IMPORTANT NOTE: the ss.txt file contains spaces in the structure
-        # records.  SeqIO.parse will silently collapse these to nothing,
-        # which will result in unequal length sequence and structure
-        # strings. So you will need to replace the spaces with something
-        # else, like '-', to make sure the structure information has the
-        # correct length and alignment with the sequence.
-        self.SSAAReads = Reads()
-        records = SeqIO.parse(pdbFile, 'fasta')
-        while True:
-            try:
-                record = next(records)
-            except StopIteration:
-                break
-            try:
-                structureRecord = next(records)
-            except StopIteration:
-                raise ValueError('Structure file %r has an odd number of '
-                                 'records.' % pdbFile)
-
-            read = SSAARead(record.id, str(record.seq),
-                            str(structureRecord.seq))
-            self.SSAAReads.add(read)
+        self._ssAAReads = SSFastaReads(pdbFile)
 
     def calculateOverlap(self):
         """
-        Calculate the feature overlap for a set of features.
-        """
-        allSequenceFeatures = defaultdict(list)
-        allCommons = defaultdict(list)
-        allTotals = defaultdict(list)
+        Calculate the feature overlap for a set of reads.
 
-        for i, read in enumerate(self.SSAAReads):
-            sequenceFeatures, commons, totals = self.getFeatures(
-                read)
+        @return: A triple, with sets of offsets...
+        """
+        allSequenceFeatures = defaultdict(set)
+        allCommons = defaultdict(set)
+        allTotals = defaultdict(set)
+
+        for i, read in enumerate(self._ssAAReads):
+            sequenceFeatures, commons, totals = self.getFeatures(read)
             for feature, indices in sequenceFeatures.items():
-                allSequenceFeatures[feature].extend(indices)
+                allSequenceFeatures[feature].update(indices)
             for name, indices in commons.items():
-                allCommons[name].extend(indices)
+                allCommons[name].update(indices)
             for name, indices in totals.items():
-                allTotals[name].extend(indices)
+                allTotals[name].update(indices)
 
         return allSequenceFeatures, allCommons, allTotals
 
@@ -113,7 +89,7 @@ class CalculateOverlap(object):
         for offset, structure in enumerate(ssAARead.structure):
             sequenceFeatures[structure].add(offset)
 
-        # Get the overlap between all features
+        # Get the overlap between all features.
         seen = set()
         for i, name1 in enumerate(names):
             for j, name2 in enumerate(names):

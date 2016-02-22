@@ -1,5 +1,4 @@
 from unittest import TestCase
-from six import StringIO
 
 from dark.reads import SSAARead
 
@@ -10,44 +9,17 @@ class TestCalculateOverlap(TestCase):
     """
     Tests for the CalculateOverlap class.
     """
-    def testCalculateOverlap(self):
-        """
-        Calling calculateOverlap on one SSAARead must give the correct result.
-        """
-        data = StringIO('\n'.join([
-            '>5AMF',
-            'SMEQVAMELRLTELTRLLRSVLDQLQDKDPARIFAQPVSLKEVPDYLDHIKHPMD',
-            '>5AMF-structure',
-            '-HHHHHHHHHHHHHHHHHHHHHHHHHHT-TT-TTSS---TTT-TTHHHH-SS---']))
-
-        seqF, commons, totals = CalculateOverlap(data).calculateOverlap()
-        # self.assertEqual(
-        #     {
-        #     },
-        #     seqF
-        # )
-        self.assertEqual(
-            {
-                49, 10,
-            },
-            commons['IndividualTroughs-Troughs'])
-        self.assertEqual(
-            {
-                1, 33, 4, 37, 6, 39, 8, 10, 42, 13, 46, 49, 21, 53, 24, 30,
-            },
-            totals['IndividualTroughs-Troughs'])
-        self.assertEqual(190, len(commons))
-        self.assertEqual(190, len(totals))
-
     def testGetFeatures(self):
         """
         Calling getFeatures on an SSAARead must give the correct result.
         """
         sequence = 'SMEQVAMELRLTELTRLLRSVLDQLQDKDPARIFAQPVSLKEVPDYLDHIKHPMD'
         structure = '-HHHHHHHHHHHHHHHHHHHHHHHHHHT-TT-TTSS---TTT-TTHHHH-SS---'
-
         ssAARead = SSAARead('5AMF', sequence, structure)
-        seqF, commons, totals = CalculateOverlap.getFeatures(ssAARead)
+
+        co = CalculateOverlap()
+        features, intersection, union = co.getFeatures(ssAARead)
+
         self.assertEqual(
             {
                 'AlphaHelix': set(),
@@ -102,16 +74,20 @@ class TestCalculateOverlap(TestCase):
                     32, 33, 39, 40, 41, 43, 44, 27, 29, 30,
                 }
             },
-            seqF)
+            features)
+
         self.assertEqual(
             {
                 49, 10,
             },
-            commons['IndividualTroughs-Troughs'])
+            intersection[frozenset(('IndividualTroughs', 'Troughs'))])
+
+        self.assertEqual(171, len(intersection))
+
         self.assertEqual(
             {
                 1, 33, 4, 37, 6, 39, 8, 10, 42, 13, 46, 49, 21, 53, 24, 30,
             },
-            totals['IndividualTroughs-Troughs'])
-        self.assertEqual(190, len(commons))
-        self.assertEqual(190, len(totals))
+            union[frozenset(('IndividualTroughs', 'Troughs'))])
+
+        self.assertEqual(171, len(union))

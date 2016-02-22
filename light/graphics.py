@@ -17,7 +17,6 @@ from light.features import Landmark
 from light.hsp import normalizeBin
 from light.landmarks import ALL_LANDMARK_CLASSES
 from light.parameters import FindParameters
-from light.performance.overlap import CalculateOverlap
 from light.performance import affinity
 from light.bin_score import ALL_BIN_SCORE_CLASSES
 from light.string import MultilineString
@@ -1100,7 +1099,7 @@ def confusionMatrix(confusionMatrix):
     ax.spines['left'].set_linewidth(0)
 
 
-def featureComparison(ssAARead, print_=True, **kwargs):
+def featureComparison(ssAARead, **kwargs):
     """
     A function which provides plotting options for sequences, given the
     predicted secondary structures from PDB and our features.
@@ -1115,8 +1114,6 @@ def featureComparison(ssAARead, print_=True, **kwargs):
         S = bend
 
     @param ssAARead: A C{dark.reads.SSAARead} instance.
-    @param print_: A C{bool} indicating if the result of the overlap
-        calculation should be printed.
     @param kwargs: See
         C{database.DatabaseSpecifier.getDatabaseFromKeywords} for
         additional keywords, all of which are optional.
@@ -1213,14 +1210,6 @@ def featureComparison(ssAARead, print_=True, **kwargs):
     ax.xaxis.grid()
     ax.set_ylim(-0.1, len(yticks) - 1 + 0.1)
     ax.set_xlim(0, len(ssAARead.sequence))
-
-    if print_:
-        co = CalculateOverlap(**kwargs)
-        features, intersection, union = co.getFeatures(ssAARead)
-        # This method doesn't seem to exist any longer. So nothing is being
-        # printed. Delete?
-        # CalculateOverlap.calculateFraction(features, intersection, union,
-        #                                    print_=True)
 
 
 class SequenceFeatureAnalysis:

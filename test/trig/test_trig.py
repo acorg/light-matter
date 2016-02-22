@@ -3,9 +3,9 @@ from unittest import TestCase
 
 from light.trig import (
     findTrigPoint, findTrigPoints, trigNameFromHashkey,
-    ALL_TRIG_CLASSES, ALL_TRIG_CLASSES_EVEN_BAD_ONES, DEFAULT_TRIG_CLASSES,
-    AminoAcids, IndividualPeaks, IndividualTroughs, Peaks, RandomTrigPoint,
-    Troughs, Volume)
+    ALL_TRIG_CLASSES, ALL_TRIG_CLASSES_INCLUDING_DEV, DEFAULT_TRIG_CLASSES,
+    DEV_TRIG_CLASSES, AminoAcids, IndividualPeaks, IndividualTroughs, Peaks,
+    RandomTrigPoint, Troughs, Volume)
 
 
 class TestFindTrigPoint(TestCase):
@@ -102,25 +102,43 @@ class TestAllTrigClasses(TestCase):
             ALL_TRIG_CLASSES)
 
 
-class TestAllTrigClassesEvenBadOnes(TestCase):
+class TestDevTrigClasses(TestCase):
     """
-    Trivial tests for the ALL_TRIG_CLASSES_EVEN_BAD_ONES set.
+    Trivial tests for the DEV_TRIG_CLASSES list.
     """
 
     def testIsAList(self):
         """
-        ALL_TRIG_CLASSES_EVEN_BAD_ONES must be a list (not a set).
+        DEV_TRIG_CLASSES must be a list (not a set).
         """
-        self.assertTrue(isinstance(ALL_TRIG_CLASSES_EVEN_BAD_ONES, list))
+        self.assertTrue(isinstance(DEV_TRIG_CLASSES, list))
 
     def testAllClasses(self):
         """
-        The ALL_TRIG_CLASSES_EVEN_BAD_ONES list must be as expected.
+        The DEV_TRIG_CLASSES list must be as expected.
+        """
+        self.assertEqual([RandomTrigPoint], DEV_TRIG_CLASSES)
+
+
+class TestAllTrigClassesIncludingDev(TestCase):
+    """
+    Trivial tests for the ALL_TRIG_CLASSES_INCLUDING_DEV set.
+    """
+
+    def testIsAList(self):
+        """
+        ALL_TRIG_CLASSES_INCLUDING_DEV must be a list (not a set).
+        """
+        self.assertTrue(isinstance(ALL_TRIG_CLASSES_INCLUDING_DEV, list))
+
+    def testAllClasses(self):
+        """
+        The ALL_TRIG_CLASSES_INCLUDING_DEV list must be as expected.
         """
         self.assertEqual(
             [AminoAcids, IndividualPeaks, IndividualTroughs, Peaks, Troughs,
              Volume, RandomTrigPoint],
-            ALL_TRIG_CLASSES_EVEN_BAD_ONES)
+            ALL_TRIG_CLASSES_INCLUDING_DEV)
 
 
 class TestDefaultTrigClasses(TestCase):

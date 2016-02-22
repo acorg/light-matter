@@ -2,7 +2,8 @@
 # iPythonNotebook following 'from light.ipynb import *'.
 
 from dark.reads import AARead, AAReadWithX, SSAARead
-from dark.fasta import FastaReads, SSFastaReads
+from dark.fasta import FastaReads
+from dark.fasta_ss import SSFastaReads
 from dark.titles import titleCounts, TitlesAlignments
 from dark.html import (
     summarizeTitlesByLength, summarizeTitlesByMaxScore,
@@ -26,7 +27,10 @@ _ = (
     AARead, AAReadWithX, SSAARead,
 
     # From dark.fasta.
-    FastaReads, SSFastaReads,
+    FastaReads,
+
+    # From dark.fasta_ss.
+    SSFastaReads,
 
     # From dark.titles.
     titleCounts, TitlesAlignments,
@@ -58,7 +62,10 @@ __all__ = [
     'AARead', 'AAReadWithX',
 
     # From dark.fasta.
-    'FastaReads', 'SSFastaReads',
+    'FastaReads',
+
+    # From dark.fasta_ss.
+    'SSFastaReads',
 
     # From dark.titles.
     'titleCounts', 'TitlesAlignments',

@@ -35,7 +35,7 @@ _ = (
     summarizeTitlesByLength, summarizeTitlesByMaxScore,
     summarizeTitlesByMedianScore, summarizeTitlesByCount,
 
-    # From alignments
+    # From alignments.
     LightReadsAlignments,
 
     # From database.
@@ -49,32 +49,32 @@ _ = (
     SequenceFeatureAnalysis, compareScores, scoreHeatmap,
     alignmentGraph, alignmentGraphMultipleQueries, alignmentPanel,
 
-    # From parameters
+    # From parameters.
     FindParameters, DatabaseParameters,
 )
 
 __all__ = [
-    # From dark.reads
+    # From dark.reads.
     'AARead', 'AAReadWithX',
 
-    # From dark.fasta
+    # From dark.fasta.
     'FastaReads', 'SSFastaReads',
 
-    # From dark.titles
+    # From dark.titles.
     'titleCounts', 'TitlesAlignments',
 
-    # From html
+    # From html.
     'summarizeTitlesByLength', 'summarizeTitlesByMaxScore',
     'summarizeTitlesByMedianScore', 'summarizeTitlesByCount',
     'summarizeTitlesByTitle',
 
-    # From alignments
+    # From alignments.
     'LightReadsAlignments',
 
-    # From database
+    # From database.
     'Database', 'DatabaseSpecifier',
 
-    # From graphics
+    # From graphics.
     'plotHistogramPanel', 'plotHistogram', 'plotHistogramLinePanel',
     'plotHistogramLine', 'plotHistogramLines', 'plotFeatureSquare',
     'plotHorizontalPairPanel', 'PlotHashesInSubjectAndRead',

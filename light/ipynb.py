@@ -4,6 +4,7 @@
 from dark.reads import Reads, AARead, AAReadWithX, SSAARead
 from dark.fasta import FastaReads
 from dark.fasta_ss import SSFastaReads
+from dark.graphics import plotAAProperties
 from dark.titles import titleCounts, TitlesAlignments
 from dark.html import (
     summarizeTitlesByLength, summarizeTitlesByMaxScore,
@@ -31,6 +32,9 @@ _ = (
 
     # From dark.fasta_ss.
     SSFastaReads,
+
+    # From dark.graphics.
+    plotAAProperties,
 
     # From dark.titles.
     titleCounts, TitlesAlignments,
@@ -66,6 +70,9 @@ __all__ = [
 
     # From dark.fasta_ss.
     'SSFastaReads',
+
+    # From dark.graphics.
+    'plotAAProperties',
 
     # From dark.titles.
     'titleCounts', 'TitlesAlignments',

@@ -7,16 +7,23 @@ from light.landmarks.beta_turn import BetaTurn
 from light.landmarks.gor4_alpha_helix import GOR4AlphaHelix
 from light.landmarks.gor4_beta_strand import GOR4BetaStrand
 from light.landmarks.gor4_coil import GOR4Coil
-from light.landmarks.predicted_structure import PredictedStructure
+from light.landmarks.pdb_alpha_helix import PDB_AlphaHelix
+from light.landmarks.pdb_alpha_helix_3_10 import PDB_AlphaHelix_3_10
+from light.landmarks.pdb_alpha_helix_pi import PDB_AlphaHelix_pi
+from light.landmarks.pdb_extended_strand import PDB_ExtendedStrand
 from light.landmarks.prosite import Prosite
 from light.landmarks.random import RandomLandmark
 
 ALL_LANDMARK_CLASSES = [
     AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, AminoAcids, BetaStrand,
-    BetaTurn, GOR4AlphaHelix, GOR4BetaStrand, GOR4Coil, PredictedStructure,
-    Prosite]
+    BetaTurn, GOR4AlphaHelix, GOR4BetaStrand, GOR4Coil, Prosite]
 
-ALL_LANDMARK_CLASSES_EVEN_BAD_ONES = ALL_LANDMARK_CLASSES + [RandomLandmark]
+DEV_LANDMARK_CLASSES = [
+    PDB_AlphaHelix, PDB_AlphaHelix_3_10, PDB_AlphaHelix_pi,
+    PDB_ExtendedStrand, RandomLandmark]
+
+ALL_LANDMARK_CLASSES_INCLUDING_DEV = (ALL_LANDMARK_CLASSES +
+                                      DEV_LANDMARK_CLASSES)
 
 DEFAULT_LANDMARK_CLASSES = [
     AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, AminoAcids, BetaStrand,

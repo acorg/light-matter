@@ -1,7 +1,7 @@
 # Import and make available things that are convenient to have around in
 # iPythonNotebook following 'from light.ipynb import *'.
 
-from dark.reads import AARead, AAReadWithX, SSAARead
+from dark.reads import Reads, AARead, AAReadWithX, SSAARead
 from dark.fasta import FastaReads
 from dark.fasta_ss import SSFastaReads
 from dark.titles import titleCounts, TitlesAlignments
@@ -24,7 +24,7 @@ from .parameters import FindParameters, DatabaseParameters
 # Keep pyflakes quiet by pretending to make use of all our imports.
 _ = (
     # From dark.reads.
-    AARead, AAReadWithX, SSAARead,
+    Reads, AARead, AAReadWithX, SSAARead,
 
     # From dark.fasta.
     FastaReads,
@@ -59,7 +59,7 @@ _ = (
 
 __all__ = [
     # From dark.reads.
-    'AARead', 'AAReadWithX',
+    'Reads', 'AARead', 'AAReadWithX',
 
     # From dark.fasta.
     'FastaReads',

@@ -58,6 +58,12 @@ class FindParameters(object):
     @param deltaScale: A C{float}. The delta between the queryOffset and the
         subjectOffset of a matching pair is scaled by dividing the delta by the
         deltaScale to reduce sensitivity.
+    @param weights: C{dict} where the keys are feature names and the values are
+        C{float} weights that should be assigned to that feature in the
+        WeightedFeatureAAScore calculation.
+    @param deltaScale: A C{float}. The delta between the query offset and the
+        subject offset is scaled by dividing the delta by the deltaScale to
+        reduce sensitivity.
     """
     # The methods to be used to calculate match scores and whether matches
     # are significant (i.e., worth reporting).

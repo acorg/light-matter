@@ -82,12 +82,15 @@ class TestCalculateOverlap(TestCase):
             },
             intersection[frozenset(('IndividualTroughs', 'Troughs'))])
 
-        self.assertEqual(171, len(intersection))
-
         self.assertEqual(
             {
                 1, 33, 4, 37, 6, 39, 8, 10, 42, 13, 46, 49, 21, 53, 24, 30,
             },
             union[frozenset(('IndividualTroughs', 'Troughs'))])
 
+        # Note that the following don't test much. There are 19 features
+        # examined by default by CalculateOverlap. So there are 19 * 18 / 2
+        # = 171 pairs of features. So these two tests are just testing that
+        # all pairs of features are present in the returned dicts.
+        self.assertEqual(171, len(intersection))
         self.assertEqual(171, len(union))

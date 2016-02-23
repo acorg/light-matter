@@ -1,5 +1,6 @@
 from light.features import Landmark
 from light.finder import Finder
+from light.utils import stringSpans
 
 
 class PDB_Finder(Finder):
@@ -24,14 +25,6 @@ class PDB_Finder(Finder):
         @param read: An instance of C{dark.reads.SSAARead}.
         @return: A generator that yields C{Landmark} instances.
         """
-        previous = None
-        for offset, symbol in enumerate(list(read.structure) + [object()]):
-            if previous is None:  # Start of string.
-                previous = symbol
-                startOffset = 0
-            elif symbol != previous:
-                if previous == self.STRUCTURE_LETTER:
-                    yield Landmark(self.NAME, self.SYMBOL, startOffset,
-                                   offset - startOffset)
-                previous = symbol
-                startOffset = offset
+        for letter, start, end in stringSpans(read.structure):
+            if letter == self.STRUCTURE_LETTER:
+                yield Landmark(self.NAME, self.SYMBOL, start, end - start)

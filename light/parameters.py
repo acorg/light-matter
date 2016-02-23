@@ -11,10 +11,10 @@ from six import string_types
 from light.checksum import Checksum
 from light.landmarks import (
     findLandmark, findLandmarks, DEFAULT_LANDMARK_CLASSES,
-    ALL_LANDMARK_CLASSES_EVEN_BAD_ONES)
+    ALL_LANDMARK_CLASSES_INCLUDING_DEV)
 from light.trig import (
     findTrigPoint, findTrigPoints, DEFAULT_TRIG_CLASSES,
-    ALL_TRIG_CLASSES_EVEN_BAD_ONES)
+    ALL_TRIG_CLASSES_INCLUDING_DEV)
 from light.bin_score import MinHashesScore, ALL_BIN_SCORE_CLASSES
 from light.significance import HashFraction, ALL_SIGNIFICANCE_CLASSES
 from light.overall_score import BestBinScore, ALL_OVERALL_SCORE_CLASSES
@@ -406,7 +406,7 @@ class DatabaseParameters(object):
         """
         parser.add_argument(
             '--landmark', action='append', dest='landmarks',
-            choices=sorted(c.NAME for c in ALL_LANDMARK_CLASSES_EVEN_BAD_ONES),
+            choices=sorted(c.NAME for c in ALL_LANDMARK_CLASSES_INCLUDING_DEV),
             help=('The name of a landmark finder to use. May be specified '
                   'multiple times. If no landmark finders are '
                   'given (and --noLandmarks is not specified), the default '
@@ -419,7 +419,7 @@ class DatabaseParameters(object):
 
         parser.add_argument(
             '--trig', action='append', dest='trigPoints',
-            choices=sorted(c.NAME for c in ALL_TRIG_CLASSES_EVEN_BAD_ONES),
+            choices=sorted(c.NAME for c in ALL_TRIG_CLASSES_INCLUDING_DEV),
             help=('The name of a trig point finder to use. May be '
                   'specified multiple times. If no trig point finders are '
                   'given (and --noTrigPoints is not specified), the default '

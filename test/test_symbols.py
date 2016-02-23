@@ -1,7 +1,7 @@
 from unittest import TestCase
 
-from light.landmarks import ALL_LANDMARK_CLASSES
-from light.trig import ALL_TRIG_CLASSES
+from light.landmarks import ALL_LANDMARK_CLASSES_INCLUDING_DEV
+from light.trig import ALL_TRIG_CLASSES_INCLUDING_DEV
 
 
 class TestSymbols(TestCase):
@@ -12,14 +12,16 @@ class TestSymbols(TestCase):
         """
         Must find the right number of symbols.
         """
-        symbols = ([cls.SYMBOL for cls in ALL_LANDMARK_CLASSES] +
-                   [cls.SYMBOL for cls in ALL_TRIG_CLASSES])
-        self.assertEqual(17, len(symbols))
+        symbols = [cls.SYMBOL for cls in
+                   ALL_LANDMARK_CLASSES_INCLUDING_DEV +
+                   ALL_TRIG_CLASSES_INCLUDING_DEV]
+        self.assertEqual(22, len(symbols))
 
-    def testAllSymbolsAreDifferent(self):
+    def testAllSymbolsAreDistinct(self):
         """
-        All landmark and trig finder symbols must be different.
+        All landmark and trig finder symbols must be distinct.
         """
-        symbols = ([cls.SYMBOL for cls in ALL_LANDMARK_CLASSES] +
-                   [cls.SYMBOL for cls in ALL_TRIG_CLASSES])
+        symbols = [cls.SYMBOL for cls in
+                   ALL_LANDMARK_CLASSES_INCLUDING_DEV +
+                   ALL_TRIG_CLASSES_INCLUDING_DEV]
         self.assertEqual(len(symbols), len(set(symbols)))

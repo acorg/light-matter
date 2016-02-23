@@ -1,8 +1,10 @@
 # Import and make available things that are convenient to have around in
 # iPythonNotebook following 'from light.ipynb import *'.
 
-from dark.reads import AARead, AAReadWithX
+from dark.reads import Reads, Read, AARead, AAReadWithX, SSAARead
 from dark.fasta import FastaReads
+from dark.fasta_ss import SSFastaReads
+from dark.graphics import plotAAProperties
 from dark.titles import titleCounts, TitlesAlignments
 from dark.html import (
     summarizeTitlesByLength, summarizeTitlesByMaxScore,
@@ -11,18 +13,89 @@ from dark.html import (
 
 from .alignments import LightReadsAlignments
 from .database import Database, DatabaseSpecifier
-from .graphics import (plotHistogram, plotFeatureSquare)
+from .graphics import (
+    plotHistogramPanel, plotHistogram, plotHistogramLinePanel,
+    plotHistogramLine, plotHistogramLines, plotFeatureSquare,
+    plotHorizontalPairPanel, PlotHashesInSubjectAndRead,
+    plotLandmarksInSequences, confusionMatrix, featureComparison,
+    SequenceFeatureAnalysis, compareScores, scoreHeatmap,
+    alignmentGraph, alignmentGraphMultipleQueries, alignmentPanel)
+from .parameters import FindParameters, DatabaseParameters
 
 # Keep pyflakes quiet by pretending to make use of all our imports.
-_ = (AARead, FastaReads, LightReadsAlignments, titleCounts, TitlesAlignments,
-     summarizeTitlesByLength, summarizeTitlesByMaxScore,
-     summarizeTitlesByMedianScore, summarizeTitlesByCount,
-     summarizeTitlesByTitle, plotHistogram, plotFeatureSquare, Database,
-     DatabaseSpecifier)
+_ = (
+    # From dark.reads.
+    Reads, Read, AARead, AAReadWithX, SSAARead,
+
+    # From dark.fasta.
+    FastaReads,
+
+    # From dark.fasta_ss.
+    SSFastaReads,
+
+    # From dark.graphics.
+    plotAAProperties,
+
+    # From dark.titles.
+    titleCounts, TitlesAlignments,
+
+    # From html.
+    summarizeTitlesByLength, summarizeTitlesByMaxScore,
+    summarizeTitlesByMedianScore, summarizeTitlesByCount,
+
+    # From alignments.
+    LightReadsAlignments,
+
+    # From database.
+    summarizeTitlesByTitle, Database, DatabaseSpecifier,
+
+    # From graphics.
+    plotHistogramPanel, plotHistogram, plotHistogramLinePanel,
+    plotHistogramLine, plotHistogramLines, plotFeatureSquare,
+    plotHorizontalPairPanel, PlotHashesInSubjectAndRead,
+    plotLandmarksInSequences, confusionMatrix, featureComparison,
+    SequenceFeatureAnalysis, compareScores, scoreHeatmap,
+    alignmentGraph, alignmentGraphMultipleQueries, alignmentPanel,
+
+    # From parameters.
+    FindParameters, DatabaseParameters,
+)
 
 __all__ = [
-    'AARead', 'AAReadWithX', 'FastaReads', 'LightReadsAlignments',
-    'titleCounts', 'TitlesAlignments', 'summarizeTitlesByLength',
-    'summarizeTitlesByMaxScore', 'summarizeTitlesByMedianScore',
-    'summarizeTitlesByCount', 'summarizeTitlesByTitle', 'plotHistogram',
-    'plotFeatureSquare', 'Database', 'DatabaseSpecifier']
+    # From dark.reads.
+    'Reads', 'Read', 'AARead', 'AAReadWithX',
+
+    # From dark.fasta.
+    'FastaReads',
+
+    # From dark.fasta_ss.
+    'SSFastaReads',
+
+    # From dark.graphics.
+    'plotAAProperties',
+
+    # From dark.titles.
+    'titleCounts', 'TitlesAlignments',
+
+    # From html.
+    'summarizeTitlesByLength', 'summarizeTitlesByMaxScore',
+    'summarizeTitlesByMedianScore', 'summarizeTitlesByCount',
+    'summarizeTitlesByTitle',
+
+    # From alignments.
+    'LightReadsAlignments',
+
+    # From database.
+    'Database', 'DatabaseSpecifier',
+
+    # From graphics.
+    'plotHistogramPanel', 'plotHistogram', 'plotHistogramLinePanel',
+    'plotHistogramLine', 'plotHistogramLines', 'plotFeatureSquare',
+    'plotHorizontalPairPanel', 'PlotHashesInSubjectAndRead',
+    'plotLandmarksInSequences', 'confusionMatrix', 'featureComparison',
+    'SequenceFeatureAnalysis', 'compareScores', 'scoreHeatmap',
+    'alignmentGraph', 'alignmentGraphMultipleQueries', 'alignmentPanel',
+
+    # From parameters.
+    'FindParameters', 'DatabaseParameters',
+]

@@ -9,7 +9,9 @@ from light.trig.volume import Volume
 ALL_TRIG_CLASSES = [
     AminoAcids, IndividualPeaks, IndividualTroughs, Peaks, Troughs, Volume]
 
-ALL_TRIG_CLASSES_EVEN_BAD_ONES = ALL_TRIG_CLASSES + [RandomTrigPoint]
+DEV_TRIG_CLASSES = [RandomTrigPoint]
+
+ALL_TRIG_CLASSES_INCLUDING_DEV = ALL_TRIG_CLASSES + DEV_TRIG_CLASSES
 
 DEFAULT_TRIG_CLASSES = [AminoAcids]
 

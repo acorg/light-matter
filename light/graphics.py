@@ -23,6 +23,7 @@ from light.string import MultilineString
 from light.significance import (
     Always, HashFraction, MaxBinHeight, MeanBinHeight)
 from light.trig import ALL_TRIG_CLASSES
+from light.utils import stringSpans
 
 from dark.dimension import dimensionalIterator
 from dark.fasta import FastaReads
@@ -1101,10 +1102,9 @@ def confusionMatrix(confusionMatrix):
 
 def featureComparison(ssAARead, **kwargs):
     """
-    A function which provides plotting options for sequences, given the
-    predicted secondary structures from PDB and our features.
+    Display features according to PDB secondary structure and our finders.
 
-    Abbreviations in the pdb secondary structures:
+    Abbreviations in PDB secondary structure strings:
         H = alpha-helix
         B = residue in isolated beta-bridge
         E = extended strand, participates in beta ladder
@@ -1112,6 +1112,7 @@ def featureComparison(ssAARead, **kwargs):
         I = 5-helix (pi-helix)
         T = hydrogen bonded turn
         S = bend
+        - = loop
 
     @param ssAARead: A C{dark.reads.SSAARead} instance.
     @param kwargs: See
@@ -1119,96 +1120,69 @@ def featureComparison(ssAARead, **kwargs):
         additional keywords, all of which are optional.
     """
     ssStructureColors = {
-        'H': (0.12156862745098039, 0.4666666666666667, 0.7058823529411765),
+        'H': (0.1215, 0.4666, 0.7058),
         'B': '#848484',
-        'E': (0.596078431372549, 0.8745098039215686, 0.5411764705882353),
-        'G': (0.6823529411764706, 0.7803921568627451, 0.9098039215686274),
-        'I': (1.0, 0.4980392156862745, 0.054901960784313725),
+        'E': (0.5960, 0.8745, 0.5411),
+        'G': (0.6823, 0.7803, 0.9098),
+        'I': (1.0000, 0.4980, 0.0549),
         'T': '#848484',
         'S': '#848484',
+        '-': TABLEAU20[3],
     }
 
-    ssStructure = ssAARead.structure
-
-    # parse the ssStructure so that it can be plotted easily.
-    all_ = defaultdict(list)
-
-    previous = None
-    start = 0
-    for i, item in enumerate(ssStructure):
-        # Item is the last item of the sequence.
-        try:
-            ssStructure[i + 1]
-        except IndexError:
-            if item == previous:
-                all_[item].append([start, i])
-            else:
-                all_[item].append([i, i])
-            break
-        if item == previous and ssStructure[i + 1] != item:
-            all_[item].append([start, i])
-        # Item is the only item of the sequence.
-        elif item != previous and ssStructure[i + 1] != item:
-            previous = item
-            all_[item].append([i, i])
-        # Item is the first one in the sequence.
-        elif item != previous and ssStructure[i + 1] == item:
-            previous = item
-            start = i
-
-    # Set up database and scan read.
     db = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
-    backend = Backend()
-    backend.configure(db.dbParams)
-    scannedRead = backend.scan(ssAARead)
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
     lmNames = db.dbParams.landmarkFinderNames()
     tpNames = db.dbParams.trigPointFinderNames()
-    yticks = ['S', 'T', 'E', 'B', 'I', 'G', 'H', ' '] + lmNames + tpNames
-    ytickLabels = (['Bend', 'H-bonded turn', 'BetaStrand (?)', 'BetaBridge',
-                    'AlphaHelixPi', 'AlphaHelix_3_10', 'AlphaHelix', ' '] +
-                   lmNames + tpNames)
-    title = ssAARead.id
+    yticks = ['S', 'T', 'E', 'B', 'I', 'G', 'H', '-', ' '] + lmNames + tpNames
+    ytickLabels = ['Bend', 'H-bonded turn', 'BetaStrand (?)', 'BetaBridge',
+                   'AlphaHelixPi', 'AlphaHelix_3_10', 'AlphaHelix', 'Loop',
+                   ''] + lmNames + tpNames
 
-    for i, item in enumerate(ytickLabels):
+    # Draw a horizontal gray background line for each feature.
+    for i in range(len(ytickLabels)):
         plt.plot([0, len(ssAARead.sequence)], [i, i], '-', linewidth=0.5,
                  color='grey')
 
-    for landmark in scannedRead.landmarks:
-        y = yticks.index(landmark.name)
-        if landmark.name != 'AminoAcidsLm':
-            plt.plot([landmark.offset, landmark.offset + landmark.length - 1],
-                     [y, y], '-', color=COLORS[landmark.symbol], linewidth=4)
+    # Plot the features found by our finders.
+    backend = Backend()
+    backend.configure(db.dbParams)
+    scannedRead = backend.scan(ssAARead)
+
+    for feature in scannedRead.landmarks + scannedRead.trigPoints:
+        y = yticks.index(feature.name)
+        color = COLORS[feature.symbol]
+        if feature.length == 1:
+            plt.plot([feature.offset, feature.offset], [y - 0.25, y + 0.25],
+                     '-', color=color, linewidth=2)
         else:
-            plt.plot([landmark.offset, landmark.offset + landmark.length],
-                     [y - 0.125, y + 0.125], '-',
-                     color=COLORS[landmark.symbol], linewidth=2)
-    for trigPoint in scannedRead.trigPoints:
-        y = yticks.index(trigPoint.name)
-        plt.plot([trigPoint.offset, trigPoint.offset], [y - 0.125, y + 0.125],
-                 '-', color=COLORS[trigPoint.symbol], linewidth=2)
+            plt.plot([feature.offset, feature.offset + feature.length],
+                     [y, y], '-', color=color, linewidth=3)
 
-    plt.plot([0, len(ssAARead.sequence)], [7, 7], '-', linewidth=3,
-             color='black')
+    # Draw a horizontal black line between the PDB features and the ones
+    # our finders found.
+    plt.plot([0, len(ssAARead.sequence)],
+             [len(ssStructureColors), len(ssStructureColors)], ':',
+             linewidth=3, color='black')
 
-    for feature, offsets in all_.items():
-        y = yticks.index(feature)
-        if feature != ' ':
-            for offset in offsets:
-                plt.plot([offset[0], offset[1]], [y, y],
-                         color=ssStructureColors[feature], linewidth=4)
+    # Draw all the features according to PDB.
+    for letter, start, end in stringSpans(ssAARead.structure):
+        y = yticks.index(letter)
+        plt.plot([start, end], [y, y],
+                 color=ssStructureColors[letter], linewidth=2)
 
+    # Labels, ticks, title, limits, etc.
     ax.set_yticklabels(ytickLabels)
     ax.set_yticks(range(len(yticks)))
-    plt.title(title, fontsize=15)
+    plt.title(ssAARead.id, fontsize=15)
     ax.spines['top'].set_linewidth(0)
     ax.spines['right'].set_linewidth(0)
     ax.spines['bottom'].set_linewidth(0)
     ax.spines['left'].set_linewidth(0)
     ax.xaxis.grid()
-    ax.set_ylim(-0.1, len(yticks) - 1 + 0.1)
+    ax.set_ylim(-0.5, len(yticks) - 0.5)
     ax.set_xlim(0, len(ssAARead.sequence))
 
 

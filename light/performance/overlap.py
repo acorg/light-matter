@@ -2,7 +2,7 @@ from collections import defaultdict
 
 from light.backend import Backend
 from light.database import DatabaseSpecifier
-from light.landmarks import ALL_LANDMARK_CLASSES
+from light.landmarks import ALL_LANDMARK_CLASSES, DEV_LANDMARK_CLASSES
 from light.trig import ALL_TRIG_CLASSES
 
 
@@ -18,24 +18,21 @@ class CalculateOverlap(object):
         additional keywords, all of which are optional.
     """
     def __init__(self, **kwargs):
-        # TODO: The following (up to the point of setting up the database)
-        #       will go away if we do
-        #       https://github.com/acorg/light-matter/issues/442
-        self._names = [
-            'AlphaHelix', 'AlphaHelix_3_10', 'AlphaHelix_pi',
-            'AminoAcidsLm', 'BetaStrand', 'BetaTurn', 'GOR4AlphaHelix',
-            'GOR4BetaStrand', 'GOR4Coil', 'Prosite', 'AminoAcids',
-            'IndividualPeaks', 'IndividualTroughs', 'Peaks', 'Troughs',
-            'H', 'G', 'I', 'E']
+        # Set default landmark and trig point finders.
         if 'landmarks' not in kwargs:
-            kwargs['landmarks'] = [c.NAME for c in ALL_LANDMARK_CLASSES]
+            kwargs['landmarks'] = ALL_LANDMARK_CLASSES + [
+                c for c in DEV_LANDMARK_CLASSES if
+                c.NAME.startswith('PDB ')]
         if 'trigPoints' not in kwargs:
-            kwargs['trigPoints'] = ([c.NAME for c in ALL_TRIG_CLASSES if
-                                     c.NAME != 'Volume'])
+            kwargs['trigPoints'] = [c for c in ALL_TRIG_CLASSES if
+                                    c.NAME != 'Volume']
 
         db = DatabaseSpecifier().getDatabaseFromKeywords(**kwargs)
         self._backend = Backend()
         self._backend.configure(db.dbParams)
+
+        self._names = (db.dbParams.landmarkFinderNames() +
+                       db.dbParams.trigPointFinderNames())
 
     def getFeatures(self, ssAARead):
         """
@@ -65,13 +62,6 @@ class CalculateOverlap(object):
         # Get all offsets for each landmark and trig point separately.
         for feature in scannedSequence.landmarks + scannedSequence.trigPoints:
             features[feature.name].update(feature.coveredOffsets())
-
-        # Get all offsets for each secondary structure feature separately.
-        #
-        # TODO: This will go away if we do
-        #       https://github.com/acorg/light-matter/issues/442
-        for offset, structure in enumerate(ssAARead.structure):
-            features[structure].add(offset)
 
         # Get the offset intersection and union of all pairs of features.
         for i, name1 in enumerate(self._names):

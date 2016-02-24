@@ -33,7 +33,7 @@ parser.add_argument(
     help=('The number of AA residues to keep on either side of the '
           'extracted helices. It is useful to keep some context in order '
           'to give other alpha helix finders (e.g., GOR4) that you might '
-          'run on the extracted heliced a chance to establish context.'))
+          'run on the extracted helices a chance to establish context.'))
 
 parser.add_argument(
     '--dropStructure', '--ds', default=False, action='store_true',

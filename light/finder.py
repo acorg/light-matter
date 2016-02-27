@@ -49,9 +49,13 @@ class Finder(object):
         @param margin: A non-negative C{int} number of residues that must
             exist on either side of the feature. If a feature does not have
             sufficient residues to its right and left it will not be returned.
+        @raise ValueError: If C{margin} is less than zero.
         @return: A generator that yields C{light.feature._Feature} instances
             (i.e., C{Landmark}s and C{TrigPoint}s).
         """
+        if margin < 0:
+            raise ValueError('Margin value (%r) is less than zero.' % margin)
+
         readLen = len(read)
         for feature in self.find(read):
             start = feature.offset - margin

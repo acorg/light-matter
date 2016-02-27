@@ -1,3 +1,4 @@
+import six
 from unittest import TestCase
 
 from dark.reads import AARead
@@ -39,6 +40,17 @@ class TestFinder(TestCase):
         Different finders must not compare equal.
         """
         self.assertNotEqual(AlphaHelix(), BetaStrand())
+
+    def testNegativeMargin(self):
+        """
+        If a negative margin is passed to findWithMargin, a ValueError must be
+        raised.
+        """
+        read = AARead('id', 'FRRRFRRRF')
+        landmark = AlphaHelix()
+        error = '^Margin value \(-1\) is less than zero\.$'
+        six.assertRaisesRegex(self, ValueError, error, list,
+                              landmark.findWithMargin(read, -1))
 
     def testFindWithMarginZeroAndNoMarginPresent(self):
         """

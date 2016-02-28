@@ -1,5 +1,9 @@
+import six
 from unittest import TestCase
 
+from dark.reads import AARead
+
+from light.features import Landmark
 from light.finder import Finder
 from light.landmarks import AlphaHelix, BetaStrand
 from light.parameters import DatabaseParameters
@@ -36,3 +40,84 @@ class TestFinder(TestCase):
         Different finders must not compare equal.
         """
         self.assertNotEqual(AlphaHelix(), BetaStrand())
+
+    def testNegativeMargin(self):
+        """
+        If a negative margin is passed to findWithMargin, a ValueError must be
+        raised.
+        """
+        read = AARead('id', 'FRRRFRRRF')
+        landmark = AlphaHelix()
+        error = '^Margin value \(-1\) is less than zero\.$'
+        six.assertRaisesRegex(self, ValueError, error, list,
+                              landmark.findWithMargin(read, -1))
+
+    def testFindWithMarginZeroAndNoMarginPresent(self):
+        """
+        A finder must find features when a zero margin is specified and there
+        is no margin present.
+        """
+        read = AARead('id', 'FRRRFRRRF')
+        landmark = AlphaHelix()
+        result = list(landmark.findWithMargin(read, 0))
+        self.assertEqual([Landmark('AlphaHelix', 'A', 0, 9, 2)], result)
+
+    def testFindWithMarginZeroAndMarginPresentOnLeft(self):
+        """
+        A finder must find features when a zero margin is specified and there
+        is a margin on the left.
+        """
+        read = AARead('id', 'MFRRRFRRRF')
+        landmark = AlphaHelix()
+        result = list(landmark.findWithMargin(read, 0))
+        self.assertEqual([Landmark('AlphaHelix', 'A', 1, 9, 2)], result)
+
+    def testFindWithMarginZeroAndMarginPresentOnRight(self):
+        """
+        A finder must find features when a zero margin is specified and there
+        is a margin on the right.
+        """
+        read = AARead('id', 'FRRRFRRRFM')
+        landmark = AlphaHelix()
+        result = list(landmark.findWithMargin(read, 0))
+        self.assertEqual([Landmark('AlphaHelix', 'A', 0, 9, 2)], result)
+
+    def testFindWithMarginZeroAndMarginPresentBothSides(self):
+        """
+        A finder must find features when a zero margin is specified and there
+        is a margin on both sides.
+        """
+        read = AARead('id', 'MFRRRFRRRFM')
+        landmark = AlphaHelix()
+        result = list(landmark.findWithMargin(read, 0))
+        self.assertEqual([Landmark('AlphaHelix', 'A', 1, 9, 2)], result)
+
+    def testFindWithMarginInsufficientMarginLeft(self):
+        """
+        A finder must not return a feature that has insufficient margin
+        to the left.
+        """
+        read = AARead('id', 'MMFRRRFRRRF')
+        landmark = AlphaHelix()
+        result = list(landmark.findWithMargin(read, 2))
+        self.assertEqual([], result)
+
+    def testFindWithMarginInsufficientMarginRight(self):
+        """
+        A finder must not return a feature that has insufficient margin
+        to the left.
+        """
+        read = AARead('id', 'FRRRFRRRFMM')
+        landmark = AlphaHelix()
+        result = list(landmark.findWithMargin(read, 2))
+        self.assertEqual([], result)
+
+    def testFindWithMarginSufficientMargin(self):
+        """
+        A finder must return a feature that has sufficient margin on both
+        sides.
+        """
+        read = AARead('id', 'MMFRRRFRRRFMM')
+        landmark = AlphaHelix()
+        result = list(landmark.findWithMargin(read, 2))
+        self.assertEqual([Landmark('AlphaHelix', 'A', 2, 9, 2)], result)

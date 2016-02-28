@@ -33,7 +33,10 @@ parser.add_argument(
     help=('The number of AA residues to keep on either side of the '
           'extracted helices. It is useful to keep some context in order '
           'to give other alpha helix finders (e.g., GOR4) that you might '
-          'run on the extracted helices a chance to establish context.'))
+          'run on the extracted helices a chance to establish context. '
+          'Note that if a feature does not have this many neighboring '
+          'residues (due to being too close to the start or end of a '
+          'sequence, it will not be output.'))
 
 parser.add_argument(
     '--dropStructure', '--ds', default=False, action='store_true',
@@ -57,12 +60,12 @@ if margin < 0:
 # 'X' and 'U'. So, for now, read it without checking sequence alphabet.
 
 for read in SSFastaReads(sys.stdin, checkAlphabet=0):
-    for helix in finder.find(read):
-        start = max(helix.offset - margin, 0)
-        end = helix.offset + helix.length + margin
+    for helix in finder.findWithMargin(read, margin):
 
         # Drop the ':sequence' suffix from read ids and add information
         # about the (1-based) offsets at which this helix was found.
+        start = helix.offset - margin
+        end = helix.offset + helix.length + margin
         readId = read.id.replace(':sequence', '') + ':%d-%d' % (start + 1, end)
 
         if dropStructure:

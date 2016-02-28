@@ -1,6 +1,13 @@
 #!/usr/bin/env python
 
 """
+Read FASTA from stdin and examine it for features (landmarks and trig points).
+Write a summary of the number of features that are found in the input for each
+of the feature finders used.
+
+The idea here is that you can provide input that contains known features (e.g.,
+taken from PDB secondary structures) and check to see if our finders can find
+the features.
 """
 
 import sys
@@ -15,7 +22,7 @@ from light.database import DatabaseParameters
 
 
 parser = argparse.ArgumentParser(
-    description=('Find features in FASTA secondary structures.'))
+    description=('Find features in FASTA.'))
 
 parser.add_argument(
     '--margin', type=int, default=0,
@@ -82,7 +89,7 @@ else:
 for read in readsClass(sys.stdin, readClass=readClass, checkAlphabet=0):
     readLen = len(read)
 
-    if len(read) < minSequenceLength:
+    if readLen < minSequenceLength:
         continue
 
     readCount += 1

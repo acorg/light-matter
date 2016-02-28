@@ -21,8 +21,7 @@ from dark.reads import AARead, SSAARead
 from light.database import DatabaseParameters
 
 
-parser = argparse.ArgumentParser(
-    description=('Find features in FASTA.'))
+parser = argparse.ArgumentParser(description='Find features in FASTA.')
 
 parser.add_argument(
     '--margin', type=int, default=0,

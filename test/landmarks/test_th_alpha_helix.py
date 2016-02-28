@@ -114,6 +114,13 @@ class TestTHAlphaHelix(TestCase):
         self.check('GGGFRRFRRFRGGGG',
                    '---HHHHHHHH----')
 
+    def testMultipleHelices(self):
+        """
+        The find method must be able to find multiple helices in a sequence.
+        """
+        self.check('GGGFRRFRRFRGGGGGGGGFRFRFRFRFRFRGGGGGGGGFRFRFRFRGG',
+                   '---HHHHHHHH--------HHHHHHHHHHHH--------HHHHHHHH--')
+
     def testSubsequentPeakExtendsHelixMatch(self):
         """
         If a second peak is found (with no intervening trough), it is added

@@ -16,7 +16,7 @@ class TestNames(TestCase):
         trigNames = [name.NAME for name in ALL_TRIG_CLASSES_INCLUDING_DEV]
         lmNames = [name.NAME for name in ALL_LANDMARK_CLASSES_INCLUDING_DEV]
         names = trigNames + lmNames
-        self.assertEqual(22, len(names))
+        self.assertEqual(23, len(names))
 
     def testAllLandmarkNamesAreDistinct(self):
         """

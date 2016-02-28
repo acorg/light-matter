@@ -22,6 +22,7 @@ class TestCalculateOverlap(TestCase):
 
         self.assertEqual(
             {
+                # Landmarks.
                 'AlphaHelix': set(),
                 'AlphaHelix_3_10': {
                     21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
@@ -41,9 +42,24 @@ class TestCalculateOverlap(TestCase):
                     0, 1, 2, 3, 4, 25, 26, 27, 28, 34, 35, 36, 37, 38, 39, 40,
                     41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52,
                 },
+                'PDB ExtendedStrand': set(),
+                'PDB AlphaHelix_3_10': set(),
+                'PDB AlphaHelix': {
+                    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
+                    18, 19, 20, 21, 22, 23, 24, 25, 26, 45, 46, 47, 48,
+                },
+                'PDB AlphaHelix_pi': set(),
                 'Prosite': {
                     32, 38, 39, 40, 41, 14, 15, 16, 19, 20, 21, 22, 30, 31,
                 },
+                'THAlphaHelix': {
+                    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
+                    18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32,
+                    33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+                    48, 49, 50, 51, 52, 53, 54,
+                },
+
+                # Trig points.
                 'AminoAcids': set(),
                 'IndividualPeaks': {
                     9, 31,
@@ -57,13 +73,6 @@ class TestCalculateOverlap(TestCase):
                 'Troughs': {
                     1, 33, 4, 37, 6, 39, 8, 10, 42, 13, 46, 49, 21, 53, 24, 30,
                 },
-                'PDB ExtendedStrand': set(),
-                'PDB AlphaHelix_3_10': set(),
-                'PDB AlphaHelix': {
-                    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
-                    18, 19, 20, 21, 22, 23, 24, 25, 26, 45, 46, 47, 48,
-                },
-                'PDB AlphaHelix_pi': set(),
             },
             features)
 
@@ -79,9 +88,9 @@ class TestCalculateOverlap(TestCase):
             },
             union[frozenset(('IndividualTroughs', 'Troughs'))])
 
-        # Note that the following don't test much. There are 19 features
-        # examined by default by CalculateOverlap. So there are 19 * 18 / 2
-        # = 171 pairs of features. So these two tests are just testing that
+        # Note that the following don't test much. There are 20 features
+        # examined by default by CalculateOverlap. So there are 20 * 19 / 2
+        # = 190 pairs of features. So these two tests are just testing that
         # all pairs of features are present in the returned dicts.
-        self.assertEqual(171, len(intersection))
-        self.assertEqual(171, len(union))
+        self.assertEqual(190, len(intersection))
+        self.assertEqual(190, len(union))

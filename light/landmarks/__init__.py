@@ -13,10 +13,13 @@ from light.landmarks.pdb_alpha_helix_pi import PDB_AlphaHelix_pi
 from light.landmarks.pdb_extended_strand import PDB_ExtendedStrand
 from light.landmarks.prosite import Prosite
 from light.landmarks.random import RandomLandmark
+from light.landmarks.th_alpha_helix import THAlphaHelix
+
 
 ALL_LANDMARK_CLASSES = [
     AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, AminoAcids, BetaStrand,
-    BetaTurn, GOR4AlphaHelix, GOR4BetaStrand, GOR4Coil, Prosite]
+    BetaTurn, GOR4AlphaHelix, GOR4BetaStrand, GOR4Coil, Prosite,
+    THAlphaHelix]
 
 DEV_LANDMARK_CLASSES = [
     PDB_AlphaHelix, PDB_AlphaHelix_3_10, PDB_AlphaHelix_pi,

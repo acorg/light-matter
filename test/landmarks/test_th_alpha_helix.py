@@ -75,6 +75,22 @@ class TestTHAlphaHelix(TestCase):
         self.check('GGGGGGG',
                    '-------')
 
+    def testAllPeaks(self):
+        """
+        The find method must return an empty generator when given a sequence
+        composed entirely of peak (hydrophobic) residues.
+        """
+        self.check('FFFFFFF',
+                   '-------')
+
+    def testAllTroughs(self):
+        """
+        The find method must return an empty generator when given a sequence
+        composed entirely of trough (hydrophilic) residues.
+        """
+        self.check('RRRRRRR',
+                   '-------')
+
     def testAlternatingStartingWithHydrophobic(self):
         """
         The find method must find a helix in a sequence that alternates between

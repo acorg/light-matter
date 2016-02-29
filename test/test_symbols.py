@@ -15,7 +15,7 @@ class TestSymbols(TestCase):
         symbols = [cls.SYMBOL for cls in
                    ALL_LANDMARK_CLASSES_INCLUDING_DEV +
                    ALL_TRIG_CLASSES_INCLUDING_DEV]
-        self.assertEqual(22, len(symbols))
+        self.assertEqual(23, len(symbols))
 
     def testAllSymbolsAreDistinct(self):
         """

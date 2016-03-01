@@ -1694,7 +1694,6 @@ def alignmentGraphMultipleQueries(queries, subject, findParams=None,
     scores = []
     for query in queries:
         result = database.find(query, findParams, storeFullAnalysis=True)
-        queryCount += 1
         try:
             significantBins = result.analysis[subjectIndex]['significantBins']
             queryCount += 1

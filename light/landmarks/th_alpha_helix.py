@@ -144,6 +144,17 @@ class THAlphaHelix(Finder):
 
     def _isHelix(self, startOffset, lastGoodOffset, extremaCount):
         """
+        Helper function to check whether the current subsequence (beginning at
+        C{startOffset} in a read can be emitted by C{find} as a possible helix.
+
+        @param startOffset: The C{int} offset where the possible helix started
+            in the read.
+        @param lastGoodOffset: The C{int} offset where we encountered the last
+            AA (an extremum) suspected of being in the helix.
+        @param extremaCount: The C{int} number of extrema found in this
+            possible helix.
+        @return: A C{Landmark} instance if the subsequence is of sufficient
+            length and has enough extrema to qualify as a helix. Else C{None}.
         """
         helixLength = lastGoodOffset - startOffset + 1
         if (helixLength >= self.MIN_HELIX_LENGTH and

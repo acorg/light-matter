@@ -188,6 +188,24 @@ class TestTHAlphaHelix(TestCase):
         self.check('FGGGGGRGGF',
                    '----------')
 
+    def testTooManyConsecutivePeaks(self):
+        """
+        The find method must not allow too many consecutive peaks (>5) in an
+        overall peak region.
+        """
+        self.assertEqual(5, THAlphaHelix.MAX_CONSECUTIVE_PEAKS)
+        self.check('GGGFRRFFFFFFFFRFFRRGG',
+                   '---HHHHHHHH-HHHHHHH--')
+
+    def testTooManyConsecutiveTroughs(self):
+        """
+        The find method must not allow too many consecutive troughs in an
+        overall trough region.
+        """
+        self.assertEqual(4, THAlphaHelix.MAX_CONSECUTIVE_TROUGHS)
+        self.check('GGGRRFFRRRRRRFFRRFRGG',
+                   '---HHHHHHHH-HHHHHHH--')
+
     def testPeakHydropathyCutoff(self):
         """
         The numeric value for peak hydropathy must be as expected.

@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 
 """
-Read FASTA containing alpha helices from stdin and compute statistics on their
-properties (primarily amino acid hydropathy). Write a summary to stdout.
+Read FASTA containing known alpha helices from stdin (likely obtained
+by running extract-alpha-helice-from-pdb-ss.py) and compute statistics on
+their properties (primarily amino acid hydropathy). Write a summary to
+stdout.
 """
 
 import sys
@@ -27,10 +29,6 @@ parser.add_argument(
           'are used per sequence. The first holds the AA sequence and the '
           'second has the structure. If False, the input is taken as regular '
           'FASTA.'))
-
-parser.add_argument(
-    '--verbose', default=False, action='store_true',
-    help='If True, print detailed information.')
 
 
 def main(args):
@@ -64,6 +62,6 @@ def main(args):
         else:
             print('No values recorded for', key)
 
+
 if __name__ == '__main__':
-    args = parser.parse_args()
-    main(args)
+    main(parser.parse_args())

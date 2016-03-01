@@ -101,7 +101,7 @@ def analyzeAlphaHelix(read):
         assert sum(consecutivePeaks) == 0
         assert sum(consecutiveTroughs) == 0
     else:
-        final = len(read) - finalExtremaOffset
+        final = len(read) - finalExtremaOffset - 1
         if state == AWAITING_PEAK:
             consecutiveTroughs.append(consecutiveTroughCount)
         else:
@@ -146,8 +146,6 @@ def analyzeAlphaHelices(reads):
             'noExtremaLength': The lengths of the alpha helies that do not
                 contain any extrema.
     """
-    verbose = False
-
     length = Stats('Alpha helix length')
     initial = Stats('Initial non-peak non-trough AAs')
     final = Stats('Final non-peak non-trough AAs')
@@ -159,11 +157,6 @@ def analyzeAlphaHelices(reads):
     for read in reads:
         readLen = len(read)
         length.append(readLen)
-
-        if verbose:
-            print('read len=%d %s id=%s seq=%r' % (
-                readLen, read.id, read.sequence))
-
         analysis = analyzeAlphaHelix(read)
 
         if analysis['initial'] is None:

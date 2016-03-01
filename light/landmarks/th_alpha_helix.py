@@ -145,7 +145,8 @@ class THAlphaHelix(Finder):
     def _isHelix(self, startOffset, lastGoodOffset, extremaCount):
         """
         Helper function to check whether the current subsequence (beginning at
-        C{startOffset} in a read can be emitted by C{find} as a possible helix.
+        C{startOffset} in a read) can be emitted by C{find} as a possible
+        helix.
 
         @param startOffset: The C{int} offset where the possible helix started
             in the read.

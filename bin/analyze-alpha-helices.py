@@ -1,25 +1,18 @@
 #!/usr/bin/env python
 
 """
-Read FASTA from stdin and examine it for features (landmarks and trig points).
-Write a summary of the number of features that are found in the input for each
-of the feature finders used.
-
-The idea here is that you can provide input that contains known features (e.g.,
-taken from PDB secondary structures) and check to see if our finders can find
-the features.
+Read FASTA containing alpha helices from stdin and compute statistics on their
+properties (primarily amino acid hydropathy). Write a summary to stdout.
 """
 
 import sys
 import argparse
 
-from dark.aa import PROPERTY_CLUSTERS
 from dark.fasta import FastaReads
 from dark.fasta_ss import SSFastaReads
 from dark.reads import AARead, SSAARead
 
-from light.landmarks import THAlphaHelix
-from light.performance.stats import Stats
+from light.performance.alpha_helix import analyzeAlphaHelices
 
 parser = argparse.ArgumentParser(description='Find features in FASTA.')
 
@@ -37,16 +30,17 @@ parser.add_argument(
 
 parser.add_argument(
     '--verbose', default=False, action='store_true',
-    help=('If True, print detailed information.'))
+    help='If True, print detailed information.')
 
 
 def main(args):
-    verbose = args.verbose
-    minSequenceLength = args.minSequenceLength
+    """
+    Use analyzeAlphaHelices to get a collection of alpha helix reads analyzed
+    and print the results.
 
-    PEAK_HYDROPATHY = THAlphaHelix.PEAK_HYDROPATHY
-    TROUGH_HYDROPATHY = THAlphaHelix.TROUGH_HYDROPATHY
-
+    @param args: Command line arguments as returned by the C{argparse}
+        C{parse_args} method.
+    """
     if args.pdb:
         readClass = SSAARead
         readsClass = SSFastaReads
@@ -54,99 +48,21 @@ def main(args):
         readClass = AARead
         readsClass = FastaReads
 
-    readCount = 0
+    reads = readsClass(sys.stdin, readClass=readClass, checkAlphabet=0)
 
-    length = Stats('Alpha helix length')
-    initial = Stats('Initial non-peak non-trough AAs')
-    final = Stats('Final non-peak non-trough AAs')
-    extrema = Stats('Number of extrema')
-    consecutivePeaks = Stats('Consecutive peaks')
-    consecutiveTroughs = Stats('Consecutive troughs')
-    noExtremaLength = Stats('Length of helices with no extrema')
+    if args.minSequenceLength:
+        reads = reads.filter(minLength=args.minSequenceLength)
 
-    for read in readsClass(sys.stdin, readClass=readClass, checkAlphabet=0):
-        readLen = len(read)
+    analysis = analyzeAlphaHelices(reads)
 
-        if readLen < minSequenceLength:
-            continue
+    print('Processed %d alpha helices.' % len(reads))
 
-        readCount += 1
-        length.add(readLen)
-
-        if verbose:
-            print('read %d: len=%d %s id=%s seq=%r' % (
-                readCount, readLen, read.id, read.sequence))
-
-        # States.
-        LOOKING = 0
-        AWAITING_PEAK = 1
-        AWAITING_TROUGH = 2
-
-        state = LOOKING
-
-        for offset, aa in enumerate(read.sequence):
-            try:
-                hydropathy = PROPERTY_CLUSTERS[aa]['hydropathy']
-            except KeyError:
-                hydropathy = 0
-
-            if state == LOOKING:
-                if hydropathy >= PEAK_HYDROPATHY:
-                    state = AWAITING_TROUGH
-                    finalExtremaOffset = offset
-                    extremaCount = 1
-                    consecutivePeakCount = 1
-                    consecutiveTroughCount = 0
-                    initial.add(offset)
-                elif hydropathy <= TROUGH_HYDROPATHY:
-                    state = AWAITING_PEAK
-                    finalExtremaOffset = offset
-                    extremaCount = 1
-                    consecutivePeakCount = 0
-                    consecutiveTroughCount = 1
-                    initial.add(offset)
-
-            elif state == AWAITING_PEAK:
-                if hydropathy >= PEAK_HYDROPATHY:
-                    finalExtremaOffset = offset
-                    state = AWAITING_TROUGH
-                    extremaCount += 1
-                    consecutivePeakCount = 1
-                    consecutiveTroughs.add(consecutiveTroughCount)
-                    consecutiveTroughCount = 0
-                elif hydropathy <= TROUGH_HYDROPATHY:
-                    finalExtremaOffset = offset
-                    consecutiveTroughCount += 1
-                    extremaCount += 1
-
-            elif state == AWAITING_TROUGH:
-                if hydropathy <= TROUGH_HYDROPATHY:
-                    finalExtremaOffset = offset
-                    state = AWAITING_PEAK
-                    extremaCount += 1
-                    consecutivePeaks.add(consecutivePeakCount)
-                    consecutivePeakCount = 0
-                    consecutiveTroughCount = 1
-                elif hydropathy >= PEAK_HYDROPATHY:
-                    finalExtremaOffset = offset
-                    consecutivePeakCount += 1
-                    extremaCount += 1
-
-        if state == LOOKING:
-            noExtremaLength.add(readLen)
+    for key in ('length', 'extremaCount', 'initial', 'final',
+                'consecutivePeaks', 'consecutiveTroughs', 'noExtremaLength'):
+        if analysis[key]:
+            print(analysis[key])
         else:
-            final.add(readLen - finalExtremaOffset)
-            extrema.add(extremaCount)
-
-    print('Processed %d alpha helices.' % readCount)
-
-    print(length)
-    print(extrema)
-    print(initial)
-    print(final)
-    print(consecutivePeaks)
-    print(consecutiveTroughs)
-    print(noExtremaLength)
+            print('No values recorded for', key)
 
 if __name__ == '__main__':
     args = parser.parse_args()

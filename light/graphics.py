@@ -308,6 +308,9 @@ def plotHistogram(query, subject, findParams=None, readsAx=None,
             elif significanceMethod == 'MeanBinHeight':
                 significance = MeanBinHeight(histogram, query,
                                              result.connector)
+            elif significanceMethod == 'AAFraction':
+                significance = MeanBinHeight(histogram, query,
+                                             result.connector)
             else:
                 raise ValueError('Unknown significance method %r' %
                                  significanceMethod)

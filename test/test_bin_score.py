@@ -9,6 +9,7 @@ from dark.reads import AARead
 from light.database import DatabaseSpecifier
 from light.features import Landmark, TrigPoint
 from light.parameters import DatabaseParameters, FindParameters
+from light.string import MultilineString
 from light.subject import Subject
 from light.bin_score import (
     NoneScore, MinHashesScore, FeatureMatchingScore, FeatureAAScore,
@@ -228,25 +229,41 @@ class TestMinHashesScore(TestCase):
         histogram.add(444)
         histogram.add(555)
         histogram.finalize()
-        mhs = MinHashesScore(histogram, 1)
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter('always')
-            score, analysis = mhs.calculateScore(0)
-            self.assertEqual(1, len(w))
-            self.assertTrue(issubclass(w[0].category, RuntimeWarning))
-            error = ('Bin contains 2 deltas for a query/subject pair with a '
-                     'minimum hash count of only 1.')
-            self.assertIn(error, str(w[0].message))
-
+        mhs = MinHashesScore(histogram, 2)
+        score, analysis = mhs.calculateScore(0)
         expected = (
             'Score method: MinHashesScore\n'
-            'Minimum hash count: 1\n'
+            'Minimum hash count: 2\n'
             'Bin count: 2\n'
             'Score: %.4f' % score)
 
         self.assertEqual(expected, MinHashesScore.printAnalysis(analysis))
         self.assertEqual(expected,
                          analysis['scoreClass'].printAnalysis(analysis))
+
+    def testPrintAnalysisWithPassedResult(self):
+        """
+        The analysis of a score calculation must print correctly when we
+        pass an existing C{MultilineString} instance.
+        """
+        histogram = Histogram(1)
+        histogram.add(444)
+        histogram.add(555)
+        histogram.finalize()
+        mhs = MinHashesScore(histogram, 2)
+        score, analysis = mhs.calculateScore(0)
+        preExisting = MultilineString()
+        preExisting.append('Hello:')
+        preExisting.indent()
+        MinHashesScore.printAnalysis(analysis, result=preExisting)
+        expected = (
+            'Hello:\n'
+            '  Score method: MinHashesScore\n'
+            '  Minimum hash count: 2\n'
+            '  Bin count: 2\n'
+            '  Score: %.4f' % score)
+        self.assertEqual(expected, str(preExisting))
+        preExisting.outdent()
 
 
 class TestHistogramBinFeatures(TestCase):
@@ -1112,6 +1129,47 @@ class TestFeatureMatchingScore(TestCase):
                          FeatureMatchingScore.printAnalysis(analysis))
         self.assertEqual(expected,
                          analysis['scoreClass'].printAnalysis(analysis))
+
+    def testPrintAnalysisWithPassedResult(self):
+        """
+        The analysis of a score calculation must print correctly when
+        we pass a pre-existing C{MultilineString} instance.
+        """
+        queryLandmark = Landmark('AlphaHelix', 'A', 0, 20)
+        queryTrigPoint = TrigPoint('Peaks', 'P', 10)
+        subjectLandmark = Landmark('AlphaHelix', 'A', 0, 20)
+        subjectTrigPoint = TrigPoint('Peaks', 'P', 10)
+        histogram = Histogram(1)
+        histogram.add(44, {
+            'queryLandmark': queryLandmark,
+            'queryTrigPoint': queryTrigPoint,
+            'subjectLandmark': subjectLandmark,
+            'subjectTrigPoint': subjectTrigPoint,
+        })
+        histogram.finalize()
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix], trigPoints=[])
+        findParams = FindParameters(featureMatchScore=3.1,
+                                    featureMismatchScore=-1.2)
+        query = AARead('id', 'FRRRFRRRF')
+        subject = Subject('id2', 'A', 0)
+        fms = FeatureMatchingScore(histogram, query, subject, dbParams,
+                                   findParams)
+        score, analysis = fms.calculateScore(0)
+        preExisting = MultilineString()
+        preExisting.append('Hello:')
+        preExisting.indent()
+        FeatureMatchingScore.printAnalysis(analysis, result=preExisting)
+        expected = (
+            'Hello:\n'
+            '  Score method: FeatureMatchingScore\n'
+            '  Matched offset range in query: 0 to 19\n'
+            '  Matched offset range in subject: 0 to 19\n'
+            '  Match score: 12.4000\n'
+            '  Mismatch score: -1.2000\n'
+            '  Score: 11.2000')
+
+        self.assertEqual(expected, str(preExisting))
+        preExisting.outdent()
 
 
 class TestFeatureAAScore(TestCase):
@@ -2006,6 +2064,52 @@ class TestFeatureAAScore(TestCase):
         self.assertEqual(expected, FeatureAAScore.printAnalysis(analysis))
         self.assertEqual(expected,
                          analysis['scoreClass'].printAnalysis(analysis))
+
+    def testPrintAnalysisWithPassedResult(self):
+        """
+        The analysis of a score calculation must print correctly when we
+        pass a pre-existing C{MultilineString} instance.
+        """
+        queryLandmark = Landmark('AlphaHelix', 'A', 5, 20)
+        queryTrigPoint = TrigPoint('Peaks', 'P', 10)
+        subjectLandmark = Landmark('AlphaHelix', 'A', 5, 20)
+        subjectTrigPoint = TrigPoint('Peaks', 'P', 10)
+        histogram = Histogram(1)
+        histogram.add(44, {
+            'queryLandmark': queryLandmark,
+            'queryTrigPoint': queryTrigPoint,
+            'subjectLandmark': subjectLandmark,
+            'subjectTrigPoint': subjectTrigPoint,
+        })
+        histogram.finalize()
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[])
+        query = AARead('id', 'FRRRFRRRFC')
+        subject = Subject('id2', 'A', 0)
+        faas = FeatureAAScore(histogram, query, subject, dbParams)
+        score, analysis = faas.calculateScore(0)
+        self.assertEqual(1.0, score)
+        preExisting = MultilineString()
+        preExisting.append('Hello:')
+        preExisting.indent()
+        FeatureAAScore.printAnalysis(analysis, result=preExisting)
+
+        expected = (
+            'Hello:\n'
+            '  Score method: FeatureAAScore\n'
+            '  Matched offset range in query: 5 to 24\n'
+            '  Matched offset range in subject: 5 to 24\n'
+            '  Total (query+subject) AA offsets in matched hashes: 40\n'
+            '  Subject AA offsets in matched hashes: 20\n'
+            '  Query AA offsets in matched hashes: 20\n'
+            '  Total (query+subject) AA offsets in hashes in matched '
+            'region: 40\n'
+            '  Matched region score 1.0000 (40 / 40)\n'
+            '  Query normalizer: 0.8000 (20 / 25)\n'
+            '  Subject normalizer: 1.0000 (20 / 20)\n'
+            '  Score: 1.0000')
+        self.assertEqual(expected, str(preExisting))
+        preExisting.outdent()
 
 
 class TestWeightedHistogramBinFeatures(TestCase):
@@ -3186,3 +3290,52 @@ class TestWeightedFeatureAAScore(TestCase):
                          WeightedFeatureAAScore.printAnalysis(analysis))
         self.assertEqual(expected,
                          analysis['scoreClass'].printAnalysis(analysis))
+
+    def testPrintAnalysisWithPassedResult(self):
+        """
+        The analysis of a score calculation must print correctly when we pass
+        a pre-existing C{MultilineString} instance.
+        """
+        queryLandmark = Landmark('AlphaHelix', 'A', 5, 20)
+        queryTrigPoint = TrigPoint('Peaks', 'P', 10)
+        subjectLandmark = Landmark('AlphaHelix', 'A', 5, 20)
+        subjectTrigPoint = TrigPoint('Peaks', 'P', 10)
+        histogram = Histogram(1)
+        histogram.add(44, {
+            'queryLandmark': queryLandmark,
+            'queryTrigPoint': queryTrigPoint,
+            'subjectLandmark': subjectLandmark,
+            'subjectTrigPoint': subjectTrigPoint,
+        })
+        histogram.finalize()
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[])
+        query = AARead('id', 'FRRRFRRRFC')
+        subject = Subject('id2', 'A', 0)
+        faas = WeightedFeatureAAScore(histogram, query, subject, dbParams,
+                                      DEFAULT_WEIGHTS)
+        score, analysis = faas.calculateScore(0)
+        self.assertEqual(1.0, score)
+        preExisting = MultilineString()
+        preExisting.append('Hello:')
+        preExisting.indent()
+        WeightedFeatureAAScore.printAnalysis(analysis, result=preExisting)
+
+        expected = (
+            'Hello:\n'
+            '  Score method: WeightedFeatureAAScore\n'
+            '  Matched offset range in query: 5 to 24\n'
+            '  Matched offset range in subject: 5 to 24\n'
+            '  Total (query+subject) AA offsets in matched hashes: 40\n'
+            '  Subject AA offsets in matched hashes: 20\n'
+            '  Query AA offsets in matched hashes: 20\n'
+            '  Total (query+subject) AA offsets in hashes in matched '
+            'region: 40\n'
+            '  Weighted Subject AA offsets in matched hashes: 20\n'
+            '  Weighted Query AA offsets in matched hashes: 20\n'
+            '  Matched region score 1.0000 (40 / 40)\n'
+            '  Query normalizer: 0.8000 (20 / 25)\n'
+            '  Subject normalizer: 1.0000 (20 / 20)\n'
+            '  Score: 1.0000')
+        self.assertEqual(expected, str(preExisting))
+        preExisting.outdent()

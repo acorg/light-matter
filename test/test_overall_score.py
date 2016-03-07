@@ -9,6 +9,7 @@ from light.database import DatabaseSpecifier
 from light.features import Landmark, TrigPoint
 from light.histogram import Histogram
 from light.landmarks import AlphaHelix, AminoAcids as AminoAcidsLm
+from light.string import MultilineString
 from light.trig.amino_acids import AminoAcids
 from light.trig.peaks import Peaks
 from light.overall_score import (
@@ -116,10 +117,30 @@ class TestBestBinScore(TestCase):
         bestBinScore = BestBinScore(histogram, [])
         score, analysis = bestBinScore.calculateScore()
 
-        expected = (
-            'Overall score method: BestBinScore\nOverall score: %s' % score)
+        expected = ('Overall score method: BestBinScore\n'
+                    'Overall score: %s' % score)
 
         self.assertEqual(expected, BestBinScore.printAnalysis(analysis))
+
+    def testPrintAnalysisWithPassedResult(self):
+        """
+        The analysis of the overall score calculation must print correctly
+        when passed a pre-existing C{MultilineString} instance.
+        """
+        histogram = Histogram()
+        histogram.finalize()
+        bestBinScore = BestBinScore(histogram, [])
+        score, analysis = bestBinScore.calculateScore()
+        preExisting = MultilineString()
+        preExisting.append('Hello:')
+        preExisting.indent()
+        BestBinScore.printAnalysis(analysis, result=preExisting)
+
+        expected = ('Hello:\n'
+                    '  Overall score method: BestBinScore\n'
+                    '  Overall score: %s' % score)
+        self.assertEqual(expected, str(preExisting))
+        preExisting.outdent()
 
 
 class TestOffsetsInBin(TestCase):
@@ -1706,6 +1727,57 @@ class TestSignificantBinScore(TestCase):
         self.assertEqual(expected,
                          analysis['scoreClass'].printAnalysis(analysis))
 
+    def testPrintAnalysisWithPassedResult(self):
+        """
+        The analysis of a score calculation must print correctly when we
+        pass a pre-existing C{MultilineString} instance.
+        """
+        queryLandmark = Landmark('AlphaHelix', 'A', 5, 20)
+        queryTrigPoint = TrigPoint('Peaks', 'P', 10)
+        subjectLandmark = Landmark('AlphaHelix', 'A', 5, 20)
+        subjectTrigPoint = TrigPoint('Peaks', 'P', 10)
+        histogram = Histogram(1)
+        histogram.add(44, {
+            'queryLandmark': queryLandmark,
+            'queryTrigPoint': queryTrigPoint,
+            'subjectLandmark': subjectLandmark,
+            'subjectTrigPoint': subjectTrigPoint,
+        })
+        histogram.finalize()
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[])
+        query = AARead('id', 'FRRRFRRRFC')
+        subject = Subject('id2', 'A', 0)
+        significantBins = [
+            {'index': 0, 'bin': histogram.bins[0], 'score': 1.0},
+        ]
+        sbs = SignificantBinScore(significantBins, query, subject,
+                                  dbParams)
+        score, analysis = sbs.calculateScore()
+        self.assertEqual(1.0, score)
+        preExisting = MultilineString()
+        preExisting.append('Hello:')
+        preExisting.indent()
+        SignificantBinScore.printAnalysis(analysis, result=preExisting)
+
+        expected = (
+            'Hello:\n'
+            '  Overall score method: SignificantBinScore\n'
+            '  Overall score: 1.0\n'
+            '  Total (query+subject) AA offsets in matched pairs in all '
+            'bins: 40\n'
+            '  Subject AA offsets in matched pairs in all bins: 20\n'
+            '  Query AA offsets in matched pairs in all bins: 20\n'
+            '  Total (query+subject) AA offsets in hashes in matched '
+            'region: 40\n'
+            '  Matched region score 1.0000 (40 / 40)\n'
+            '  Query normalizer: 0.8000 (20 / 25)\n'
+            '  Subject normalizer: 1.0000 (20 / 20)\n'
+            '  Total query offsets that are in a bin: 20\n'
+            '  Total subject offsets that are in a bin: 20')
+        self.assertEqual(expected, str(preExisting))
+        preExisting.outdent()
+
 
 class TestGreedySignificantBinScore(TestCase):
     """
@@ -2051,3 +2123,59 @@ class TestGreedySignificantBinScore(TestCase):
                          GreedySignificantBinScore.printAnalysis(analysis))
         self.assertEqual(expected,
                          analysis['scoreClass'].printAnalysis(analysis))
+
+    def testPrintAnalysisWithPassedResult(self):
+        """
+        The analysis of a score calculation must print correctly when we pass
+        a pre-expected C{MultilineString} instance.
+        """
+        queryLandmark = Landmark('AlphaHelix', 'A', 5, 20)
+        queryTrigPoint = TrigPoint('Peaks', 'P', 10)
+        subjectLandmark = Landmark('AlphaHelix', 'A', 5, 20)
+        subjectTrigPoint = TrigPoint('Peaks', 'P', 10)
+        histogram = Histogram(3)
+        histogram.add(44, {
+            'queryLandmark': queryLandmark,
+            'queryTrigPoint': queryTrigPoint,
+            'subjectLandmark': subjectLandmark,
+            'subjectTrigPoint': subjectTrigPoint,
+        })
+        histogram.add(24, {
+            'queryLandmark': queryLandmark,
+            'queryTrigPoint': queryTrigPoint,
+            'subjectLandmark': subjectLandmark,
+            'subjectTrigPoint': subjectTrigPoint,
+        })
+        histogram.finalize()
+        params = DatabaseParameters([AlphaHelix, AminoAcidsLm], [Peaks])
+        query = AARead('id', 'FRRRFRRRFC')
+        subject = Subject('id2', 'A', 0)
+        significantBins = [
+            {'index': 0, 'bin': histogram.bins[0], 'score': 0.0},
+        ]
+        gsbs = GreedySignificantBinScore(significantBins, query, subject,
+                                         params)
+        score, analysis = gsbs.calculateScore()
+        preExisting = MultilineString()
+        preExisting.append('Hello:')
+        preExisting.indent()
+        GreedySignificantBinScore.printAnalysis(analysis, result=preExisting)
+
+        expected = (
+            'Hello:\n'
+            '  Overall score method: GreedySignificantBinScore\n'
+            '  Overall score: 1.0\n'
+            '  Total (query+subject) AA offsets in matched pairs in all '
+            'bins: 40\n'
+            '  Subject AA offsets in matched pairs in all bins: 20\n'
+            '  Query AA offsets in matched pairs in all bins: 20\n'
+            '  Total (query+subject) AA offsets in hashes in matched '
+            'region: 40\n'
+            '  Matched region score 1.0000 (40 / 40)\n'
+            '  Query normalizer: 0.8000 (20 / 25)\n'
+            '  Subject normalizer: 1.0000 (20 / 20)\n'
+            '  Total query offsets that are in a bin: 20\n'
+            '  Total subject offsets that are in a bin: 20\n'
+            '  Number of bins included in the score calculation: 1')
+        self.assertEqual(expected, str(preExisting))
+        preExisting.outdent()

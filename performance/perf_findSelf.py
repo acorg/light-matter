@@ -6,6 +6,7 @@ from light.database import Database
 from light.landmarks import (
     AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, BetaStrand, BetaTurn,
     ALL_LANDMARK_CLASSES)
+from light.parameters import DatabaseParameters
 from light.trig import (
     AminoAcids, Peaks, Troughs, IndividualPeaks, IndividualTroughs,
     ALL_TRIG_CLASSES)
@@ -33,9 +34,9 @@ class _FindSelfMixin(object):
                 'DESNYIREEDLQCGTWLCKVQKEGIDIMFKGLFSGLGRYWTILIYSIIGVVIIVILVYILL'
                 'PIGRLLKAFLIRHEIEYAMEQKIK')
 
-    MAXDISTANCE = None
-    MINDISTANCE = None
-    LIMITPERLANDMARK = None
+    MAX_DISTANCE = None
+    MIN_DISTANCE = None
+    LIMIT_PER_LANDMARK = None
 
     def testFindSelf(self):
         """
@@ -43,17 +44,18 @@ class _FindSelfMixin(object):
         finders.
         """
         read = AARead(self.ID, self.SEQUENCE)
-        database = Database(self.LANDMARKS, self.TRIG_POINTS,
-                            maxDistance=self.MAXDISTANCE,
-                            minDistance=self.MINDISTANCE,
-                            limitPerLandmark=self.LIMITPERLANDMARK)
-        database.addSubject(read)
+        dbParams = DatabaseParameters(landmarks=self.LANDMARKS,
+                                      trigPoints=self.TRIG_POINTS,
+                                      limitPerLandmark=self.LIMIT_PER_LANDMARK,
+                                      maxDistance=self.MAX_DISTANCE,
+                                      minDistance=self.MIN_DISTANCE)
+        database = Database(dbParams=dbParams)
+        _, subjectIndex, _ = database.addSubject(read)
         result = database.find(read)
-        significant = list(result.significant())
-        if 0 in significant:
+        if subjectIndex in result.analysis:
             self.details = {
                 'result': True,
-                'score': result.analysis[0]['score'],
+                'score': result.analysis[subjectIndex]['bestBinScore'],
             }
         else:
             self.details = {

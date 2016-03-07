@@ -6,6 +6,7 @@ from dark.reads import AARead
 from light.database import Database
 from light.landmarks import (
     AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, BetaStrand, BetaTurn)
+from light.parameters import DatabaseParameters
 from light.trig import (
     AminoAcids, Peaks, Troughs, IndividualPeaks, IndividualTroughs)
 
@@ -20,7 +21,7 @@ class TestDatabaseCreation(TestCase):
         How long does it take to construct a database with no subjects, and no
         landmark or trig point finders?
         """
-        Database([], [])
+        Database()
 
 
 class _SubjectAddMixin(object):
@@ -41,7 +42,9 @@ class _SubjectAddMixin(object):
         How long does it take to add SUBJECT_COUNT subjects to a database.
         """
         read = AARead('id', self.FEATURE_SEQUENCE * self.FEATURE_COUNT)
-        database = Database(self.LANDMARKS, self.TRIG_POINTS)
+        dbParams = DatabaseParameters(landmarks=self.LANDMARKS,
+                                      trigPoints=self.TRIG_POINTS)
+        database = Database(dbParams=dbParams)
         startTime = time.time()
         for _ in range(self.SUBJECT_COUNT):
             database.addSubject(read)
@@ -56,7 +59,7 @@ class SubjectAddNoFinders(_SubjectAddMixin, TestCase):
     """
     LANDMARKS = []
     TRIG_POINTS = []
-    # The sequence below be random. It's not going to be examined by
+    # The sequence below can be random. It's not going to be examined by
     # anything because there are no landmark or trig point finders.
     FEATURE_SEQUENCE = 'MMMMMMMMMM'
 

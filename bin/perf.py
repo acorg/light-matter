@@ -16,7 +16,7 @@ if __name__ == '__main__':
         description='Run light-matter performance tests')
 
     parser.add_argument(
-        '--startDir', default='.',
+        '--startDir', default='performance',
         help='The directory in which to (recursively) search for tests.')
 
     parser.add_argument(
@@ -28,18 +28,18 @@ if __name__ == '__main__':
         help='A description of the code being tested.')
 
     parser.add_argument(
-        '--testIdPattern', default=None,
+        '--testIdPrefix', default=None,
         help='A test id prefix. Tests whose ids do not contain this pattern '
         'will not be run. The pattern is case-sensitive.')
 
     args = parser.parse_args()
     suite = unittest.defaultTestLoader.discover(args.startDir,
                                                 pattern='perf_*.py')
-    if args.testIdPattern:
-        suite = filterTestSuite(args.testIdPattern, suite)
+    if args.testIdPrefix:
+        suite = filterTestSuite(args.testIdPrefix, suite)
         if suite.countTestCases() == 0:
             print('%s: No test cases match %r.' % (
-                basename(sys.argv[0]), args.testIdPattern), file=sys.stderr)
+                basename(sys.argv[0]), args.testIdPrefix), file=sys.stderr)
             sys.exit(1)
 
     result = PerformanceTestRunner(verbosity=args.verbosity).run(suite)

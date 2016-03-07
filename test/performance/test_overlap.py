@@ -31,6 +31,8 @@ class TestCalculateOverlap(TestCase):
                 'AminoAcidsLm': set(),
                 'BetaStrand': set(),
                 'BetaTurn': set(),
+                'ClusterAlphaHelix': {
+                    33, 34, 35, 36, 10, 11, 12, 13, 14, 15, 16, 17},
                 'GOR4AlphaHelix': {
                     5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
                     21, 22, 23, 24, 29, 30, 31, 32, 33,
@@ -92,5 +94,5 @@ class TestCalculateOverlap(TestCase):
         # examined by default by CalculateOverlap. So there are 20 * 19 / 2
         # = 190 pairs of features. So these two tests are just testing that
         # all pairs of features are present in the returned dicts.
-        self.assertEqual(190, len(intersection))
-        self.assertEqual(190, len(union))
+        self.assertEqual(210, len(intersection))
+        self.assertEqual(210, len(union))

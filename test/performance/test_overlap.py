@@ -90,9 +90,9 @@ class TestCalculateOverlap(TestCase):
             },
             union[frozenset(('IndividualTroughs', 'Troughs'))])
 
-        # Note that the following don't test much. There are 20 features
-        # examined by default by CalculateOverlap. So there are 20 * 19 / 2
-        # = 190 pairs of features. So these two tests are just testing that
+        # Note that the following don't test much. There are 21 features
+        # examined by default by CalculateOverlap. So there are 21 * 20 / 2
+        # = 210 pairs of features. So these two tests are just testing that
         # all pairs of features are present in the returned dicts.
         self.assertEqual(210, len(intersection))
         self.assertEqual(210, len(union))

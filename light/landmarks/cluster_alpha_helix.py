@@ -68,7 +68,7 @@ def translateToCluster(read):
 
 class ClusterAlphaHelix(Finder):
     """
-    A class for finding prosite motifs.
+    A class for finding cluster alpha helices.
     """
     NAME = 'ClusterAlphaHelix'
     SYMBOL = 'CAH'
@@ -76,7 +76,7 @@ class ClusterAlphaHelix(Finder):
     def find(self, read):
         """
         A function that finds and yields (as C{Landmark}s instances) cluster
-        alpha helix from a sequence
+        alpha helix from a sequence.
 
         @param read: An instance of C{dark.reads.AARead}.
         @return: A generator that yields C{Landmark} instances.

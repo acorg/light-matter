@@ -91,7 +91,7 @@ class TestClusterAlphaHelix(TestCase):
 
     def testFindTwoIdenticalAAClustersNonIdenticalAAAdjacent(self):
         """
-        The find method must find two identical clusters with the same AA
+        The find method must find two identical clusters with a different AA
         sequence.
         """
         read = AARead('id', 'KKAHRKMH')
@@ -124,7 +124,7 @@ class TestClusterAlphaHelix(TestCase):
         expected result.
         """
         db = _loadDatabase()
-        # The 17 is based on the cluster database of the 7. March 2016
+        # The 17 is based on the cluster database of March 7, 2016.
         self.assertEqual(17, len(db))
         expectedKeys = {'cluster', 'regex'}
         for motif in db:

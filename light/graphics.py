@@ -1287,16 +1287,24 @@ class SequenceFeatureAnalysis:
         plt.title('Pairwise feature offset overlap\n', fontsize=18)
         plt.show()
 
-    def printDensities(self, margin=''):
+    def printDensities(self, margin='', result=None):
         """
         Produce a table of offset densities for each feature.
 
         @param margin: A C{str} that should be inserted at the start of each
             line of output.
-        @return: A C{str} summarizing feature densities and the number of
-            offsets that are not covered by any feature.
+        @param result: A C{MultilineString} instance, or C{None} if a new
+            C{MultilineString} should be created.
+        @return: If C{result} was C{None}, return a C{str} summarizing feature
+            densities and the number of offsets that are not covered by any
+            feature, else C{None}.
         """
-        result = MultilineString(margin=margin, indent='  ')
+        if result is None:
+            result = MultilineString(margin=margin)
+            returnNone = False
+        else:
+            returnNone = True
+
         result.append('Feature densities:')
         result.indent()
 
@@ -1333,7 +1341,8 @@ class SequenceFeatureAnalysis:
             'feature.' % (uncoveredOffsetCount / totalOffsetCount * 100.0,
                           uncoveredOffsetCount, totalOffsetCount))
 
-        return str(result)
+        if not returnNone:
+            return str(result)
 
     def uniqueOffsets(self):
         """
@@ -1366,30 +1375,35 @@ class SequenceFeatureAnalysis:
 
 def compareScores(subject, query, binScoreMethods=None,
                   plotHashesInSubjectAndRead=True, showBestBinOnly=True,
-                  showHistogram=True, findParams=None, showInsignificant=False,
+                  showInsignificant=False, showHistogram=True, findParams=None,
                   showFeatures=False, showScoreAnalysis=True,
                   showSignificantBinsDetails=False,
                   showBestBinFeatureInfo=False, **kwargs):
     """
     Plot the features in two sequences, the hashes in their match, and
-    the scores for the match calculated under different score methods.
+    the bin and overall scores for the match calculated under different score
+    methods.
 
     @param subject: An C{AAReadWithX} instance.
     @param query: An C{AAReadWithX} instance.
     @param binScoreMethods: A C{list} of bin score methods to use, or C{None}
         to use all score methods.
-    @param plotHashesInSubjectAndRead: If C{True}, plot the hashes in the
-        subject and read showing the match.
+    @param plotHashesInSubjectAndRead: If C{True}, produce a horizontal plot
+        of the hashes and bins in the subject and read showing the match.
     @param showBestBinOnly: If C{True} (and C{PlotHashesInSubjectAndRead} is
         also C{True}), only show details of the best bin in the match between
-        query and subject.
+        query and subject. Has no effect if C{plotHashesInSubjectAndRead} is
+        C{False}.
+    @param showInsignificant: If C{True}, (and C{PlotHashesInSubjectAndRead} is
+        also C{True}), insignificant bins will be shown in the horizontal
+        query/subject feature plot. Has no effect if
+        C{plotHashesInSubjectAndRead} is C{False}.
     @param showHistogram: If C{True}, plot the delta offset histogram.
     @param findParams: A C{light.parameters.FindParameters} instance or
         C{None}, to use the default find parameters.
-    @param showInsignificant: If C{True}, hashes from insignificant bins will
-        be included in the set of hashes that match query and subject.
     @param showFeatures: If C{True}, show a separate plot of features in the
-        sequences.
+        sequences. This is C{False} by default as you can see the features
+        (and more) by using C{plotHashesInSubjectAndRead}.
     @param showScoreAnalysis: If C{True}, print details of the score analysis.
     @param showSignificantBinsDetails: If C{True}, print information about the
         contents of the significant bins in the histogram.
@@ -1404,55 +1418,90 @@ def compareScores(subject, query, binScoreMethods=None,
     binScoreMethods = binScoreMethods or sorted(
         cls.__name__ for cls in ALL_BIN_SCORE_CLASSES)
     findParams = findParams or FindParameters()
+    originalBinScoreMethod = findParams.binScoreMethod
 
     # Calculate a score for each score method.
     for binScoreMethod in binScoreMethods:
-        print('%s:' % binScoreMethod)
+        out = MultilineString()
+        append = out.append
+        append('%s:' % binScoreMethod)
+        out.indent()
         findParams.binScoreMethod = binScoreMethod
         result = db.find(query, findParams, storeFullAnalysis=True).analysis
         if subjectIndex in result:
             significantBins = result[subjectIndex]['significantBins']
-            if significantBins:
+            nSignificantBins = len(significantBins)
+            if nSignificantBins:
+                append('Subject matches, with %d significant bin%s' %
+                       (nSignificantBins,
+                        '' if nSignificantBins == 1 else 's'))
                 if showScoreAnalysis:
+                    append('Best bin score analysis:')
+                    out.indent()
                     analysis = significantBins[0]['scoreAnalysis']
-                    print(analysis['scoreClass'].printAnalysis(analysis))
+                    analysis['scoreClass'].printAnalysis(analysis, result=out)
+                    out.outdent()
+
+                    append('Overall score analysis:')
+                    out.indent()
+                    analysis = result[subjectIndex]['overallScoreAnalysis']
+                    analysis['scoreClass'].printAnalysis(analysis, result=out)
+                    out.outdent()
                 else:
-                    print('Score:', result[subjectIndex]['bestScore'])
+                    append('Bin score:', result[subjectIndex]['bestBinScore'])
+                    append('Overall score:',
+                           result[subjectIndex]['overallScore'])
 
                 if showSignificantBinsDetails:
-                    print('There are %d significant bins:\n  %s' % (
-                        len(significantBins),
-                        '\n  '.join(['index=%d score=%.4f binCount=%d' %
-                                    ((b['index'], b['score'], len(b['bin'])))
-                                    for b in significantBins])))
+                    append('Significant bin details:')
+                    out.indent()
+                    for b in significantBins:
+                        append('index=%d, score=%.4f, hash count=%d' %
+                               (b['index'], b['score'], len(b['bin'])))
+                    out.outdent()
+
                 if showBestBinFeatureInfo:
+                    append('Best bin feature counts:')
                     bestBinInfo = significantBins[0]['bin']
                     features = defaultdict(int)
                     for hash_ in bestBinInfo:
                         features[hash_['subjectLandmark'].name] += 1
                         features[hash_['subjectTrigPoint'].name] += 1
+                    out.indent()
                     for featureName, count in features.items():
-                        print('Feature: %s; count: %d' % (featureName, count))
+                        append('Feature: %s; count: %d' % (featureName, count))
+                    out.outdent()
             else:
-                print('No significant bins.')
-
-        if plotHashesInSubjectAndRead:
-            PlotHashesInSubjectAndRead(
-                query, subject, findParams=findParams,
-                showInsignificant=showInsignificant, showSignificant=True,
-                showBestBinOnly=showBestBinOnly, **kwargs).plotHorizontal(
-                    addJitter=True)
-
-        if showHistogram:
-            plotHistogram(
-                query, subject, showSignificanceCutoff=True,
-                findParams=findParams, **kwargs)
+                append('No significant bins.')
         else:
-            print('Subject %r was not matched.', subject.id)
-        print()
+            append('Subject %r was not matched.', subject.id)
+        append('')
+
+        out.outdent()
+        print(str(out))
+
+    # Restore the original bin score method. This is not needed at present,
+    # but be defensive, in case we add code below that relies on using what
+    # we were called with.
+
+    findParams.binScoreMethod = originalBinScoreMethod
+
+    # We only plot the following things once, no matter how many score
+    # methods we looped through above, because none of the following
+    # depends on the bin score method.
+
+    if plotHashesInSubjectAndRead:
+        plotter = PlotHashesInSubjectAndRead(
+            query, subject, findParams=findParams,
+            showInsignificant=showInsignificant, showSignificant=True,
+            showBestBinOnly=showBestBinOnly, **kwargs)
+        plotter.plotHorizontal(addJitter=True)
+
+    if showHistogram:
+        plotHistogram(query, subject, showSignificanceCutoff=True,
+                      findParams=findParams, **kwargs)
 
     if showFeatures:
-        # Plot landmarks and trig points horizontally.
         plotLandmarksInSequences([subject, query], **kwargs)
 
 

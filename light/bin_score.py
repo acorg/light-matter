@@ -87,7 +87,7 @@ class MinHashesScore(object):
         return score, analysis
 
     @staticmethod
-    def printAnalysis(analysis, margin=''):
+    def printAnalysis(analysis, margin='', result=None):
         """
         Convert an analysis to a nicely formatted string.
 
@@ -95,9 +95,16 @@ class MinHashesScore(object):
             calculation.
         @param margin: A C{str} that should be inserted at the start of each
             line of output.
-        @return: A C{str} human-readable version of the last analysis.
+        @param result: A C{MultilineString} instance, or C{None} if a new
+            C{MultilineString} should be created.
+        @return: If C{result} was C{None}, return a C{str} human-readable
+            version of the last analysis, else C{None}.
         """
-        result = MultilineString(margin=margin)
+        if result is None:
+            result = MultilineString(margin=margin)
+            returnNone = False
+        else:
+            returnNone = True
 
         result.extend([
             'Score method: %s' % analysis['scoreClass'].__name__,
@@ -106,7 +113,8 @@ class MinHashesScore(object):
             'Score: %(score).4f' % analysis,
         ])
 
-        return str(result)
+        if not returnNone:
+            return str(result)
 
 
 def histogramBinFeatures(bin_, queryOrSubject):
@@ -286,7 +294,7 @@ class FeatureMatchingScore:
         return score, analysis
 
     @staticmethod
-    def printAnalysis(analysis, margin=''):
+    def printAnalysis(analysis, margin='', result=None):
         """
         Convert an analysis to a nicely formatted string.
 
@@ -294,9 +302,16 @@ class FeatureMatchingScore:
             calculation.
         @param margin: A C{str} that should be inserted at the start of each
             line of output.
-        @return: A C{str} human-readable version of the last analysis.
+        @param result: A C{MultilineString} instance, or C{None} if a new
+            C{MultilineString} should be created.
+        @return: If C{result} was C{None}, return a C{str} human-readable
+            version of the last analysis, else C{None}.
         """
-        result = MultilineString(margin=margin)
+        if result is None:
+            result = MultilineString(margin=margin)
+            returnNone = False
+        else:
+            returnNone = True
 
         result.extend([
             'Score method: %s' % analysis['scoreClass'].__name__,
@@ -309,7 +324,8 @@ class FeatureMatchingScore:
             'Score: %(score).4f' % analysis,
         ])
 
-        return str(result)
+        if not returnNone:
+            return str(result)
 
 
 class FeatureAAScore:
@@ -471,7 +487,7 @@ class FeatureAAScore:
         return score, analysis
 
     @staticmethod
-    def printAnalysis(analysis, margin=''):
+    def printAnalysis(analysis, margin='', result=None):
         """
         Convert an analysis to a nicely formatted string.
 
@@ -479,9 +495,16 @@ class FeatureAAScore:
             calculation.
         @param margin: A C{str} that should be inserted at the start of each
             line of output.
-        @return: A C{str} human-readable version of the last analysis.
+        @param result: A C{MultilineString} instance, or C{None} if a new
+            C{MultilineString} should be created.
+        @return: If C{result} was C{None}, return a C{str} human-readable
+            version of the last analysis, else C{None}.
         """
-        result = MultilineString(margin=margin)
+        if result is None:
+            result = MultilineString(margin=margin)
+            returnNone = False
+        else:
+            returnNone = True
 
         result.extend([
             'Score method: %s' % analysis['scoreClass'].__name__,
@@ -506,7 +529,8 @@ class FeatureAAScore:
             'Score: %(score).4f' % analysis,
         ])
 
-        return str(result)
+        if returnNone is not None:
+            return str(result)
 
 
 def getWeightedOffsets(offsetDict):
@@ -708,7 +732,7 @@ class WeightedFeatureAAScore:
         return score, analysis
 
     @staticmethod
-    def printAnalysis(analysis, margin=''):
+    def printAnalysis(analysis, margin='', result=None):
         """
         Convert an analysis to a nicely formatted string.
 
@@ -716,9 +740,16 @@ class WeightedFeatureAAScore:
             calculation.
         @param margin: A C{str} that should be inserted at the start of each
             line of output.
-        @return: A C{str} human-readable version of the last analysis.
+        @param result: A C{MultilineString} instance, or C{None} if a new
+            C{MultilineString} should be created.
+        @return: If C{result} was C{None}, return a C{str} human-readable
+            version of the last analysis, else C{None}.
         """
-        result = MultilineString(margin=margin)
+        if result is None:
+            result = MultilineString(margin=margin)
+            returnNone = False
+        else:
+            returnNone = True
 
         result.extend([
             'Score method: %s' % analysis['scoreClass'].__name__,
@@ -747,7 +778,8 @@ class WeightedFeatureAAScore:
             'Score: %(score).4f' % analysis,
         ])
 
-        return str(result)
+        if not returnNone:
+            return str(result)
 
 ALL_BIN_SCORE_CLASSES = (NoneScore, MinHashesScore, FeatureMatchingScore,
                          FeatureAAScore, WeightedFeatureAAScore)

@@ -38,7 +38,7 @@ class BestBinScore(object):
         return self._score, self._analysis
 
     @staticmethod
-    def printAnalysis(analysis, margin=''):
+    def printAnalysis(analysis, margin='', result=None):
         """
         Convert an analysis to a nicely formatted string.
 
@@ -46,16 +46,24 @@ class BestBinScore(object):
             calculation.
         @param margin: A C{str} that should be inserted at the start of each
             line of output.
-        @return: A C{str} human-readable version of the last analysis.
+        @param result: A C{MultilineString} instance, or C{None} if a new
+            C{MultilineString} should be created.
+        @return: If C{result} was C{None}, return a C{str} human-readable
+            version of the last analysis, else C{None}.
         """
-        result = MultilineString(margin=margin)
+        if result is None:
+            result = MultilineString(margin=margin)
+            returnNone = False
+        else:
+            returnNone = True
 
         result.extend([
             'Overall score method: %s' % analysis['scoreClass'].__name__,
             'Overall score: %s' % analysis['score'],
         ])
 
-        return str(result)
+        if not returnNone:
+            return str(result)
 
 
 def offsetsInBin(bin_, queryOrSubject, allFeatures):
@@ -313,7 +321,7 @@ class SignificantBinScore(object):
         return overallScore, analysis
 
     @staticmethod
-    def printAnalysis(analysis, margin=''):
+    def printAnalysis(analysis, margin='', result=None):
         """
         Convert an analysis to a nicely formatted string.
 
@@ -321,9 +329,16 @@ class SignificantBinScore(object):
             calculation.
         @param margin: A C{str} that should be inserted at the start of each
             line of output.
-        @return: A C{str} human-readable version of the last analysis.
+        @param result: A C{MultilineString} instance, or C{None} if a new
+            C{MultilineString} should be created.
+        @return: If C{result} was C{None}, return a C{str} human-readable
+            version of the last analysis.
         """
-        result = MultilineString(margin=margin)
+        if result is None:
+            result = MultilineString(margin=margin)
+            returnNone = False
+        else:
+            returnNone = True
 
         result.extend([
             'Overall score method: %s' % analysis['scoreClass'].__name__,
@@ -348,7 +363,8 @@ class SignificantBinScore(object):
              '%(subjectOffsetsInBins)d' % analysis),
         ])
 
-        return str(result)
+        if not returnNone:
+            return str(result)
 
 
 def addBin(bin_, allQueryFeatures, allSubjectFeatures, oldState):
@@ -590,7 +606,7 @@ class GreedySignificantBinScore(object):
         return state['score'], state
 
     @staticmethod
-    def printAnalysis(analysis, margin=''):
+    def printAnalysis(analysis, margin='', result=None):
         """
         Convert an analysis to a nicely formatted string.
 
@@ -598,9 +614,16 @@ class GreedySignificantBinScore(object):
             calculation.
         @param margin: A C{str} that should be inserted at the start of each
             line of output.
-        @return: A C{str} human-readable version of the last analysis.
+        @param result: A C{MultilineString} instance, or C{None} if a new
+            C{MultilineString} should be created.
+        @return: If C{result} was C{None}, return a C{str} human-readable
+            version of the last analysis.
         """
-        result = MultilineString(margin=margin)
+        if result is None:
+            result = MultilineString(margin=margin)
+            returnNone = False
+        else:
+            returnNone = True
 
         result.extend([
             'Overall score method: %s' % analysis['scoreClass'].__name__,
@@ -627,7 +650,8 @@ class GreedySignificantBinScore(object):
              '%(numberOfBinsConsidered)d' % analysis),
         ])
 
-        return str(result)
+        if not returnNone:
+            return str(result)
 
 ALL_OVERALL_SCORE_CLASSES = [BestBinScore, SignificantBinScore,
                              GreedySignificantBinScore]

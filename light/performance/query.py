@@ -1,6 +1,10 @@
 from collections import defaultdict
 
 from dark.fasta import FastaReads
+from dark.reads import AAReadWithX
+
+# TODO: This seems to just be calculating an affinity matrix, but doing
+# all-against-all. Replace it with an affinity matrix.
 
 
 def queryDatabase(subjects, queries, database, findParams=None):
@@ -19,10 +23,10 @@ def queryDatabase(subjects, queries, database, findParams=None):
         C{dict} showing what subjects it matched, and with what score.
     """
     if isinstance(queries, str):
-        queries = FastaReads(queries, upperCase=True)
+        queries = FastaReads(queries, readClass=AAReadWithX, upperCase=True)
 
     if isinstance(subjects, str):
-        subjects = FastaReads(subjects, upperCase=True)
+        subjects = FastaReads(subjects, readClass=AAReadWithX, upperCase=True)
 
     list(map(database.addSubject, subjects))
 

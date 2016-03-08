@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 from collections import defaultdict
 
 from light.database import DatabaseSpecifier
+from light.parameters import DatabaseParameters
 from light.performance.query import queryDatabase
 
 """
@@ -199,6 +200,7 @@ def plot(x, y, read, scoreType, outputDir):
     ax.spines['left'].set_linewidth(0.5)
 
     fig.savefig(join(outputDir, '%s-%s.png' % (read, scoreType)))
+    plt.close()
 
 
 class WriteMarkdownFile(object):
@@ -214,8 +216,7 @@ class WriteMarkdownFile(object):
     def open(self):
         self.openedFile = open(self.outputFile, 'w')
 
-    def writeHeader(self, landmarkNames, trigNames, maxDistance, minDistance,
-                    limitPerLandmark, distanceBase):
+    def writeHeader(self, dbParams):
         self.openedFile.write('Title:\nDate:\nCategory: light-matter\nTags: '
                               'light-matter, benchmarking\nSummary: '
                               'Performance and sensitivity testing\n\n'
@@ -223,9 +224,11 @@ class WriteMarkdownFile(object):
                               'Landmarks: %s, trig points: %s, '
                               'maxDistance: %s, minDistance: %s '
                               'limitPerLandmark: %s, distanceBase %f\n\n' %
-                              (landmarkNames, trigNames,
-                               maxDistance, minDistance,
-                               limitPerLandmark, distanceBase))
+                              (dbParams.landmarkFinderNames(),
+                               dbParams.trigPointFinderNames(),
+                               dbParams.maxDistance, dbParams.minDistance,
+                               dbParams.limitPerLandmark,
+                               dbParams.distanceBase))
 
     def writeTest(self, testName, testResult, time, readNr):
         """
@@ -259,6 +262,7 @@ class WriteMarkdownFile(object):
     def close(self):
         self.openedFile.close()
 
+
 if __name__ == '__main__':
     startTime = time()
 
@@ -271,13 +275,6 @@ if __name__ == '__main__':
         help='The filename where the output will be written to.')
 
     parser.add_argument(
-        '--significanceFraction', type=float, default=None,
-        help='The (float) fraction of all (landmark, trig point) pairs for a '
-        'scannedRead that need to fall into the same histogram bucket for '
-        'that bucket to be considered a significant match with a database '
-        'title.')
-
-    parser.add_argument(
         '--verbose', default=False, action='store_true',
         help=('If True, information about each matching read will be written '
               'out.'))
@@ -286,21 +283,19 @@ if __name__ == '__main__':
     databaseSpecifier.addArgsToParser(parser)
 
     args = parser.parse_args()
+    dbParams = DatabaseParameters.fromArgs(args)
 
     # start writing to file
     writer = WriteMarkdownFile(args.outputFile, args.verbose)
     writer.open()
-    writer.writeHeader(args.landmarkFinderNames, args.trigFinderNames,
-                       args.maxDistance, args.minDistance,
-                       args.limitPerLandmark, args.distanceBase)
+    writer.writeHeader(dbParams)
 
     # run tests
     # 1) A complete sequence must match itself:
     oneStart = time()
     print('1) A complete sequence must find itself.', file=sys.stderr)
-    database = databaseSpecifier.getDatabaseFromArgs(args)
-    oneResult = queryDatabase(T1DB, T1READ, database,
-                              significanceFraction=args.significanceFraction)
+    database = databaseSpecifier.getDatabaseFromArgs(args, dbParams)
+    oneResult = queryDatabase(T1DB, T1READ, database)
     oneTime = time() - oneStart
     writer.writeTest('1) A complete sequence must match itself', oneResult,
                      oneTime, 1)
@@ -308,9 +303,8 @@ if __name__ == '__main__':
     # 2) Reads made from a sequence must match itself:
     twoStart = time()
     print('2) Reads made from a sequence must match itself.', file=sys.stderr)
-    database = databaseSpecifier.getDatabaseFromArgs(args)
-    twoResult = queryDatabase(T2DB, T2READ, database,
-                              significanceFraction=args.significanceFraction)
+    database = databaseSpecifier.getDatabaseFromArgs(args, dbParams)
+    twoResult = queryDatabase(T2DB, T2READ, database)
     twoTime = time() - twoStart
     writer.writeTest('2) Reads made from a sequence must match itself',
                      twoResult, twoTime, 9)
@@ -318,9 +312,8 @@ if __name__ == '__main__':
     # 3) A sequence must find related sequences:
     threeStart = time()
     print('3) A sequence must match related sequences.', file=sys.stderr)
-    database = databaseSpecifier.getDatabaseFromArgs(args)
-    threeResult = queryDatabase(T3DB, T3READ, database,
-                                significanceFraction=args.significanceFraction)
+    database = databaseSpecifier.getDatabaseFromArgs(args, dbParams)
+    threeResult = queryDatabase(T3DB, T3READ, database)
     threeTime = time() - threeStart
     writer.writeTest('3) A sequence must find related sequences', threeResult,
                      threeTime, 1)
@@ -329,9 +322,8 @@ if __name__ == '__main__':
     fourStart = time()
     print(('4) Reads made from a sequence must match related '
            'sequences.'), file=sys.stderr)
-    database = databaseSpecifier.getDatabaseFromArgs(args)
-    fourResult = queryDatabase(T4DB, T4READ, database,
-                               significanceFraction=args.significanceFraction)
+    database = databaseSpecifier.getDatabaseFromArgs(args, dbParams)
+    fourResult = queryDatabase(T4DB, T4READ, database)
     fourTime = time() - fourStart
     fourTitle = '4) Reads made from a sequence must match related sequences'
     writer.writeTest(fourTitle, fourResult, fourTime, 7)
@@ -343,10 +335,8 @@ if __name__ == '__main__':
            'correlate.'), file=sys.stderr)
     print(('6) The BLASTp bit scores and light matter scores '
            'must correlate.'), file=sys.stderr)
-    database = databaseSpecifier.getDatabaseFromArgs(args)
-    fiveSixResult = queryDatabase(
-        T56DB, T56READ, database,
-        significanceFraction=args.significanceFraction)
+    database = databaseSpecifier.getDatabaseFromArgs(args, dbParams)
+    fiveSixResult = queryDatabase(T56DB, T56READ, database)
     fiveSixTime = time() - fiveSixStart
     sTitle = '6) The BLASTp bit scores and light matter scores must correlate'
     writer.writeTest('5) The Z-scores and light matter score must correlate',

@@ -9,23 +9,25 @@ from light.features import Landmark
 from light.finder import Finder
 
 
+# The set of hydropathy cluster alpha helix patterns was constructed as
+# follows:
+# - All 'H' alpha helices were extracted from
+#   http://www.rcsb.org/pdb/files/ss.txt.
+# - The alpha helices were converted to cluster patterns using the
+#   hydrophobicity clusters in C{dark.aa}. Duplicates and clusters containing
+#   0 were removed.
+# - True and false positives were evaluated for a small subset of hydropathy
+#   cluster alpha helices using all sequences in
+#   http://www.rcsb.org/pdb/files/ss.txt.
+# - All patterns with a length between 4 - 6 that had a true positive to false
+#   positive rate less than or equal to 3.25 were included in this finder.
+
+
 def _loadDatabase():
     """
     Read and convert the JSON file of alpha helix cluster patterns.
 
-    The set of alpha helix cluster patterns was constructed as follows:
-    - All 'H' alpha helices were extracted from
-      http://www.rcsb.org/pdb/files/ss.txt.
-    - The alpha helices were converted to cluster patterns using the clusters
-      in C{dark.aa}. Duplicates and clusters containing 0 were removed.
-    - True and false positives were evaluated using all sequences in
-      http://www.rcsb.org/pdb/files/ss.txt.
-    - All patterns that had a true positive to false positive rate less than or
-      equal to 3.25 were included in this finder.
-
-    @return: A C{list} of C{dict}s, each containing 1) a 'name' key
-        giving the C{str} alpha helix cluster and 2) a 'regex' key with
-        a compiled regex value.
+    @return: A compiled regular expression of hydropathy cluster alpha helices.
     """
     filename = join(dirname(light.__file__), '..', 'data',
                     'cluster_alpha_helix_3.25.json')

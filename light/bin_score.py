@@ -211,7 +211,7 @@ def getHashFeatures(readHashes):
     return allFeatures
 
 
-class FeatureMatchingScore:
+class FeatureMatchingScore(object):
     """
     Calculates the score for histogram bins based on the features present
     within the regions of the query and subject that had a significant
@@ -328,7 +328,7 @@ class FeatureMatchingScore:
             return str(result)
 
 
-class FeatureAAScore:
+class FeatureAAScore(object):
     """
     Calculates the score for histogram bins based on the count of amino acids
     present in the regions of the query and subject that had a significant
@@ -544,7 +544,7 @@ def getWeightedOffsets(offsetDict):
     return sum(max(weights) for weights in offsetDict.values())
 
 
-class WeightedFeatureAAScore:
+class WeightedFeatureAAScore(object):
     """
     Calculates the score for histogram bins based on the count of amino acids
     present in the regions of the query and subject that had a significant

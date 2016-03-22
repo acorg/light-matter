@@ -1189,7 +1189,7 @@ def featureComparison(ssAARead, **kwargs):
     ax.set_xlim(0, len(ssAARead.sequence))
 
 
-class SequenceFeatureAnalysis:
+class SequenceFeatureAnalysis(object):
     """
     Analyze a sequence for its features and provide methods to plot and
     print useful summaries.

@@ -44,7 +44,7 @@ def getWampClientDatabase(args):
             return database
 
 
-class WampDatabaseClient:
+class WampDatabaseClient(object):
     """
     Provide an interface to a remote WAMP database.
 

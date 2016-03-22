@@ -33,7 +33,7 @@ logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
                     level=logging.INFO)
 
 
-class Database:
+class Database(object):
     """
     An interface to a database connector that maintains a collection of
     sequences (aka subjects) and provide for database insertion and look-up
@@ -205,7 +205,7 @@ class Database:
             return str(result)
 
 
-class DatabaseSpecifier:
+class DatabaseSpecifier(object):
     """
     Helper class for 1) either creating a new database, loading one from
     saved files, accessing one that's already in memory, or accessing one

@@ -19,7 +19,7 @@ from light.trig import trigNameFromHashkey
 from light.string import MultilineString
 
 
-class Backend:
+class Backend(object):
     """
     Maintain a collection of hashes for sequences (aka subjects) and provide
     for database index creation and search operations on them.

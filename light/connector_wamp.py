@@ -30,7 +30,7 @@ logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
                     level=logging.INFO)
 
 
-class WampServerConnector:
+class WampServerConnector(object):
     """
     Provide a connection between a persistent WAMP database component and a set
     of remote WAMP backend instances.

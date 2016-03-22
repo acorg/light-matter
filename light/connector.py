@@ -11,7 +11,7 @@ logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
                     level=logging.INFO)
 
 
-class SimpleConnector:
+class SimpleConnector(object):
     """
     Provide a simple in-memory connection between a Database and a single
     Backend.

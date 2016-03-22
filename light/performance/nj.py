@@ -50,7 +50,7 @@ def perturbDistanceMatrix(matrix, stddev=None):
     return newMatrix
 
 
-class NJTree:
+class NJTree(object):
 
     def __init__(self):
         # You probably don't want to use NJTree() directly. Rather, make an

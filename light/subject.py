@@ -26,7 +26,7 @@ class Subject(AARead):
         self.hashCount = hashCount
 
 
-class SubjectStore:
+class SubjectStore(object):
     """
     Maintain information about the set of subjects in a database.
     """

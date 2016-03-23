@@ -61,7 +61,7 @@ class TestSimpleConnector(TestCase):
         self.assertEqual(expected, sc.print_(printHashes=True))
 
 
-class UnusedConnectorTests:
+class UnusedConnectorTests(object):
 
     def testAddUnknownBackend(self):
         """

@@ -1,4 +1,4 @@
-class MultilineString:
+class MultilineString(object):
     """
     Incrementally build a multi-line indented string.
 

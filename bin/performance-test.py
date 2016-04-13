@@ -103,7 +103,8 @@ ZSCORES = {'2J7W': [60, 42.9, 22.8, 20.5, 18.1, 18.2, 18.0, 18.0, 19.2, 20.5,
                     4.9, 3.8, 5.8, 2.8, 2.3, 4.0, 5.9, 60, 28.5],
            '1MU2': [5.4, 4.0, 7.9, 7.4, 6.2, 6.6, 6.8, 6.9, 6.1, 7.6, 7.9, 6.5,
                     7.4, 5.5, 7.7, 3.6, 4.3, 4.6, 5.1, 28.5, 60],
-           # 1RW3 is missing!
+           # 1RW3 is missing! Also, its name has been changed to 4MH8. See
+           # http://www.rcsb.org/pdb/explore/explore.do?structureId=4MH8
            }
 
 BITSCORES = {'2J7W': [1328.15, 899.427, 46.2098, 0, 21.9422, 0, 0, 0, 0, 0,

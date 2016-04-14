@@ -104,6 +104,61 @@ class TestAffinityMatrix(TestCase):
                                 subjects=subjects, computeDiagonal=True)
         self.assertTrue(np.array_equal([[1.0, 1.0, 1.0]], matrix))
 
+    def testOneByThreeAsDict(self):
+        """
+        If affinityMatrix is called with a read and the database has three
+        subjects, and a dict result is requested, the result must be as
+        expected.
+        """
+        reads = Reads()
+        read = AARead('id1', 'FRRRFRRRFAAAFRRRFRRRF')
+        reads.add(read)
+        subjects = Reads()
+        subjects.add(AARead('id2', 'FRRRFRRRFAAAFRRRFRRRF'))
+        subjects.add(AARead('id3', 'FRRRFRRRFAAAFRRRFRRRF'))
+        subjects.add(AARead('id4', 'FRRRFRRRFAAAFRRRFRRRF'))
+        matrix = affinityMatrix(reads, landmarks=['AlphaHelix'],
+                                subjects=subjects, computeDiagonal=True,
+                                returnDict=True)
+        self.assertEqual(
+            {
+                'id1': {
+                    'id2': 1.0,
+                    'id3': 1.0,
+                    'id4': 1.0,
+                },
+            },
+            matrix)
+
+    def testTwoByTwoAsDict(self):
+        """
+        If affinityMatrix is called with two reads and the database has two
+        subjects, and a dict result is requested, the result must be as
+        expected.
+        """
+        reads = Reads()
+        reads.add(AARead('id1', 'FRRRFRRRFAAAFRRRFRRRF'))
+        reads.add(AARead('id2', 'FRRRFRRRFAAAFRRRFRRRF'))
+        subjects = Reads()
+        subjects.add(AARead('id3', 'FRRRFRRRFAAAFRRRFRRRF'))
+        subjects.add(AARead('id4', 'FRRRFRRRFAAAFRRRFRRRF'))
+
+        matrix = affinityMatrix(reads, landmarks=['AlphaHelix'],
+                                subjects=subjects, computeDiagonal=True,
+                                returnDict=True)
+        self.assertEqual(
+            {
+                'id1': {
+                    'id3': 1.0,
+                    'id4': 1.0,
+                },
+                'id2': {
+                    'id3': 1.0,
+                    'id4': 1.0,
+                },
+            },
+            matrix)
+
     def testTwoByTwoWithProgressFunction(self):
         """
         If affinityMatrix is called with two reads and the database has two

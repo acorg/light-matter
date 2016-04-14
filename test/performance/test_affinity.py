@@ -1,5 +1,6 @@
 from unittest import TestCase
 import numpy as np
+import six
 
 from dark.reads import Reads, AARead
 
@@ -104,6 +105,97 @@ class TestAffinityMatrix(TestCase):
                                 subjects=subjects, computeDiagonal=True)
         self.assertTrue(np.array_equal([[1.0, 1.0, 1.0]], matrix))
 
+    def testOneByThreeAsDict(self):
+        """
+        If affinityMatrix is called with a read and the database has three
+        subjects, and a dict result is requested, the result must be as
+        expected.
+        """
+        reads = Reads()
+        read = AARead('id1', 'FRRRFRRRFAAAFRRRFRRRF')
+        reads.add(read)
+        subjects = Reads()
+        subjects.add(AARead('id2', 'FRRRFRRRFAAAFRRRFRRRF'))
+        subjects.add(AARead('id3', 'FRRRFRRRFAAAFRRRFRRRF'))
+        subjects.add(AARead('id4', 'FRRRFRRRFAAAFRRRFRRRF'))
+        matrix = affinityMatrix(reads, landmarks=['AlphaHelix'],
+                                subjects=subjects, computeDiagonal=True,
+                                returnDict=True)
+        self.assertEqual(
+            {
+                'id1': {
+                    'id2': 1.0,
+                    'id3': 1.0,
+                    'id4': 1.0,
+                },
+            },
+            matrix)
+
+    def testTwoByTwoAsDictWithRepeatedQueryId(self):
+        """
+        If affinityMatrix is called with two reads and the database has two
+        subjects, and a dict result is requested, but the reads have the same
+        id, ValueError must be raised.
+        """
+        reads = Reads()
+        reads.add(AARead('id1', 'FRRRFRRRFAAAFRRRFRRRF'))
+        reads.add(AARead('id1', 'FRRRFRRRFAAAFRRRFRRRF'))
+        subjects = Reads()
+        subjects.add(AARead('id3', 'FRRRFRRRFAAAFRRRFRRRF'))
+        subjects.add(AARead('id4', 'FRRRFRRRFAAAFRRRFRRRF'))
+
+        error = "^Query id 'id1' appears more than once\.$"
+        six.assertRaisesRegex(
+            self, ValueError, error, affinityMatrix, reads,
+            subjects=subjects, returnDict=True)
+
+    def testTwoByTwoAsDictWithRepeatedSubjectId(self):
+        """
+        If affinityMatrix is called with two reads and the database has two
+        subjects, and a dict result is requested, but the subjects have the
+        same id, ValueError must be raised.
+        """
+        reads = Reads()
+        reads.add(AARead('id1', 'FRRRFRRRFAAAFRRRFRRRF'))
+        reads.add(AARead('id2', 'FRRRFRRRFAAAFRRRFRRRF'))
+        subjects = Reads()
+        subjects.add(AARead('id3', 'FRRRFRRRFAAAFRRRFRRRF'))
+        subjects.add(AARead('id3', 'FRRRFRRRFAAAFRRRFRRRF'))
+
+        error = "^Subject id 'id3' appears more than once\.$"
+        six.assertRaisesRegex(
+            self, ValueError, error, affinityMatrix, reads,
+            subjects=subjects, returnDict=True)
+
+    def testTwoByTwoAsDict(self):
+        """
+        If affinityMatrix is called with two reads and the database has two
+        subjects, and a dict result is requested, the result must be as
+        expected.
+        """
+        reads = Reads()
+        reads.add(AARead('id1', 'FRRRFRRRFAAAFRRRFRRRF'))
+        reads.add(AARead('id2', 'FRRRFRRRFAAAFRRRFRRRF'))
+        subjects = Reads()
+        subjects.add(AARead('id3', 'FRRRFRRRFAAAFRRRFRRRF'))
+        subjects.add(AARead('id4', 'FRRRFRRRFAAAFRRRFRRRF'))
+
+        matrix = affinityMatrix(reads, landmarks=['AlphaHelix'],
+                                subjects=subjects, computeDiagonal=True,
+                                returnDict=True)
+        self.assertEqual(
+            {
+                'id1': {
+                    'id3': 1.0,
+                    'id4': 1.0,
+                },
+                'id2': {
+                    'id3': 1.0,
+                    'id4': 1.0,
+                },
+            },
+            matrix)
+
     def testTwoByTwoWithProgressFunction(self):
         """
         If affinityMatrix is called with two reads and the database has two
@@ -134,13 +226,36 @@ class TestAffinityMatrix(TestCase):
         subjects, the resulting matrix must be 2x3.
         """
         reads = Reads()
-        read = AARead('id1', 'FRRRFRRRFAAAFRRRFRRRF')
-        reads.add(read)
-        reads.add(read)
+        reads.add(AARead('id1', 'FRRRFRRRFAAAFRRRFRRRF'))
+        reads.add(AARead('id2', 'FRRRFRRRFAAAFRRRFRRRF'))
+        subjects = Reads()
+        subjects.add(AARead('id3', 'FRRRFRRRFAAAFRRRFRRRF'))
+        subjects.add(AARead('id4', 'FRRRFRRRFAAAFRRRFRRRF'))
+        subjects.add(AARead('id5', 'FRRRFRRRFAAAFRRRFRRRF'))
+        matrix = affinityMatrix(reads, landmarks=['AlphaHelix'],
+                                subjects=subjects, computeDiagonal=True)
+        self.assertTrue(np.array_equal(
+            [
+                [1.0, 1.0, 1.0],
+                [1.0, 1.0, 1.0]
+            ],
+            matrix)
+        )
+
+    def testTwoByThreeWithRepeatedQueryAndSubjectIds(self):
+        """
+        If affinityMatrix is called with two reads and the database has three
+        subjects, the resulting matrix must be 2x3, and the fact that query
+        and subject ids are not all different must not cause a problem (as it
+        would if we called affinityMatrix with returnDict=True).
+        """
+        reads = Reads()
+        reads.add(AARead('id1', 'FRRRFRRRFAAAFRRRFRRRF'))
+        reads.add(AARead('id1', 'FRRRFRRRFAAAFRRRFRRRF'))
         subjects = Reads()
         subjects.add(AARead('id2', 'FRRRFRRRFAAAFRRRFRRRF'))
         subjects.add(AARead('id3', 'FRRRFRRRFAAAFRRRFRRRF'))
-        subjects.add(AARead('id4', 'FRRRFRRRFAAAFRRRFRRRF'))
+        subjects.add(AARead('id3', 'FRRRFRRRFAAAFRRRFRRRF'))
         matrix = affinityMatrix(reads, landmarks=['AlphaHelix'],
                                 subjects=subjects, computeDiagonal=True)
         self.assertTrue(np.array_equal(

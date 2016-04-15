@@ -9,7 +9,7 @@ from light.parameters import FindParameters
 
 def affinityMatrix(queries, findParams=None, subjects=None, symmetric=True,
                    computeDiagonal=False, diagonalValue=1.0, progressFunc=None,
-                   **kwargs):
+                   returnDict=False, **kwargs):
     """
     Produce an affinity matrix containing scores for a set of reads matched
     against a set of subjects.
@@ -38,8 +38,15 @@ def affinityMatrix(queries, findParams=None, subjects=None, symmetric=True,
     @param kwargs: See
         C{database.DatabaseSpecifier.getDatabaseFromKeywords} for
         additional keywords, all of which are optional.
-    @return: A two-dimensional array of match scores. The first dimension is
-        the read number, the second is the database subject index.
+    @param returnDict: If C{True}, return a C{dict} keyed by query id, whose
+        values are C{dict}s keyed by subject id, whose values are C{float}
+        scores. In other words, a 2-level deep C{dict} that allows the caller
+        to look up a score via something like C{result[query.id][subject.id]}.
+    @raise ValueError: If C{returnDict} is C{True} and there is a duplicated
+        query or subject id.
+    @return: If C{returnDict} is C{True}, a C{dict} as just described, else a
+        two-dimensional array of match scores. The first dimension is the query
+        index (in C{queries}, the second is the subject index (in C{subjects}).
     """
     if isinstance(queries, str):
         queries = list(FastaReads(queries, readClass=AAReadWithX,
@@ -100,4 +107,18 @@ def affinityMatrix(queries, findParams=None, subjects=None, symmetric=True,
                     score = 0.0
             affinity[i][j] = score
 
-    return affinity
+    if returnDict:
+        result = {}
+        for i, query in enumerate(queries):
+            if query.id in result:
+                raise ValueError('Query id %r appears more than once.' %
+                                 query.id)
+            result[query.id] = values = {}
+            for j, subject in enumerate(subjects):
+                if subject.id in values:
+                    raise ValueError('Subject id %r appears more than once.' %
+                                     subject.id)
+                values[subject.id] = affinity[i][j]
+        return result
+    else:
+        return affinity

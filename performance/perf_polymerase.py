@@ -6,7 +6,7 @@ from os.path import join
 from light.database import Database
 from light.landmarks import (
     AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, BetaStrand, BetaTurn)
-from light.parameters import DatabaseParameters, FindParameters
+from light.parameters import DatabaseParameters
 from light.trig import (
     AminoAcids, Peaks, Troughs, IndividualPeaks, IndividualTroughs)
 
@@ -88,23 +88,25 @@ class TestZScoreCorrelation(TestCase):
         """
         Examine the correlation between our scores and Z scores.
         """
-        dbParams = DatabaseParameters()
-        database = Database(dbParams=dbParams)
-        findParams = FindParameters(significanceFraction=0.05)
-        affinity = affinityMatrix('performance/database/polymerase-db.fasta',
-                                  database=database, findParams=findParams)
-        from pprint import pprint
-        pprint(affinity)
+        affinity = affinityMatrix(
+            'performance/database/polymerase-db.fasta',
+            database=Database(testArgs.dbParams),
+            findParams=testArgs.findParams, returnDict=True)
+
+        # from pprint import pprint
+        # pprint(affinity)
 
         # Prepare results for plotting, and plot.
-        for i, queryId in enumerate(Z_SCORES):
+        for queryId in Z_SCORES:
             zScores = []
             lmScores = []
-            for j, subjectId in enumerate(Z_SCORES):
-                if i != j:
-                    lmScores.append(affinity[i][j])
+            for subjectId in Z_SCORES:
+                if queryId != subjectId:
+                    lmScores.append(affinity[queryId][subjectId])
                     zScores.append(Z_SCORES[queryId][subjectId])
             plot(lmScores, zScores, queryId, 'Z-score')
+
+        self.details = affinity
 
 
 class TestAlphaHelix(_TestPolymerase, TestCase):

@@ -9,6 +9,7 @@ from os.path import basename, exists, isdir, join
 from time import gmtime, strftime
 from os import mkdir
 
+from light.parameters import DatabaseParameters, FindParameters
 import light.performance
 from light.performance.runner import PerformanceTestRunner, filterTestSuite
 
@@ -28,7 +29,7 @@ if __name__ == '__main__':
 
     parser.add_argument(
         '--outputDir',
-        default='/tmp/' + strftime('%Y%m%d-%H:%M:%S', gmtime()),
+        default='/tmp/lm-performance-' + strftime('%Y%m%d-%H:%M:%S', gmtime()),
         help=('The directory where test output (if any) should be written. '
               'This directory will be created if it doesn\'t exist.'))
 
@@ -48,7 +49,17 @@ if __name__ == '__main__':
         help='A test id prefix. Tests whose ids do not contain this pattern '
         'will not be run. The pattern is case-sensitive.')
 
+    FindParameters.addArgsToParser(parser)
+    DatabaseParameters.addArgsToParser(parser)
+
     args = parser.parse_args()
+
+    # Add the find and database parameters to args for the convenience of
+    # the tests that may want them. Sanity check that those attributes
+    # don't already exist on args.
+    assert not (hasattr(args, 'findParams') or hasattr(args, 'dbParams'))
+    args.findParams = FindParameters.fromArgs(args)
+    args.dbParams = DatabaseParameters.fromArgs(args)
 
     outputDir = args.outputDir
     if exists(outputDir):
@@ -74,8 +85,7 @@ if __name__ == '__main__':
                 basename(sys.argv[0]), args.testIdPrefix), file=sys.stderr)
             sys.exit(1)
 
-    runner = PerformanceTestRunner(verbosity=int(not args.hidePassFail))
-    result = runner.run(suite)
+    result = PerformanceTestRunner(args).run(suite)
 
     with open(join(outputDir, _RESULT_FILENAME), 'w') as fp:
-        result.save(description=args.description, fp=fp)
+        result.save(args, fp=fp)

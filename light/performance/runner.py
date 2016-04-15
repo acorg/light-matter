@@ -44,7 +44,7 @@ class PerformanceTestResult(TestResult):
 
     @param stream: A file-like object.
     @param verbosity: An C{int} used to control the amount of information
-        printed. Unused.
+        printed by the result class.
     """
 
     def __init__(self, stream, verbosity):
@@ -54,24 +54,29 @@ class PerformanceTestResult(TestResult):
         self.status = None
         self.results = {}
 
-    def save(self, fp=sys.stdout, description=None):
+    def save(self, args, fp=sys.stdout):
         """
         Write test results to C{fp} in JSON format, if no errors or failures
         have occurred.
 
+        @param args: The result of calling C{parse_args()} on an
+            C{argparse.ArgumentParser} instance. These are the command-line
+            arguments that were given to C{performance/bin/perf.py} plus
+            attributes C{findParams} and C{dbParams} holding instances of
+            C{FindParameters} and C{DatabaseParameters} respectively.
         @param fp: A file-like object.
-        @param description: A C{str} description of the code whose performance
-            is being tested.
         """
         if not self.errors and not self.failures:
             dump({
                 'UTC': strftime('%F %T', gmtime(self.startTestRunTime)),
-                'description': description,
-                'results': self.results,
+                'description': args.description,
                 'startTestRunTime': self.startTestRunTime,
                 'elapsed': self.stopTestRunTime - self.startTestRunTime,
-                'testCount': self.testsRun},
-                fp)
+                'testCount': self.testsRun,
+                'dbParams': args.dbParams.toDict(),
+                'findParams': args.findParams.toDict(),
+                'results': self.results,
+            }, fp)
 
     def stopTest(self, test):
         super(PerformanceTestResult, self).stopTest(test)
@@ -185,14 +190,17 @@ class PerformanceTestRunner(object):
     """
     A performance test runner.
 
+    @param args: The result of calling C{parse_args()} on an
+        C{argparse.ArgumentParser} instance. These are the command-line
+        arguments that were given to C{performance/bin/perf.py} plus
+        attributes C{findParams} and C{dbParams} holding instances of
+        C{FindParameters} and C{DatabaseParameters} respectively.
     @param stream: A file-like object.
-    @param verbosity: An C{int} used to control the amount of information
-        printed by the result class.
     """
 
-    def __init__(self, stream=sys.stderr, verbosity=1):
+    def __init__(self, args, stream=sys.stderr):
+        self.verbosity = int(not args.hidePassFail)
         self.stream = _WritelnDecorator(stream)
-        self.verbosity = verbosity
 
     def run(self, test):
         """

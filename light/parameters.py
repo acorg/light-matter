@@ -215,6 +215,21 @@ class FindParameters(object):
                    overallScoreMethod=args.overallScoreMethod,
                    deltaScale=args.deltaScale)
 
+    def toDict(self):
+        """
+        Get self parameters and values.
+
+        @return: A C{dict} holding self parameters and values.
+        """
+        return dict(significanceMethod=self.significanceMethod,
+                    significanceFraction=self.significanceFraction,
+                    binScoreMethod=self.binScoreMethod,
+                    featureMatchScore=self.featureMatchScore,
+                    featureMismatchScore=self.featureMismatchScore,
+                    weights=self.weights,
+                    overallScoreMethod=self.overallScoreMethod,
+                    deltaScale=self.deltaScale)
+
     def print_(self, margin='', result=None):
         """
         Print find parameter values.
@@ -515,6 +530,22 @@ class DatabaseParameters(object):
                    featureLengthBase=args.featureLengthBase,
                    randomLandmarkDensity=args.randomLandmarkDensity,
                    randomTrigPointDensity=args.randomTrigPointDensity)
+
+    def toDict(self):
+        """
+        Get self parameters and values.
+
+        @return: A C{dict} holding self parameters and values.
+        """
+        return dict(landmarks=self.landmarkFinderNames(),
+                    trigPoints=self.trigPointFinderNames(),
+                    limitPerLandmark=self.limitPerLandmark,
+                    maxDistance=self.maxDistance,
+                    minDistance=self.minDistance,
+                    distanceBase=self.distanceBase,
+                    featureLengthBase=self.featureLengthBase,
+                    randomLandmarkDensity=self.randomLandmarkDensity,
+                    randomTrigPointDensity=self.randomTrigPointDensity)
 
     def save(self, fp=sys.stdout):
         """

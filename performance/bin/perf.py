@@ -46,8 +46,8 @@ if __name__ == '__main__':
 
     parser.add_argument(
         '--testIdPrefix', default=None,
-        help='A test id prefix. Tests whose ids do not contain this pattern '
-        'will not be run. The pattern is case-sensitive.')
+        help=('A test id prefix. Tests whose ids do not contain this pattern '
+              'will not be run. The pattern is case-sensitive.'))
 
     FindParameters.addArgsToParser(parser)
     DatabaseParameters.addArgsToParser(parser)

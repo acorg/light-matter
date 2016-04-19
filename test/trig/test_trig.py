@@ -28,6 +28,13 @@ class TestFindTrigPoint(TestCase):
         for klass in ALL_TRIG_CLASSES:
             self.assertIs(klass, findTrigPoint(klass.NAME))
 
+    def testFindDevTrigPoint(self):
+        """
+        The find function should be able to find development trig point
+        classes.
+        """
+        self.assertIs(RandomTrigPoint, findTrigPoint('RandomTrigPoint'))
+
 
 class TestFindTrigPoints(TestCase):
     """

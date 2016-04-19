@@ -12,7 +12,7 @@ from light.trig import (
 
 from light.performance.affinity import affinityMatrix
 from light.performance.query import queryDatabase
-from light.performance.polymerase import Z_SCORES
+from light.performance.polymerase import Z_SCORES, BIT_SCORES
 from light.performance import testArgs
 
 
@@ -24,6 +24,8 @@ def plot(x, y, read, scoreType):
     @param y: a C{list} of the y coordinates (either z-score or bit score).
     @param scoreType: A C{str} Y-axis title indicating the type of score.
     """
+    MAX_Z_SCORE = 60.0
+
     plt.rcParams['font.family'] = 'Helvetica'
     fig = plt.figure(figsize=(7, 5))
     ax = fig.add_subplot(111)
@@ -44,6 +46,11 @@ def plot(x, y, read, scoreType):
                  (read, rValue, se, slope, pValue))
     ax.set_ylabel(scoreType)
     ax.set_xlabel('Light matter score')
+
+    if scoreType == 'Z score':
+        ax.set_ylim(0.0, MAX_Z_SCORE)
+
+    ax.set_xlim(0.0, 1.0)
 
     # Axes.
     ax.spines['top'].set_linewidth(0.5)
@@ -81,6 +88,12 @@ class _TestPolymerase(object):
             'performance/read/polymerase-queries.fasta',
             database)
 
+# Singleton affinity matrix of lm scores for all polymerase sequences.
+_AFFINITY = affinityMatrix(
+    'performance/database/polymerase-db.fasta',
+    database=Database(testArgs.dbParams),
+    findParams=testArgs.findParams, returnDict=True)
+
 
 class TestZScoreCorrelation(TestCase):
 
@@ -88,22 +101,30 @@ class TestZScoreCorrelation(TestCase):
         """
         Examine the correlation between our scores and Z scores.
         """
-        affinity = affinityMatrix(
-            'performance/database/polymerase-db.fasta',
-            database=Database(testArgs.dbParams),
-            findParams=testArgs.findParams, returnDict=True)
-
-        # Prepare results for plotting, and plot.
         for queryId in Z_SCORES:
             zScores = []
             lmScores = []
             for subjectId in Z_SCORES:
                 if queryId != subjectId:
-                    lmScores.append(affinity[queryId][subjectId])
+                    lmScores.append(_AFFINITY[queryId][subjectId])
                     zScores.append(Z_SCORES[queryId][subjectId])
-            plot(lmScores, zScores, queryId, 'Z-score')
+            plot(lmScores, zScores, queryId, 'Z score')
 
-        self.details = affinity
+
+class TestBitScoreCorrelation(TestCase):
+
+    def testPlots(self):
+        """
+        Examine the correlation between our scores and blast bit scores.
+        """
+        for queryId in BIT_SCORES:
+            zScores = []
+            lmScores = []
+            for subjectId in BIT_SCORES:
+                if queryId != subjectId:
+                    lmScores.append(_AFFINITY[queryId][subjectId])
+                    zScores.append(BIT_SCORES[queryId][subjectId])
+            plot(lmScores, zScores, queryId, 'Bit score')
 
 
 class TestAlphaHelix(_TestPolymerase, TestCase):

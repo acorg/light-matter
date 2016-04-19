@@ -4,19 +4,23 @@ from light.performance.polymerase import BIT_SCORES, Z_SCORES
 
 POLYMERASE_COUNT = 22
 
-# Note that the names must be in this order. If they're not, the code in
-# light/performance/polymerase.py is incorrect.
-POLYMERASE_NAMES = [
+POLYMERASE_NAMES = {
     '2J7W', '4K6M', '1S49', '1NB6', '3OLB', '1XR7', '1XR6', '3CDW', '2E9Z',
     '3BSO', '3UQS', '1KHV', '2CKW', '1HI0', '3AVX', '2PUS', '2YI9', '2R7W',
     '1N35', '3V81', '1MU2', '1RW3'
-]
+}
 
 
 class TestZScores(TestCase):
     """
     Tests for the light.performance.polymerase Z_SCORES variable.
     """
+    def testVariables(self):
+        """
+        Make sure the variables defined above are consistent.
+        """
+        self.assertEqual(POLYMERASE_COUNT, len(POLYMERASE_NAMES))
+
     def testLen(self):
         """
         Z_SCORES and each of its keys must have the expected number of
@@ -88,16 +92,17 @@ class TestBitScores(TestCase):
         """
         BIT_SCORES must have the correct keys.
         """
-        self.assertEqual(set(POLYMERASE_NAMES), set(BIT_SCORES.keys()))
+        self.assertEqual(POLYMERASE_NAMES, set(BIT_SCORES.keys()))
 
     def testValues(self):
         """
-        BIT_SCORES values must have the correct keys.
+        BIT_SCORES values must have the correct keys. Each key, k (a query id),
+        must have a set of keys (subject ids) that is the full set of sequence
+        ids except for k.
         """
         for queryId in POLYMERASE_NAMES:
-            expected = set(POLYMERASE_NAMES)
-            expected.remove(queryId)
-            self.assertEqual(set(expected), set(BIT_SCORES[queryId]))
+            expected = POLYMERASE_NAMES - {queryId}
+            self.assertEqual(expected, set(BIT_SCORES[queryId]))
 
     def testSymmetric(self):
         """

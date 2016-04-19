@@ -16,13 +16,15 @@ from light.performance.polymerase import Z_SCORES, BIT_SCORES
 from light.performance import testArgs
 
 
-def plot(x, y, read, scoreType):
+def plot(x, y, read, scoreType1, scoreType2=None):
     """
     Make a scatterplot of the test results.
 
-    @param x: a C{list} of the x coordinates (light matter score).
-    @param y: a C{list} of the y coordinates (either z-score or bit score).
-    @param scoreType: A C{str} Y-axis title indicating the type of score.
+    @param x: A C{list} of the x coordinates (light matter score).
+    @param y: A C{list} of the y coordinates (either z-score or bit score).
+    @param scoreType1: A C{str} Y-axis title indicating the type of score.
+    @param scoreType2: A C{str} X-axis title indicating the type of score. To
+        be specified if a score other than the lm score is used.
     """
     MAX_Z_SCORE = 60.0
 
@@ -44,13 +46,15 @@ def plot(x, y, read, scoreType):
     # Labels.
     ax.set_title('Read: %s, R^2: %.2f, SE: %.2f, slope: %.2f, p: %.2f' %
                  (read, rValue, se, slope, pValue))
-    ax.set_ylabel(scoreType)
-    ax.set_xlabel('Light matter score')
+    ax.set_ylabel(scoreType1)
+    if not scoreType2:
+        ax.set_xlabel('Light matter score')
+        ax.set_xlim(0.0, 1.0)
+    else:
+        ax.set_xlabel(scoreType2)
 
-    if scoreType == 'Z score':
+    if scoreType1 == 'Z score':
         ax.set_ylim(0.0, MAX_Z_SCORE)
-
-    ax.set_xlim(0.0, 1.0)
 
     # Axes.
     ax.spines['top'].set_linewidth(0.5)
@@ -58,7 +62,13 @@ def plot(x, y, read, scoreType):
     ax.spines['bottom'].set_linewidth(0.5)
     ax.spines['left'].set_linewidth(0.5)
 
-    fig.savefig(join(testArgs.outputDir, '%s-%s.png' % (read, scoreType)))
+    if not scoreType2:
+        fig.savefig(join(testArgs.outputDir, '%s-%s.png' % (read, scoreType1)))
+    else:
+        fig.savefig(join(testArgs.outputDir, '%s-%s-%s.png' % (read,
+                                                               scoreType1,
+                                                               scoreType2)))
+
     plt.close()
 
 
@@ -118,13 +128,29 @@ class TestBitScoreCorrelation(TestCase):
         Examine the correlation between our scores and blast bit scores.
         """
         for queryId in BIT_SCORES:
-            zScores = []
+            bitScores = []
             lmScores = []
             for subjectId in BIT_SCORES:
                 if queryId != subjectId:
                     lmScores.append(_AFFINITY[queryId][subjectId])
-                    zScores.append(BIT_SCORES[queryId][subjectId])
-            plot(lmScores, zScores, queryId, 'Bit score')
+                    bitScores.append(BIT_SCORES[queryId][subjectId])
+            plot(lmScores, bitScores, queryId, 'Bit score')
+
+
+class TestZScoreBitScoreCorrelation(TestCase):
+
+    def testPlots(self):
+        """
+        Examine the correlation between Z scores and blast bit scores.
+        """
+        for queryId in BIT_SCORES:
+            zScores = []
+            bitScores = []
+            for subjectId in BIT_SCORES:
+                if queryId != subjectId:
+                    bitScores.append(BIT_SCORES[queryId][subjectId])
+                    zScores.append(Z_SCORES[queryId][subjectId])
+            plot(bitScores, zScores, queryId, 'Bit score', 'Z score')
 
 
 class TestAlphaHelix(_TestPolymerase, TestCase):

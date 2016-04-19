@@ -93,9 +93,6 @@ class TestZScoreCorrelation(TestCase):
             database=Database(testArgs.dbParams),
             findParams=testArgs.findParams, returnDict=True)
 
-        # from pprint import pprint
-        # pprint(affinity)
-
         # Prepare results for plotting, and plot.
         for queryId in Z_SCORES:
             zScores = []

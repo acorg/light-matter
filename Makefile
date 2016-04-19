@@ -28,8 +28,11 @@ clean:
 	rm -f light/*.so
 	rm -fr build
 
-perf: performance/blast/polymerase.json
+perf: performance/z-scores/polymerase.json
 	bin/perf.py
+
+performance/z-scores/polymerase.json: performance/database/polymerase-db.fasta
+	performance/bin/create-polymerase-json.sh > $@
 
 update-prosite:
 	@echo "Downloading Prosite database... this may take a while."
@@ -38,6 +41,3 @@ update-prosite:
 	@echo "New database stored into data/prosite-`egrep -m 1 '^CC   Release ' /tmp/prosite.dat | awk '{print $$3}'`.json"
 	@echo "You'll need to add the new db to git and update the version number in _DB_FILE in light/landmarks/prosite.py"
 	rm /tmp/prosite.dat
-
-light/performance/polymerase.json: performance/database/polymerase-db.fasta
-	performance/bin/create-polymerase-json.sh > $@

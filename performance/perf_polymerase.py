@@ -1,27 +1,32 @@
+from os.path import dirname, join
 from unittest import TestCase
 import matplotlib.pyplot as plt
 from scipy import stats
-from os.path import join
 
+from dark.fasta_ss import SSFastaReads
+
+import light
 from light.database import Database
-from light.landmarks import (
-    AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, BetaStrand, BetaTurn)
-from light.parameters import DatabaseParameters
-from light.trig import (
-    AminoAcids, Peaks, Troughs, IndividualPeaks, IndividualTroughs)
-
 from light.performance.affinity import affinityMatrix
-from light.performance.query import queryDatabase
 from light.performance.polymerase import Z_SCORES, BIT_SCORES
 from light.performance import testArgs
 
+# Create a singleton affinity matrix of lm scores for all polymerase
+# sequences.
+_QUERIES = list(SSFastaReads(
+    join(dirname(dirname(light.__file__)),
+         'performance', 'database', 'polymerase-db.fasta')))
+_AFFINITY = affinityMatrix(_QUERIES, database=Database(testArgs.dbParams),
+                           findParams=testArgs.findParams, returnDict=True)
 
-def plot(x, y, read, scoreType):
+
+def plot(x, y, readId, scoreType):
     """
     Make a scatterplot of the test results.
 
-    @param x: a C{list} of the x coordinates (light matter score).
-    @param y: a C{list} of the y coordinates (either z-score or bit score).
+    @param x: a C{list} of C{float} x coordinates.
+    @param y: a C{list} of C{float} y coordinates.
+    @param readId: The C{str} id of the read whose values are being plotted.
     @param scoreType: A C{str} Y-axis title indicating the type of score.
     """
     MAX_Z_SCORE = 60.0
@@ -43,7 +48,7 @@ def plot(x, y, read, scoreType):
 
     # Labels.
     ax.set_title('Read: %s, R^2: %.2f, SE: %.2f, slope: %.2f, p: %.2f' %
-                 (read, rValue, se, slope, pValue))
+                 (readId, rValue, se, slope, pValue))
     ax.set_ylabel(scoreType)
     ax.set_xlabel('Light matter score')
 
@@ -58,41 +63,8 @@ def plot(x, y, read, scoreType):
     ax.spines['bottom'].set_linewidth(0.5)
     ax.spines['left'].set_linewidth(0.5)
 
-    fig.savefig(join(testArgs.outputDir, '%s-%s.png' % (read, scoreType)))
+    fig.savefig(join(testArgs.outputDir, '%s-%s.png' % (readId, scoreType)))
     plt.close()
-
-
-class _TestPolymerase(object):
-    """
-    Test look-up of polymerase sequences.
-    """
-
-    LANDMARKS = None  # Must be set in a subclass.
-    TRIG_POINTS = None  # Must be set in a subclass.
-    LIMIT_PER_LANDMARK = None
-    MAX_DISTANCE = None
-    MIN_DISTANCE = None
-
-    def testFind(self):
-        """
-        Look up various polymerase sequences.
-        """
-        dbParams = DatabaseParameters(landmarks=self.LANDMARKS,
-                                      trigPoints=self.TRIG_POINTS,
-                                      limitPerLandmark=self.LIMIT_PER_LANDMARK,
-                                      maxDistance=self.MAX_DISTANCE,
-                                      minDistance=self.MIN_DISTANCE)
-        database = Database(dbParams=dbParams)
-        self.details = queryDatabase(
-            'performance/database/polymerase-db.fasta',
-            'performance/read/polymerase-queries.fasta',
-            database)
-
-# Singleton affinity matrix of lm scores for all polymerase sequences.
-_AFFINITY = affinityMatrix(
-    'performance/database/polymerase-db.fasta',
-    database=Database(testArgs.dbParams),
-    findParams=testArgs.findParams, returnDict=True)
 
 
 class TestZScoreCorrelation(TestCase):
@@ -125,84 +97,3 @@ class TestBitScoreCorrelation(TestCase):
                     lmScores.append(_AFFINITY[queryId][subjectId])
                     zScores.append(BIT_SCORES[queryId][subjectId])
             plot(lmScores, zScores, queryId, 'Bit score')
-
-
-class TestAlphaHelix(_TestPolymerase, TestCase):
-    """
-    Test looking up polymerases with just an AlphaHelix landmark finder.
-    """
-    LANDMARKS = [AlphaHelix]
-    TRIG_POINTS = []
-
-
-class TestAlphaHelix_3_10(_TestPolymerase, TestCase):
-    """
-    Test looking up polymerases with just an AlphaHelix_3_10 landmark finder.
-    """
-    LANDMARKS = [AlphaHelix_3_10]
-    TRIG_POINTS = []
-
-
-class TestAlphaHelix_pi(_TestPolymerase, TestCase):
-    """
-    Test looking up polymerases with just an AlphaHelix_pi landmark finder.
-    """
-    LANDMARKS = [AlphaHelix_pi]
-    TRIG_POINTS = []
-
-
-class TestBetaStrand(_TestPolymerase, TestCase):
-    """
-    Test looking up polymerases with just a BetaStrand landmark finder.
-    """
-    LANDMARKS = [BetaStrand]
-    TRIG_POINTS = []
-
-
-class TestBetaTurn(_TestPolymerase, TestCase):
-    """
-    Test looking up polymerases with just a BetaTurn landmark finder.
-    """
-    LANDMARKS = [BetaTurn]
-    TRIG_POINTS = []
-
-
-class TestAminoAcids(_TestPolymerase, TestCase):
-    """
-    Test looking up polymerases with just an AminoAcids trig point finder.
-    """
-    LANDMARKS = []
-    TRIG_POINTS = [AminoAcids]
-
-
-class TestPeaks(_TestPolymerase, TestCase):
-    """
-    Test looking up polymerases with just a Peaks trig point finder.
-    """
-    LANDMARKS = []
-    TRIG_POINTS = [Peaks]
-
-
-class TestTroughs(_TestPolymerase, TestCase):
-    """
-    Test looking up polymerases with just a Troughs trig point finder.
-    """
-    LANDMARKS = []
-    TRIG_POINTS = [Troughs]
-
-
-class TestIndividualPeaks(_TestPolymerase, TestCase):
-    """
-    Test looking up polymerases with just an IndividualPeaks trig point finder.
-    """
-    LANDMARKS = []
-    TRIG_POINTS = [IndividualPeaks]
-
-
-class TestIndividualTroughs(_TestPolymerase, TestCase):
-    """
-    Test looking up polymerases with just an IndividualTroughs trig point
-    finder.
-    """
-    LANDMARKS = []
-    TRIG_POINTS = [IndividualTroughs]

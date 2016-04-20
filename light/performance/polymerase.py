@@ -68,5 +68,5 @@ for index, queryId in enumerate(_CERNY_TABLE_2):
 # performance/bin/create-polymerase-json.sh and
 # performance/bin/convert-blast-10-to-json.py for details.
 _BITSCORES_JSON = join(dirname(dirname(light.__file__)),
-                       'performance', 'z-scores', 'polymerase.json')
+                       'performance', 'bit-scores', 'polymerase.json')
 BIT_SCORES = loads(open(_BITSCORES_JSON).read())

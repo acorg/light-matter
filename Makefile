@@ -28,10 +28,10 @@ clean:
 	rm -f light/*.so
 	rm -fr build
 
-perf: performance/z-scores/polymerase.json
+perf: performance/bit-scores/polymerase.json
 	bin/perf.py
 
-performance/z-scores/polymerase.json: performance/database/polymerase-db.fasta
+performance/bit-scores/polymerase.json: performance/database/polymerase-db.fasta
 	performance/bin/create-polymerase-json.sh > $@
 
 update-prosite:

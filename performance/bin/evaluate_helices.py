@@ -51,8 +51,8 @@ def evaluateHelices(helixFile, pdbFile, outFile):
     @param outFile: A C{str} filename of the output file.
     """
     pdbReads = [[read.sequence, read.structure] for read in
-                SSFastaReads(pdbFile)]
-    helices = FastaReads(helixFile, readClass=AAReadWithX)
+                SSFastaReads(pdbFile, checkAlphabet=0)]
+    helices = FastaReads(helixFile, readClass=AAReadWithX, checkAlphabet=0)
 
     truePositive = 0
     falsePositive = 0

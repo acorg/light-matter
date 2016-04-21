@@ -29,7 +29,7 @@ clean:
 	rm -fr build
 
 perf: light/performance/data/polymerase.json
-	bin/perf.py
+	light/performance/bin/perf.py
 
 light/performance/data/polymerase.json: light/performance/data/polymerase.fasta
 	light/performance/bin/create-polymerase-json.sh > $@

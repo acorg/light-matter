@@ -30,6 +30,31 @@ class TestFindLandmark(TestCase):
         for klass in ALL_LANDMARK_CLASSES:
             self.assertIs(klass, findLandmark(klass.NAME))
 
+    def testFindDevLandmark(self):
+        """
+        The find function should be able to find development landmark classes.
+        """
+        self.assertIs(RandomLandmark, findLandmark('RandomLandmark'))
+
+    def testFindNameWithSpace(self):
+        """
+        The find function should be able to find a landmark class that has a
+        space in its name.
+        """
+        self.assertIs(PDB_AlphaHelix, findLandmark('PDB AlphaHelix'))
+
+    def testFindNameWithSpaceUsingTheClassName(self):
+        """
+        The find function should not be able to find a class whose NAME
+        attribute has a space in it name without using a space (e.g.,
+        by using the class name).
+        """
+        # We're just testing strictness here. I considered making it
+        # possible to specify names using either the NAME attribute of the
+        # class or the class name, but it's better to just do things one way.
+        # See 'import this'.
+        self.assertIs(None, findLandmark('PDB_AlphaHelix'))
+
 
 class TestFindLandmarks(TestCase):
     """

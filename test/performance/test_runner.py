@@ -8,12 +8,29 @@ class TestRunner(TestCase):
     Test the light.performance.PerformanceTestRunner class
     """
 
-    # TODO: Delete this test, add something useful.
-    def testNothingYet(self):
+    def testVerbosityZero(self):
         """
-        Placeholder so we have one test.
+        The verbosity attribute must be set to zero if args.hidePassFail is
+        True.
         """
-        PerformanceTestRunner()
+        class X(object):
+            pass
+        args = X()
+        args.hidePassFail = True
+        runner = PerformanceTestRunner(args)
+        self.assertEqual(0, runner.verbosity)
+
+    def testVerbosityOne(self):
+        """
+        The verbosity attribute must be set to one if args.hidePassFail is
+        False.
+        """
+        class X(object):
+            pass
+        args = X()
+        args.hidePassFail = False
+        runner = PerformanceTestRunner(args)
+        self.assertEqual(1, runner.verbosity)
 
 
 class TestFilterTestSuite(TestCase):

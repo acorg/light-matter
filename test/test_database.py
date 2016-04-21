@@ -130,7 +130,7 @@ class TestDatabase(TestCase):
         db = Database(dbParams)
         error = "^'id'$"
         six.assertRaisesRegex(self, KeyError, error, db.getIndexBySubject,
-                              Subject('id', 'FF', 5))
+                              Subject(AARead('id', 'FF')))
 
     def testGetSubjectByIndex(self):
         """
@@ -141,7 +141,7 @@ class TestDatabase(TestCase):
         db = Database(dbParams)
         subject = AARead('id', 'FRRRFRRRF')
         _, index, _ = db.addSubject(subject)
-        self.assertEqual(Subject('id', 'FRRRFRRRF', 0),
+        self.assertEqual(Subject(AARead('id', 'FRRRFRRRF')),
                          db.getSubjectByIndex(index))
 
     def testGetSubjectBySubject(self):
@@ -152,8 +152,9 @@ class TestDatabase(TestCase):
         dbParams = DatabaseParameters(landmarks=[AlphaHelix], trigPoints=[])
         db = Database(dbParams)
         _, index, _ = db.addSubject(AARead('id', 'FRRRFRRRF'))
-        self.assertEqual(index,
-                         db.getIndexBySubject(Subject('id', 'FRRRFRRRF', 0)))
+        self.assertEqual(
+            index,
+            db.getIndexBySubject(Subject(AARead('id', 'FRRRFRRRF'))))
 
     def testGetSubjectHashCount(self):
         """
@@ -177,7 +178,7 @@ class TestDatabase(TestCase):
         subjects = list(db.getSubjects())
         self.assertEqual(1, len(subjects))
         subject = subjects[0]
-        self.assertEqual(Subject('id', 'FRRRFRRRF', 0), subject)
+        self.assertEqual(Subject(AARead('id', 'FRRRFRRRF')), subject)
         self.assertEqual(0, subject.hashCount)
 
     def testOneReadTwoLandmarksGetSubjects(self):
@@ -189,7 +190,8 @@ class TestDatabase(TestCase):
         db = Database(dbParams)
         db.addSubject(AARead('id', 'FRRRFRRRFAFRRRFRRRF'))
         subject = list(db.getSubjects())[0]
-        self.assertEqual(Subject('id', 'FRRRFRRRFAFRRRFRRRF', 1), subject)
+        read = AARead('id', 'FRRRFRRRFAFRRRFRRRF')
+        self.assertEqual(Subject(read, 1), subject)
         self.assertEqual(1, subject.hashCount)
 
     def testOneReadOneLandmarkStatistics(self):
@@ -882,7 +884,7 @@ class TestGetDatabaseFromKeywords(TestCase):
         subjects.add(subject1)
         subjects.add(subject2)
         db = DatabaseSpecifier().getDatabaseFromKeywords(subjects=subjects)
-        allSubjects = db.getSubjects()
+        allSubjects = [subject.read for subject in db.getSubjects()]
         self.assertEqual({subject1, subject2}, set(allSubjects))
 
     def testPopulationFromFastaFile(self):
@@ -896,7 +898,7 @@ class TestGetDatabaseFromKeywords(TestCase):
             db = DatabaseSpecifier().getDatabaseFromKeywords(
                 databaseFasta='file.fasta')
 
-        allSubjects = db.getSubjects()
+        allSubjects = [subject.read for subject in db.getSubjects()]
         self.assertEqual({AARead('id1', 'FFF'), AARead('id2', 'RRR')},
                          set(allSubjects))
 
@@ -918,7 +920,7 @@ class TestGetDatabaseFromKeywords(TestCase):
             db = DatabaseSpecifier().getDatabaseFromKeywords(
                 subjects=subjects, databaseFasta='file.fasta')
 
-        allSubjects = db.getSubjects()
+        allSubjects = [subject.read for subject in db.getSubjects()]
         self.assertEqual(
             {
                 subject1, subject2,
@@ -948,7 +950,7 @@ class TestGetDatabaseFromKeywords(TestCase):
         subjects.add(subject2)
         db = DatabaseSpecifier().getDatabaseFromKeywords(
             database=original, subjects=subjects)
-        allSubjects = db.getSubjects()
+        allSubjects = [subject.read for subject in db.getSubjects()]
         self.assertEqual({subject1, subject2}, set(allSubjects))
 
 
@@ -1032,7 +1034,7 @@ class TestGetDatabaseFromArgs(TestCase):
         args = parser.parse_args(['--databaseSequence', 'id1 FFF',
                                   '--databaseSequence', 'id2 RRR'])
         db = specifier.getDatabaseFromArgs(args)
-        allSubjects = db.getSubjects()
+        allSubjects = [subject.read for subject in db.getSubjects()]
         self.assertEqual({AARead('id1', 'FFF'), AARead('id2', 'RRR')},
                          set(allSubjects))
 
@@ -1050,7 +1052,7 @@ class TestGetDatabaseFromArgs(TestCase):
         with patch.object(builtins, 'open', mockOpener):
             db = specifier.getDatabaseFromArgs(args)
 
-        allSubjects = db.getSubjects()
+        allSubjects = [subject.read for subject in db.getSubjects()]
         self.assertEqual({AARead('id1', 'FFF'), AARead('id2', 'RRR')},
                          set(allSubjects))
 
@@ -1071,7 +1073,7 @@ class TestGetDatabaseFromArgs(TestCase):
         with patch.object(builtins, 'open', mockOpener):
             db = specifier.getDatabaseFromArgs(args)
 
-        allSubjects = db.getSubjects()
+        allSubjects = [subject.read for subject in db.getSubjects()]
         self.assertEqual(
             {
                 AARead('id1', 'FFF'), AARead('id2', 'RRR'),

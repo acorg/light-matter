@@ -210,7 +210,7 @@ class SignificantBinScore(object):
             backend.scan(self._query)))
 
         allSubjectFeatures = getHashFeatures(backend.getHashes(
-            backend.scan(self._subject)))
+            backend.scan(self._subject.read)))
 
         # overallMatchedQueryOffsets and overallMatchedSubjectOffsets will
         # contain all int offsets that are in matching features (and thus
@@ -551,7 +551,7 @@ class GreedySignificantBinScore(object):
             backend.scan(self._query)))
 
         allSubjectFeatures = getHashFeatures(backend.getHashes(
-            backend.scan(self._subject)))
+            backend.scan(self._subject.read)))
 
         # Keep track of variables
         state = {

@@ -26,7 +26,7 @@ def findTrigPoint(name):
     @return: The found class, or C{None}.
     """
 
-    for klass in ALL_TRIG_CLASSES:
+    for klass in ALL_TRIG_CLASSES_INCLUDING_DEV:
         if name == klass.NAME:
             return klass
 

@@ -45,7 +45,7 @@ def findLandmark(name):
     @return: The found class, or C{None}.
     """
 
-    for klass in ALL_LANDMARK_CLASSES:
+    for klass in ALL_LANDMARK_CLASSES_INCLUDING_DEV:
         if name == klass.NAME:
             return klass
 
@@ -55,7 +55,7 @@ def findLandmarks(names):
     A function to find multiple landmark finders by name.
 
     @param names: A C{list} of C{str} name of the landmark finder classes to
-        find, or C{None} (equivalent to an empty list of names)..
+        find, or C{None} (equivalent to an empty list of names).
     @raise ValueError: If any name cannot be found.
     @return: A C{list} of classes that were successfully found.
     """

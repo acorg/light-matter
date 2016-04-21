@@ -128,8 +128,29 @@ class TestFindParameters(TestCase):
         # treat these cases and also because it may become useful if
         # argparse becomes more flexible.
         #
-        # This problem exists for testing the 'choices' arguments:
+        # This problem exists for testing all 'choices' arguments:
         # significanceMethod, scoreMethod, overallScoreMethod.
+
+    def testToDict(self):
+        """
+        The toDict method must return a correct dict.
+        """
+        findParams = FindParameters(
+            significanceMethod='yyy', significanceFraction=0.5,
+            binScoreMethod='xxx', featureMatchScore=3.4,
+            featureMismatchScore=9.3)
+        self.assertEqual(
+            {
+                'binScoreMethod': 'xxx',
+                'deltaScale': 1.0,
+                'featureMatchScore': 3.4,
+                'featureMismatchScore': 9.3,
+                'overallScoreMethod': 'BestBinScore',
+                'significanceFraction': 0.5,
+                'significanceMethod': 'yyy',
+                'weights': FindParameters.DEFAULT_WEIGHTS,
+            },
+            findParams.toDict())
 
 
 class TestDatabaseParameters(TestCase):
@@ -197,6 +218,31 @@ class TestDatabaseParameters(TestCase):
         self.assertEqual(66, dbParams.minDistance)
         self.assertEqual(0.1, dbParams.randomLandmarkDensity)
         self.assertEqual(0.2, dbParams.randomTrigPointDensity)
+
+    def testToDict(self):
+        """
+        The toDict method must return a correct dict.
+        """
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, BetaStrand],
+                                      trigPoints=[Peaks, Troughs],
+                                      distanceBase=3.0, featureLengthBase=1.7,
+                                      limitPerLandmark=10, maxDistance=77,
+                                      minDistance=66,
+                                      randomLandmarkDensity=0.1,
+                                      randomTrigPointDensity=0.2)
+        self.assertEqual(
+            {
+                'distanceBase': 3.0,
+                'featureLengthBase': 1.7,
+                'landmarks': ['AlphaHelix', 'BetaStrand'],
+                'limitPerLandmark': 10,
+                'maxDistance': 77,
+                'minDistance': 66,
+                'randomLandmarkDensity': 0.1,
+                'randomTrigPointDensity': 0.2,
+                'trigPoints': ['Peaks', 'Troughs']
+            },
+            dbParams.toDict())
 
     def testDistanceBaseZeroValueError(self):
         """

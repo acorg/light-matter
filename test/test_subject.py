@@ -2,7 +2,7 @@ import six
 from unittest import TestCase
 from six import StringIO
 
-from dark.reads import AARead
+from dark.reads import AARead, SSAARead
 
 from light.subject import Subject, SubjectStore
 from light.exceptions import SubjectStoreException
@@ -16,21 +16,45 @@ class TestSubject(TestCase):
         """
         A Subject must store the hashcount it is passed.
         """
-        self.assertEqual(6, Subject('id', 'AA', 6).hashCount)
+        read = AARead('id', 'AA')
+        self.assertEqual(6, Subject(read, 6).hashCount)
 
-    def testIsAARead(self):
+    def testHashCountDefaultsToZero(self):
         """
-        A Subject is a subclass of AARead.
+        A Subject must store a hashcount of zero if the hashcount isn't given.
         """
-        self.assertTrue(isinstance(Subject('id', 'AA', 0), AARead))
+        read = AARead('id', 'AA')
+        self.assertEqual(0, Subject(read).hashCount)
 
-    def testAAReadInitCalled(self):
+    def testLen(self):
         """
-        A Subject must call AARead.__init__ with the correct arguments. We can
-        check this by comparing an AARead to a Subject (and vice versa).
+        A Subject must return the correct (sequence) length via len().
         """
-        self.assertEqual(AARead('id', 'A', '!'), Subject('id', 'A', 6, '!'))
-        self.assertEqual(Subject('id', 'A', 6, '!'), AARead('id', 'A', '!'))
+        self.assertEqual(2, len(Subject(AARead('id', 'AA'))))
+
+    def testIdenticalSubjectsCompareEqual(self):
+        """
+        Two identical Subject instances must compare equal.
+        """
+        read = AARead('id', 'AA')
+        self.assertEqual(Subject(read), Subject(read))
+
+    def testSubjectsCompareEqualEvenWithDifferingHashCounts(self):
+        """
+        Two otherwise identical Subject instances must compare equal even if
+        their hash counts differ.
+        """
+        read = AARead('id', 'AA')
+        self.assertEqual(Subject(read, 1), Subject(read, 2))
+
+    def testSubjectsOfIncompatibleReadTypesCompareUnequal(self):
+        """
+        Two Subject instances that have reads that cannot be compared must
+        compare unequal.
+        """
+        read1 = AARead('id', 'AA')
+        read2 = SSAARead('id', 'AA', 'HH')
+        self.assertNotEqual(Subject(read1), Subject(read2))
 
 
 class TestSubjectStore(TestCase):
@@ -49,7 +73,7 @@ class TestSubjectStore(TestCase):
         length one.
         """
         ss = SubjectStore()
-        subject = Subject('id', 'AA', 6)
+        subject = Subject(AARead('id', 'AA'))
         ss.add(subject)
         self.assertEqual(1, len(ss))
 
@@ -58,7 +82,7 @@ class TestSubjectStore(TestCase):
         Adding one subject to a SubjectStore but not giving a subject index
         must return the expected result.
         """
-        subject = Subject('id', 'AA', 6)
+        subject = Subject(AARead('id', 'AA'))
         preExisting, subjectIndex = SubjectStore().add(subject)
         self.assertFalse(preExisting)
         self.assertEqual('0', subjectIndex)
@@ -68,7 +92,7 @@ class TestSubjectStore(TestCase):
         Adding one subject to a SubjectStore and giving a subject index
         must return the expected result.
         """
-        subject = Subject('id', 'AA', 6)
+        subject = Subject(AARead('id', 'AA'))
         preExisting, subjectIndex = SubjectStore().add(subject, '3')
         self.assertFalse(preExisting)
         self.assertEqual('3', subjectIndex)
@@ -79,8 +103,8 @@ class TestSubjectStore(TestCase):
         must have the expected result.
         """
         ss = SubjectStore()
-        subject1 = Subject('id1', 'AA', 6)
-        subject2 = Subject('id2', 'AA', 6)
+        subject1 = Subject(AARead('id1', 'AA'))
+        subject2 = Subject(AARead('id2', 'AA'))
         ss.add(subject1, '1')
         ss.add(subject2, '2')
         self.assertEqual(2, len(ss))
@@ -91,7 +115,7 @@ class TestSubjectStore(TestCase):
         and then re-adding it with the same index must return the expected
         result.
         """
-        subject = Subject('id', 'AA', 6)
+        subject = Subject(AARead('id', 'AA'))
         ss = SubjectStore()
         ss.add(subject, '3')
         preExisting, subjectIndex = ss.add(subject, '3')
@@ -104,7 +128,7 @@ class TestSubjectStore(TestCase):
         results in SubjectStore with length one.
         """
         ss = SubjectStore()
-        subject = Subject('id', 'AA', 6)
+        subject = Subject(AARead('id', 'AA'))
         ss.add(subject)
         ss.add(subject)
         self.assertEqual(1, len(ss))
@@ -115,7 +139,7 @@ class TestSubjectStore(TestCase):
         and then re-adding it with a different index must raise a
         SubjectStoreException.
         """
-        subject = Subject('id', 'AA', 6)
+        subject = Subject(AARead('id', 'AA'))
         ss = SubjectStore()
         ss.add(subject, '3')
         error = ("^Already stored index \(3\) for subject 'id' does not match "
@@ -128,8 +152,8 @@ class TestSubjectStore(TestCase):
         getSubjects must return the expected result.
         """
         ss = SubjectStore()
-        subject1 = Subject('id1', 'AA', 6)
-        subject2 = Subject('id2', 'CC', 6)
+        subject1 = Subject(AARead('id1', 'AA'))
+        subject2 = Subject(AARead('id2', 'CC'))
         ss.add(subject1, '1')
         ss.add(subject2, '2')
         result = set(ss.getSubjects())
@@ -153,7 +177,7 @@ class TestSubjectStore(TestCase):
         must be as expected.
         """
         ss = SubjectStore()
-        subject = Subject('id', 'AA', 6)
+        subject = Subject(AARead('id', 'AA'), 6)
         ss.add(subject, '3')
         fp = StringIO()
         ss.save(fp)

@@ -1,7 +1,7 @@
 autobahn==0.10.9
 biopython==1.65
 crossbar[all]
-dark-matter==1.0.19
+dark-matter>=1.0.31
 discover==0.4.0
 matplotlib==1.4.3
 --allow-external mysql-connector-python

@@ -181,7 +181,7 @@ class Backend(object):
             already in the database, 2) the C{str} subject index, and 3) the
             hash count for the subject.
         """
-        subject = Subject(subject.id, subject.sequence, 0, subject.quality)
+        subject = Subject(subject)
         preExisting, subjectIndex = self._subjectStore.add(subject,
                                                            subjectIndex)
 
@@ -190,7 +190,7 @@ class Backend(object):
                 True, subjectIndex,
                 self._subjectStore.getSubjectByIndex(subjectIndex).hashCount)
 
-        scannedSubject = self.scan(subject)
+        scannedSubject = self.scan(subject.read)
         self._totalCoveredResidues += len(scannedSubject.coveredIndices())
 
         for landmark, trigPoint in self.getScannedPairs(scannedSubject):
@@ -211,7 +211,7 @@ class Backend(object):
             except KeyError:
                 subjectDict[subjectIndex] = [offsets]
 
-        self._checksum.update((subject.id, subject.sequence))
+        self._checksum.update((subject.read.id, subject.read.sequence))
 
         return False, subjectIndex, subject.hashCount
 
@@ -230,46 +230,46 @@ class Backend(object):
         return '%s:%s:%s' % (landmark.hashkey(), trigPoint.hashkey(),
                              distance)
 
-    def scan(self, sequence):
+    def scan(self, read):
         """
         Make an instance of C{light.reads.ScannedRead} from a sequence.
 
-        @param sequence: a C{dark.read.AARead} instance.
+        @param read: A instance of C{dark.read.AARead} or its subclasses.
         @return: a C{light.reads.ScannedRead} instance.
         """
-        scannedSequence = ScannedRead(sequence)
+        scannedRead = ScannedRead(read)
 
-        append = scannedSequence.landmarks.append
+        append = scannedRead.landmarks.append
         for landmarkFinder in self.dbParams.landmarkFinders:
-            for landmark in landmarkFinder.find(sequence):
+            for landmark in landmarkFinder.find(read):
                 append(landmark)
 
-        append = scannedSequence.trigPoints.append
+        append = scannedRead.trigPoints.append
         for trigFinder in self.dbParams.trigPointFinders:
-            for trigPoint in trigFinder.find(sequence):
+            for trigPoint in trigFinder.find(read):
                 append(trigPoint)
 
-        return scannedSequence
+        return scannedRead
 
-    def getScannedPairs(self, scannedSequence):
+    def getScannedPairs(self, scannedRead):
         """
         Get the (landmark, trigPoint) pairs from a ScannedRead instance.
 
-        @param scannedSequence: A C{light.reads.ScannedRead} instance.
+        @param scannedRead: A C{light.reads.ScannedRead} instance.
         @return: A generator yielding (landmark, trigPoint) pairs, as returned
             by C{light.reads.ScannedRead.getPairs}.
         """
-        return scannedSequence.getPairs(
+        return scannedRead.getPairs(
             limitPerLandmark=self.dbParams.limitPerLandmark,
             maxDistance=self.dbParams.maxDistance,
             minDistance=self.dbParams.minDistance)
 
-    def getHashes(self, scannedSequence):
+    def getHashes(self, scannedRead):
         """
         Get all (landmark, trigPoint) hashes from a scanned sequence and
         collect the offsets at which the (landmark, trigPoint) pair occurs.
 
-        @param scannedSequence: A C{light.reads.ScannedRead} instance.
+        @param scannedRead: A C{light.reads.ScannedRead} instance.
         @return: A C{dict} keyed by (landmark, trigPoint) hash, whose value
             is a C{list} of C{lists} containing the landmark and trigPoint pair
             that generated that hash.
@@ -282,7 +282,7 @@ class Backend(object):
         # in results.
         hashes = OrderedDict()
 
-        for (landmark, trigPoint) in self.getScannedPairs(scannedSequence):
+        for (landmark, trigPoint) in self.getScannedPairs(scannedRead):
             hash_ = self.hash(landmark, trigPoint)
             try:
                 hashInfo = hashes[hash_]

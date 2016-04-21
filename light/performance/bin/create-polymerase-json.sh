@@ -9,8 +9,8 @@
 tmp=`mktemp -d /tmp/lm-XXXXXX`
 trap "rm -fr $tmp" 1 2 3 15
 
-base=$(dirname $(dirname $(python -c 'import light; print(light.__file__)')))
-pdbFASTA=$base/performance/database/polymerase-db.fasta
+base=$(dirname $(python -c 'import light; print(light.__file__)'))
+pdbFASTA=$base/performance/data/polymerase.fasta
 
 test -f $fasta || {
     echo "$(basename $0): Required input FASTA file '$fasta' does not exist." >&2

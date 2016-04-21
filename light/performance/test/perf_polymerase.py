@@ -14,8 +14,8 @@ from light.performance import testArgs
 # Create a singleton affinity matrix of lm scores for all polymerase
 # sequences.
 _QUERIES = list(SSFastaReads(
-    join(dirname(dirname(light.__file__)),
-         'performance', 'database', 'polymerase-db.fasta')))
+    join(dirname(light.__file__),
+         'performance', 'data', 'polymerase.fasta')))
 _AFFINITY = affinityMatrix(_QUERIES, database=Database(testArgs.dbParams),
                            findParams=testArgs.findParams, returnDict=True)
 

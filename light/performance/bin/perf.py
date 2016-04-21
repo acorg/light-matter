@@ -5,7 +5,7 @@ from __future__ import print_function
 import sys
 import unittest
 import argparse
-from os.path import basename, exists, isdir, join
+from os.path import basename, dirname, exists, isdir, join
 from time import gmtime, strftime
 from os import mkdir
 
@@ -24,7 +24,8 @@ if __name__ == '__main__':
         description='Run light-matter performance tests')
 
     parser.add_argument(
-        '--startDir', default='performance',
+        '--startDir',
+        default=join(dirname(light.performance.__file__), 'test'),
         help='The directory in which to (recursively) search for tests.')
 
     parser.add_argument(

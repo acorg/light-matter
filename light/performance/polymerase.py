@@ -11,7 +11,7 @@ from os.path import join, dirname
 from json import loads
 from collections import OrderedDict
 
-import light
+from light import performance
 
 
 # The following has long lines and extra embedded spaces to make it simpler
@@ -65,8 +65,7 @@ for index, queryId in enumerate(_CERNY_TABLE_2):
 
 # Read the BLAST bit score JSON. These values in that file were generated
 # by blastp. See the top-level Makefile,
-# performance/bin/create-polymerase-json.sh and
-# performance/bin/convert-blast-10-to-json.py for details.
-_BITSCORES_JSON = join(dirname(dirname(light.__file__)),
-                       'performance', 'bit-scores', 'polymerase.json')
-BIT_SCORES = loads(open(_BITSCORES_JSON).read())
+# light/performance/bin/create-polymerase-json.sh and
+# light/performance/bin/convert-blast-10-to-json.py for details.
+_JSON = join(dirname(performance.__file__), 'data', 'polymerase.json')
+BIT_SCORES = loads(open(_JSON).read())

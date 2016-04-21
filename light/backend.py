@@ -234,7 +234,7 @@ class Backend(object):
         """
         Make an instance of C{light.reads.ScannedRead} from a sequence.
 
-        @param read: A instance of C{dark.read.AARead} or its subclasses.
+        @param read: An instance of C{dark.read.AARead} or its subclasses.
         @return: a C{light.reads.ScannedRead} instance.
         """
         scannedRead = ScannedRead(read)

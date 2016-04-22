@@ -73,8 +73,6 @@ def plot(x, y, readId, scoreTypeX, scoreTypeY):
     @param scoreTypeX: A C{str} X-axis title indicating the type of score.
     @param scoreTypeY: A C{str} Y-axis title indicating the type of score.
     """
-    MAX_Z_SCORE = 60.0
-
     plt.rcParams['font.family'] = 'Helvetica'
     fig = plt.figure(figsize=(7, 5))
     ax = fig.add_subplot(111)
@@ -83,12 +81,8 @@ def plot(x, y, readId, scoreTypeX, scoreTypeY):
 
     # Plot.
     plt.plot(x, y, 'o', markerfacecolor='blue', markeredgecolor='blue')
-    if slope >= 0:
-        col = 'green'
-    else:
-        col = 'red'
     plt.plot([0, max(x)], [intercept, slope * max(x) + intercept], '-',
-             color=col)
+             color='green' if slope >= 0 else 'red')
 
     # Labels.
     ax.set_title('Read: %s, R^2: %.2f, SE: %.2f, slope: %.2f, p: %.2f' %
@@ -103,12 +97,12 @@ def plot(x, y, readId, scoreTypeX, scoreTypeY):
     if scoreTypeY == 'Light matter score':
         ax.set_ylim(0.0, 1.0)
 
-    # Z scores are always 0.0 to MAX_Z_SCORE so we can explicitly set
+    # Z scores are always 0.0 to 60.0 so we can explicitly set
     # axis limits for these.
     if scoreTypeX == 'Z score':
-        ax.set_xlim(0.0, MAX_Z_SCORE)
+        ax.set_xlim(0.0, 60.0)
     if scoreTypeY == 'Z score':
-        ax.set_ylim(0.0, MAX_Z_SCORE)
+        ax.set_ylim(0.0, 60.0)
 
     # Axes.
     ax.spines['top'].set_linewidth(0.5)

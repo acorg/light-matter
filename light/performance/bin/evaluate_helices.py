@@ -24,12 +24,14 @@ def evaluateMatch(structureString, start, end):
         --> true positive.
 
     @param structureString: A C{str} of a structure sequence.
-    @param start: A C{int} start of the match.
-    @param end: A C{int} end of the match.
+    @param start: An C{int} start of the match.
+    @param end: An C{int} end of the match.
 
     @return: C{True} if the match is a true positive and C{False} if the match
         is a false positive.
     """
+    assert 0 <= start < end
+
     if start > 0 and structureString[start - 1] == 'H':
         return False
 
@@ -50,34 +52,37 @@ def evaluateHelices(helixFile, pdbFile, outFile):
         their structure annotation.
     @param outFile: A C{str} filename of the output file.
     """
-    pdbReads = [[read.sequence, read.structure] for read in
+    pdbReads = [(read.sequence, read.structure) for read in
                 SSFastaReads(pdbFile, checkAlphabet=0)]
     helices = FastaReads(helixFile, readClass=AAReadWithX, checkAlphabet=0)
 
-    truePositive = 0
-    falsePositive = 0
-
     with open(outFile, 'w') as fp:
         for i, helix in enumerate(helices):
-            print(i)
+            truePositive = falsePositive = 0
             helixSequence = helix.sequence
             if ('X' in helixSequence or 'Z' in helixSequence or 'B' in
                     helixSequence):
                 continue
             else:
                 uniqueRegex = re.compile(helixSequence)
-                for read in pdbReads:
-                    for match in uniqueRegex.finditer(read[0]):
+                for sequence, structure in pdbReads:
+                    for match in uniqueRegex.finditer(sequence):
                         start = match.start()
                         end = match.end()
-                        if evaluateMatch(read[1], start, end):
+                        if evaluateMatch(structure, start, end):
                             truePositive += 1
                         else:
                             falsePositive += 1
 
-            fp.write('%s %d %d\n' % (helix.sequence, truePositive,
-                                     falsePositive))
+                fp.write('%s %d %d\n' % (helix.sequence, truePositive,
+                                         falsePositive))
 
 
 if __name__ == '__main__':
-    evaluateHelices(sys.argv[1], sys.argv[2], sys.argv[3])
+    if len(sys.argv) != 4:
+        from os.path import basename
+        print('Usage: %s helixFile, pdbFile, outFile' % basename(sys.argv[0]),
+              file=sys.stderr)
+    else:
+        helixFile, pdbFile, outFile = sys.argv[1:]
+        evaluateHelices(helixFile, pdbFile, outFile)

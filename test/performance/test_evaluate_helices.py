@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from performance.bin.evaluate_helices import evaluateMatch
+from light.performance.bin.evaluate_helices import evaluateMatch
 
 
 class TestEvaluateMatch(TestCase):
@@ -23,6 +23,15 @@ class TestEvaluateMatch(TestCase):
         """
         self.assertTrue(evaluateMatch('SHHHHHHG', 1, 7))
 
+    def testCase2ExactMatch(self):
+        """
+        The alpha helix matches part of a sequence that's an alpha helix. The
+        alpha helix in the sequence doesn't extend to the left or right.
+        --> true positive.
+        The helix starts at 0 and matches exactly.
+        """
+        self.assertTrue(evaluateMatch('HHH', 0, 3))
+
     def testCase3(self):
         """
         The alpha helix matches part of a sequence that's an alpha helix. The
@@ -39,7 +48,16 @@ class TestEvaluateMatch(TestCase):
         """
         self.assertTrue(evaluateMatch('GHHHHHHH', 1, 7))
 
-    def testHelixExtendsBothSites(self):
+    def testCase4HelixStartsAt0(self):
+        """
+        The alpha helix matches part of a sequence that's an alpha helix. The
+        alpha helix in the sequence doesn't extends to the right.
+        --> true positive.
+        The helix starts at 0 and extends to the right.
+        """
+        self.assertTrue(evaluateMatch('HHHHHHHH', 0, 6))
+
+    def testHelixExtendsBothSides(self):
         """
         The alpha helix matches part of a sequence that's an alpha helix. The
         alpha helix in the sequence extends to both sides.

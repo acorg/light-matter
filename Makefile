@@ -28,11 +28,11 @@ clean:
 	rm -f light/*.so
 	rm -fr build
 
-perf: performance/z-scores/polymerase.json
-	bin/perf.py
+perf: light/performance/data/polymerase.json
+	light/performance/bin/perf.py
 
-performance/z-scores/polymerase.json: performance/database/polymerase-db.fasta
-	performance/bin/create-polymerase-json.sh > $@
+light/performance/data/polymerase.json: light/performance/data/polymerase.fasta
+	light/performance/bin/create-polymerase-json.sh > $@
 
 update-prosite:
 	@echo "Downloading Prosite database... this may take a while."

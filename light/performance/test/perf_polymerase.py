@@ -20,15 +20,15 @@ _AFFINITY = affinityMatrix(_QUERIES, database=Database(testArgs.dbParams),
                            findParams=testArgs.findParams, returnDict=True)
 
 
-def plot(x, y, readId, scoreType1, scoreType2=None):
+def plot(x, y, readId, scoreTypeX, scoreTypeY=None):
     """
     Make a scatterplot of the test results.
 
     @param x: a C{list} of C{float} x coordinates.
     @param y: a C{list} of C{float} y coordinates.
     @param readId: The C{str} id of the read whose values are being plotted.
-    @param scoreType1: A C{str} Y-axis title indicating the type of score.
-    @param scoreType2: A C{str} X-axis title indicating the type of score. To
+    @param scoreTypeX: A C{str} Y-axis title indicating the type of score.
+    @param scoreTypeY: A C{str} X-axis title indicating the type of score. To
         be specified if a score other than the lm score is used.
     """
     MAX_Z_SCORE = 60.0
@@ -51,14 +51,14 @@ def plot(x, y, readId, scoreType1, scoreType2=None):
     # Labels.
     ax.set_title('Read: %s, R^2: %.2f, SE: %.2f, slope: %.2f, p: %.2f' %
                  (readId, rValue, se, slope, pValue))
-    ax.set_ylabel(scoreType1)
-    if not scoreType2:
+    ax.set_ylabel(scoreTypeX)
+    if scoreTypeY:
+        ax.set_xlabel(scoreTypeY)
+    else:
         ax.set_xlabel('Light matter score')
         ax.set_xlim(0.0, 1.0)
-    else:
-        ax.set_xlabel(scoreType2)
 
-    if scoreType1 == 'Z score':
+    if scoreTypeX == 'Z score':
         ax.set_ylim(0.0, MAX_Z_SCORE)
 
     # Axes.
@@ -67,13 +67,13 @@ def plot(x, y, readId, scoreType1, scoreType2=None):
     ax.spines['bottom'].set_linewidth(0.5)
     ax.spines['left'].set_linewidth(0.5)
 
-    if not scoreType2:
-        fig.savefig(join(testArgs.outputDir, '%s-%s.png' % (readId,
-                                                            scoreType1)))
-    else:
+    if scoreTypeY:
         fig.savefig(join(testArgs.outputDir, '%s-%s-%s.png' % (readId,
-                                                               scoreType1,
-                                                               scoreType2)))
+                                                               scoreTypeX,
+                                                               scoreTypeY)))
+    else:
+        fig.savefig(join(testArgs.outputDir, '%s-%s.png' % (readId,
+                                                            scoreTypeX)))
     plt.close()
 
 

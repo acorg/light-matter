@@ -21,7 +21,7 @@ _AFFINITY = affinityMatrix(_QUERIES, database=Database(testArgs.dbParams),
 
 class TestZScoreCorrelation(TestCase):
 
-    def testPlots(self):
+    def testPlotsPolymerase(self):
         """
         Examine the correlation between our scores and Z scores.
         """
@@ -37,7 +37,7 @@ class TestZScoreCorrelation(TestCase):
 
 class TestBitScoreCorrelation(TestCase):
 
-    def testPlots(self):
+    def testPlotsPolymerase(self):
         """
         Examine the correlation between our scores and blast bit scores.
         """
@@ -53,7 +53,7 @@ class TestBitScoreCorrelation(TestCase):
 
 class TestZScoreBitScoreCorrelation(TestCase):
 
-    def testPlots(self):
+    def testPlotsPolymerase(self):
         """
         Examine the correlation between Z scores and blast bit scores.
         """

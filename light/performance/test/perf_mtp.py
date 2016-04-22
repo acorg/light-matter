@@ -50,7 +50,7 @@ LM_SCORES = affinityMatrix(_QUERIES, subjects=_SUBJECT,
 
 class TestZScoreCorrelation(TestCase):
 
-    def testPlots(self):
+    def testPlotsMTP(self):
         """
         Examine the correlation between our scores and Z scores.
         """
@@ -59,7 +59,7 @@ class TestZScoreCorrelation(TestCase):
 
 class TestBitScoreCorrelation(TestCase):
 
-    def testPlots(self):
+    def testPlotsMTP(self):
         """
         Examine the correlation between our scores and blast bit scores.
         """
@@ -69,7 +69,7 @@ class TestBitScoreCorrelation(TestCase):
 
 class TestZScoreBitScoreCorrelation(TestCase):
 
-    def testPlots(self):
+    def testPlotsMTP(self):
         """
         Examine the correlation between Z scores and blast bit scores.
         """

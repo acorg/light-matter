@@ -23,23 +23,14 @@ class TestEvaluateMatch(TestCase):
         """
         self.assertTrue(evaluateMatch('SHHHHHHG', 1, 7))
 
-    def testCase2HelixStartsAt0(self):
+    def testCase2ExactMatch(self):
         """
         The alpha helix matches part of a sequence that's an alpha helix. The
         alpha helix in the sequence doesn't extend to the left or right.
         --> true positive.
         The helix starts at 0 and matches exactly.
         """
-        self.assertTrue(evaluateMatch('HHHHHHHH', 0, 7))
-
-    def testCase2HelixStartsAt0StickOutLeft(self):
-        """
-        The alpha helix matches part of a sequence that's an alpha helix. The
-        alpha helix in the sequence doesn't extend to the left or right.
-        --> true positive.
-        The helix starts at 0 and sticks out to the left.
-        """
-        self.assertTrue(evaluateMatch('HHHHHHHH', 0, 5))
+        self.assertTrue(evaluateMatch('HHH', 0, 3))
 
     def testCase3(self):
         """
@@ -56,6 +47,15 @@ class TestEvaluateMatch(TestCase):
         --> true positive.
         """
         self.assertTrue(evaluateMatch('GHHHHHHH', 1, 7))
+
+    def testCase4HelixStartsAt0(self):
+        """
+        The alpha helix matches part of a sequence that's an alpha helix. The
+        alpha helix in the sequence doesn't extends to the right.
+        --> true positive.
+        The helix starts at 0 and extends to the right.
+        """
+        self.assertTrue(evaluateMatch('HHHHHHHH', 0, 6))
 
     def testHelixExtendsBothSides(self):
         """

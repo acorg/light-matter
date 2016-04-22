@@ -90,19 +90,25 @@ def plot(x, y, readId, scoreTypeX, scoreTypeY):
     ax.set_ylabel(scoreTypeY)
     ax.set_xlabel(scoreTypeX)
 
-    # Light matter scores are always 0.0 to 1.0 so we can explicitly set
-    # axis limits for these.
+    # Light matter scores are always <= 1.0.
     if scoreTypeX == 'Light matter score':
-        ax.set_xlim(0.0, 1.0)
+        ax.set_xlim(right=1.0)
     if scoreTypeY == 'Light matter score':
-        ax.set_ylim(0.0, 1.0)
+        ax.set_ylim(top=1.0)
 
-    # Z scores are always 0.0 to 60.0 so we can explicitly set
-    # axis limits for these.
+    # Z scores are always <= 60.0 (with sanity check).
     if scoreTypeX == 'Z score':
-        ax.set_xlim(0.0, 60.0)
+        assert max(x) <= 60.0
+        ax.set_xlim(right=60.0)
     if scoreTypeY == 'Z score':
-        ax.set_ylim(0.0, 60.0)
+        assert max(y) <= 60.0
+        ax.set_ylim(top=60.0)
+
+    # No scores can be negative. Explicitly set the lower limits on both
+    # axes to zero. This stops regression lines from causing an axis to
+    # display useless areas with negative ticks and no data points.
+    ax.set_xlim(left=0.0)
+    ax.set_ylim(bottom=0.0)
 
     # Axes.
     ax.spines['top'].set_linewidth(0.5)

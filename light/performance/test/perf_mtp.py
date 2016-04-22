@@ -1,0 +1,76 @@
+from os.path import dirname, join
+from unittest import TestCase
+
+from dark.reads import SSAARead, Reads
+from dark.fasta_ss import SSFastaReads
+
+import light
+from light.database import Database
+from light.performance import testArgs
+from light.performance.affinity import affinityMatrix
+from light.performance.data.mtp import BIT_SCORES, Z_SCORES
+from light.performance.test.utils import plot
+
+# Create a singleton affinity matrix of lm scores for all sequences.
+_SUBJECT = Reads()
+_SUBJECT.add(SSAARead('4MTP:A:sequence',
+                      'VHSNQEKIKKRIQKLKEEFATTWHKDPEHPYRTWTYHGSYEVKATGSASSLVNGV'
+                      'VKLMSKPWDAIANVTTMAMTDTTPFGQQRVFKEKVDTKAPEPPAGVREVLNETTN'
+                      'WLWAHLSREKRPRLCTKEEFIKKVNSNAALGAVFAEQNQWSTAREAVNDPRFWEM'
+                      'VDEERENHLRGECHTCIYNMMGKREKKPGEFGKAKGSRAIWFMWLGARYLEFEAL'
+                      'GFLNEDHWLSRENSGGGVEGSGVQKLGYILRDIAGKQGGKMYADDTAGWDTRITR'
+                      'TDLENEAKVLELLDGEHRMLARAIIELTYRHKVVKVMRPAAEGKTVMDVISREDQ'
+                      'RGSGQVVTYALNTFTNIAVQLVRLMEAEGVIGPQHLEQLPRKNKIAVRTWLFENG'
+                      'EERVTRMAISGDDCVVKPLDDRFATALHFLNAMSKVRKDIQEWKPSHGWHDWQQV'
+                      'PFCSNHFQEIVMKDGRSIVVPCRGQDELIGRARISPGAGWNVKDTACLAKAYAQM'
+                      'WLLLYFHRRDLRLMANAICSAVPVDWVPTGRTSWSIHSKGEWMTTEDMLQVWNRV'
+                      'WIEENEWMMDKTPIASWTDVPYVGKREDIWCGSLIGTRSRATWAENIYAAINQVR'
+                      'AVIGKENYVDYMTSLRRYEDVLIQEDRVI',
+                      '------TTHHHHHHHHHHTTTT-B---S---SSSEEEEEEE----------B-HH'
+                      'HHHH-GGGGS-HHHHT---EE-SHHHHHHHHHHHTS-------HHHHHHHHHHHH'
+                      'HHHHHHTTT-------HHHHHHHH-------------------HHHHT-TTHHHH'
+                      'HHHHHHHHHHT--SS--EEEEEEE----SSSS-----EEEEE--HHHHHHHHHHH'
+                      'THHHHTTTTSHHHHSSB-TT--HHHHHHHHHHHHHSSSS-EE---BTTGGGG--H'
+                      'HHHHHHGGGGGG--THHHHHHHHHHHHTTTSEEEEEEEEETTTEEEEEEEEESS-'
+                      '--S-STTHHHHHHHHHHHHHHHHHHHHHTSS-GGGTTS--HHHHHHHHHHHHHHH'
+                      'HHHGGGEEEETTEEEE--SSGGGGG--HHHHHTT--BSSS-TTS---EES-GGG-'
+                      '-BTTBEEEEEE-TTS-EEEEEE--HHHHHHHHHB-------HHHHHHHHHHHHHH'
+                      'HHHHSTTSHHHHHHHHHHHHTS-TT----S-S---TT---TTSSSS-HHHHHHHH'
+                      'HTTS-TT--------SGGGS----HHHHHHTT--TT-HHHHHHHHTHHHHHHHHH'
+                      'HHH-S------------------------'))
+
+_QUERIES = list(SSFastaReads(
+    join(dirname(light.__file__),
+         'performance', 'data', 'mtp-queries-structure.fasta')))
+
+LM_SCORES = affinityMatrix(_QUERIES, subjects=_SUBJECT,
+                           database=Database(testArgs.dbParams),
+                           findParams=testArgs.findParams, returnDict=True)
+
+
+class TestZScoreCorrelation(TestCase):
+
+    def testPlots(self):
+        """
+        Examine the correlation between our scores and Z scores.
+        """
+        plot(LM_SCORES, Z_SCORES, '4MPT:A', 'Light matter score', 'Z score')
+
+
+class TestBitScoreCorrelation(TestCase):
+
+    def testPlots(self):
+        """
+        Examine the correlation between our scores and blast bit scores.
+        """
+        plot(LM_SCORES, BIT_SCORES, '4MPT:A', 'Light matter score',
+             'Bit score')
+
+
+class TestZScoreBitScoreCorrelation(TestCase):
+
+    def testPlots(self):
+        """
+        Examine the correlation between Z scores and blast bit scores.
+        """
+        plot(BIT_SCORES, Z_SCORES, '4MPT:A', 'Bit score', 'Z score')

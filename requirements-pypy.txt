@@ -1,0 +1,13 @@
+git+http://bitbucket.org/pypy/numpy.git
+biopython==1.64
+dark-matter==1.0.19
+discover==0.4.0
+matplotlib==1.4.2
+pandas==0.15.2
+pep8==1.5.7
+pyflakes==0.8.1
+six==1.10.0
+scipy==0.14.0
+trollius==2.0
+twisted==14.0.2
+ujson==1.33

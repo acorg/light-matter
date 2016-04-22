@@ -237,7 +237,7 @@ class FeatureMatchingScore(object):
         scannedQuery = backend.scan(query)
         self._allQueryFeatures = set(scannedQuery.landmarks +
                                      scannedQuery.trigPoints)
-        scannedSubject = backend.scan(subject)
+        scannedSubject = backend.scan(subject.read)
         self._allSubjectFeatures = set(scannedSubject.landmarks +
                                        scannedSubject.trigPoints)
 
@@ -353,7 +353,7 @@ class FeatureAAScore(object):
         allQueryHashes = backend.getHashes(scannedQuery)
         self._allQueryFeatures = getHashFeatures(allQueryHashes)
 
-        scannedSubject = backend.scan(subject)
+        scannedSubject = backend.scan(subject.read)
         allSubjectHashes = backend.getHashes(scannedSubject)
         self._allSubjectFeatures = getHashFeatures(allSubjectHashes)
 
@@ -574,7 +574,7 @@ class WeightedFeatureAAScore(object):
         allQueryHashes = backend.getHashes(scannedQuery)
         self._allQueryFeatures = getHashFeatures(allQueryHashes)
 
-        scannedSubject = backend.scan(subject)
+        scannedSubject = backend.scan(subject.read)
         allSubjectHashes = backend.getHashes(scannedSubject)
         self._allSubjectFeatures = getHashFeatures(allSubjectHashes)
 

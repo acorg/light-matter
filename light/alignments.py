@@ -22,6 +22,7 @@ class LightAlignment(Alignment):
     @param subjectTitle: The C{str} title of the sequence a read matched
         against.
     """
+    # The implementation is completely provided by dark.alignments.Alignment
 
 
 class LightReadsAlignments(ReadsAlignments):
@@ -51,7 +52,7 @@ class LightReadsAlignments(ReadsAlignments):
 
         # Add a dictionary that will allow us to look up database subjects
         # by title.
-        self._subjects = dict((subject.id, subject.sequence)
+        self._subjects = dict((subject.read.id, subject.read.sequence)
                               for subject in database.getSubjects())
 
         # Prepare application parameters in order to initialize self.
@@ -123,7 +124,8 @@ class LightReadsAlignments(ReadsAlignments):
         Obtain information about a subject sequence, given its title.
 
         @param title: A C{str} sequence title from a light matter match.
-        @return: An C{AARead} instance.
+        @return: An C{AARead} instance. Note that this may not be the type
+            of read originally given to the database.
         """
         return AARead(title, self._subjects[title])
 
@@ -142,7 +144,7 @@ def jsonDictToAlignments(lightDict, database):
 
     for alignment in lightDict['alignments']:
         subject = database.getSubjectByIndex(alignment['subjectIndex'])
-        lightAlignment = LightAlignment(len(subject), subject.id)
+        lightAlignment = LightAlignment(len(subject), subject.read.id)
         for hspDict in alignment['hsps']:
             hsp = HSP(hspDict['score'])
             # This is ugly: manually put the additional light matter HSP

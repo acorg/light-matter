@@ -90,7 +90,7 @@ class Result(object):
             # tiny floating point differences. The simple solution is to
             # canonicalize the deltas based on an arbitrary consistent
             # difference between the subject and query.
-            negateDeltas = subject.sequence < query.sequence
+            negateDeltas = subject.read.sequence < query.sequence
 
             for match in matches[subjectIndex]:
                 # The delta is the difference between the
@@ -122,7 +122,7 @@ class Result(object):
                 significance = MeanBinHeight(histogram, query, connector)
             elif significanceMethod == 'AAFraction':
                 featureAACount = (queryAACount +
-                                  len(be.scan(subject).coveredIndices()))
+                                  len(be.scan(subject.read).coveredIndices()))
                 significance = AAFraction(histogram, featureAACount,
                                           findParams.significanceFraction)
             else:
@@ -357,12 +357,12 @@ class Result(object):
             indent()
 
             extend([
-                'Title: %s' % subject.id,
+                'Title: %s' % subject.read.id,
                 'Best HSP score: %s' % analysis['bestBinScore'],
             ])
 
             if printSequences:
-                append('Sequence: %s' % subject.sequence)
+                append('Sequence: %s' % subject.read.sequence)
 
             extend([
                 'Index in database: %s' % subjectIndex,

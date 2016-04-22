@@ -5,9 +5,10 @@ from light.performance.polymerase import BIT_SCORES, Z_SCORES
 POLYMERASE_COUNT = 22
 
 POLYMERASE_NAMES = {
-    '2J7W', '4K6M', '1S49', '1NB6', '3OLB', '1XR7', '1XR6', '3CDW', '2E9Z',
-    '3BSO', '3UQS', '1KHV', '2CKW', '1HI0', '3AVX', '2PUS', '2YI9', '2R7W',
-    '1N35', '3V81', '1MU2', '1RW3'
+    '2J7W-A', '4K6M-A', '1S49-A', '1NB6-A', '3OLB-A', '1XR7-A', '1XR6-A',
+    '3CDW-A', '2E9Z-A', '3BSO-A', '3UQS-A', '1KHV-B', '2CKW-A', '1HI0-P',
+    '3AVX-A', '2PUS-A', '2YI9-A', '2R7W-A', '1N35-A', '3V81-C', '1MU2-A',
+    '1RW3-A'
 }
 
 
@@ -41,10 +42,10 @@ class TestZScores(TestCase):
         right.
         """
         for queryId, subjectId, expected in (
-                ('3BSO', '3OLB', 32.0),
-                ('2J7W', '4K6M', 42.9),
-                ('1RW3', '1MU2', 20.7),
-                ('2YI9', '1HI0', 10.7)):
+                ('3BSO-A', '3OLB-A', 32.0),
+                ('2J7W-A', '4K6M-A', 42.9),
+                ('1RW3-A', '1MU2-A', 20.7),
+                ('2YI9-A', '1HI0-P', 10.7)):
             self.assertAlmostEqual(expected, Z_SCORES[queryId][subjectId])
 
     def testSymmetric(self):

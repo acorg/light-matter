@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from performance.bin.evaluate_helices import evaluateMatch
+from light.performance.bin.evaluate_helices import evaluateMatch
 
 
 class TestEvaluateMatch(TestCase):

@@ -85,7 +85,7 @@ class TestZScoreBitScoreCorrelation(TestCase):
 
 class TestZScoreBitScoreLMScore3D(TestCase):
 
-    def test3D(self):
+    def test3Dpolymerase(self):
         """
         Make a 3D plot of Z scores, blast bit scores, and light matter scores.
         """

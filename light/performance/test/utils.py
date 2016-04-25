@@ -1,9 +1,30 @@
 from os import mkdir
 from os.path import exists, isdir, join
-import matplotlib.pyplot as plt
 from scipy import stats
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+import numpy as np
 
 from light.performance import testArgs
+
+# Keep pyflakes quiet by pretending to use Axes3D.
+_ = Axes3D
+
+
+def makeDir(path):
+    """
+    Check to see if a path exists and whether it's a directory. Create it (as
+    a dir) if it's non-existent.
+
+    @raise RuntimeError: if C{path} exists but is not a directory.
+    @param path: The C{str} path for the directory.
+    """
+    if exists(path):
+        if not isdir(path):
+            raise RuntimeError('Output path %r already exists but is not a '
+                               'directory.' % path)
+    else:
+        mkdir(path)
 
 
 def makeOutputDir(scoreTypeX, scoreTypeY, dirName):
@@ -23,21 +44,6 @@ def makeOutputDir(scoreTypeX, scoreTypeY, dirName):
     }
 
     assert scoreTypeX in FILESYSTEM_NAME and scoreTypeY in FILESYSTEM_NAME
-
-    def makeDir(path):
-        """
-        Check to see if a path exists and whether it's a directory. Create
-        it (as a dir) if it's non-existent.
-
-        @raise RuntimeError: if C{path} exists but is not a directory.
-        @param path: The C{str} path for the directory.
-        """
-        if exists(path):
-            if not isdir(path):
-                raise RuntimeError('Output path %r already exists but is not '
-                                   'a directory.' % path)
-        else:
-            mkdir(path)
 
     outputDir = join(testArgs.outputDir, dirName)
 
@@ -105,3 +111,117 @@ def plot(x, y, readId, scoreTypeX, scoreTypeY, dirName):
     fig.savefig(join(makeOutputDir(scoreTypeX, scoreTypeY, dirName),
                      '%s.png' % readId))
     plt.close()
+
+
+def plot3D(x, y, z, readId, scoreTypeX, scoreTypeY, scoreTypeZ,
+           interactive=False):
+    """
+    Make a 3D plot of the test results.
+
+    @param x: a C{list} of C{float} X axis bit score values.
+    @param y: a C{list} of C{float} Y axis Z score values.
+    @param z: a C{list} of C{float} Z axis light matter score values.
+    @param readId: The C{str} id of the read whose values are being plotted.
+    @param scoreTypeX: A C{str} X-axis title indicating the type of score.
+    @param scoreTypeY: A C{str} Y-axis title indicating the type of score.
+    @param scoreTypeZ: A C{str} Z-axis title indicating the type of score.
+    @param interactive: If C{True} use plt.show() to display interactive plots
+        that the user will need to manually dismiss.
+    """
+    fig = plt.figure(figsize=(10, 10))
+    ax = fig.add_subplot(111, projection='3d')
+
+    alpha = 0.1
+    dotSize = 40
+
+    # The initial view onto the 3D plot.
+    cameraDegrees = 11
+    azimuth = -103
+    ax.view_init(cameraDegrees, azimuth)
+
+    # All the Z scores we've observed so far are less than 65. We have a
+    # fixed upper limit here so all graphs produced will have the same Y
+    # axis upper limit.
+    zScoreLimit = 65.0
+    assert max(y) <= zScoreLimit
+
+    # Values less than these cutoffs are considered bad, values bigger are
+    # good. Planes will be drawn to separate each axis into bad/good
+    # points (assuming there are any good points in a given dimension).
+    bitScoreCutoff = 50.0
+    zScoreCutoff = 20.0
+    lmScoreCutoff = 0.5
+
+    # cutoffStringToColor converts a binary string of length 3 to a color.
+    # The positions in the string represent bad/good (0/1) values for bit
+    # score, Z score, light matter score according to the bad/good cutoff
+    # values above. From best to worst: yellow, green, black, blue, red.
+    # Blue isn't bad, it just indicates that two sequences are similar but
+    # that they have no common structure (they may have no structure at
+    # all).
+    cutoffStringToColor = {
+        '000': 'green',   # OK - no conflict.
+        '001': 'red',     # Really bad - lm disagrees with both other scores.
+        '010': 'black',   # Quite bad - Lm disagrees with Z score.
+        '011': 'yellow',  # Good - bit score low, structure scores both high.
+        '100': 'blue',    # Weird - bit score is the only one that's high.
+        '101': 'black',   # Quite bad - Lm disagrees with Z score.
+        '110': 'red',     # Really bad - lm disagrees with both other scores.
+        '111': 'green',   # OK - no conflict.
+    }
+
+    # Assign each x, y, z triple a color.
+    colors = []
+    for bitScore, zScore, lmScore in zip(x, y, z):
+        key = (('1' if bitScore > bitScoreCutoff else '0') +
+               ('1' if zScore > zScoreCutoff else '0') +
+               ('1' if lmScore > lmScoreCutoff else '0'))
+        colors.append(cutoffStringToColor[key])
+
+    ax.scatter(x, y, z, c=colors, s=dotSize)
+    ax.set_xlabel(scoreTypeX)
+    ax.set_ylabel(scoreTypeY)
+    ax.set_zlabel(scoreTypeZ)
+    ax.set_title(readId)
+
+    ax.set_xlim(left=0.0)
+    ax.set_ylim(0.0, zScoreLimit)
+    ax.set_zlim(0.0, 1.0)
+
+    # cg is the contour granularity: the number of points in the mesh used
+    # for plotting the three plane contours that divide each axis into good
+    # & bad regions.
+    cg = 60
+
+    # Bit score (x) bad/good plane.
+    if max(x) >= bitScoreCutoff:
+        Y = np.linspace(0.0, zScoreLimit, cg)
+        Z = np.linspace(0.0, 1.0, cg)
+        yy, zz = np.meshgrid(Y, Z)
+        X = np.array([bitScoreCutoff] * (cg * cg)).reshape(cg, cg)
+        ax.contourf(X, yy, zz, colors='blue', alpha=alpha, zdir='x')
+
+    # Z score (y) bad/good plane.
+    if max(y) >= zScoreCutoff:
+        X = np.linspace(0.0, max(x), cg)
+        Z = np.linspace(0.0, 1.0, cg)
+        xx, zz = np.meshgrid(X, Z)
+        Y = np.array([zScoreCutoff] * (cg * cg)).reshape(cg, cg)
+        ax.contourf(xx, Y, zz, colors='green', alpha=alpha, zdir='y')
+
+    # LM score (z) bad/good plane.
+    if max(z) >= lmScoreCutoff:
+        X = np.linspace(0.0, max(x), cg)
+        Y = np.linspace(0.0, zScoreLimit, cg)
+        xx, yy = np.meshgrid(X, Y)
+        Z = np.array([lmScoreCutoff] * (cg * cg)).reshape(cg, cg)
+        ax.contourf(xx, yy, Z, colors='purple', alpha=alpha, zdir='z')
+
+    outputDir = join(testArgs.outputDir, 'polymerase')
+    subDir = join(outputDir, '3d')
+    makeDir(outputDir)
+    makeDir(subDir)
+
+    fig.savefig(join(subDir, '%s.png' % readId))
+    if interactive:
+        plt.show()

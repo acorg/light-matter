@@ -24,6 +24,12 @@ if __name__ == '__main__':
         description='Run light-matter performance tests')
 
     parser.add_argument(
+        '--interactive', action='store_true', default=False,
+        help=('If True, performance tests will display interactive windows of '
+              'results as they are computed. If False, just compute results '
+              'and store them.'))
+
+    parser.add_argument(
         '--startDir',
         default=join(dirname(light.performance.__file__), 'test'),
         help='The directory in which to (recursively) search for tests.')

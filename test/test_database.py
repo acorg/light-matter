@@ -735,12 +735,12 @@ class TestDatabase(TestCase):
             'Hash count: 3\n'
             'Total residues: 15\n'
             'Coverage: 73.33%\n'
-            'Checksum: 108925676\n'
+            'Checksum: 337886368\n'
             'Connector:\n'
             'Backends:\n'
             '  Name: backend\n'
             '  Hash count: 3\n'
-            '  Checksum: 108925676\n'
+            '  Checksum: 337886368\n'
             '  Subjects (with offsets) by hash:\n'
             '    A2:P:10\n'
             '      0 [[0, 9, 10, 1]]\n'
@@ -790,7 +790,7 @@ class TestDatabase(TestCase):
             'Hash count: 0\n'
             'Total residues: 0\n'
             'Coverage: 0.00%\n'
-            'Checksum: 1057269478\n'
+            'Checksum: 3958833242\n'
             'Connector:')
         self.assertEqual(expected, db.print_())
 

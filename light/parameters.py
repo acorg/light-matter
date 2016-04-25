@@ -421,7 +421,7 @@ class DatabaseParameters(object):
                            self.featureLengthBase,
                            self.randomLandmarkDensity,
                            self.randomTrigPointDensity,
-                           self.ahocorasickFilename))))
+                           basename(self.ahocorasickFilename)))))
         return checksum.value
 
     @staticmethod

@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-from os.path import dirname, join
+from os.path import dirname, join, basename
 import sys
 try:
     from ujson import dumps, loads
@@ -652,7 +652,7 @@ class DatabaseParameters(object):
             'Feature length base: %f' % self.featureLengthBase,
             'Random landmark density: %f' % self.randomLandmarkDensity,
             'Random trig point density: %f' % self.randomTrigPointDensity,
-            'Ahocorasick filename: %s' % self.ahocorasickFilename,
+            'Ahocorasick filename: %s' % basename(self.ahocorasickFilename),
         ])
 
         result.outdent()

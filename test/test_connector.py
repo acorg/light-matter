@@ -45,7 +45,7 @@ class TestSimpleConnector(TestCase):
             'Backends:\n'
             '  Name: backend\n'
             '  Hash count: 3\n'
-            '  Checksum: 2842633337\n'
+            '  Checksum: 108925676\n'
             '  Subjects (with offsets) by hash:\n'
             '    A2:P:10\n'
             '      0 [[0, 9, 10, 1]]\n'

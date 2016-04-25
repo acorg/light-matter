@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+from os.path import dirname, join
 import sys
 try:
     from ujson import dumps, loads
@@ -8,6 +9,7 @@ except ImportError:
 
 from six import string_types
 
+import light
 from light.checksum import Checksum
 from light.landmarks import (
     findLandmark, findLandmarks, DEFAULT_LANDMARK_CLASSES,
@@ -298,6 +300,8 @@ class DatabaseParameters(object):
         landmarks to generate.
     @param randomTrigPointDensity: The C{float} density of random trig points
         to generate.
+    @param ahocorasickFilename: The C{str} name of a file to be used by the
+        AC_AlphaHelix finder.
     @raise ValueError: If an unknown landmark or trig point finder name is
         given in C{landmarks} or C{trigPoints}.
     """
@@ -310,11 +314,14 @@ class DatabaseParameters(object):
     DEFAULT_FEATURE_LENGTH_BASE = 1.35
     DEFAULT_RANDOM_LANDMARK_DENSITY = 0.1
     DEFAULT_RANDOM_TRIG_POINT_DENSITY = 0.1
+    DEFAULT_AHOCORASICK_FILENAME = join(dirname(light.__file__), '..', 'data',
+                                        'aho-corasick-alpha-helix-prefixes-91')
 
     def __init__(self, landmarks=None, trigPoints=None,
                  limitPerLandmark=None, maxDistance=None, minDistance=None,
                  distanceBase=None, featureLengthBase=None,
-                 randomLandmarkDensity=None, randomTrigPointDensity=None):
+                 randomLandmarkDensity=None, randomTrigPointDensity=None,
+                 ahocorasickFilename=None):
 
         # First set the simple scalar parameters.
         self.limitPerLandmark = (
@@ -348,6 +355,10 @@ class DatabaseParameters(object):
         self.randomTrigPointDensity = (
             self.DEFAULT_RANDOM_TRIG_POINT_DENSITY if
             randomTrigPointDensity is None else randomTrigPointDensity)
+
+        self.ahocorasickFilename = (
+            self.DEFAULT_AHOCORASICK_FILENAME if
+            ahocorasickFilename is None else ahocorasickFilename)
 
         if landmarks is None:
             landmarkClasses = DEFAULT_LANDMARK_CLASSES
@@ -409,7 +420,8 @@ class DatabaseParameters(object):
                            self.minDistance, self.distanceBase,
                            self.featureLengthBase,
                            self.randomLandmarkDensity,
-                           self.randomTrigPointDensity))))
+                           self.randomTrigPointDensity,
+                           self.ahocorasickFilename))))
         return checksum.value
 
     @staticmethod
@@ -488,6 +500,12 @@ class DatabaseParameters(object):
             default=DatabaseParameters.DEFAULT_RANDOM_TRIG_POINT_DENSITY,
             help=('The (float) density of random trig points to generate.'))
 
+        parser.add_argument(
+            '--ahocorasickFilename', type=str,
+            default=DatabaseParameters.DEFAULT_AHOCORASICK_FILENAME,
+            help=('The name of the file to be used by the AC_AlphaHelix '
+                  'finder.'))
+
     @classmethod
     def fromArgs(cls, args):
         if args.noLandmarks:
@@ -529,7 +547,8 @@ class DatabaseParameters(object):
                    distanceBase=args.distanceBase,
                    featureLengthBase=args.featureLengthBase,
                    randomLandmarkDensity=args.randomLandmarkDensity,
-                   randomTrigPointDensity=args.randomTrigPointDensity)
+                   randomTrigPointDensity=args.randomTrigPointDensity,
+                   ahocorasickFilename=args.ahocorasickFilename)
 
     def toDict(self):
         """
@@ -545,7 +564,8 @@ class DatabaseParameters(object):
                     distanceBase=self.distanceBase,
                     featureLengthBase=self.featureLengthBase,
                     randomLandmarkDensity=self.randomLandmarkDensity,
-                    randomTrigPointDensity=self.randomTrigPointDensity)
+                    randomTrigPointDensity=self.randomTrigPointDensity,
+                    ahocorasickFilename=self.ahocorasickFilename)
 
     def save(self, fp=sys.stdout):
         """
@@ -564,6 +584,7 @@ class DatabaseParameters(object):
             'featureLengthBase': self.featureLengthBase,
             'randomLandmarkDensity': self.randomLandmarkDensity,
             'randomTrigPointDensity': self.randomTrigPointDensity,
+            'ahocorasickFilename': self.ahocorasickFilename,
         }
 
         print(dumps(state), file=fp)
@@ -631,6 +652,7 @@ class DatabaseParameters(object):
             'Feature length base: %f' % self.featureLengthBase,
             'Random landmark density: %f' % self.randomLandmarkDensity,
             'Random trig point density: %f' % self.randomTrigPointDensity,
+            'Ahocorasick filename: %s' % self.ahocorasickFilename,
         ])
 
         result.outdent()
@@ -665,7 +687,7 @@ class DatabaseParameters(object):
         for param in (
                 'limitPerLandmark', 'maxDistance', 'minDistance',
                 'distanceBase', 'featureLengthBase', 'randomLandmarkDensity',
-                'randomTrigPointDensity'):
+                'randomTrigPointDensity', 'ahocorasickFilename'):
             ours = getattr(self, param)
             others = getattr(other, param)
             if ours != others:

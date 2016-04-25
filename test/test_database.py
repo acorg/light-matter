@@ -670,7 +670,8 @@ class TestDatabase(TestCase):
                                       limitPerLandmark=16, maxDistance=10,
                                       minDistance=0, distanceBase=1,
                                       randomLandmarkDensity=0.6,
-                                      randomTrigPointDensity=0.4)
+                                      randomTrigPointDensity=0.4,
+                                      ahocorasickFilename='xxx')
         db = Database(dbParams)
         db.addSubject(subject)
         expected = (
@@ -688,12 +689,13 @@ class TestDatabase(TestCase):
             '  Feature length base: 1.350000\n'
             '  Random landmark density: 0.600000\n'
             '  Random trig point density: 0.400000\n'
+            '  Ahocorasick filename: xxx\n'
             'Connector class: SimpleConnector\n'
             'Subject count: 1\n'
             'Hash count: 3\n'
             'Total residues: 15\n'
             'Coverage: 73.33%\n'
-            'Checksum: 1080240747\n'
+            'Checksum: 1809003954\n'
             'Connector:')
         self.assertEqual(expected, db.print_())
 
@@ -725,17 +727,19 @@ class TestDatabase(TestCase):
             '  Feature length base: 1.350000\n'
             '  Random landmark density: 0.100000\n'
             '  Random trig point density: 0.100000\n'
+            '  Ahocorasick filename: /Users/barbara/dark-matter/light-matter/'
+            'light/../data/aho-corasick-alpha-helix-prefixes-91\n'
             'Connector class: SimpleConnector\n'
             'Subject count: 1\n'
             'Hash count: 3\n'
             'Total residues: 15\n'
             'Coverage: 73.33%\n'
-            'Checksum: 2842633337\n'
+            'Checksum: 108925676\n'
             'Connector:\n'
             'Backends:\n'
             '  Name: backend\n'
             '  Hash count: 3\n'
-            '  Checksum: 2842633337\n'
+            '  Checksum: 108925676\n'
             '  Subjects (with offsets) by hash:\n'
             '    A2:P:10\n'
             '      0 [[0, 9, 10, 1]]\n'
@@ -755,6 +759,7 @@ class TestDatabase(TestCase):
         The print_ function should report the expected result if no hashes are
         found in the subject.
         """
+        self.maxDiff = None
         subject = AARead('subject', '')
         dbParams = DatabaseParameters(landmarks=[AlphaHelix, BetaStrand],
                                       trigPoints=[Peaks, Troughs],
@@ -777,12 +782,14 @@ class TestDatabase(TestCase):
             '  Feature length base: 1.350000\n'
             '  Random landmark density: 0.100000\n'
             '  Random trig point density: 0.100000\n'
+            '  Ahocorasick filename: /Users/barbara/dark-matter/light-matter/'
+            'light/../data/aho-corasick-alpha-helix-prefixes-91\n'
             'Connector class: SimpleConnector\n'
             'Subject count: 1\n'
             'Hash count: 0\n'
             'Total residues: 0\n'
             'Coverage: 0.00%\n'
-            'Checksum: 171162040\n'
+            'Checksum: 1057269478\n'
             'Connector:')
         self.assertEqual(expected, db.print_())
 

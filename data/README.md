@@ -40,3 +40,7 @@ probably need to change this if the database has changed.
 The test suite should now pass cleanly:
 
     $ make check
+
+# aho-corasick-alpha-helix-prefixes-*
+
+These files contain alpha helix prefixes to be used by the `AC_AlphaHelix` finder. The number at the end of the filename corresponds to the cut-off used to determine which helices should be in the file. E.g., all helices in aho-corasick-alpha-helix-prefixes-1 have a true positive to false positive ratio of 1 or more.

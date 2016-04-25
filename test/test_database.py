@@ -1,5 +1,6 @@
 import six
 import argparse
+from os.path import dirname
 from unittest import TestCase, skip
 from six import StringIO
 from six.moves import builtins
@@ -17,6 +18,7 @@ from .mocking import mockOpen
 
 from dark.reads import Reads, AARead
 
+import light
 from light.backend import Backend
 from light.checksum import Checksum
 from light.database import Database, DatabaseSpecifier
@@ -727,8 +729,8 @@ class TestDatabase(TestCase):
             '  Feature length base: 1.350000\n'
             '  Random landmark density: 0.100000\n'
             '  Random trig point density: 0.100000\n'
-            '  Ahocorasick filename: /Users/barbara/dark-matter/light-matter/'
-            'light/../data/aho-corasick-alpha-helix-prefixes-91\n'
+            '  Ahocorasick filename: ' + dirname(light.__file__) +
+            '/../data/aho-corasick-alpha-helix-prefixes-91\n'
             'Connector class: SimpleConnector\n'
             'Subject count: 1\n'
             'Hash count: 3\n'
@@ -782,8 +784,8 @@ class TestDatabase(TestCase):
             '  Feature length base: 1.350000\n'
             '  Random landmark density: 0.100000\n'
             '  Random trig point density: 0.100000\n'
-            '  Ahocorasick filename: /Users/barbara/dark-matter/light-matter/'
-            'light/../data/aho-corasick-alpha-helix-prefixes-91\n'
+            '  Ahocorasick filename: ' + dirname(light.__file__) +
+            '/../data/aho-corasick-alpha-helix-prefixes-91\n'
             'Connector class: SimpleConnector\n'
             'Subject count: 1\n'
             'Hash count: 0\n'

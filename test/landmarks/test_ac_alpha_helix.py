@@ -132,12 +132,12 @@ class TestACAlphaHelix(TestCase):
         """
         # TODO: Change this once data/aho-corasick-alpha-helix-prefixes has
         # been populated
-        read = AARead('id', 'PRIVATE LILY')
+        read = AARead('id', 'RCELARTLKR VAWRN')
         finder = AC_AlphaHelix()
         result = list(finder.find(read))
         self.assertEqual(
             [
-                Landmark('AC AlphaHelix', 'ACAH', 0, 7),
-                Landmark('AC AlphaHelix', 'ACAH', 8, 4),
+                Landmark('AC AlphaHelix', 'ACAH', 0, 10),
+                Landmark('AC AlphaHelix', 'ACAH', 11, 5),
             ],
             sorted(result))

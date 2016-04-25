@@ -32,7 +32,8 @@ class TestZScoreCorrelation(TestCase):
                 if queryId != subjectId:
                     lmScores.append(_AFFINITY[queryId][subjectId])
                     zScores.append(Z_SCORES[queryId][subjectId])
-            plot(lmScores, zScores, queryId, 'Light matter score', 'Z score')
+            plot(lmScores, zScores, queryId, 'Light matter score', 'Z score',
+                 'polymerase')
 
 
 class TestBitScoreCorrelation(TestCase):
@@ -48,7 +49,8 @@ class TestBitScoreCorrelation(TestCase):
                 if queryId != subjectId:
                     lmScores.append(_AFFINITY[queryId][subjectId])
                     zScores.append(BIT_SCORES[queryId][subjectId])
-            plot(lmScores, zScores, queryId, 'Light matter score', 'Bit score')
+            plot(lmScores, zScores, queryId, 'Light matter score', 'Bit score',
+                 'polymerase')
 
 
 class TestZScoreBitScoreCorrelation(TestCase):
@@ -64,4 +66,5 @@ class TestZScoreBitScoreCorrelation(TestCase):
                 if queryId != subjectId:
                     bitScores.append(BIT_SCORES[queryId][subjectId])
                     zScores.append(Z_SCORES[queryId][subjectId])
-            plot(bitScores, zScores, queryId, 'Bit score', 'Z score')
+            plot(bitScores, zScores, queryId, 'Bit score', 'Z score',
+                 'polymerase')

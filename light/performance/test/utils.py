@@ -6,12 +6,14 @@ from scipy import stats
 from light.performance import testArgs
 
 
-def makeOutputDir(scoreTypeX, scoreTypeY):
+def makeOutputDir(scoreTypeX, scoreTypeY, dirName):
     """
     Create an output directory if it doesn't already exist.
 
     @param scoreTypeX: A C{str} X-axis title indicating the type of score.
     @param scoreTypeY: A C{str} Y-axis title indicating the type of score.
+    @param dirName: A C{str} name of the output directory to be created.
+
     @return: The C{str} path to the output directory.
     """
     FILESYSTEM_NAME = {
@@ -37,7 +39,7 @@ def makeOutputDir(scoreTypeX, scoreTypeY):
         else:
             mkdir(path)
 
-    outputDir = join(testArgs.outputDir, 'polymerase')
+    outputDir = join(testArgs.outputDir, dirName)
 
     subDir = join(outputDir,
                   '%s-vs-%s' % (FILESYSTEM_NAME[scoreTypeX],
@@ -48,7 +50,7 @@ def makeOutputDir(scoreTypeX, scoreTypeY):
     return subDir
 
 
-def plot(x, y, readId, scoreTypeX, scoreTypeY):
+def plot(x, y, readId, scoreTypeX, scoreTypeY, dirName):
     """
     Make a scatterplot of the test results.
 
@@ -57,11 +59,10 @@ def plot(x, y, readId, scoreTypeX, scoreTypeY):
     @param readId: The C{str} id of the read whose values are being plotted.
     @param scoreTypeX: A C{str} X-axis title indicating the type of score.
     @param scoreTypeY: A C{str} Y-axis title indicating the type of score.
+    @param dirName: A C{str} name of the output directory to be created.
     """
-    plt.rcParams['font.family'] = 'Helvetica'
     fig = plt.figure(figsize=(7, 5))
     ax = fig.add_subplot(111)
-
     slope, intercept, rValue, pValue, se = stats.linregress(x, y)
 
     # Plot.
@@ -83,11 +84,11 @@ def plot(x, y, readId, scoreTypeX, scoreTypeY):
 
     # Z scores are always <= 60.0 (with sanity check).
     if scoreTypeX == 'Z score':
-        assert max(x) <= 60.0
-        ax.set_xlim(right=60.0)
+        assert max(x) <= 65.0
+        ax.set_xlim(right=65.0)
     if scoreTypeY == 'Z score':
-        assert max(y) <= 60.0
-        ax.set_ylim(top=60.0)
+        assert max(y) <= 65.0
+        ax.set_ylim(top=65.0)
 
     # No scores can be negative. Explicitly set the lower limits on both
     # axes to zero. This stops regression lines from causing an axis to
@@ -101,6 +102,6 @@ def plot(x, y, readId, scoreTypeX, scoreTypeY):
     ax.spines['bottom'].set_linewidth(0.5)
     ax.spines['left'].set_linewidth(0.5)
 
-    fig.savefig(join(makeOutputDir(scoreTypeX, scoreTypeY),
+    fig.savefig(join(makeOutputDir(scoreTypeX, scoreTypeY, dirName),
                      '%s.png' % readId))
     plt.close()

@@ -18,6 +18,8 @@ except ImportError:
 
 from unittest import TestResult, TestSuite
 
+from light.performance.parameters import PARAMETER_SETS
+
 
 class _WritelnDecorator(object):
     """
@@ -67,16 +69,24 @@ class PerformanceTestResult(TestResult):
         @param fp: A file-like object.
         """
         if not self.errors and not self.failures:
-            dump({
+            state = {
                 'UTC': strftime('%F %T', gmtime(self.startTestRunTime)),
                 'description': args.description,
                 'startTestRunTime': self.startTestRunTime,
                 'elapsed': self.stopTestRunTime - self.startTestRunTime,
                 'testCount': self.testsRun,
-                'dbParams': args.dbParams.toDict(),
-                'findParams': args.findParams.toDict(),
+                'parameterSets': {},
                 'results': self.results,
-            }, fp)
+            }
+
+            for parameterSet in args.parameterSets:
+                params = PARAMETER_SETS[parameterSet]
+                state['parameterSets'][parameterSet] = {
+                    'dbParams': params['dbParams'].toDict(),
+                    'findParams': params['findParams'].toDict(),
+                }
+
+            dump(state, fp)
 
     def stopTest(self, test):
         super(PerformanceTestResult, self).stopTest(test)

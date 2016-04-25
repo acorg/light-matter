@@ -5,16 +5,17 @@ from dark.reads import SSAARead, SSAAReadWithX, Reads
 from dark.fasta_ss import SSFastaReads
 
 import light
-from light.database import Database
 from light.performance import testArgs
-from light.performance.affinity import affinityMatrix
+from light.performance.affinity import AffinityMatrices
 from light.performance.data.hla import BIT_SCORES, Z_SCORES
-from light.performance.test.utils import plot
+from light.performance.utils import (
+    plot, plot3D, makeOutputDir, FILESYSTEM_NAME)
 
+_DATASET = 'hla'
+_SUBJECT_NAME = '2HLA:A'
 
-# Create a singleton affinity matrix of lm scores for all sequences.
 _SUBJECT = Reads()
-_SUBJECT.add(SSAARead('2HLA:A:sequence',
+_SUBJECT.add(SSAARead(_SUBJECT_NAME,
                       'GSHSMRYFYTSVSRPGRGEPRFIAVGYVDDTQFVRFDSDAASQRMEPRAPWIEQE'
                       'GPEYWDRNTRNVKAQSQTDRVDLGTLRGYYNQSEAGSHTIQMMYGCDVGSDGRFL'
                       'RGYRQDAYDGKDYIALKEDLRSWTAADMAAQTTKHKWEAAHVAEQWRAYLEGTCV'
@@ -31,56 +32,102 @@ _QUERIES = list(SSFastaReads(
          'performance', 'data', 'hla-queries-structure.fasta'),
     readClass=SSAAReadWithX))
 
-LM_SCORES = affinityMatrix(_QUERIES, subjects=_SUBJECT, symmetric=False,
-                           database=Database(testArgs.dbParams),
-                           findParams=testArgs.findParams, returnDict=True)
+_AFFINITY = AffinityMatrices(_QUERIES, _SUBJECT, symmetric=False)
 
 
 class TestZScoreCorrelation(TestCase):
 
     def testPlotsHLA(self):
         """
-        Examine the correlation between our scores and Z scores.
+        Examine the correlation between light matter scores and Z scores.
         """
-        lmScores = []
-        zScores = []
-        for query in _QUERIES:
-            assert query.id.endswith(':sequence')
-            id_ = query.id[:-9]
-            zScores.append(Z_SCORES[id_])
-            lmScores.append(LM_SCORES[query.id]['2HLA:A:sequence'])
-        plot(lmScores, zScores, '2HLA:A', 'Light matter score', 'Z score',
-             'hla')
+        scoreTypeX = 'Light matter score'
+        scoreTypeY = 'Z score'
+
+        for parameterSet in testArgs.parameterSets:
+            affinity = _AFFINITY[parameterSet]
+            dirName = makeOutputDir(
+                _DATASET,
+                parameterSet,
+                '%s-%s' % (FILESYSTEM_NAME[scoreTypeX],
+                           FILESYSTEM_NAME[scoreTypeY]))
+            lmScores = []
+            zScores = []
+            for query in _QUERIES:
+                zScores.append(Z_SCORES[query.id])
+                lmScores.append(affinity[query.id][_SUBJECT_NAME])
+            plot(lmScores, zScores, _SUBJECT_NAME, scoreTypeX, scoreTypeY,
+                 dirName)
 
 
 class TestBitScoreCorrelation(TestCase):
 
     def testPlotsHLA(self):
         """
-        Examine the correlation between our scores and blast bit scores.
+        Examine the correlation between light matter scores and BLAST bit
+        scores.
         """
-        lmScores = []
-        bitScores = []
-        for query in _QUERIES:
-            assert query.id.endswith(':sequence')
-            id_ = query.id[:-9]
-            bitScores.append(BIT_SCORES[id_])
-            lmScores.append(LM_SCORES[query.id]['2HLA:A:sequence'])
-        plot(lmScores, bitScores, '2HLA:A', 'Light matter score',
-             'Bit score', 'hla')
+        scoreTypeX = 'Light matter score'
+        scoreTypeY = 'Bit score'
+
+        for parameterSet in testArgs.parameterSets:
+            affinity = _AFFINITY[parameterSet]
+            dirName = makeOutputDir(
+                _DATASET,
+                parameterSet,
+                '%s-%s' % (FILESYSTEM_NAME[scoreTypeX],
+                           FILESYSTEM_NAME[scoreTypeY]))
+            lmScores = []
+            bitScores = []
+            for query in _QUERIES:
+                bitScores.append(BIT_SCORES[query.id])
+                lmScores.append(affinity[query.id][_SUBJECT_NAME])
+            plot(lmScores, bitScores, _SUBJECT_NAME, scoreTypeX,
+                 scoreTypeY, dirName)
 
 
 class TestZScoreBitScoreCorrelation(TestCase):
 
     def testPlotsHLA(self):
         """
-        Examine the correlation between Z scores and blast bit scores.
+        Examine the correlation between BLAST bit scores and Z scores.
         """
-        zScores = []
-        bitScores = []
-        for query in _QUERIES:
-            assert query.id.endswith(':sequence')
-            id_ = query.id[:-9]
-            bitScores.append(BIT_SCORES[id_])
-            zScores.append(Z_SCORES[id_])
-        plot(bitScores, zScores, '2HLA:A', 'Bit score', 'Z score', 'hla')
+        scoreTypeX = 'Bit score'
+        scoreTypeY = 'Z score'
+
+        for parameterSet in testArgs.parameterSets:
+            dirName = makeOutputDir(
+                _DATASET,
+                parameterSet,
+                '%s-%s' % (FILESYSTEM_NAME[scoreTypeX],
+                           FILESYSTEM_NAME[scoreTypeY]))
+            zScores = []
+            bitScores = []
+            for query in _QUERIES:
+                bitScores.append(BIT_SCORES[query.id])
+                zScores.append(Z_SCORES[query.id])
+            plot(bitScores, zScores, _SUBJECT_NAME, scoreTypeX, scoreTypeY,
+                 dirName)
+
+
+class TestZScoreBitScoreLMScore3D(TestCase):
+
+    def test3DHLA(self):
+        """
+        Make a 3D plot of BLAST bit scores, Z scores, and light matter scores.
+        """
+        for parameterSet in testArgs.parameterSets:
+            affinity = _AFFINITY[parameterSet]
+            dirName = makeOutputDir(_DATASET, parameterSet, '3d')
+            for queryId in sorted(BIT_SCORES):
+                zScores = []
+                bitScores = []
+                lmScores = []
+                for subjectId in BIT_SCORES:
+                    if queryId != subjectId:
+                        bitScores.append(BIT_SCORES[queryId][subjectId])
+                        zScores.append(Z_SCORES[queryId][subjectId])
+                        lmScores.append(affinity[queryId][subjectId])
+                plot3D(bitScores, zScores, lmScores, queryId,
+                       'Bit score', 'Z score', 'Light matter score',
+                       dirName, testArgs.interactive)

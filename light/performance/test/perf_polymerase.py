@@ -4,47 +4,46 @@ from unittest import TestCase
 from dark.fasta_ss import SSFastaReads
 
 import light
-from light.database import Database
 from light.performance import testArgs
-from light.performance.affinity import affinityMatrix
+from light.performance.affinity import AffinityMatrices
 from light.performance.polymerase import Z_SCORES, BIT_SCORES
-from light.performance.test.utils import plot, plot3D
+from light.performance.utils import (
+    plot, plot3D, makeOutputDir, FILESYSTEM_NAME)
 
-# Singleton affinity matrix, to be initialized in _makeAffinityMatrix
-_AFFINITY = None
+_DATASET = 'polymerase'
 
+_QUERIES = list(SSFastaReads(
+    join(dirname(light.__file__),
+         'performance', 'data', 'polymerase.fasta')))
 
-def _makeAffinityMatrix():
-    """
-    Create an affinity matrix of light matter scores for all polymerase
-    sequences.
-    """
-    global _AFFINITY
-    if _AFFINITY is None:
-        queries = list(SSFastaReads(
-            join(dirname(light.__file__),
-                 'performance', 'data', 'polymerase.fasta')))
-        _AFFINITY = affinityMatrix(
-            queries, database=Database(testArgs.dbParams),
-            findParams=testArgs.findParams, returnDict=True)
+_AFFINITY = AffinityMatrices(_QUERIES)
 
 
 class TestZScoreCorrelation(TestCase):
 
     def testPlotsPolymerase(self):
         """
-        Examine the correlation between our scores and Z scores.
+        Examine the correlation between light matter scores and Z scores.
         """
-        _makeAffinityMatrix()
-        for queryId in Z_SCORES:
-            zScores = []
-            lmScores = []
-            for subjectId in Z_SCORES:
-                if queryId != subjectId:
-                    lmScores.append(_AFFINITY[queryId][subjectId])
-                    zScores.append(Z_SCORES[queryId][subjectId])
-            plot(lmScores, zScores, queryId, 'Light matter score', 'Z score',
-                 'polymerase')
+        scoreTypeX = 'Light matter score'
+        scoreTypeY = 'Z score'
+
+        for parameterSet in testArgs.parameterSets:
+            affinity = _AFFINITY[parameterSet]
+            dirName = makeOutputDir(
+                _DATASET,
+                parameterSet,
+                '%s-%s' % (FILESYSTEM_NAME[scoreTypeX],
+                           FILESYSTEM_NAME[scoreTypeY]))
+            for queryId in Z_SCORES:
+                zScores = []
+                lmScores = []
+                for subjectId in Z_SCORES:
+                    if queryId != subjectId:
+                        lmScores.append(affinity[queryId][subjectId])
+                        zScores.append(Z_SCORES[queryId][subjectId])
+                plot(lmScores, zScores, queryId,
+                     scoreTypeX, scoreTypeY, dirName)
 
 
 class TestBitScoreCorrelation(TestCase):
@@ -53,52 +52,72 @@ class TestBitScoreCorrelation(TestCase):
         """
         Examine the correlation between our scores and blast bit scores.
         """
-        _makeAffinityMatrix()
-        for queryId in BIT_SCORES:
-            zScores = []
-            lmScores = []
-            for subjectId in BIT_SCORES:
-                if queryId != subjectId:
-                    lmScores.append(_AFFINITY[queryId][subjectId])
-                    zScores.append(BIT_SCORES[queryId][subjectId])
-            plot(lmScores, zScores, queryId, 'Light matter score', 'Bit score',
-                 'polymerase')
+        scoreTypeX = 'Light matter score'
+        scoreTypeY = 'Bit score'
+
+        for parameterSet in testArgs.parameterSets:
+            affinity = _AFFINITY[parameterSet]
+            dirName = makeOutputDir(
+                _DATASET,
+                parameterSet,
+                '%s-%s' % (FILESYSTEM_NAME[scoreTypeX],
+                           FILESYSTEM_NAME[scoreTypeY]))
+            for queryId in BIT_SCORES:
+                zScores = []
+                lmScores = []
+                for subjectId in BIT_SCORES:
+                    if queryId != subjectId:
+                        lmScores.append(affinity[queryId][subjectId])
+                        zScores.append(BIT_SCORES[queryId][subjectId])
+                plot(lmScores, zScores, queryId, scoreTypeX, scoreTypeY,
+                     dirName)
 
 
 class TestZScoreBitScoreCorrelation(TestCase):
 
     def testPlotsPolymerase(self):
         """
-        Examine the correlation between Z scores and blast bit scores.
+        Examine the correlation between BLAST bit scores and Z scores.
         """
-        _makeAffinityMatrix()
-        for queryId in BIT_SCORES:
-            zScores = []
-            bitScores = []
-            for subjectId in BIT_SCORES:
-                if queryId != subjectId:
-                    bitScores.append(BIT_SCORES[queryId][subjectId])
-                    zScores.append(Z_SCORES[queryId][subjectId])
-            plot(bitScores, zScores, queryId, 'Bit score', 'Z score',
-                 'polymerase')
+        scoreTypeX = 'Bit score'
+        scoreTypeY = 'Z score'
+
+        for parameterSet in testArgs.parameterSets:
+            dirName = makeOutputDir(
+                _DATASET,
+                parameterSet,
+                '%s-%s' % (FILESYSTEM_NAME[scoreTypeX],
+                           FILESYSTEM_NAME[scoreTypeY]))
+
+            for queryId in BIT_SCORES:
+                zScores = []
+                bitScores = []
+                for subjectId in BIT_SCORES:
+                    if queryId != subjectId:
+                        bitScores.append(BIT_SCORES[queryId][subjectId])
+                        zScores.append(Z_SCORES[queryId][subjectId])
+                plot(bitScores, zScores, queryId, scoreTypeX, scoreTypeY,
+                     dirName)
 
 
 class TestZScoreBitScoreLMScore3D(TestCase):
 
     def test3Dpolymerase(self):
         """
-        Make a 3D plot of Z scores, blast bit scores, and light matter scores.
+        Make a 3D plot of BLAST bit scores, Z scores, and light matter scores.
         """
-        _makeAffinityMatrix()
-        for queryId in sorted(BIT_SCORES):
-            zScores = []
-            bitScores = []
-            lmScores = []
-            for subjectId in BIT_SCORES:
-                if queryId != subjectId:
-                    bitScores.append(BIT_SCORES[queryId][subjectId])
-                    zScores.append(Z_SCORES[queryId][subjectId])
-                    lmScores.append(_AFFINITY[queryId][subjectId])
-            plot3D(bitScores, zScores, lmScores, queryId,
-                   'Bit score', 'Z score', 'Light matter score',
-                   testArgs.interactive)
+        for parameterSet in testArgs.parameterSets:
+            affinity = _AFFINITY[parameterSet]
+            dirName = makeOutputDir(_DATASET, parameterSet, '3d')
+            for queryId in sorted(BIT_SCORES):
+                zScores = []
+                bitScores = []
+                lmScores = []
+                for subjectId in BIT_SCORES:
+                    if queryId != subjectId:
+                        bitScores.append(BIT_SCORES[queryId][subjectId])
+                        zScores.append(Z_SCORES[queryId][subjectId])
+                        lmScores.append(affinity[queryId][subjectId])
+                plot3D(bitScores, zScores, lmScores, queryId,
+                       'Bit score', 'Z score', 'Light matter score',
+                       dirName, testArgs.interactive)

@@ -9,7 +9,7 @@ from light.database import Database
 from light.performance import testArgs
 from light.performance.affinity import affinityMatrix
 from light.performance.data.mtp import BIT_SCORES, Z_SCORES
-from light.performance.test.utils import plot
+from light.performance.utils import plot
 
 # Create a singleton affinity matrix of lm scores for all sequences.
 _SUBJECT = Reads()

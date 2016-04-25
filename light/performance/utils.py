@@ -5,10 +5,16 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 
-from light.performance import testArgs
-
 # Keep pyflakes quiet by pretending to use Axes3D.
 _ = Axes3D
+
+
+# How to translate axis names to filesystem names.
+FILESYSTEM_NAME = {
+    'Bit score': 'bit-score',
+    'Z score': 'z-score',
+    'Light matter score': 'lm-score',
+}
 
 
 def makeDir(path):
@@ -27,33 +33,26 @@ def makeDir(path):
         mkdir(path)
 
 
-def makeOutputDir(scoreTypeX, scoreTypeY, dirName):
+def makeOutputDir(*path):
     """
     Create an output directory if it doesn't already exist.
 
-    @param scoreTypeX: A C{str} X-axis title indicating the type of score.
-    @param scoreTypeY: A C{str} Y-axis title indicating the type of score.
-    @param dirName: A C{str} name of the output directory to be created.
+    @param path: A C{list} of C{str} path components to add to
+        C{testArgs.outputDir}. The full path to the directory is made, as in
+        mkdir -p at the shell.
 
     @return: The C{str} path to the output directory.
     """
-    FILESYSTEM_NAME = {
-        'Bit score': 'bit-score',
-        'Z score': 'z-score',
-        'Light matter score': 'lm-score',
-    }
+    # This import cannot be done at the top level, it needs to be deferred
+    # until light/performance/bin/perf.py sets it.
+    from light.performance import testArgs
+    result = testArgs.outputDir
 
-    assert scoreTypeX in FILESYSTEM_NAME and scoreTypeY in FILESYSTEM_NAME
+    for p in path:
+        result = join(result, p)
+        makeDir(result)
 
-    outputDir = join(testArgs.outputDir, dirName)
-
-    subDir = join(outputDir,
-                  '%s-vs-%s' % (FILESYSTEM_NAME[scoreTypeX],
-                                FILESYSTEM_NAME[scoreTypeY]))
-    makeDir(outputDir)
-    makeDir(subDir)
-
-    return subDir
+    return result
 
 
 def plot(x, y, readId, scoreTypeX, scoreTypeY, dirName):
@@ -65,7 +64,8 @@ def plot(x, y, readId, scoreTypeX, scoreTypeY, dirName):
     @param readId: The C{str} id of the read whose values are being plotted.
     @param scoreTypeX: A C{str} X-axis title indicating the type of score.
     @param scoreTypeY: A C{str} Y-axis title indicating the type of score.
-    @param dirName: A C{str} name of the output directory to be created.
+    @param dirName: A C{str} name of the output directory in which to store
+        the plot image. The image will be saved to dirName + readId + '.png'
     """
     fig = plt.figure(figsize=(7, 5))
     ax = fig.add_subplot(111)
@@ -108,13 +108,12 @@ def plot(x, y, readId, scoreTypeX, scoreTypeY, dirName):
     ax.spines['bottom'].set_linewidth(0.5)
     ax.spines['left'].set_linewidth(0.5)
 
-    fig.savefig(join(makeOutputDir(scoreTypeX, scoreTypeY, dirName),
-                     '%s.png' % readId))
+    fig.savefig(join(dirName, '%s.png' % readId))
     plt.close()
 
 
 def plot3D(x, y, z, readId, scoreTypeX, scoreTypeY, scoreTypeZ,
-           interactive=False):
+           dirName, interactive=False):
     """
     Make a 3D plot of the test results.
 
@@ -125,6 +124,8 @@ def plot3D(x, y, z, readId, scoreTypeX, scoreTypeY, scoreTypeZ,
     @param scoreTypeX: A C{str} X-axis title indicating the type of score.
     @param scoreTypeY: A C{str} Y-axis title indicating the type of score.
     @param scoreTypeZ: A C{str} Z-axis title indicating the type of score.
+    @param dirName: A C{str} name of the output directory in which to store
+        the plot image. The image will be saved to dirName + readId + '.png'
     @param interactive: If C{True} use plt.show() to display interactive plots
         that the user will need to manually dismiss.
     """
@@ -217,11 +218,7 @@ def plot3D(x, y, z, readId, scoreTypeX, scoreTypeY, scoreTypeZ,
         Z = np.array([lmScoreCutoff] * (cg * cg)).reshape(cg, cg)
         ax.contourf(xx, yy, Z, colors='purple', alpha=alpha, zdir='z')
 
-    outputDir = join(testArgs.outputDir, 'polymerase')
-    subDir = join(outputDir, '3d')
-    makeDir(outputDir)
-    makeDir(subDir)
-
-    fig.savefig(join(subDir, '%s.png' % readId))
+    fig.savefig(join(dirName, '%s.png' % readId))
     if interactive:
         plt.show()
+    plt.close()

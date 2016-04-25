@@ -3,8 +3,9 @@ import numpy as np
 from dark.reads import AAReadWithX
 from dark.fasta import FastaReads
 
-from light.database import DatabaseSpecifier
+from light.database import Database, DatabaseSpecifier
 from light.parameters import FindParameters
+from light.performance.parameters import PARAMETER_SETS
 
 
 def affinityMatrix(queries, findParams=None, subjects=None, symmetric=True,
@@ -122,3 +123,37 @@ def affinityMatrix(queries, findParams=None, subjects=None, symmetric=True,
         return result
     else:
         return affinity
+
+
+class AffinityMatrices(object):
+    """
+    """
+    def __init__(self, queries, subjects=None, **kwargs):
+        self._matrices = {}
+        self._queries = queries
+        self._subjects = subjects
+        self._kwargs = kwargs
+
+    def __getitem__(self, parameterSet):
+        """
+        Given some parameter settings, create an affinity matrix of light
+        matter scores for all polymerase sequences.
+
+        @param parameterSet: The C{str} name of a parameter set, which must be
+            a key from C{light.performance.parameters.PARAMETER_SETS}.
+        @raise KeyError: If C{parameterSet} is not in
+            C{light.performance.parameters.PARAMETER_SETS}.
+        @return: The affinity matrix.
+        """
+        try:
+            result = self._matrices[parameterSet]
+        except KeyError:
+            print('Creating affinity matrix for parameter set', parameterSet)
+            dbParams = PARAMETER_SETS[parameterSet]['dbParams']
+            findParams = PARAMETER_SETS[parameterSet]['findParams']
+            result = self._matrices[parameterSet] = affinityMatrix(
+                self._queries, subjects=self._subjects,
+                database=Database(dbParams), findParams=findParams,
+                returnDict=True, **self._kwargs)
+
+        return result

@@ -58,6 +58,7 @@ class TestZScoreCorrelation(TestCase):
         lmScores = []
         zScores = []
         for query in _QUERIES:
+            assert query.id.endswith(':sequence')
             id_ = query.id[:-9]
             zScores.append(Z_SCORES[id_])
             lmScores.append(LM_SCORES[query.id]['4MTP:A:sequence'])
@@ -74,6 +75,7 @@ class TestBitScoreCorrelation(TestCase):
         lmScores = []
         bitScores = []
         for query in _QUERIES:
+            assert query.id.endswith(':sequence')
             id_ = query.id[:-9]
             bitScores.append(BIT_SCORES[id_])
             lmScores.append(LM_SCORES[query.id]['4MTP:A:sequence'])
@@ -90,6 +92,7 @@ class TestZScoreBitScoreCorrelation(TestCase):
         zScores = []
         bitScores = []
         for query in _QUERIES:
+            assert query.id.endswith(':sequence')
             id_ = query.id[:-9]
             bitScores.append(BIT_SCORES[id_])
             zScores.append(Z_SCORES[id_])

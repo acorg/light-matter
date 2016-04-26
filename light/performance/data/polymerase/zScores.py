@@ -7,11 +7,7 @@ http://www.rcsb.org/pdb/explore/explore.do?structureId=4MH8
 In the tables below we use 1RW3
 """
 
-from os.path import join, dirname
-from json import loads
 from collections import OrderedDict
-
-from light import performance
 
 
 # The following has long lines and extra embedded spaces to make it simpler
@@ -62,10 +58,3 @@ for index, queryId in enumerate(_CERNY_TABLE_2):
                 score = Z_SCORES[subjectId][queryId]
 
             Z_SCORES[queryId][subjectId] = score
-
-# Read the BLAST bit score JSON. These values in that file were generated
-# by blastp. See the top-level Makefile,
-# light/performance/bin/create-polymerase-json.sh and
-# light/performance/bin/convert-blast-10-to-json.py for details.
-_JSON = join(dirname(performance.__file__), 'data', 'polymerase.json')
-BIT_SCORES = loads(open(_JSON).read())

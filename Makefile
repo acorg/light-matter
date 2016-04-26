@@ -10,8 +10,22 @@ light/_distance.so: src/distance.py
 	python setup.py build_ext -i
 
 pep8:
-	find . -path ./light/colors -prune -o -path ./light/performance/polymerase.py -prune -o -name '*.py' -print0 | xargs -0 pep8 --ignore=E402
-	pep8 --ignore=E201,E241,E501 light/performance/polymerase.py
+	find . -path ./light/colors -prune -o \
+            -path ./light/performance/data/polymerase/zScores.py -prune -o \
+            -path ./light/performance/data/polymerase/bitScores.py -prune -o \
+            -path ./light/performance/data/_2hla_a/zScores.py -prune -o \
+            -path ./light/performance/data/_2hla_a/bitScores.py -prune -o \
+            -path ./light/performance/data/_4mtp_a/zScores.py -prune -o \
+            -path ./light/performance/data/_4mtp_a/bitScores.py -prune -o \
+            -name '*.py' -print0 | xargs -0 pep8 --ignore=E402
+	pep8 --ignore=E201,E241,E501 \
+            light/performance/data/polymerase/zScores.py \
+            light/performance/data/_2hla_a/zScores.py \
+            light/performance/data/_4mtp_a/zScores.py
+	pep8 --ignore=E121 \
+            light/performance/data/polymerase/bitScores.py \
+            light/performance/data/_2hla_a/bitScores.py \
+            light/performance/data/_4mtp_a/bitScores.py
 
 pyflakes:
 	find . -path ./light/colors/six.py -prune -o -name '*.py' -print0 | xargs -0 pyflakes 2>&1 | bin/check-pyflakes-output.sh
@@ -28,11 +42,11 @@ clean:
 	rm -f light/*.so
 	rm -fr build
 
-perf: light/performance/data/polymerase.json
+perf: 
 	light/performance/bin/perf.py
 
-light/performance/data/polymerase.json: light/performance/data/polymerase.fasta
-	light/performance/bin/create-polymerase-json.sh > $@
+performance-data:
+	find light/performance/data -name __pycache__ -prune -o -type d -depth 1 -print0 | xargs -0 -n 1 make -C
 
 update-prosite:
 	@echo "Downloading Prosite database... this may take a while."

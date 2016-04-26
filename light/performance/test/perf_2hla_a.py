@@ -4,16 +4,15 @@ from light.performance import testArgs
 from light.performance.affinity import AffinityMatrices
 from light.performance.utils import (
     plot, plot3D, makeOutputDir, FILESYSTEM_NAME)
-from light.performance.data.polymerase import (
+from light.performance.data._2hla_a import (
     Z_SCORES, BIT_SCORES, QUERIES, SUBJECTS, DATASET)
 
-
-_AFFINITY = AffinityMatrices(QUERIES, SUBJECTS)
+_AFFINITY = AffinityMatrices(QUERIES, SUBJECTS, symmetric=False)
 
 
 class TestLightMatterZScoreCorrelation(TestCase):
 
-    def testPlotsPolymerase(self):
+    def testPlotsHLA(self):
         """
         Examine the correlation between light matter scores and Z scores.
         """
@@ -28,21 +27,22 @@ class TestLightMatterZScoreCorrelation(TestCase):
                 '%s-%s' % (FILESYSTEM_NAME[scoreTypeX],
                            FILESYSTEM_NAME[scoreTypeY]))
             for queryId in Z_SCORES:
-                zScores = []
                 lmScores = []
+                zScores = []
                 for subjectId in Z_SCORES[queryId]:
                     if queryId != subjectId:
-                        lmScores.append(affinity[queryId][subjectId])
                         zScores.append(Z_SCORES[queryId][subjectId])
-                plot(lmScores, zScores, queryId,
-                     scoreTypeX, scoreTypeY, dirName)
+                        lmScores.append(affinity[queryId][subjectId])
+                plot(lmScores, zScores, queryId, scoreTypeX, scoreTypeY,
+                     dirName)
 
 
 class TestLightMatterBitScoreCorrelation(TestCase):
 
-    def testPlotsPolymerase(self):
+    def testPlotsHLA(self):
         """
-        Examine the correlation between our scores and blast bit scores.
+        Examine the correlation between light matter scores and BLAST bit
+        scores.
         """
         scoreTypeX = 'Light matter score'
         scoreTypeY = 'Bit score'
@@ -55,19 +55,19 @@ class TestLightMatterBitScoreCorrelation(TestCase):
                 '%s-%s' % (FILESYSTEM_NAME[scoreTypeX],
                            FILESYSTEM_NAME[scoreTypeY]))
             for queryId in BIT_SCORES:
-                zScores = []
                 lmScores = []
+                bitScores = []
                 for subjectId in BIT_SCORES[queryId]:
                     if queryId != subjectId:
+                        bitScores.append(BIT_SCORES[queryId][subjectId])
                         lmScores.append(affinity[queryId][subjectId])
-                        zScores.append(BIT_SCORES[queryId][subjectId])
-                plot(lmScores, zScores, queryId, scoreTypeX, scoreTypeY,
+                plot(lmScores, bitScores, queryId, scoreTypeX, scoreTypeY,
                      dirName)
 
 
 class TestBitScoreZScoreCorrelation(TestCase):
 
-    def testPlotsPolymerase(self):
+    def testPlotsHLA(self):
         """
         Examine the correlation between BLAST bit scores and Z scores.
         """
@@ -80,21 +80,20 @@ class TestBitScoreZScoreCorrelation(TestCase):
                 parameterSet,
                 '%s-%s' % (FILESYSTEM_NAME[scoreTypeX],
                            FILESYSTEM_NAME[scoreTypeY]))
-
             for queryId in BIT_SCORES:
                 zScores = []
                 bitScores = []
                 for subjectId in BIT_SCORES[queryId]:
                     if queryId != subjectId:
-                        bitScores.append(BIT_SCORES[queryId][subjectId])
-                        zScores.append(Z_SCORES[queryId][subjectId])
+                        bitScores.append(BIT_SCORES[queryId])
+                        zScores.append(Z_SCORES[queryId])
                 plot(bitScores, zScores, queryId, scoreTypeX, scoreTypeY,
                      dirName)
 
 
 class TestBitScoreZScoreLightMatterScore3D(TestCase):
 
-    def test3Dpolymerase(self):
+    def test3DHLA(self):
         """
         Make a 3D plot of BLAST bit scores, Z scores, and light matter scores.
         """

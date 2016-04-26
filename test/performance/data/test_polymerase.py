@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from light.performance.polymerase import BIT_SCORES, Z_SCORES
+from light.performance.data.polymerase import BIT_SCORES, Z_SCORES
 
 POLYMERASE_COUNT = 22
 
@@ -87,7 +87,7 @@ class TestBitScores(TestCase):
         self.assertEqual(POLYMERASE_COUNT, len(BIT_SCORES))
 
         for queryId in BIT_SCORES:
-            self.assertEqual(POLYMERASE_COUNT - 1, len(BIT_SCORES[queryId]))
+            self.assertEqual(POLYMERASE_COUNT, len(BIT_SCORES[queryId]))
 
     def testKeys(self):
         """
@@ -99,11 +99,10 @@ class TestBitScores(TestCase):
         """
         BIT_SCORES values must have the correct keys. Each key, k (a query id),
         must have a set of keys (subject ids) that is the full set of sequence
-        ids except for k.
+        ids.
         """
         for queryId in POLYMERASE_NAMES:
-            expected = POLYMERASE_NAMES - {queryId}
-            self.assertEqual(expected, set(BIT_SCORES[queryId]))
+            self.assertEqual(POLYMERASE_NAMES, set(BIT_SCORES[queryId]))
 
     def testSymmetric(self):
         """
@@ -114,13 +113,6 @@ class TestBitScores(TestCase):
                 if queryId != subjectId:
                     self.assertEqual(BIT_SCORES[queryId][subjectId],
                                      BIT_SCORES[subjectId][queryId])
-
-    def testSelfScoresAbsent(self):
-        """
-        BIT_SCORES must not exist for sequences matched against themselves.
-        """
-        for queryId in POLYMERASE_NAMES:
-            self.assertNotIn(queryId, BIT_SCORES[queryId])
 
     def testNonNegative(self):
         """

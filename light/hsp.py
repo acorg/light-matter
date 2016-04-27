@@ -22,7 +22,8 @@ def _printBin(bin_):
 
 
 def normalizeBin(bin_, queryLen):
-    """Examine a bin and return information about where the query and the subject
+    """
+    Examine a bin and return information about where the query and the subject
     begin and end. Return a dict with keys that allow the query and the subject
     to be displayed relative to the subject orientation (i.e., with start <
     stop for both the read and the match). The returned query indices are

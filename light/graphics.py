@@ -15,14 +15,14 @@ from light.colors import colors
 from light.database import DatabaseSpecifier
 from light.features import Landmark
 from light.hsp import normalizeBin
-from light.landmarks import ALL_LANDMARK_CLASSES
+from light.landmarks import ALL_LANDMARK_CLASSES_INCLUDING_DEV
 from light.parameters import FindParameters
 from light.performance import affinity
 from light.bin_score import ALL_BIN_SCORE_CLASSES
 from light.string import MultilineString
 from light.significance import (
     Always, HashFraction, MaxBinHeight, MeanBinHeight)
-from light.trig import ALL_TRIG_CLASSES
+from light.trig import ALL_TRIG_CLASSES_INCLUDING_DEV
 from light.utils import stringSpans
 
 from dark.dimension import dimensionalIterator
@@ -34,7 +34,7 @@ FILL_WIDTH = 120
 
 ALL_FEATURES = [
     (feature.SYMBOL, feature.NAME) for feature in
-    sorted(ALL_LANDMARK_CLASSES + ALL_TRIG_CLASSES,
+    sorted(ALL_LANDMARK_CLASSES_INCLUDING_DEV + ALL_TRIG_CLASSES_INCLUDING_DEV,
            key=attrgetter('NAME'))]
 
 # From http://www.randalolson.com/2014/06/28/how-to-make-beautiful-data-\
@@ -46,7 +46,9 @@ TABLEAU20 = [
     (44, 160, 44), (152, 223, 138), (214, 39, 40), (255, 152, 150),
     (148, 103, 189), (197, 176, 213), (140, 86, 75), (196, 156, 148),
     (227, 119, 194), (247, 182, 210), (127, 127, 127), (199, 199, 199),
-    (188, 189, 34), (219, 219, 141), (23, 190, 207), (158, 218, 229)]
+    (188, 189, 34), (219, 219, 141), (23, 190, 207), (158, 218, 229),
+    (153, 86, 136), (240, 39, 32), (234, 107, 115), (255, 217, 74),
+    (57, 115, 124)]
 
 # Scale the above RGB values to the [0, 1] range, the format matplotlib
 # accepts.

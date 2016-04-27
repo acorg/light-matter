@@ -137,7 +137,9 @@ class TestACAlphaHelix(TestCase):
         result = list(finder.find(read))
         self.assertEqual(
             [
+                Landmark('AC AlphaHelix', 'ACAH', 0, 4),
                 Landmark('AC AlphaHelix', 'ACAH', 0, 10),
+                Landmark('AC AlphaHelix', 'ACAH', 11, 4),
                 Landmark('AC AlphaHelix', 'ACAH', 11, 5),
             ],
             sorted(result))

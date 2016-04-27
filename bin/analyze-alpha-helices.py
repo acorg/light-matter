@@ -2,7 +2,7 @@
 
 """
 Read FASTA containing known alpha helices from stdin (likely obtained
-by running extract-alpha-helice-from-pdb-ss.py) and compute statistics on
+by running extract-structures-from-pdb-ss.py) and compute statistics on
 their properties (primarily amino acid hydropathy). Write a summary to
 stdout.
 """

@@ -16,12 +16,13 @@ except ImportError:
 
 from .mocking import mockOpen
 
-from dark.reads import Reads, AARead
+from dark.reads import Reads, AARead, SSAARead
 
 from light.backend import Backend
 from light.checksum import Checksum
 from light.database import Database, DatabaseSpecifier
 from light.features import Landmark, TrigPoint
+from light.hsp import normalizeBin
 from light.landmarks import AlphaHelix, BetaStrand
 from light.parameters import DatabaseParameters, FindParameters
 from light.subject import Subject
@@ -557,6 +558,78 @@ class TestDatabase(TestCase):
             ]
             },
             result.matches)
+
+    def testFindBug493(self):
+        """
+        Failing test case for https://github.com/acorg/light-matter/issues/493
+        """
+        query = SSAARead(
+            '2HLA:A',
+            'GSHSMRYFYTSVSRPGRGEPRFIAVGYVDDTQFVRFDSDAASQRMEPRAPWIEQEGPEYWDR'
+            'NTRNVKAQSQTDRVDLGTLRGYYNQSEAGSHTIQMMYGCDVGSDGRFLRGYRQDAYDGKDYI'
+            'ALKEDLRSWTAADMAAQTTKHKWEAAHVAEQWRAYLEGTCVEWLRRYLENGKETLQRTDAPK'
+            'THMTHHAVSDHEATLRCWALSFYPAEITLTWQRDGEDQTQDTELVETRPAGDGTFQKWVAVV'
+            'VPSGQEQRYTCHVQHEGLPKPL',
+            '--EEEEEEEEEE--TTSS--EEEEEEEETTEEEEEEETTSTT-S-EE-SHHHHTS-HHHHHH'
+            'HHHHHHHHHHHHHHHHHHHHHHTT--TTS--EEEEEEEEEE-TTS-EEEEEEEEEETTEEEE'
+            'EE-TTSS-EEESSHHHHHHHHHHHHTTTHHHHHHHHHTHHHHHHHHHHHHHHHHHT--B--E'
+            'EEEEEEE-SSSEEEEEEEEEEEBSS-EEEEEEETTEEE-TTEEE---EE-SSS-EEEEEEEE'
+            'EETT-GGGEEEEEEETTB-S--')
+        subject = SSAARead(
+            '3D2U:A',
+            'HVLRYGYTGIFDDTSHMTLTVVGIFDGQHFFTYHVQSSDKASSRANGTISWMANVSAAYPTY'
+            'LDGERAKGDLIFNQTEQNLLELEIALGYRSQSVLTWTHECNTTENGSFVAGYEGFGWDGETL'
+            'MELKDNLTLWTGPNYEISWLKQQKTYIDGKIKNISEGDTTIQRNYLKGNCTQWSVIYSGFQP'
+            'PVTHPVVKGGVRNQNDNRAEAFCTSYGFFPGEIQITFIHYGDKVPEDSEPQCNPLLPTLDGT'
+            'FHQGCYVAIFSNQNYTCRVTHGNWTVEIPISVT',
+            '-EEEEEEEEEESSSS-EEEEEEEEETTEEEEEEEEESS-SSS-EEEE-STHHHHHHHHSTTH'
+            'HHHHHHHHHHHHHHHHHHHHHHHHHH--SS--EEEEEEEEEE-TT--EEEEEEEEEETTEEE'
+            'EEE-TTS---B---TTT-GGGGGHHHHHHHHHT--SHHHHHHHHHHHTHHHHHHHHHHHHS-'
+            '--B--EEEEEEEEEETTEEEEEEEEEEEBSS--EEEEEEESS---TT---EE---EE-TTS-'
+            'EEEEEEEEEETTSEEEEEEE-SS-EEEEEEE--')
+        dbParams = DatabaseParameters(
+            landmarks=['PDB AlphaHelix', 'PDB AlphaHelix_3_10',
+                       'PDB AlphaHelix_pi', 'PDB ExtendedStrand',
+                       'AminoAcidsLm'],
+            trigPoints=['AminoAcids', 'Peaks', 'Troughs', 'IndividualPeaks',
+                        'IndividualTroughs'],
+            featureLengthBase=1.01, maxDistance=10000, limitPerLandmark=50,
+            distanceBase=1.1)
+        db = Database(dbParams)
+        _, subjectIndex, _ = db.addSubject(subject)
+        findParams = FindParameters(significanceFraction=0.01)
+        result = db.find(query, findParams, storeFullAnalysis=True)
+        significantBins = result.analysis[subjectIndex]['significantBins']
+        for binInfo in significantBins:
+            normalizeBin(binInfo['bin'], len(query))
+
+    def testFindBug493Minimal(self):
+        """
+        A minimal failing test case for
+        https://github.com/acorg/light-matter/issues/493
+        """
+        query = SSAARead(
+            '2HLA:A',
+            'ALKEDLRSWTAADMAAQTTKHKWEAAHVAEQWRAYLEGTCVEWLRRYLENGKETLQRTDAPK'
+            'THMTHHAVSDHEATLRCWALSFYPAEITLTWQRDGEDQTQDTELVETRPAGDGTFQKWVAVV',
+            'EE-TTSS-EEESSHHHHHHHHHHHHTTTHHHHHHHHHTHHHHHHHHHHHHHHHHHT--B--E'
+            'EEEEEEE-SSSEEEEEEEEEEEBSS-EEEEEEETTEEE-TTEEE---EE-SSS-EEEEEEEE')
+        subject = SSAARead(
+            '3D2U:A',
+            'HVLRYGYTGIFDDTSHMTLTVVGIFDGQHFFTYHVQSSDKASSRANGTISWMANVSAAYPTY'
+            'PVTHPVVKGGVRNQNDNRAEAFCTSYGFFPGEIQITFIHYGDKVPEDSEPQCNPLLPTLDGT',
+            '-EEEEEEEEEESSSS-EEEEEEEEETTEEEEEEEEESS-SSS-EEEE-STHHHHHHHHSTTH'
+            '--B--EEEEEEEEEETTEEEEEEEEEEEBSS--EEEEEEESS---TT---EE---EE-TTS-')
+        dbParams = DatabaseParameters(landmarks=['PDB ExtendedStrand'],
+                                      trigPoints=[], limitPerLandmark=50,
+                                      distanceBase=1.1)
+        db = Database(dbParams)
+        _, subjectIndex, _ = db.addSubject(subject)
+        findParams = FindParameters(significanceFraction=0.01)
+        result = db.find(query, findParams, storeFullAnalysis=True)
+        significantBins = result.analysis[subjectIndex]['significantBins']
+        for binInfo in significantBins:
+            normalizeBin(binInfo['bin'], len(query))
 
     def testSymmetricFindScoresSameSubjectAndQuery(self):
         """

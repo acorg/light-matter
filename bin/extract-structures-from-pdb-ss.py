@@ -48,10 +48,10 @@ parser.add_argument(
           'records.'))
 
 parser.add_argument(
-    '--structureType', default='PDB AlphaHelix',
+    '--feature', default='PDB AlphaHelix',
     choices=('PDB AlphaHelix', 'PDB AlphaHelix_3_10', 'PDB AlphaHelix_pi',
              'PDB ExtendedStrand'),
-    help=('The type of structure that should be extracted.'))
+    help='The type of structure that should be extracted.')
 
 args = parser.parse_args()
 
@@ -67,18 +67,18 @@ if margin < 0:
 # 'X' and 'U'. So, for now, read it without checking sequence alphabet.
 
 for read in SSFastaReads(sys.stdin, checkAlphabet=0):
-    for structureType in finder.findWithMargin(read, margin):
+    for feature in finder.findWithMargin(read, margin):
 
         # Drop the ':sequence' suffix from read ids and add information
-        # about the (1-based) offsets at which this structureType was found.
-        start = structureType.offset - margin
-        end = structureType.offset + structureType.length + margin
+        # about the (1-based) offsets at which this feature was found.
+        start = feature.offset - margin
+        end = feature.offset + feature.length + margin
         readId = read.id.replace(':sequence', '') + ':%d-%d' % (start + 1, end)
 
         if dropStructure:
-            structureTypeWithMargin = AARead(readId, read.sequence[start:end])
+            featureWithMargin = AARead(readId, read.sequence[start:end])
         else:
-            structureTypeWithMargin = read[start:end]
-            structureTypeWithMargin.id = readId
+            featureWithMargin = read[start:end]
+            featureWithMargin.id = readId
 
-        print(structureTypeWithMargin.toString(format_='fasta'), end='')
+        print(featureWithMargin.toString(format_='fasta'), end='')

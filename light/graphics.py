@@ -52,13 +52,17 @@ TABLEAU20 = [
 ADDITIONAL_COLORS = [(153, 86, 136), (240, 39, 32), (234, 107, 115),
                      (255, 217, 74), (57, 115, 124)]
 
-TABLEAU25 = TABLEAU20 + ADDITIONAL_COLORS
-
 # Scale the above RGB values to the [0, 1] range, the format matplotlib
 # accepts.
-for i in range(len(TABLEAU25)):
-    r, g, b = TABLEAU25[i]
-    TABLEAU25[i] = (r / 255.0, g / 255.0, b / 255.0)
+for i in range(len(TABLEAU20)):
+    r, g, b = TABLEAU20[i]
+    TABLEAU20[i] = (r / 255.0, g / 255.0, b / 255.0)
+
+for i in range(len(ADDITIONAL_COLORS)):
+    r, g, b = ADDITIONAL_COLORS[i]
+    ADDITIONAL_COLORS[i] = (r / 255.0, g / 255.0, b / 255.0)
+
+TABLEAU25 = TABLEAU20 + ADDITIONAL_COLORS
 
 # Make sure we have enough colors for our set of features.
 assert len(ALL_FEATURES) <= len(TABLEAU25)

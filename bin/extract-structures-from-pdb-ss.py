@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
 """
-Read PDB secondary structure records from stdin, find their alpha
-helices (from the predicted secondary structure) and print just the alpha
-helices to stdout.
+Read PDB secondary structure records from stdin, find the desired structure
+(from the predicted secondary structure) and print just the desired structure
+to stdout.
 
 Optionally, drop the structure information from the output (to produce regular
-FASTA) and/or add a margin of amino acids around the found alpha helices.
+FASTA) and/or add a margin of amino acids around the found structure.
 
 See the docstring for dark.fasta_ss.SSFastaReads for information on the PDB
 secondary structure file format. Note the IMPORTANT NOTE section there! You
@@ -21,19 +21,19 @@ import argparse
 from dark.fasta_ss import SSFastaReads
 from dark.reads import AARead
 
-from light.landmarks import PDB_AlphaHelix
+from light.landmarks import findLandmark
 
 
 parser = argparse.ArgumentParser(
-    description=('Extract alpha helix subsequences from predicted PDB '
+    description=('Extract structure subsequences from predicted PDB '
                  'secondary structures.'))
 
 parser.add_argument(
     '--margin', type=int, default=0,
     help=('The number of AA residues to keep on either side of the '
-          'extracted helices. It is useful to keep some context in order '
-          'to give other alpha helix finders (e.g., GOR4) that you might '
-          'run on the extracted helices a chance to establish context. '
+          'extracted structures. It is useful to keep some context in order '
+          'to give other structure finders (e.g., GOR4) that you might '
+          'run on the extracted structures a chance to establish context. '
           'Note that if a feature does not have this many neighboring '
           'residues (due to being too close to the start or end of a '
           'sequence, it will not be output.'))
@@ -47,8 +47,15 @@ parser.add_argument(
           'and matching structure information written as successive FASTA '
           'records.'))
 
+parser.add_argument(
+    '--feature', default='PDB AlphaHelix',
+    choices=('PDB AlphaHelix', 'PDB AlphaHelix_3_10', 'PDB AlphaHelix_pi',
+             'PDB ExtendedStrand'),
+    help='The type of structure that should be extracted.')
+
 args = parser.parse_args()
-finder = PDB_AlphaHelix()
+
+finder = findLandmark(args.structureType)
 
 dropStructure = args.dropStructure
 margin = args.margin
@@ -60,18 +67,18 @@ if margin < 0:
 # 'X' and 'U'. So, for now, read it without checking sequence alphabet.
 
 for read in SSFastaReads(sys.stdin, checkAlphabet=0):
-    for helix in finder.findWithMargin(read, margin):
+    for feature in finder.findWithMargin(read, margin):
 
         # Drop the ':sequence' suffix from read ids and add information
-        # about the (1-based) offsets at which this helix was found.
-        start = helix.offset - margin
-        end = helix.offset + helix.length + margin
+        # about the (1-based) offsets at which this feature was found.
+        start = feature.offset - margin
+        end = feature.offset + feature.length + margin
         readId = read.id.replace(':sequence', '') + ':%d-%d' % (start + 1, end)
 
         if dropStructure:
-            helixWithMargin = AARead(readId, read.sequence[start:end])
+            featureWithMargin = AARead(readId, read.sequence[start:end])
         else:
-            helixWithMargin = read[start:end]
-            helixWithMargin.id = readId
+            featureWithMargin = read[start:end]
+            featureWithMargin.id = readId
 
-        print(helixWithMargin.toString(format_='fasta'), end='')
+        print(featureWithMargin.toString(format_='fasta'), end='')

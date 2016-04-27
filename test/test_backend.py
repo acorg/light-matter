@@ -917,7 +917,7 @@ class TestBackend(TestCase):
         expected = (
             'Name: backend\n'
             'Hash count: 3\n'
-            'Checksum: 337886368\n'
+            'Checksum: 562661082\n'
             'Subjects (with offsets) by hash:\n'
             '  A2:P:10\n'
             '    0 [[0, 9, 10, 1]]\n'

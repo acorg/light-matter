@@ -5,23 +5,20 @@ The Aho Corasick implementation is taken from
 https://github.com/WojciechMula/pyahocorasick
 """
 
-from os.path import dirname, join
-
 import ahocorasick
 
-import light
 from light.features import Landmark
 from light.finder import Finder
 
 
-def _loadDatabase():
+def _loadDatabase(filename):
     """
     Read alpha helix prefix strings and add them to an Aho Corasick matcher.
 
+    @param filename: A C{str} filename of a file with alpha helices.
+
     @return: An C{ahocorasick.Automaton} instance.
     """
-    filename = join(dirname(light.__file__), '..', 'data',
-                    'aho-corasick-alpha-helix-prefixes')
     # We only need to store the lengths of the prefixes, not the prefixes
     # themselves.
     ac = ahocorasick.Automaton(ahocorasick.STORE_LENGTH)
@@ -35,7 +32,7 @@ def _loadDatabase():
 
 # Read the alpha helix database (only once) into a singleton for use in the
 # ACAlphaHelix.find method.
-_AC = _loadDatabase()
+_AC = None
 
 
 class AC_AlphaHelix(Finder):
@@ -49,11 +46,15 @@ class AC_AlphaHelix(Finder):
         """
         A function that finds and yields (as C{Landmark}s instances) alpha
         helices.
-
         No attempt is made to disallow overlapping alpha helices.
 
         @param read: An instance of C{dark.reads.AARead}.
+
         @return: A generator that yields C{Landmark} instances.
         """
+        global _AC
+        if _AC is None:
+            _AC = _loadDatabase(self._dbParams.ahocorasickFilename)
+
         for end, length in _AC.iter(read.sequence):
             yield Landmark(self.NAME, self.SYMBOL, end - length + 1, length)

@@ -229,9 +229,14 @@ class TestDatabaseParameters(TestCase):
                                       limitPerLandmark=10, maxDistance=77,
                                       minDistance=66,
                                       randomLandmarkDensity=0.1,
-                                      randomTrigPointDensity=0.2)
+                                      randomTrigPointDensity=0.2,
+                                      ahocorasickFilename=(
+            '../data/aho-corasick-alpha-helix-prefixes-91'))
+
         self.assertEqual(
             {
+                'ahocorasickFilename': '../data/aho-corasick-alpha-helix-'
+                                       'prefixes-91',
                 'distanceBase': 3.0,
                 'featureLengthBase': 1.7,
                 'landmarks': ['AlphaHelix', 'BetaStrand'],
@@ -293,10 +298,12 @@ class TestDatabaseParameters(TestCase):
                                       maxDistance=19, minDistance=5,
                                       distanceBase=1.2, featureLengthBase=1.7,
                                       randomLandmarkDensity=0.3,
-                                      randomTrigPointDensity=0.9)
+                                      randomTrigPointDensity=0.9,
+                                      ahocorasickFilename='xxx')
         fp = StringIO()
         dbParams.save(fp)
         expected = {
+            'ahocorasickFilename': 'xxx',
             'landmarks': ['AlphaHelix'],
             'trigPoints': ['Peaks'],
             'limitPerLandmark': 3,

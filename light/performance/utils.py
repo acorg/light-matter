@@ -2,14 +2,6 @@ from os import mkdir
 from os.path import exists, isdir, join
 
 
-# How to translate axis names to filesystem names.
-FILESYSTEM_NAME = {
-    'Bit score': 'bit-score',
-    'Z score': 'z-score',
-    'Light matter score': 'lm-score',
-}
-
-
 def makeDir(path):
     """
     Check to see if a path exists and whether it's a directory. Create it (as
@@ -83,27 +75,3 @@ def pdbNameToPythonName(name, raiseOnError=True):
             return origName
 
     return 'pdb_' + pdbId + '_' + suffix
-
-
-def convertDictKeysFromPDBToPython(d, raiseOnError=True):
-    """
-    Use pdbNameToPythonName to convert the keys of a dictionary from PDB ids
-    to Python ids.
-
-    @param d: A C{dict}.
-    @param raiseOnError: If C{True} and a dict key cannot be recognized, raise
-        a C{RuntimeError}. Else use the original dict key.
-    @raise RuntimeError: If the key conversion causes a collision and
-        C{raiseOnError} is C{True}.
-    @return: A new C{dict} with converted keys. Note that the values from
-        C{d} will be present in the result as well as in C{d}.
-    """
-    result = {}
-    for key, value in d.items():
-        newKey = pdbNameToPythonName(key, raiseOnError=raiseOnError)
-        if newKey in result:
-            raise RuntimeError(
-                'Dict key canonicalization resulted in a key collision. Two '
-                'or more keys map to %r.' % newKey)
-        result[newKey] = value
-    return result

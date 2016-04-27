@@ -42,7 +42,7 @@ clean:
 	rm -f light/*.so
 	rm -fr build
 
-perf: 
+perf:
 	light/performance/bin/perf.py
 
 performance-data:

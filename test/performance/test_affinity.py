@@ -4,8 +4,8 @@ import six
 
 from dark.reads import Reads, AARead
 
-from light.parameters import FindParameters
-from light.performance.affinity import affinityMatrix
+from light.parameters import DatabaseParameters, FindParameters
+from light.performance.affinity import affinityMatrix, AffinityMatrices
 from light.landmarks import ALL_LANDMARK_CLASSES
 from light.trig import ALL_TRIG_CLASSES
 
@@ -14,7 +14,6 @@ class TestAffinityMatrix(TestCase):
     """
     Tests for the light.performance.affinity.affinityMatrix function.
     """
-
     def testNoReads(self):
         """
         If affinityMatrix is called with no reads and no subjects, an empty
@@ -428,3 +427,99 @@ class TestAffinityMatrix(TestCase):
             trigPoints=['Peaks', 'Troughs'],
             limitPerLandmark=50, minDistance=1, maxDistance=100,
             symmetric=False)
+
+
+class TestAffinityMatrices(TestCase):
+    """
+    Tests for the light.performance.affinity.Affinitymatrices class.
+    """
+    def testIllegalDatabaseArgument(self):
+        """
+        An AffinityMatrices instance cannot be passed a 'database' keyword.
+        It must raise ValueError in this case.
+        """
+        error = '^A database cannot be passed to AffinityMatrices$'
+        six.assertRaisesRegex(self, ValueError, error, AffinityMatrices,
+                              Reads(), database=None)
+
+    def testUnknownParameterSet(self):
+        """
+        An AffinityMatrices instance asked for an unknown parameter set must
+        raise a KeyError.
+        """
+        parameterSets = {}
+        am = AffinityMatrices(Reads(), parameterSets=parameterSets)
+        error = 'unknown'
+        six.assertRaisesRegex(self, KeyError, error, am.__getitem__, 'unknown')
+
+    def testNoQueriesOrSubjects(self):
+        """
+        An AffinityMatrices instance with no queries or subjects must return
+        an empty matrix.
+        """
+        parameterSets = {
+            'test': {
+                'dbParams': DatabaseParameters(),
+                'findParams': FindParameters(),
+            }
+        }
+        am = AffinityMatrices(Reads(), parameterSets=parameterSets)
+        matrix = am['test']
+        self.assertTrue(np.array_equal(np.zeros((0, 0)), matrix))
+
+    def testNoQueriesOrSubjectsWithResultAsDict(self):
+        """
+        An AffinityMatrices instance with no queries or subjects must return
+        an empty dictionary when returnDict is True.
+        """
+        parameterSets = {
+            'test': {
+                'dbParams': DatabaseParameters(),
+                'findParams': FindParameters(),
+            }
+        }
+        am = AffinityMatrices(Reads(), parameterSets=parameterSets,
+                              returnDict=True)
+        matrix = am['test']
+        self.assertEqual({}, matrix)
+
+    def testIdenticalMatrixIsReturnedOnRepeatedRequest(self):
+        """
+        An AffinityMatrices instance must return the identical affinity matrix
+        object when asked for it a second time.
+        """
+        parameterSets = {
+            'test': {
+                'dbParams': DatabaseParameters(),
+                'findParams': FindParameters(),
+            }
+        }
+        am = AffinityMatrices(Reads(), parameterSets=parameterSets,
+                              returnDict=True)
+        self.assertIs(am['test'], am['test'])
+
+    def testResultIsAnAffinityMatrix(self):
+        """
+        An AffinityMatrices instance must return affinity matrices.
+        """
+        parameterSets = {
+            'test': {
+                'dbParams': DatabaseParameters(landmarks=['AlphaHelix']),
+                'findParams': FindParameters(),
+            }
+        }
+        sequence = 'FRRRFRRRFAAAFRRRFRRRF'
+        queries = Reads([AARead('query1', sequence)])
+        subjects = Reads([AARead('subject1', sequence),
+                          AARead('subject2', sequence)])
+        am = AffinityMatrices(queries, subjects=subjects,
+                              parameterSets=parameterSets, returnDict=True)
+        matrix = am['test']
+        self.assertEqual(
+            {
+                'query1': {
+                    'subject1': 1.0,
+                    'subject2': 1.0,
+                },
+            },
+            matrix)

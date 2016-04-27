@@ -10,3 +10,6 @@ crossbar/.crossbar/node.pid
 _trial_temp
 light/*.so
 light_matter.egg-info
+light/performance/data/pdb_2hla_a/bitScores.py
+light/performance/data/pdb_4mtp_a/bitScores.py
+light/performance/data/polymerase/bitScores.py

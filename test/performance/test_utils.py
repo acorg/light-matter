@@ -1,8 +1,7 @@
 import six
 from unittest import TestCase
 
-from light.performance.utils import (
-    convertDictKeysFromPDBToPython, pdbNameToPythonName)
+from light.performance.utils import pdbNameToPythonName
 
 
 class TestPdbNameToPythonName(TestCase):
@@ -63,51 +62,3 @@ class TestPdbNameToPythonName(TestCase):
         """
         self.assertEqual('pdb_1mla_a',
                          pdbNameToPythonName('1MLA:A:sequence'))
-
-
-class TestConvertDictKeysFromPDBToPython(TestCase):
-    """
-    Tests for the light.performance.utils.convertDictKeysFromPDBToPython
-    function.
-    """
-    def testEmpty(self):
-        """
-        Passing an empty dict must result in an empty dict.
-        """
-        self.assertEqual({}, convertDictKeysFromPDBToPython({}))
-
-    def testUnrecognizable(self):
-        """
-        An unrecognizable name in a dict must result in a RuntimeError.
-        """
-        error = "^Could not convert PDB name 'xxxxxxx' to a Python name$"
-        six.assertRaisesRegex(self, RuntimeError, error,
-                              convertDictKeysFromPDBToPython,
-                              {'xxxxxxx': 44})
-
-    def testUnrecognizableWithoutRaising(self):
-        """
-        An unrecognizable name in a dict must result in the original name
-        being in the result (not in the raising of a RuntimeError) if
-        raiseOnError is passed as False.
-        """
-        d = {'x' * 10: 33}
-        self.assertEqual(d, convertDictKeysFromPDBToPython(
-            d, raiseOnError=False))
-
-    def testCanonical(self):
-        """
-        Passing a dict with canonical PDB names must return as expected.
-        """
-        self.assertEqual(
-            dict.fromkeys(['pdb_1mpl_a', 'pdb_2abc_d']),
-            convertDictKeysFromPDBToPython(
-                dict.fromkeys(['1MPL:A', '2ABC:D'])))
-
-    def testValuesArePreserverd(self):
-        """
-        The values in the result must be those in the argument.
-        """
-        o = object()
-        result = convertDictKeysFromPDBToPython({'1MPL:A': o})
-        self.assertIs(o, result['pdb_1mpl_a'])

@@ -7,10 +7,17 @@ from light.bin_score import histogramBinFeatures
 
 
 def _printBin(bin_):
+    """
+    Print detail of the contents of a histogram bin.
+
+    @param bin_: A C{light.histogram.Histogram} bin, which is a C{list} of
+        C{dict}s.
+    """
     print('Bin has %d items:' % len(bin_), file=sys.stderr)
-    for i, item in enumerate(bin_, start=1):
-        print('  Item %d:' % i)
-        for key, value in item.items():
+    for i, hashInfo in enumerate(bin_, start=1):
+        print('  Item %d:' % i, file=sys.stderr)
+        for key, value in hashInfo.items():
+            # The 16 below is the length of the longest key (subjectTrigPoint).
             print('    %16s: %s' % (key, value), file=sys.stderr)
 
 
@@ -113,9 +120,9 @@ def normalizeBin(bin_, queryLen):
             print('  %s: %s' % (var, locals[var]), file=sys.stderr)
 
         print('allQueryOffsets:',
-              ' '.join(map(str, sorted(allQueryOffsets))))
+              ' '.join(map(str, sorted(allQueryOffsets))), file=sys.stderr)
         print('allSubjectOffsets:',
-              ' '.join(map(str, sorted(allSubjectOffsets))))
+              ' '.join(map(str, sorted(allSubjectOffsets))), file=sys.stderr)
 
         # Sort features based only on offset. We can't just use sorted()
         # because the features can be a mix of landmarks and trig points
@@ -129,7 +136,7 @@ def normalizeBin(bin_, queryLen):
             for feature in sorted(allQueryFeatures, key=key):
                 print('  ', feature, file=sys.stderr)
         else:
-            print('All query features is empty.')
+            print('All query features is empty.', file=sys.stderr)
 
         allSubjectFeatures = locals['allSubjectFeatures']
         if allSubjectFeatures:
@@ -137,7 +144,7 @@ def normalizeBin(bin_, queryLen):
             for feature in sorted(allSubjectFeatures, key=key):
                 print('  ', feature, file=sys.stderr)
         else:
-            print('All subject features is empty.')
+            print('All subject features is empty.', file=sys.stderr)
 
         _printBin(bin_)
         raise AssertionError(msg)

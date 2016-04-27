@@ -13,19 +13,19 @@ pep8:
 	find . -path ./light/colors -prune -o \
             -path ./light/performance/data/polymerase/zScores.py -prune -o \
             -path ./light/performance/data/polymerase/bitScores.py -prune -o \
-            -path ./light/performance/data/_2hla_a/zScores.py -prune -o \
-            -path ./light/performance/data/_2hla_a/bitScores.py -prune -o \
-            -path ./light/performance/data/_4mtp_a/zScores.py -prune -o \
-            -path ./light/performance/data/_4mtp_a/bitScores.py -prune -o \
+            -path ./light/performance/data/pdb_2hla_a/zScores.py -prune -o \
+            -path ./light/performance/data/pdb_2hla_a/bitScores.py -prune -o \
+            -path ./light/performance/data/pdb_4mtp_a/zScores.py -prune -o \
+            -path ./light/performance/data/pdb_4mtp_a/bitScores.py -prune -o \
             -name '*.py' -print0 | xargs -0 pep8 --ignore=E402
 	pep8 --ignore=E201,E241,E501 \
             light/performance/data/polymerase/zScores.py \
-            light/performance/data/_2hla_a/zScores.py \
-            light/performance/data/_4mtp_a/zScores.py
+            light/performance/data/pdb_2hla_a/zScores.py \
+            light/performance/data/pdb_4mtp_a/zScores.py
 	pep8 --ignore=E121 \
             light/performance/data/polymerase/bitScores.py \
-            light/performance/data/_2hla_a/bitScores.py \
-            light/performance/data/_4mtp_a/bitScores.py
+            light/performance/data/pdb_2hla_a/bitScores.py \
+            light/performance/data/pdb_4mtp_a/bitScores.py
 
 pyflakes:
 	find . -path ./light/colors/six.py -prune -o -name '*.py' -print0 | xargs -0 pyflakes 2>&1 | bin/check-pyflakes-output.sh

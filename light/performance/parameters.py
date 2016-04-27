@@ -28,4 +28,16 @@ PARAMETER_SETS = {
             significanceFraction=0.05,
         ),
     },
+
+    'GOR4-landmarks-default-trig': {
+        'dbParams': DatabaseParameters(
+            landmarks=['GOR4AlphaHelix', 'GOR4BetaStrand', 'GOR4Coil'],
+            maxDistance=5000,
+            limitPerLandmark=50,
+        ),
+        'findParams': FindParameters(
+            binScoreMethod='FeatureAAScore',
+            significanceFraction=0.05,
+        ),
+    },
 }

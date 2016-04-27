@@ -8,9 +8,9 @@ from light.performance import data
 from dark.fasta_ss import SSFastaReads
 from dark.reads import SSAAReadWithX
 
-DATASET = '2hla_a'
+DATASET = 'pdb_2hla_a'
 
-_DIR = join(dirname(data.__file__), '_' + DATASET)
+_DIR = join(dirname(data.__file__), DATASET)
 
 QUERIES = list(SSFastaReads(join(_DIR, 'queries.fasta'),
                             readClass=SSAAReadWithX))

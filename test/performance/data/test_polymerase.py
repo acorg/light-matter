@@ -5,16 +5,17 @@ from light.performance.data.polymerase import BIT_SCORES, Z_SCORES
 POLYMERASE_COUNT = 22
 
 POLYMERASE_NAMES = {
-    '2J7W-A', '4K6M-A', '1S49-A', '1NB6-A', '3OLB-A', '1XR7-A', '1XR6-A',
-    '3CDW-A', '2E9Z-A', '3BSO-A', '3UQS-A', '1KHV-B', '2CKW-A', '1HI0-P',
-    '3AVX-A', '2PUS-A', '2YI9-A', '2R7W-A', '1N35-A', '3V81-C', '1MU2-A',
-    '1RW3-A'
+    'pdb_2j7w_a', 'pdb_4k6m_a', 'pdb_1s49_a', 'pdb_1nb6_a', 'pdb_3olb_a',
+    'pdb_1xr7_a', 'pdb_1xr6_a', 'pdb_3cdw_a', 'pdb_2e9z_a', 'pdb_3bso_a',
+    'pdb_3uqs_a', 'pdb_1khv_b', 'pdb_2ckw_a', 'pdb_1hi0_p', 'pdb_3avx_a',
+    'pdb_2pus_a', 'pdb_2yi9_a', 'pdb_2r7w_a', 'pdb_1n35_a', 'pdb_3v81_c',
+    'pdb_1mu2_a', 'pdb_1rw3_a'
 }
 
 
 class TestZScores(TestCase):
     """
-    Tests for the light.performance.polymerase Z_SCORES variable.
+    Tests for the light.performance.data.polymerase Z_SCORES variable.
     """
     def testVariables(self):
         """
@@ -42,10 +43,10 @@ class TestZScores(TestCase):
         right.
         """
         for queryId, subjectId, expected in (
-                ('3BSO-A', '3OLB-A', 32.0),
-                ('2J7W-A', '4K6M-A', 42.9),
-                ('1RW3-A', '1MU2-A', 20.7),
-                ('2YI9-A', '1HI0-P', 10.7)):
+                ('pdb_3bso_a', 'pdb_3olb_a', 32.0),
+                ('pdb_2j7w_a', 'pdb_4k6m_a', 42.9),
+                ('pdb_1rw3_a', 'pdb_1mu2_a', 20.7),
+                ('pdb_2yi9_a', 'pdb_1hi0_p', 10.7)):
             self.assertAlmostEqual(expected, Z_SCORES[queryId][subjectId])
 
     def testSymmetric(self):
@@ -77,7 +78,7 @@ class TestZScores(TestCase):
 
 class TestBitScores(TestCase):
     """
-    Tests for the light.performance.polymerase BIT_SCORES variable.
+    Tests for the light.performance.data.polymerase BIT_SCORES variable.
     """
     def testLen(self):
         """
@@ -93,7 +94,7 @@ class TestBitScores(TestCase):
         """
         BIT_SCORES must have the correct keys.
         """
-        self.assertEqual(POLYMERASE_NAMES, set(BIT_SCORES.keys()))
+        self.assertEqual(POLYMERASE_NAMES, set(BIT_SCORES))
 
     def testValues(self):
         """

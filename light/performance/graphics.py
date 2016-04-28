@@ -1,59 +1,17 @@
-from os import mkdir
-from os.path import exists, isdir, join
+"""
+None of this code is tested.
+"""
+
+from os.path import join
 from scipy import stats
+import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-import numpy as np
 
-from light.performance import testArgs
+from light.performance.utils import pythonNameToPdbName
 
 # Keep pyflakes quiet by pretending to use Axes3D.
 _ = Axes3D
-
-
-def makeDir(path):
-    """
-    Check to see if a path exists and whether it's a directory. Create it (as
-    a dir) if it's non-existent.
-
-    @raise RuntimeError: if C{path} exists but is not a directory.
-    @param path: The C{str} path for the directory.
-    """
-    if exists(path):
-        if not isdir(path):
-            raise RuntimeError('Output path %r already exists but is not a '
-                               'directory.' % path)
-    else:
-        mkdir(path)
-
-
-def makeOutputDir(scoreTypeX, scoreTypeY, dirName):
-    """
-    Create an output directory if it doesn't already exist.
-
-    @param scoreTypeX: A C{str} X-axis title indicating the type of score.
-    @param scoreTypeY: A C{str} Y-axis title indicating the type of score.
-    @param dirName: A C{str} name of the output directory to be created.
-
-    @return: The C{str} path to the output directory.
-    """
-    FILESYSTEM_NAME = {
-        'Bit score': 'bit-score',
-        'Z score': 'z-score',
-        'Light matter score': 'lm-score',
-    }
-
-    assert scoreTypeX in FILESYSTEM_NAME and scoreTypeY in FILESYSTEM_NAME
-
-    outputDir = join(testArgs.outputDir, dirName)
-
-    subDir = join(outputDir,
-                  '%s-vs-%s' % (FILESYSTEM_NAME[scoreTypeX],
-                                FILESYSTEM_NAME[scoreTypeY]))
-    makeDir(outputDir)
-    makeDir(subDir)
-
-    return subDir
 
 
 def plot(x, y, readId, scoreTypeX, scoreTypeY, dirName):
@@ -65,20 +23,31 @@ def plot(x, y, readId, scoreTypeX, scoreTypeY, dirName):
     @param readId: The C{str} id of the read whose values are being plotted.
     @param scoreTypeX: A C{str} X-axis title indicating the type of score.
     @param scoreTypeY: A C{str} Y-axis title indicating the type of score.
-    @param dirName: A C{str} name of the output directory to be created.
+    @param dirName: A C{str} name of the output directory in which to store
+        the plot image. The image will be saved to dirName + readId + '.png'
+    @raises AssertionError: If the length of C{x} is not the same as the
+        length of C{y}.
     """
+    assert len(x) == len(y)
+
     fig = plt.figure(figsize=(7, 5))
     ax = fig.add_subplot(111)
-    slope, intercept, rValue, pValue, se = stats.linregress(x, y)
 
-    # Plot.
-    plt.plot(x, y, 'o', markerfacecolor='blue', markeredgecolor='blue')
-    plt.plot([0, max(x)], [intercept, slope * max(x) + intercept], '-',
-             color='green' if slope >= 0 else 'red')
+    if len(x) > 1:
+        slope, intercept, rValue, pValue, se = stats.linregress(x, y)
 
-    # Labels.
-    ax.set_title('Read: %s, R^2: %.2f, SE: %.2f, slope: %.2f, p: %.2f' %
-                 (readId, rValue, se, slope, pValue))
+        # Plot.
+        plt.plot(x, y, 'o', markerfacecolor='blue', markeredgecolor='blue')
+        plt.plot([0, max(x)], [intercept, slope * max(x) + intercept], '-',
+                 color='green' if slope >= 0 else 'red')
+
+        # Labels.
+        ax.set_title('Read: %s, R^2: %.2f, SE: %.2f, slope: %.2f, p: %.2f' %
+                     (pythonNameToPdbName(readId), rValue, se, slope, pValue))
+    else:
+        ax.set_title('No (or not enough) x,y data given for read %s' %
+                     pythonNameToPdbName(readId))
+
     ax.set_ylabel(scoreTypeY)
     ax.set_xlabel(scoreTypeX)
 
@@ -90,10 +59,12 @@ def plot(x, y, readId, scoreTypeX, scoreTypeY, dirName):
 
     # Z scores are always <= 60.0 (with sanity check).
     if scoreTypeX == 'Z score':
-        assert max(x) <= 65.0
+        if x:
+            assert max(x) <= 65.0
         ax.set_xlim(right=65.0)
     if scoreTypeY == 'Z score':
-        assert max(y) <= 65.0
+        if y:
+            assert max(y) <= 65.0
         ax.set_ylim(top=65.0)
 
     # No scores can be negative. Explicitly set the lower limits on both
@@ -108,13 +79,12 @@ def plot(x, y, readId, scoreTypeX, scoreTypeY, dirName):
     ax.spines['bottom'].set_linewidth(0.5)
     ax.spines['left'].set_linewidth(0.5)
 
-    fig.savefig(join(makeOutputDir(scoreTypeX, scoreTypeY, dirName),
-                     '%s.png' % readId))
+    fig.savefig(join(dirName, '%s.png' % readId))
     plt.close()
 
 
 def plot3D(x, y, z, readId, scoreTypeX, scoreTypeY, scoreTypeZ,
-           interactive=False):
+           dirName, interactive=False):
     """
     Make a 3D plot of the test results.
 
@@ -125,9 +95,15 @@ def plot3D(x, y, z, readId, scoreTypeX, scoreTypeY, scoreTypeZ,
     @param scoreTypeX: A C{str} X-axis title indicating the type of score.
     @param scoreTypeY: A C{str} Y-axis title indicating the type of score.
     @param scoreTypeZ: A C{str} Z-axis title indicating the type of score.
+    @param dirName: A C{str} name of the output directory in which to store
+        the plot image. The image will be saved to dirName + readId + '.png'
     @param interactive: If C{True} use plt.show() to display interactive plots
         that the user will need to manually dismiss.
+    @raises AssertionError: If the length of C{x} is not the same as the
+        length of C{y} and the length of C{z}.
     """
+    assert len(x) == len(y) == len(z)
+
     fig = plt.figure(figsize=(10, 10))
     ax = fig.add_subplot(111, projection='3d')
 
@@ -143,7 +119,8 @@ def plot3D(x, y, z, readId, scoreTypeX, scoreTypeY, scoreTypeZ,
     # fixed upper limit here so all graphs produced will have the same Y
     # axis upper limit.
     zScoreLimit = 65.0
-    assert max(y) <= zScoreLimit
+    if y:
+        assert max(y) <= zScoreLimit
 
     # Values less than these cutoffs are considered bad, values bigger are
     # good. Planes will be drawn to separate each axis into bad/good
@@ -170,58 +147,59 @@ def plot3D(x, y, z, readId, scoreTypeX, scoreTypeY, scoreTypeZ,
         '111': 'green',   # OK - no conflict.
     }
 
-    # Assign each x, y, z triple a color.
-    colors = []
-    for bitScore, zScore, lmScore in zip(x, y, z):
-        key = (('1' if bitScore > bitScoreCutoff else '0') +
-               ('1' if zScore > zScoreCutoff else '0') +
-               ('1' if lmScore > lmScoreCutoff else '0'))
-        colors.append(cutoffStringToColor[key])
+    if x:
+        # Assign each x, y, z triple a color.
+        colors = []
+        for bitScore, zScore, lmScore in zip(x, y, z):
+            key = (('1' if bitScore > bitScoreCutoff else '0') +
+                   ('1' if zScore > zScoreCutoff else '0') +
+                   ('1' if lmScore > lmScoreCutoff else '0'))
+            colors.append(cutoffStringToColor[key])
 
-    ax.scatter(x, y, z, c=colors, s=dotSize)
+        ax.scatter(x, y, z, c=colors, s=dotSize)
+        ax.set_title(pythonNameToPdbName(readId))
+
+        # cg is the contour granularity: the number of points in the mesh used
+        # for plotting the three plane contours that divide each axis into good
+        # & bad regions.
+        cg = 60
+
+        # Bit score (x) bad/good plane.
+        if max(x) >= bitScoreCutoff:
+            Y = np.linspace(0.0, zScoreLimit, cg)
+            Z = np.linspace(0.0, 1.0, cg)
+            yy, zz = np.meshgrid(Y, Z)
+            X = np.array([bitScoreCutoff] * (cg * cg)).reshape(cg, cg)
+            ax.contourf(X, yy, zz, colors='blue', alpha=alpha, zdir='x')
+
+        # Z score (y) bad/good plane.
+        if max(y) >= zScoreCutoff:
+            X = np.linspace(0.0, max(x), cg)
+            Z = np.linspace(0.0, 1.0, cg)
+            xx, zz = np.meshgrid(X, Z)
+            Y = np.array([zScoreCutoff] * (cg * cg)).reshape(cg, cg)
+            ax.contourf(xx, Y, zz, colors='green', alpha=alpha, zdir='y')
+
+        # LM score (z) bad/good plane.
+        if max(z) >= lmScoreCutoff:
+            X = np.linspace(0.0, max(x), cg)
+            Y = np.linspace(0.0, zScoreLimit, cg)
+            xx, yy = np.meshgrid(X, Y)
+            Z = np.array([lmScoreCutoff] * (cg * cg)).reshape(cg, cg)
+            ax.contourf(xx, yy, Z, colors='purple', alpha=alpha, zdir='z')
+    else:
+        ax.set_title('No x,y,z data given for read %s' %
+                     pythonNameToPdbName(readId))
+
     ax.set_xlabel(scoreTypeX)
     ax.set_ylabel(scoreTypeY)
     ax.set_zlabel(scoreTypeZ)
-    ax.set_title(readId)
 
     ax.set_xlim(left=0.0)
     ax.set_ylim(0.0, zScoreLimit)
     ax.set_zlim(0.0, 1.0)
 
-    # cg is the contour granularity: the number of points in the mesh used
-    # for plotting the three plane contours that divide each axis into good
-    # & bad regions.
-    cg = 60
-
-    # Bit score (x) bad/good plane.
-    if max(x) >= bitScoreCutoff:
-        Y = np.linspace(0.0, zScoreLimit, cg)
-        Z = np.linspace(0.0, 1.0, cg)
-        yy, zz = np.meshgrid(Y, Z)
-        X = np.array([bitScoreCutoff] * (cg * cg)).reshape(cg, cg)
-        ax.contourf(X, yy, zz, colors='blue', alpha=alpha, zdir='x')
-
-    # Z score (y) bad/good plane.
-    if max(y) >= zScoreCutoff:
-        X = np.linspace(0.0, max(x), cg)
-        Z = np.linspace(0.0, 1.0, cg)
-        xx, zz = np.meshgrid(X, Z)
-        Y = np.array([zScoreCutoff] * (cg * cg)).reshape(cg, cg)
-        ax.contourf(xx, Y, zz, colors='green', alpha=alpha, zdir='y')
-
-    # LM score (z) bad/good plane.
-    if max(z) >= lmScoreCutoff:
-        X = np.linspace(0.0, max(x), cg)
-        Y = np.linspace(0.0, zScoreLimit, cg)
-        xx, yy = np.meshgrid(X, Y)
-        Z = np.array([lmScoreCutoff] * (cg * cg)).reshape(cg, cg)
-        ax.contourf(xx, yy, Z, colors='purple', alpha=alpha, zdir='z')
-
-    outputDir = join(testArgs.outputDir, 'polymerase')
-    subDir = join(outputDir, '3d')
-    makeDir(outputDir)
-    makeDir(subDir)
-
-    fig.savefig(join(subDir, '%s.png' % readId))
+    fig.savefig(join(dirName, '%s.png' % readId))
     if interactive:
         plt.show()
+    plt.close()

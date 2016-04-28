@@ -3,8 +3,9 @@ import numpy as np
 from dark.reads import AAReadWithX
 from dark.fasta import FastaReads
 
-from light.database import DatabaseSpecifier
+from light.database import Database, DatabaseSpecifier
 from light.parameters import FindParameters
+from light.performance.parameters import PARAMETER_SETS
 
 
 def affinityMatrix(queries, findParams=None, subjects=None, symmetric=True,
@@ -122,3 +123,51 @@ def affinityMatrix(queries, findParams=None, subjects=None, symmetric=True,
         return result
     else:
         return affinity
+
+
+class AffinityMatrices(object):
+    """
+    Create and maintain a set of named affinity matrices.
+
+    @param queries: Either A C{str} filename of sequences to consider or
+        a C{light.reads.Reads} instance.
+    @param subjects: Either 1) a C{str} filename of sequences to consider, or
+        2) a C{light.reads.Reads} instance, or 3) C{None}, in which case
+        the C{queries} will also be used as the subjects.
+    @param parameterSets: A C{dict} with C{str} affinity matrix names as keys
+        and values that are C{dict}s with 'dbParams' and 'findParams' keys in
+        the style of C{PARAMETER_SETS} in light/performance/parameters.py
+    @param kwargs: Keyword parameters to be passed to C{affinityMatrix}
+        (above).
+    """
+    def __init__(self, queries, subjects=None, parameterSets=None, **kwargs):
+        self._queries = queries
+        self._subjects = subjects
+        self._parameterSets = parameterSets or PARAMETER_SETS
+        if 'database' in kwargs:
+            raise ValueError('A database cannot be passed to AffinityMatrices')
+        self._kwargs = kwargs
+        self._matrices = {}
+
+    def __getitem__(self, parameterSet):
+        """
+        Given some parameter settings, create an affinity matrix of light
+        matter scores for all polymerase sequences.
+
+        @param parameterSet: The C{str} name of a parameter set, which must be
+            a key from C{light.performance.parameters.PARAMETER_SETS}.
+        @raise KeyError: If C{parameterSet} is not in
+            C{light.performance.parameters.PARAMETER_SETS}.
+        @return: The affinity matrix.
+        """
+        try:
+            result = self._matrices[parameterSet]
+        except KeyError:
+            dbParams = self._parameterSets[parameterSet]['dbParams']
+            findParams = self._parameterSets[parameterSet]['findParams']
+            result = self._matrices[parameterSet] = affinityMatrix(
+                self._queries, subjects=self._subjects,
+                database=Database(dbParams), findParams=findParams,
+                **self._kwargs)
+
+        return result

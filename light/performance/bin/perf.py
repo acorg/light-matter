@@ -5,13 +5,14 @@ from __future__ import print_function
 import sys
 import unittest
 import argparse
-from os.path import basename, dirname, exists, isdir, join
+from os.path import basename, dirname, join
 from time import gmtime, strftime
-from os import mkdir
 
 from light.parameters import DatabaseParameters, FindParameters
 import light.performance
+from light.performance.parameters import PARAMETER_SETS
 from light.performance.runner import PerformanceTestRunner, filterTestSuite
+from light.performance.utils import makeDir
 
 # The overall JSON result will be written to a file with this name, in the
 # directory given by --outputDir on the command line (or its default value,
@@ -28,6 +29,12 @@ if __name__ == '__main__':
         help=('If True, performance tests will display interactive windows of '
               'results as they are computed. If False, just compute results '
               'and store them.'))
+
+    parser.add_argument(
+        '--parameterSet', action='append', dest='parameterSets',
+        choices=sorted(PARAMETER_SETS),
+        help=('The name of a canned parameter set to use. This option may be '
+              'repeated.'))
 
     parser.add_argument(
         '--startDir',
@@ -61,20 +68,18 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    # Add the find and database parameters to args for the convenience of
-    # the tests that may want them. Sanity check that those attributes
-    # don't already exist on args.
-    assert not (hasattr(args, 'findParams') or hasattr(args, 'dbParams'))
-    args.findParams = FindParameters.fromArgs(args)
-    args.dbParams = DatabaseParameters.fromArgs(args)
+    # If no parameter sets were specified, use the ones on the command line.
+    if not args.parameterSets:
+        args.parameterSets = ['command-line']
+
+    if 'command-line' in args.parameterSets:
+        PARAMETER_SETS['command-line'] = {
+            'dbParams': DatabaseParameters.fromArgs(args),
+            'findParams': FindParameters.fromArgs(args),
+        }
 
     outputDir = args.outputDir
-    if exists(outputDir):
-        if not isdir(outputDir):
-            print('The specified output directory %r already exists, but it '
-                  'is a file!' % outputDir)
-    else:
-        mkdir(outputDir)
+    makeDir(outputDir)
 
     # Make the command-line args available to the tests. There doesn't seem
     # to be another way to pass information like this when using a unittest

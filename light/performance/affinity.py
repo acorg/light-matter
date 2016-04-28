@@ -31,7 +31,7 @@ def affinityMatrix(queries, findParams=None, subjects=None, symmetric=True,
         (i.e., obtained from find). Otherwise, all diagonal values will be set
         to C{diagonalValue}.
     @param diagonalValue: The result that diagonal values will all be set to if
-        C{computeDiagonal} is False.
+        C{computeDiagonal} is C{False}.
     @param progressFunc: If not C{None}, a function that takes two arguments.
         The function will be called before each query sequence is processed.
         The arguments will be the C{int} (zero-based) number of the query and

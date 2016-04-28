@@ -9,7 +9,7 @@ from light.performance.data.pdb_4mtp_a import (
 from light.performance.test.filesystem import FILESYSTEM_NAME
 
 _AFFINITY = AffinityMatrices(QUERIES, SUBJECTS, symmetric=False,
-                             returnDict=True)
+                             computeDiagonal=True, returnDict=True)
 
 
 class TestLightMatterZScoreCorrelation(TestCase):

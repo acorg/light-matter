@@ -33,7 +33,7 @@ class TestLightMatterZScoreCorrelation(TestCase):
                 zScores = []
                 for subjectId in Z_SCORES[queryId]:
                     if queryId != subjectId:
-                        zScores.append(Z_SCORES[queryId])
+                        zScores.append(Z_SCORES[queryId][subjectId])
                         lmScores.append(affinity[queryId][subjectId])
                 plot(lmScores, zScores, queryId, scoreTypeX, scoreTypeY,
                      dirName)
@@ -60,7 +60,7 @@ class TestLightMatterBitScoreCorrelation(TestCase):
                 bitScores = []
                 for subjectId in BIT_SCORES[queryId]:
                     if queryId != subjectId:
-                        bitScores.append(BIT_SCORES[queryId])
+                        bitScores.append(BIT_SCORES[queryId][subjectId])
                         lmScores.append(affinity[queryId][subjectId])
                 plot(lmScores, bitScores, queryId, scoreTypeX, scoreTypeY,
                      dirName)
@@ -86,8 +86,8 @@ class TestBitScoreZScoreCorrelation(TestCase):
                 bitScores = []
                 for subjectId in BIT_SCORES[queryId]:
                     if queryId != subjectId:
-                        bitScores.append(BIT_SCORES[queryId])
-                        zScores.append(Z_SCORES[queryId])
+                        bitScores.append(BIT_SCORES[queryId][subjectId])
+                        zScores.append(Z_SCORES[queryId][subjectId])
                 plot(bitScores, zScores, queryId, scoreTypeX, scoreTypeY,
                      dirName)
 

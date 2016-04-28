@@ -25,11 +25,15 @@ def plot(x, y, readId, scoreTypeX, scoreTypeY, dirName):
     @param scoreTypeY: A C{str} Y-axis title indicating the type of score.
     @param dirName: A C{str} name of the output directory in which to store
         the plot image. The image will be saved to dirName + readId + '.png'
+    @raises AssertionError: If the length of C{x} is not the same as the
+        length of C{y}.
     """
+    assert len(x) == len(y)
+
     fig = plt.figure(figsize=(7, 5))
     ax = fig.add_subplot(111)
 
-    if x and y:
+    if len(x) > 1:
         slope, intercept, rValue, pValue, se = stats.linregress(x, y)
 
         # Plot.
@@ -41,7 +45,7 @@ def plot(x, y, readId, scoreTypeX, scoreTypeY, dirName):
         ax.set_title('Read: %s, R^2: %.2f, SE: %.2f, slope: %.2f, p: %.2f' %
                      (pythonNameToPdbName(readId), rValue, se, slope, pValue))
     else:
-        ax.set_title('No x,y data given for read %s' %
+        ax.set_title('No (or not enough) x,y data given for read %s' %
                      pythonNameToPdbName(readId))
 
     ax.set_ylabel(scoreTypeY)
@@ -95,7 +99,11 @@ def plot3D(x, y, z, readId, scoreTypeX, scoreTypeY, scoreTypeZ,
         the plot image. The image will be saved to dirName + readId + '.png'
     @param interactive: If C{True} use plt.show() to display interactive plots
         that the user will need to manually dismiss.
+    @raises AssertionError: If the length of C{x} is not the same as the
+        length of C{y} and the length of C{z}.
     """
+    assert len(x) == len(y) == len(z)
+
     fig = plt.figure(figsize=(10, 10))
     ax = fig.add_subplot(111, projection='3d')
 
@@ -139,7 +147,7 @@ def plot3D(x, y, z, readId, scoreTypeX, scoreTypeY, scoreTypeZ,
         '111': 'green',   # OK - no conflict.
     }
 
-    if x and y and z:
+    if x:
         # Assign each x, y, z triple a color.
         colors = []
         for bitScore, zScore, lmScore in zip(x, y, z):

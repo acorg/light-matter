@@ -1,10 +1,10 @@
-from unittest import TestCase, skip
+from unittest import TestCase
 
 from light.performance.data.pdb_4mtp_a import (
     QUERIES, SUBJECTS, BIT_SCORES, Z_SCORES)
 
 SUBJECT_COUNT = 1
-QUERY_COUNT = 217
+QUERY_COUNT = 215
 
 
 class TestQueries(TestCase):
@@ -17,6 +17,19 @@ class TestQueries(TestCase):
         """
         self.assertEqual(QUERY_COUNT, len(QUERIES))
 
+    def testNoDuplicates(self):
+        """
+        There shouldn't be any duplicated queries. If the query has known
+        structure, both the sequence and structure are part of what's
+        matched in detecting duplicates. This allows identical sequences with
+        different structures to be part of a query set.
+        """
+        seen = set()
+        for query in QUERIES:
+            s = query.sequence + '\0' + getattr(query, 'structure', '')
+            self.assertNotIn(s, seen)
+            seen.add(s)
+
 
 class TestSubjects(TestCase):
     """
@@ -27,6 +40,19 @@ class TestSubjects(TestCase):
         Make sure the subject counts are as expected.
         """
         self.assertEqual(SUBJECT_COUNT, len(SUBJECTS))
+
+    def testNoDuplicates(self):
+        """
+        There shouldn't be any duplicated subjects. If the subject has known
+        structure, both the sequence and structure are part of what's
+        matched in detecting duplicates. This allows identical sequences with
+        different structures to be part of a subject set.
+        """
+        seen = set()
+        for subject in SUBJECTS:
+            s = subject.sequence + '\0' + getattr(subject, 'structure', '')
+            self.assertNotIn(s, seen)
+            seen.add(s)
 
 
 class TestBitScores(TestCase):
@@ -74,7 +100,6 @@ class TestZScores(TestCase):
     """
     Tests for the light.performance.pdb_2hla_a Z_SCORES variable.
     """
-    @skip('Pending investigation into missing FASTA seqs')
     def testLen(self):
         """
         Z_SCORES and each of its keys must have the expected number of
@@ -85,7 +110,6 @@ class TestZScores(TestCase):
         for queryId in Z_SCORES:
             self.assertEqual(SUBJECT_COUNT, len(Z_SCORES[queryId]))
 
-    @skip('Pending investigation into missing FASTA seqs')
     def testKeys(self):
         """
         Z_SCORES must have the correct keys.

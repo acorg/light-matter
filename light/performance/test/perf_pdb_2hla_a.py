@@ -87,8 +87,8 @@ class TestBitScoreZScoreCorrelation(TestCase):
                 bitScores = []
                 for subjectId in BIT_SCORES[queryId]:
                     if queryId != subjectId:
-                        bitScores.append(BIT_SCORES[queryId])
-                        zScores.append(Z_SCORES[queryId])
+                        bitScores.append(BIT_SCORES[queryId][subjectId])
+                        zScores.append(Z_SCORES[queryId][subjectId])
                 plot(bitScores, zScores, queryId, scoreTypeX, scoreTypeY,
                      dirName)
 

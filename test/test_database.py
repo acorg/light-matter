@@ -16,12 +16,13 @@ except ImportError:
 
 from .mocking import mockOpen
 
-from dark.reads import Reads, AARead
+from dark.reads import Reads, AARead, SSAARead
 
 from light.backend import Backend
 from light.checksum import Checksum
 from light.database import Database, DatabaseSpecifier
 from light.features import Landmark, TrigPoint
+from light.hsp import normalizeBin
 from light.landmarks import AlphaHelix, BetaStrand
 from light.parameters import DatabaseParameters, FindParameters
 from light.subject import Subject
@@ -558,6 +559,78 @@ class TestDatabase(TestCase):
             },
             result.matches)
 
+    def testFindBug493(self):
+        """
+        Failing test case for https://github.com/acorg/light-matter/issues/493
+        """
+        query = SSAARead(
+            '2HLA:A',
+            'GSHSMRYFYTSVSRPGRGEPRFIAVGYVDDTQFVRFDSDAASQRMEPRAPWIEQEGPEYWDR'
+            'NTRNVKAQSQTDRVDLGTLRGYYNQSEAGSHTIQMMYGCDVGSDGRFLRGYRQDAYDGKDYI'
+            'ALKEDLRSWTAADMAAQTTKHKWEAAHVAEQWRAYLEGTCVEWLRRYLENGKETLQRTDAPK'
+            'THMTHHAVSDHEATLRCWALSFYPAEITLTWQRDGEDQTQDTELVETRPAGDGTFQKWVAVV'
+            'VPSGQEQRYTCHVQHEGLPKPL',
+            '--EEEEEEEEEE--TTSS--EEEEEEEETTEEEEEEETTSTT-S-EE-SHHHHTS-HHHHHH'
+            'HHHHHHHHHHHHHHHHHHHHHHTT--TTS--EEEEEEEEEE-TTS-EEEEEEEEEETTEEEE'
+            'EE-TTSS-EEESSHHHHHHHHHHHHTTTHHHHHHHHHTHHHHHHHHHHHHHHHHHT--B--E'
+            'EEEEEEE-SSSEEEEEEEEEEEBSS-EEEEEEETTEEE-TTEEE---EE-SSS-EEEEEEEE'
+            'EETT-GGGEEEEEEETTB-S--')
+        subject = SSAARead(
+            '3D2U:A',
+            'HVLRYGYTGIFDDTSHMTLTVVGIFDGQHFFTYHVQSSDKASSRANGTISWMANVSAAYPTY'
+            'LDGERAKGDLIFNQTEQNLLELEIALGYRSQSVLTWTHECNTTENGSFVAGYEGFGWDGETL'
+            'MELKDNLTLWTGPNYEISWLKQQKTYIDGKIKNISEGDTTIQRNYLKGNCTQWSVIYSGFQP'
+            'PVTHPVVKGGVRNQNDNRAEAFCTSYGFFPGEIQITFIHYGDKVPEDSEPQCNPLLPTLDGT'
+            'FHQGCYVAIFSNQNYTCRVTHGNWTVEIPISVT',
+            '-EEEEEEEEEESSSS-EEEEEEEEETTEEEEEEEEESS-SSS-EEEE-STHHHHHHHHSTTH'
+            'HHHHHHHHHHHHHHHHHHHHHHHHHH--SS--EEEEEEEEEE-TT--EEEEEEEEEETTEEE'
+            'EEE-TTS---B---TTT-GGGGGHHHHHHHHHT--SHHHHHHHHHHHTHHHHHHHHHHHHS-'
+            '--B--EEEEEEEEEETTEEEEEEEEEEEBSS--EEEEEEESS---TT---EE---EE-TTS-'
+            'EEEEEEEEEETTSEEEEEEE-SS-EEEEEEE--')
+        dbParams = DatabaseParameters(
+            landmarks=['PDB AlphaHelix', 'PDB AlphaHelix_3_10',
+                       'PDB AlphaHelix_pi', 'PDB ExtendedStrand',
+                       'AminoAcidsLm'],
+            trigPoints=['AminoAcids', 'Peaks', 'Troughs', 'IndividualPeaks',
+                        'IndividualTroughs'],
+            featureLengthBase=1.01, maxDistance=10000, limitPerLandmark=50,
+            distanceBase=1.1)
+        db = Database(dbParams)
+        _, subjectIndex, _ = db.addSubject(subject)
+        findParams = FindParameters(significanceFraction=0.01)
+        result = db.find(query, findParams, storeFullAnalysis=True)
+        significantBins = result.analysis[subjectIndex]['significantBins']
+        for binInfo in significantBins:
+            normalizeBin(binInfo['bin'], len(query))
+
+    def testFindBug493Minimal(self):
+        """
+        A minimal failing test case for
+        https://github.com/acorg/light-matter/issues/493
+        """
+        query = SSAARead(
+            '2HLA:A',
+            'ALKEDLRSWTAADMAAQTTKHKWEAAHVAEQWRAYLEGTCVEWLRRYLENGKETLQRTDAPK'
+            'THMTHHAVSDHEATLRCWALSFYPAEITLTWQRDGEDQTQDTELVETRPAGDGTFQKWVAVV',
+            'EE-TTSS-EEESSHHHHHHHHHHHHTTTHHHHHHHHHTHHHHHHHHHHHHHHHHHT--B--E'
+            'EEEEEEE-SSSEEEEEEEEEEEBSS-EEEEEEETTEEE-TTEEE---EE-SSS-EEEEEEEE')
+        subject = SSAARead(
+            '3D2U:A',
+            'HVLRYGYTGIFDDTSHMTLTVVGIFDGQHFFTYHVQSSDKASSRANGTISWMANVSAAYPTY'
+            'PVTHPVVKGGVRNQNDNRAEAFCTSYGFFPGEIQITFIHYGDKVPEDSEPQCNPLLPTLDGT',
+            '-EEEEEEEEEESSSS-EEEEEEEEETTEEEEEEEEESS-SSS-EEEE-STHHHHHHHHSTTH'
+            '--B--EEEEEEEEEETTEEEEEEEEEEEBSS--EEEEEEESS---TT---EE---EE-TTS-')
+        dbParams = DatabaseParameters(landmarks=['PDB ExtendedStrand'],
+                                      trigPoints=[], limitPerLandmark=50,
+                                      distanceBase=1.1)
+        db = Database(dbParams)
+        _, subjectIndex, _ = db.addSubject(subject)
+        findParams = FindParameters(significanceFraction=0.01)
+        result = db.find(query, findParams, storeFullAnalysis=True)
+        significantBins = result.analysis[subjectIndex]['significantBins']
+        for binInfo in significantBins:
+            normalizeBin(binInfo['bin'], len(query))
+
     def testSymmetricFindScoresSameSubjectAndQuery(self):
         """
         The score of matching a sequence A against a sequence B must
@@ -729,18 +802,18 @@ class TestDatabase(TestCase):
             '  Random landmark density: 0.100000\n'
             '  Random trig point density: 0.100000\n'
             '  Ahocorasick filename: ' +
-            basename('aho-corasick-alpha-helix-prefixes-91') + '\n'
+            basename('aho-corasick-alpha-helix-prefixes-1') + '\n'
             'Connector class: SimpleConnector\n'
             'Subject count: 1\n'
             'Hash count: 3\n'
             'Total residues: 15\n'
             'Coverage: 73.33%\n'
-            'Checksum: 337886368\n'
+            'Checksum: 562661082\n'
             'Connector:\n'
             'Backends:\n'
             '  Name: backend\n'
             '  Hash count: 3\n'
-            '  Checksum: 337886368\n'
+            '  Checksum: 562661082\n'
             '  Subjects (with offsets) by hash:\n'
             '    A2:P:10\n'
             '      0 [[0, 9, 10, 1]]\n'
@@ -784,13 +857,13 @@ class TestDatabase(TestCase):
             '  Random landmark density: 0.100000\n'
             '  Random trig point density: 0.100000\n'
             '  Ahocorasick filename: ' +
-            basename('aho-corasick-alpha-helix-prefixes-91') + '\n'
+            basename('aho-corasick-alpha-helix-prefixes-1') + '\n'
             'Connector class: SimpleConnector\n'
             'Subject count: 1\n'
             'Hash count: 0\n'
             'Total residues: 0\n'
             'Coverage: 0.00%\n'
-            'Checksum: 3958833242\n'
+            'Checksum: 1933166003\n'
             'Connector:')
         self.assertEqual(expected, db.print_())
 

@@ -15,14 +15,14 @@ from light.colors import colors
 from light.database import DatabaseSpecifier
 from light.features import Landmark
 from light.hsp import normalizeBin
-from light.landmarks import ALL_LANDMARK_CLASSES
+from light.landmarks import ALL_LANDMARK_CLASSES_INCLUDING_DEV
 from light.parameters import FindParameters
 from light.performance import affinity
 from light.bin_score import ALL_BIN_SCORE_CLASSES
 from light.string import MultilineString
 from light.significance import (
     Always, HashFraction, MaxBinHeight, MeanBinHeight)
-from light.trig import ALL_TRIG_CLASSES
+from light.trig import ALL_TRIG_CLASSES_INCLUDING_DEV
 from light.utils import stringSpans
 
 from dark.dimension import dimensionalIterator
@@ -34,7 +34,7 @@ FILL_WIDTH = 120
 
 ALL_FEATURES = [
     (feature.SYMBOL, feature.NAME) for feature in
-    sorted(ALL_LANDMARK_CLASSES + ALL_TRIG_CLASSES,
+    sorted(ALL_LANDMARK_CLASSES_INCLUDING_DEV + ALL_TRIG_CLASSES_INCLUDING_DEV,
            key=attrgetter('NAME'))]
 
 # From http://www.randalolson.com/2014/06/28/how-to-make-beautiful-data-\
@@ -48,17 +48,27 @@ TABLEAU20 = [
     (227, 119, 194), (247, 182, 210), (127, 127, 127), (199, 199, 199),
     (188, 189, 34), (219, 219, 141), (23, 190, 207), (158, 218, 229)]
 
+# We need more than 20 colors, so that we have one color per feature.
+ADDITIONAL_COLORS = [(153, 86, 136), (240, 39, 32), (234, 107, 115),
+                     (255, 217, 74), (57, 115, 124)]
+
 # Scale the above RGB values to the [0, 1] range, the format matplotlib
 # accepts.
 for i in range(len(TABLEAU20)):
     r, g, b = TABLEAU20[i]
     TABLEAU20[i] = (r / 255.0, g / 255.0, b / 255.0)
 
+for i in range(len(ADDITIONAL_COLORS)):
+    r, g, b = ADDITIONAL_COLORS[i]
+    ADDITIONAL_COLORS[i] = (r / 255.0, g / 255.0, b / 255.0)
+
+TABLEAU25 = TABLEAU20 + ADDITIONAL_COLORS
+
 # Make sure we have enough colors for our set of features.
-assert len(ALL_FEATURES) <= len(TABLEAU20)
+assert len(ALL_FEATURES) <= len(TABLEAU25)
 
 # The following maps from feature symbol to matplotlib color.
-COLORS = dict(zip([feature[0] for feature in ALL_FEATURES], TABLEAU20))
+COLORS = dict(zip([feature[0] for feature in ALL_FEATURES], TABLEAU25))
 
 
 def legendHandles(names):

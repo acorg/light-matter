@@ -315,7 +315,7 @@ class DatabaseParameters(object):
     DEFAULT_RANDOM_LANDMARK_DENSITY = 0.1
     DEFAULT_RANDOM_TRIG_POINT_DENSITY = 0.1
     DEFAULT_AHOCORASICK_FILENAME = join(dirname(light.__file__), '..', 'data',
-                                        'aho-corasick-alpha-helix-prefixes-91')
+                                        'aho-corasick-alpha-helix-prefixes-1')
 
     def __init__(self, landmarks=None, trigPoints=None,
                  limitPerLandmark=None, maxDistance=None, minDistance=None,

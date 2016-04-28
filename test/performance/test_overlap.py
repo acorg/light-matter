@@ -19,10 +19,11 @@ class TestCalculateOverlap(TestCase):
 
         co = CalculateOverlap()
         features, intersection, union = co.getFeatures(ssAARead)
-
+        self.maxDiff = None
         expected = {
             # Landmarks.
-            'AC AlphaHelix': set(),
+            'AC AlphaHelix': {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
+                              15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25},
             'AlphaHelix': set(),
             'AlphaHelix_3_10': {
                 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,

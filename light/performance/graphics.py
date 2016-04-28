@@ -8,6 +8,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
+from light.performance.utils import pythonNameToPdbName
+
 # Keep pyflakes quiet by pretending to use Axes3D.
 _ = Axes3D
 
@@ -26,16 +28,22 @@ def plot(x, y, readId, scoreTypeX, scoreTypeY, dirName):
     """
     fig = plt.figure(figsize=(7, 5))
     ax = fig.add_subplot(111)
-    slope, intercept, rValue, pValue, se = stats.linregress(x, y)
 
-    # Plot.
-    plt.plot(x, y, 'o', markerfacecolor='blue', markeredgecolor='blue')
-    plt.plot([0, max(x)], [intercept, slope * max(x) + intercept], '-',
-             color='green' if slope >= 0 else 'red')
+    if x and y:
+        slope, intercept, rValue, pValue, se = stats.linregress(x, y)
 
-    # Labels.
-    ax.set_title('Read: %s, R^2: %.2f, SE: %.2f, slope: %.2f, p: %.2f' %
-                 (readId, rValue, se, slope, pValue))
+        # Plot.
+        plt.plot(x, y, 'o', markerfacecolor='blue', markeredgecolor='blue')
+        plt.plot([0, max(x)], [intercept, slope * max(x) + intercept], '-',
+                 color='green' if slope >= 0 else 'red')
+
+        # Labels.
+        ax.set_title('Read: %s, R^2: %.2f, SE: %.2f, slope: %.2f, p: %.2f' %
+                     (pythonNameToPdbName(readId), rValue, se, slope, pValue))
+    else:
+        ax.set_title('No x,y data given for read %s' %
+                     pythonNameToPdbName(readId))
+
     ax.set_ylabel(scoreTypeY)
     ax.set_xlabel(scoreTypeX)
 
@@ -47,10 +55,12 @@ def plot(x, y, readId, scoreTypeX, scoreTypeY, dirName):
 
     # Z scores are always <= 60.0 (with sanity check).
     if scoreTypeX == 'Z score':
-        assert max(x) <= 65.0
+        if x:
+            assert max(x) <= 65.0
         ax.set_xlim(right=65.0)
     if scoreTypeY == 'Z score':
-        assert max(y) <= 65.0
+        if y:
+            assert max(y) <= 65.0
         ax.set_ylim(top=65.0)
 
     # No scores can be negative. Explicitly set the lower limits on both
@@ -101,7 +111,8 @@ def plot3D(x, y, z, readId, scoreTypeX, scoreTypeY, scoreTypeZ,
     # fixed upper limit here so all graphs produced will have the same Y
     # axis upper limit.
     zScoreLimit = 65.0
-    assert max(y) <= zScoreLimit
+    if y:
+        assert max(y) <= zScoreLimit
 
     # Values less than these cutoffs are considered bad, values bigger are
     # good. Planes will be drawn to separate each axis into bad/good
@@ -128,52 +139,57 @@ def plot3D(x, y, z, readId, scoreTypeX, scoreTypeY, scoreTypeZ,
         '111': 'green',   # OK - no conflict.
     }
 
-    # Assign each x, y, z triple a color.
-    colors = []
-    for bitScore, zScore, lmScore in zip(x, y, z):
-        key = (('1' if bitScore > bitScoreCutoff else '0') +
-               ('1' if zScore > zScoreCutoff else '0') +
-               ('1' if lmScore > lmScoreCutoff else '0'))
-        colors.append(cutoffStringToColor[key])
+    if x and y and z:
+        # Assign each x, y, z triple a color.
+        colors = []
+        for bitScore, zScore, lmScore in zip(x, y, z):
+            key = (('1' if bitScore > bitScoreCutoff else '0') +
+                   ('1' if zScore > zScoreCutoff else '0') +
+                   ('1' if lmScore > lmScoreCutoff else '0'))
+            colors.append(cutoffStringToColor[key])
 
-    ax.scatter(x, y, z, c=colors, s=dotSize)
+        ax.scatter(x, y, z, c=colors, s=dotSize)
+        ax.set_title(pythonNameToPdbName(readId))
+
+        # cg is the contour granularity: the number of points in the mesh used
+        # for plotting the three plane contours that divide each axis into good
+        # & bad regions.
+        cg = 60
+
+        # Bit score (x) bad/good plane.
+        if max(x) >= bitScoreCutoff:
+            Y = np.linspace(0.0, zScoreLimit, cg)
+            Z = np.linspace(0.0, 1.0, cg)
+            yy, zz = np.meshgrid(Y, Z)
+            X = np.array([bitScoreCutoff] * (cg * cg)).reshape(cg, cg)
+            ax.contourf(X, yy, zz, colors='blue', alpha=alpha, zdir='x')
+
+        # Z score (y) bad/good plane.
+        if max(y) >= zScoreCutoff:
+            X = np.linspace(0.0, max(x), cg)
+            Z = np.linspace(0.0, 1.0, cg)
+            xx, zz = np.meshgrid(X, Z)
+            Y = np.array([zScoreCutoff] * (cg * cg)).reshape(cg, cg)
+            ax.contourf(xx, Y, zz, colors='green', alpha=alpha, zdir='y')
+
+        # LM score (z) bad/good plane.
+        if max(z) >= lmScoreCutoff:
+            X = np.linspace(0.0, max(x), cg)
+            Y = np.linspace(0.0, zScoreLimit, cg)
+            xx, yy = np.meshgrid(X, Y)
+            Z = np.array([lmScoreCutoff] * (cg * cg)).reshape(cg, cg)
+            ax.contourf(xx, yy, Z, colors='purple', alpha=alpha, zdir='z')
+    else:
+        ax.set_title('No x,y,z data given for read %s' %
+                     pythonNameToPdbName(readId))
+
     ax.set_xlabel(scoreTypeX)
     ax.set_ylabel(scoreTypeY)
     ax.set_zlabel(scoreTypeZ)
-    ax.set_title(readId)
 
     ax.set_xlim(left=0.0)
     ax.set_ylim(0.0, zScoreLimit)
     ax.set_zlim(0.0, 1.0)
-
-    # cg is the contour granularity: the number of points in the mesh used
-    # for plotting the three plane contours that divide each axis into good
-    # & bad regions.
-    cg = 60
-
-    # Bit score (x) bad/good plane.
-    if max(x) >= bitScoreCutoff:
-        Y = np.linspace(0.0, zScoreLimit, cg)
-        Z = np.linspace(0.0, 1.0, cg)
-        yy, zz = np.meshgrid(Y, Z)
-        X = np.array([bitScoreCutoff] * (cg * cg)).reshape(cg, cg)
-        ax.contourf(X, yy, zz, colors='blue', alpha=alpha, zdir='x')
-
-    # Z score (y) bad/good plane.
-    if max(y) >= zScoreCutoff:
-        X = np.linspace(0.0, max(x), cg)
-        Z = np.linspace(0.0, 1.0, cg)
-        xx, zz = np.meshgrid(X, Z)
-        Y = np.array([zScoreCutoff] * (cg * cg)).reshape(cg, cg)
-        ax.contourf(xx, Y, zz, colors='green', alpha=alpha, zdir='y')
-
-    # LM score (z) bad/good plane.
-    if max(z) >= lmScoreCutoff:
-        X = np.linspace(0.0, max(x), cg)
-        Y = np.linspace(0.0, zScoreLimit, cg)
-        xx, yy = np.meshgrid(X, Y)
-        Z = np.array([lmScoreCutoff] * (cg * cg)).reshape(cg, cg)
-        ax.contourf(xx, yy, Z, colors='purple', alpha=alpha, zdir='z')
 
     fig.savefig(join(dirName, '%s.png' % readId))
     if interactive:

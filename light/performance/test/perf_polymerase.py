@@ -1,13 +1,12 @@
 from unittest import TestCase
 
-from .filesystem import FILESYSTEM_NAME
-
 from light.performance import testArgs
 from light.performance.affinity import AffinityMatrices
 from light.performance.graphics import plot, plot3D
 from light.performance.utils import makeOutputDir
 from light.performance.data.polymerase import (
     Z_SCORES, BIT_SCORES, QUERIES, SUBJECTS, DATASET)
+from light.performance.test.filesystem import FILESYSTEM_NAME
 
 
 _AFFINITY = AffinityMatrices(QUERIES, SUBJECTS, returnDict=True)

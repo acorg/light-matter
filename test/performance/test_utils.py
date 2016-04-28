@@ -1,7 +1,7 @@
 import six
 from unittest import TestCase
 
-from light.performance.utils import pdbNameToPythonName
+from light.performance.utils import pdbNameToPythonName, pythonNameToPdbName
 
 
 class TestPdbNameToPythonName(TestCase):
@@ -62,3 +62,35 @@ class TestPdbNameToPythonName(TestCase):
         """
         self.assertEqual('pdb_1mla_a',
                          pdbNameToPythonName('1MLA:A:sequence'))
+
+
+class TestPythonNameToPdbName(TestCase):
+    """
+    Tests for the light.performance.utils.pythonNameToPdbName function.
+    """
+    def testUnrecognizable(self):
+        """
+        Passing an unrecognizable name must result in the original name.
+        """
+        self.assertEqual('x' * 10, pythonNameToPdbName('x' * 10))
+
+    def testUnrecognizableDueToSuffix(self):
+        """
+        Passing a name that has a valid prefix but which is too long must
+        result in the original name.
+        """
+        self.assertEqual('pdb_1mla_aa', pythonNameToPdbName('pdb_1mla_aa'))
+
+    def testUnrecognizableDueToPreix(self):
+        """
+        Passing a name that has a valid suffix but which is too long must
+        result in the original name.
+        """
+        self.assertEqual('apdb_1mla_a', pythonNameToPdbName('apdb_1mla_a'))
+
+    def testRecognizedLowerCase(self):
+        """
+        Passing an recognizable Python name must result in the expected PDB
+        name.
+        """
+        self.assertEqual('1MLA:A', pythonNameToPdbName('pdb_1mla_a'))

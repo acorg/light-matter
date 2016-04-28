@@ -45,6 +45,8 @@ def pdbNameToPythonName(name, raiseOnError=True):
     Convert a PDB protein name to a name that can be used in Python
     (and the filesystem).
 
+    See the corresponding pythonNameToPdbName function below.
+
     @param: A C{str} PDB name, usually in the form "NXXX:X" where N is a digit,
         and each X is an ASCII letter. Other forms are possible, for example
         with a trailing ":sequence" or "NXXX-X".
@@ -75,3 +77,19 @@ def pdbNameToPythonName(name, raiseOnError=True):
             return origName
 
     return 'pdb_' + pdbId + '_' + suffix
+
+
+def pythonNameToPdbName(name):
+    """
+    Convert a Python name to a PDB name.
+
+    See the corresponding pdbNameToPythonName function above.
+
+    @param name: A C{str} in the form pdb_NXXX_X (e.g., pdb_2hla_a).
+    @return: A C{str} PDB name in the form NXXX:X if C{name} is recognized
+        as a Python name (as above), else just return C{name}.
+    """
+    if (len(name) == 10 and name.startswith('pdb_') and name[8] == '_'):
+        return (name[4:8] + ':' + name[9]).upper()
+    else:
+        return name

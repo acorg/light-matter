@@ -48,14 +48,14 @@ parser.add_argument(
           'records.'))
 
 parser.add_argument(
-    '--feature', default='PDB AlphaHelix',
+    '--featureType', default='PDB AlphaHelix',
     choices=('PDB AlphaHelix', 'PDB AlphaHelix_3_10', 'PDB AlphaHelix_pi',
              'PDB ExtendedStrand'),
     help='The type of structure that should be extracted.')
 
 args = parser.parse_args()
 
-finder = findLandmark(args.structureType)
+finder = findLandmark(args.featureType)()
 
 dropStructure = args.dropStructure
 margin = args.margin

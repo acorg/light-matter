@@ -6,7 +6,7 @@ Each subdirectory contains the following files:
 
 ## `queries.fasta`
 
-A fasta files with the query sequences to be used in the tests.
+A fasta file with the query sequences to be used in the tests.
 
 `polymerase`: A set of 22 polymerase sequences and their structures (from PDB), as used in Cerny et al., 2014, 'Evolution of Tertiary Structure of Viral RNA Dependent Polymerases.'
 
@@ -30,4 +30,4 @@ A file containing a python dictionary which lists the DALI Z scores for all pair
 
 ## `Makefile`
 
-In order to run the tests, you also need a bitScores.py file for each dataset. This can be obtained by running `$ make bitScores.py`, and it'll create a file named `bitScores.py` which contains all the necessary bit scores. Note that you need BLASTP installed to be able to run this.
+In order to run the tests, you also need a bitScores.py file for each dataset. This can be obtained by running `$ make performance-data` at the top level of the tree. This will create a files named `bitScores.py` in each directory which contains all the necessary bit scores. Note that you need BLASTP as well as dark-matter installed to be able to run this.

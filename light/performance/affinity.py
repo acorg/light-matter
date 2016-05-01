@@ -147,6 +147,23 @@ def affinityMatrix(queries, findParams=None, subjects=None, symmetric=True,
         return affinity
 
 
+def getScore(matrix, queryId, subjectId):
+    """
+    Get the overall score from an affinity matrix that contains match analyses.
+
+    @param matrix: An affinity matrix, as returned by C{affinityMatrix} above.
+    @queryId: An C{int} or C{str} index into C{matrix} (the required type
+        depends on whether C{matrix} was built with C{returnDict} or not.
+    @subjectId: An C{int} or C{str} index into C{matrix[queryId]} (the
+        required type depends on whether C{matrix} was built with
+        C{returnDict} or not.
+    @return: The overall score of the query against the subject or 0.0 if
+        they did not match.
+    """
+    analysis = matrix[queryId][subjectId]
+    return analysis['overallScore'] if analysis else 0.0
+
+
 class AffinityMatrices(object):
     """
     Create and maintain a set of named affinity matrices.

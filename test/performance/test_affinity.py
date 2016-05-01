@@ -4,7 +4,8 @@ import six
 from dark.reads import Reads, AARead
 
 from light.parameters import DatabaseParameters, FindParameters
-from light.performance.affinity import affinityMatrix, AffinityMatrices
+from light.performance.affinity import (
+    affinityMatrix, getScore, AffinityMatrices)
 from light.landmarks import ALL_LANDMARK_CLASSES
 from light.trig import ALL_TRIG_CLASSES
 
@@ -453,6 +454,26 @@ class TestAffinityMatrix(TestCase):
             trigPoints=['Peaks', 'Troughs'],
             limitPerLandmark=50, minDistance=1, maxDistance=100,
             symmetric=False)
+
+
+class TestGetScore(TestCase):
+    """
+    Tests for the light.performance.affinity.getScore function
+    """
+    def testOneByTwo(self):
+        """
+        If affinityMatrix is called with one query and two subjects, with the
+        query matching just the first subject, getScore must work as expected
+        in retrieving the two scores.
+        """
+        reads = Reads([AARead('id1', 'FRRRFRRRFAAAFRRRFRRRF')])
+        subjects = Reads([AARead('id2', 'FRRRFRRRFAAAFRRRFRRRF'),
+                          AARead('id3', 'FFF')])
+        matrix = affinityMatrix(reads, landmarks=['AlphaHelix'],
+                                subjects=subjects, computeDiagonal=True,
+                                returnAnalysis=True)
+        self.assertEqual(1.0, getScore(matrix, 0, 0))
+        self.assertEqual(0.0, getScore(matrix, 0, 1))
 
 
 class TestAffinityMatrices(TestCase):

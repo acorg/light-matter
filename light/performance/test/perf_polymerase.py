@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from light.performance import testArgs
-from light.performance.affinity import AffinityMatrices
+from light.performance.affinity import AffinityMatrices, getScore
 from light.performance.graphics import plot, plot3D
 from light.performance.utils import makeOutputDir
 from light.performance.data.polymerase import (
@@ -9,7 +9,8 @@ from light.performance.data.polymerase import (
 from light.performance.test.filesystem import FILESYSTEM_NAME
 
 
-_AFFINITY = AffinityMatrices(QUERIES, SUBJECTS, returnDict=True)
+_AFFINITY = AffinityMatrices(QUERIES, SUBJECTS, returnDict=True,
+                             returnAnalysis=True)
 
 
 class TestLightMatterZScoreCorrelation(TestCase):
@@ -33,7 +34,8 @@ class TestLightMatterZScoreCorrelation(TestCase):
                 lmScores = []
                 for subjectId in Z_SCORES[queryId]:
                     if queryId != subjectId:
-                        lmScores.append(affinity[queryId][subjectId])
+                        lmScore = getScore(affinity, queryId, subjectId)
+                        lmScores.append(lmScore)
                         zScores.append(Z_SCORES[queryId][subjectId])
                 plot(lmScores, zScores, queryId,
                      scoreTypeX, scoreTypeY, dirName)
@@ -60,7 +62,8 @@ class TestLightMatterBitScoreCorrelation(TestCase):
                 lmScores = []
                 for subjectId in BIT_SCORES[queryId]:
                     if queryId != subjectId:
-                        lmScores.append(affinity[queryId][subjectId])
+                        lmScore = getScore(affinity, queryId, subjectId)
+                        lmScores.append(lmScore)
                         zScores.append(BIT_SCORES[queryId][subjectId])
                 plot(lmScores, zScores, queryId, scoreTypeX, scoreTypeY,
                      dirName)
@@ -110,7 +113,8 @@ class TestBitScoreZScoreLightMatterScore3D(TestCase):
                     if queryId != subjectId:
                         bitScores.append(BIT_SCORES[queryId][subjectId])
                         zScores.append(Z_SCORES[queryId][subjectId])
-                        lmScores.append(affinity[queryId][subjectId])
+                        lmScore = getScore(affinity, queryId, subjectId)
+                        lmScores.append(lmScore)
                 plot3D(bitScores, zScores, lmScores, queryId,
                        'Bit score', 'Z score', 'Light matter score',
                        dirName, testArgs.interactive)

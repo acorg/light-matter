@@ -898,11 +898,11 @@ class TestPerturbDistanceMatrix(TestCase):
         perturbDistanceMatrix must return an np.ndarray of same shape as
         its matrix argument.
         """
-        distance = [
+        distance = np.array([
             [0.0, 0.7, 0.1],
             [0.7, 0.0, 0.4],
             [0.1, 0.4, 0.0],
-        ]
+        ])
         result = perturbDistanceMatrix(distance)
         self.assertEqual((3, 3), result.shape)
         self.assertTrue(isinstance(result, np.ndarray))
@@ -913,10 +913,10 @@ class TestPerturbDistanceMatrix(TestCase):
         """
         # Use non-zero diagonal values to get more confidence that those
         # values are not being altered.
-        distance = [
+        distance = np.array([
             [0.2, 0.7, 0.1],
             [0.7, 0.5, 0.4],
             [0.1, 0.4, 0.9],
-        ]
+        ])
         result = perturbDistanceMatrix(distance, 0.3)
         self.assertEqual([0.2, 0.5, 0.9], [result[i][i] for i in range(3)])

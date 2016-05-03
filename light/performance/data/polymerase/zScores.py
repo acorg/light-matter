@@ -4,7 +4,7 @@ The Z-scores below are for polymerase sequences taken from Cerny et al., 2014,
 
 Note that the name of 1RW3 has been changed to 4MH8. See
 http://www.rcsb.org/pdb/explore/explore.do?structureId=4MH8
-In the tables below we use 1RW3
+In the tables below we use 1RW3.
 """
 
 from collections import OrderedDict

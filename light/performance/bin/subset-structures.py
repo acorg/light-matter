@@ -26,9 +26,8 @@ def makeSubstring(length, helix):
         yield AAReadWithX(newHelixId, helix.sequence[i:length + i])
 
 
-allHelices = [helix for helix in FastaReads(sys.stdin,
-                                            readClass=AAReadWithX,
-                                            checkAlphabet=0)]
+allHelices = list(FastaReads(sys.stdin, readClass=AAReadWithX,
+                             checkAlphabet=0))
 
 allLengths = [len(helix) for helix in allHelices]
 minLength = min(allLengths)
@@ -38,7 +37,7 @@ for length in range(minLength, maxLength + 1):
     for helix in allHelices:
         if length == len(helix):
             newHelix = AAReadWithX(helix.id, helix.sequence)
-            print(newHelix.toString(format_='fasta'), file=sys.stdout)
+            print(newHelix.toString(format_='fasta'), end='')
         elif length < len(helix):
             for newHelix in makeSubstring(length, helix):
-                print(newHelix.toString(format_='fasta'), file=sys.stdout)
+                print(newHelix.toString(format_='fasta'), end='')

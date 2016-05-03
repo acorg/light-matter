@@ -8,7 +8,10 @@ from __future__ import print_function
 
 import os
 import sys
-from Bio import SeqIO
+
+from dark.fasta import FastaReads
+from dark.reads import AAReadWithX
+
 
 DEFAULT_STRUCTURE_DB = 'path to ss.txt'
 DEFAULT_EXECUTABLE_NAME = ('/usr/local/dark-matter/light-matter/light/'
@@ -45,17 +48,18 @@ def splitFASTA(params):
 
     fileCount = count = seqCount = 0
     outfp = None
-    with open(params['fastaFile']) as infp:
-        for seq in SeqIO.parse(infp, 'fasta'):
-            seqCount += 1
-            if count == params['seqsPerJob']:
-                outfp.close()
-                count = 0
-            if count == 0:
-                outfp = open('%d.fasta' % fileCount, 'w')
-                fileCount += 1
-            count += 1
-            outfp.write('>%s\n%s\n' % (seq.description, str(seq.seq)))
+
+    reads = FastaReads(params['fastaFile'], readClass=AAReadWithX)
+    for read in reads:
+        seqCount += 1
+        if count == params['seqsPerJob']:
+            outfp.close()
+            count = 0
+        if count == 0:
+            outfp = open('%d.fasta' % fileCount, 'w')
+            fileCount += 1
+        count += 1
+        print(read.toString(), file=outfp)
     outfp.close()
     return fileCount, seqCount
 
@@ -149,12 +153,11 @@ def printProcessScript(params):
 #!/bin/sh
 
 DM=/usr/local/dark-matter
-export PYTHONPATH=$DM/light-matter/light/performance/bin
+export PYTHONPATH=$DM/light-matter/
 
 jobid=$1
 shift
 
-db="$1"
 shift
 
 errs=$jobid.error
@@ -221,7 +224,7 @@ if __name__ == '__main__':
                      'write an HTCondor job spec for evaluate_helices.py'),
         epilog=EPILOG)
     parser.add_argument(
-        'fasta', metavar='FASTA-file', type=str,
+        'fasta', metavar='FASTA-file',
         help='the FASTA file of sequences to evaluate.')
     parser.add_argument(
         '--seqs-per-evaluation', metavar='N',

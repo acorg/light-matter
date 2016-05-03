@@ -40,4 +40,11 @@ PARAMETER_SETS = {
             significanceFraction=0.05,
         ),
     },
+
+    'no-finders': {
+        # This is included just to allow a quick run of performance tests
+        # with very little work being done because no finders are used.
+        'dbParams': DatabaseParameters(landmarks=[], trigPoints=[]),
+        'findParams': FindParameters(),
+    },
 }

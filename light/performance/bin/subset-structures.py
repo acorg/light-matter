@@ -37,8 +37,7 @@ maxLength = max(allLengths)
 for length in range(minLength, maxLength + 1):
     for string in allStrings:
         if length == len(string):
-            newString = AAReadWithX(string.id, string.sequence)
-            print(newString.toString(format_='fasta'), end='')
+            print(string.toString(format_='fasta'), end='')
         elif length < len(string):
             for newString in makeSubstring(length, string):
                 print(newString.toString(format_='fasta'), end='')

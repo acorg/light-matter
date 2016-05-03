@@ -1,5 +1,3 @@
-import numpy as np
-
 from dark.reads import AAReadWithX
 from dark.fasta import FastaReads
 
@@ -10,7 +8,7 @@ from light.performance.parameters import PARAMETER_SETS
 
 def affinityMatrix(queries, findParams=None, subjects=None, symmetric=True,
                    computeDiagonal=False, diagonalValue=1.0, progressFunc=None,
-                   returnDict=False, **kwargs):
+                   returnDict=False, returnAnalysis=False, **kwargs):
     """
     Produce an affinity matrix containing scores for a set of reads matched
     against a set of subjects.
@@ -36,18 +34,26 @@ def affinityMatrix(queries, findParams=None, subjects=None, symmetric=True,
         The function will be called before each query sequence is processed.
         The arguments will be the C{int} (zero-based) number of the query and
         the query (an AAReadWithX instance) itself.
-    @param kwargs: See
-        C{database.DatabaseSpecifier.getDatabaseFromKeywords} for
-        additional keywords, all of which are optional.
     @param returnDict: If C{True}, return a C{dict} keyed by query id, whose
         values are C{dict}s keyed by subject id, whose values are C{float}
         scores. In other words, a 2-level deep C{dict} that allows the caller
         to look up a score via something like C{result[query.id][subject.id]}.
+    @param returnAnalysis: This determines what information is returned in each
+        affinity matrix location. If C{False}, the default, each location will
+        contain the overall score for the corresponding query/subject pair, or
+        0.0 if the query did not match the subject. If C{True}, the location
+        will contain the analysis C{dict} computed by the
+        C{light.result.Result} instance, or C{None} if the query did not match
+        the subject.
+    @param kwargs: See
+        C{database.DatabaseSpecifier.getDatabaseFromKeywords} for
+        additional keywords, all of which are optional.
     @raise ValueError: If C{returnDict} is C{True} and there is a duplicated
         query or subject id.
-    @return: If C{returnDict} is C{True}, a C{dict} as just described, else a
-        two-dimensional array of match scores. The first dimension is the query
-        index (in C{queries}, the second is the subject index (in C{subjects}).
+    @return: If C{returnDict} is C{True}, a C{dict} as described above, else a
+        two-dimensional array whose dimensions are the query index (in
+        C{queries}, and then the subject index (in C{subjects}). The values in
+        the returned structure are as described in C{returnAnalysis}, above.
     """
     if isinstance(queries, str):
         queries = list(FastaReads(queries, readClass=AAReadWithX,
@@ -72,7 +78,12 @@ def affinityMatrix(queries, findParams=None, subjects=None, symmetric=True,
     nQueries = len(queries)
     nSubjects = len(subjectIndices)
 
-    affinity = np.zeros((nQueries, nSubjects))
+    # Prepare a result array (we'll walk through this later to make a dict
+    # if returnDict is True).
+    affinity = []
+    noMatchValue = None if returnAnalysis else 0.0
+    for _ in range(nQueries):
+        affinity.append([noMatchValue] * nSubjects)
 
     for i, query in enumerate(queries):
         if progressFunc:
@@ -87,9 +98,12 @@ def affinityMatrix(queries, findParams=None, subjects=None, symmetric=True,
                 wantedIndices = set(subjectIndices[i:])
             else:
                 wantedIndices = set(subjectIndices[i + 1:])
-            result = db.find(query, findParams, subjectIndices=wantedIndices)
+            result = db.find(query, findParams,
+                             storeFullAnalysis=returnAnalysis,
+                             subjectIndices=wantedIndices)
         else:
-            result = db.find(query, findParams)
+            result = db.find(query, findParams,
+                             storeFullAnalysis=returnAnalysis)
 
         analysis = result.analysis
         for j in range(nSubjects):
@@ -99,13 +113,21 @@ def affinityMatrix(queries, findParams=None, subjects=None, symmetric=True,
                 score = diagonalValue
             else:
                 # Be careful how we access the analysis. It is a defaultdict,
-                # so its keys are created upon access. I.e., use 'in' to test
-                # for membership not try/except, because analysis[subjectIndex]
-                # will never raise a KeyError.
+                # so its keys are created on access. I.e., we must use 'in'
+                # to test for membership not try/except, because
+                # analysis[subjectIndex] will never raise a KeyError.
                 if subjectIndices[j] in analysis:
-                    score = analysis[subjectIndices[j]]['bestBinScore']
+                    if returnAnalysis:
+                        score = analysis[subjectIndices[j]]
+                    else:
+                        score = analysis[subjectIndices[j]]['overallScore']
                 else:
-                    score = 0.0
+                    # The query didn't match the subject. We don't actually
+                    # need to set this value as it is already present due
+                    # to the initialization of affinity above, but it
+                    # simplifies the code to do so.
+                    score = noMatchValue
+
             affinity[i][j] = score
 
     if returnDict:

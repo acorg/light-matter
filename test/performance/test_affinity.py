@@ -1,5 +1,4 @@
 from unittest import TestCase
-import numpy as np
 import six
 
 from dark.reads import Reads, AARead
@@ -17,11 +16,11 @@ class TestAffinityMatrix(TestCase):
     def testNoReads(self):
         """
         If affinityMatrix is called with no reads and no subjects, an empty
-        matrix must be returned.
+        score matrix must be returned.
         """
         reads = Reads()
         matrix = affinityMatrix(reads, landmarks=['AlphaHelix'])
-        self.assertTrue(np.array_equal(np.zeros((0, 0)), matrix))
+        self.assertEqual([], matrix)
 
     def testSequenceWithNoFeaturesAgainstItself(self):
         """
@@ -64,7 +63,7 @@ class TestAffinityMatrix(TestCase):
     def testZeroByThree(self):
         """
         If affinityMatrix is called with no reads and three subjects, the
-        resulting matrix must be 0x3.
+        resulting matrix must be empty.
         """
         reads = Reads()
         subjects = Reads()
@@ -73,7 +72,7 @@ class TestAffinityMatrix(TestCase):
         subjects.add(AARead('id4', 'FRRRFRRRFAAAFRRRFRRRF'))
         matrix = affinityMatrix(reads, landmarks=['AlphaHelix'],
                                 subjects=subjects, computeDiagonal=True)
-        self.assertTrue(np.array_equal(np.zeros((0, 3)), matrix))
+        self.assertEqual([], matrix)
 
     def testOneByZero(self):
         """
@@ -86,7 +85,36 @@ class TestAffinityMatrix(TestCase):
         subjects = Reads()
         matrix = affinityMatrix(reads, landmarks=['AlphaHelix'],
                                 subjects=subjects, computeDiagonal=True)
-        self.assertTrue(np.array_equal(np.zeros((1, 0)), matrix))
+        self.assertEqual([[]], matrix)
+
+    def testOneByTwoReturnAnalysis(self):
+        """
+        If affinityMatrix is called with one read and two subjects, the
+        resulting matrix must be 1x2 with each entry containing an
+        analysis dict if returnAnalysis is True (and the query matches the
+        subject). The analysis must contain the keys from a full analysis.
+        """
+        reads = Reads([AARead('id1', 'FRRRFRRRFAAAFRRRFRRRF')])
+        subjects = Reads([AARead('id2', 'FRRRFRRRFAAAFRRRFRRRF'),
+                          AARead('id3', 'FFF')])
+        matrix = affinityMatrix(reads, landmarks=['AlphaHelix'],
+                                subjects=subjects, computeDiagonal=True,
+                                returnAnalysis=True)
+        analysis = matrix[0][0]
+        self.assertEqual(
+            {
+                'bestBinScore',
+                'histogram',
+                'overallScore',
+                'overallScoreAnalysis',
+                'significanceAnalysis',
+                'significantBins',
+            },
+            set(analysis))
+        self.assertEqual(1.0, analysis['overallScore'])
+
+        # The query doesn't match the second subject.
+        self.assertIs(None, matrix[0][1])
 
     def testOneByThree(self):
         """
@@ -102,7 +130,7 @@ class TestAffinityMatrix(TestCase):
         subjects.add(AARead('id4', 'FRRRFRRRFAAAFRRRFRRRF'))
         matrix = affinityMatrix(reads, landmarks=['AlphaHelix'],
                                 subjects=subjects, computeDiagonal=True)
-        self.assertTrue(np.array_equal([[1.0, 1.0, 1.0]], matrix))
+        self.assertEqual([[1.0, 1.0, 1.0]], matrix)
 
     def testOneByThreeAsDict(self):
         """
@@ -233,13 +261,12 @@ class TestAffinityMatrix(TestCase):
         subjects.add(AARead('id5', 'FRRRFRRRFAAAFRRRFRRRF'))
         matrix = affinityMatrix(reads, landmarks=['AlphaHelix'],
                                 subjects=subjects, computeDiagonal=True)
-        self.assertTrue(np.array_equal(
+        self.assertEqual(
             [
                 [1.0, 1.0, 1.0],
                 [1.0, 1.0, 1.0]
             ],
             matrix)
-        )
 
     def testTwoByThreeWithRepeatedQueryAndSubjectIds(self):
         """
@@ -257,13 +284,12 @@ class TestAffinityMatrix(TestCase):
         subjects.add(AARead('id3', 'FRRRFRRRFAAAFRRRFRRRF'))
         matrix = affinityMatrix(reads, landmarks=['AlphaHelix'],
                                 subjects=subjects, computeDiagonal=True)
-        self.assertTrue(np.array_equal(
+        self.assertEqual(
             [
                 [1.0, 1.0, 1.0],
                 [1.0, 1.0, 1.0]
             ],
             matrix)
-        )
 
     def _checkSymmetry(self, sequences, findParams, symmetric=False, **kwargs):
         """
@@ -465,7 +491,7 @@ class TestAffinityMatrices(TestCase):
         }
         am = AffinityMatrices(Reads(), parameterSets=parameterSets)
         matrix = am['test']
-        self.assertTrue(np.array_equal(np.zeros((0, 0)), matrix))
+        self.assertEqual([], matrix)
 
     def testNoQueriesOrSubjectsWithResultAsDict(self):
         """

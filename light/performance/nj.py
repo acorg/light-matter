@@ -82,8 +82,8 @@ class NJTree(object):
         new.sequences = list(sequences)
         new.labels = labels
         findParams = findParams or FindParameters()
-        affinity = affinityMatrix(new.sequences, findParams=findParams,
-                                  **kwargs)
+        affinity = np.array(
+            affinityMatrix(new.sequences, findParams=findParams, **kwargs))
         new.distance = np.ones(affinity.shape) - affinity
         new.tree = nj(DistanceMatrix(new.distance, labels))
         return new

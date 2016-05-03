@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
 """
-Read a fasta file of helices from stdin, and write all possible helix
-substrings to stdout.
+Read a fasta file from stdin, and write all possible substrings to stdout.
+Note that the range of lengths of the new substrings is defined between the
+shortest sequence and the longest sequence in the file.
 """
 
 import sys
@@ -11,33 +12,33 @@ from dark.fasta import FastaReads
 from dark.reads import AAReadWithX
 
 
-def makeSubstring(length, helix):
+def makeSubstring(length, string):
     """
     Take a string and make substrings of a specified length.
 
     @param length: An C{int} of length of the substrings.
-    @param helix: A {dark.AAReadsWithX} instance of sequence to make substrings
-        from.
+    @param string: A {dark.AAReadsWithX} instance of a sequence to make
+        substrings from.
     """
-    assert(length < len(helix))
-    numberOfHelices = len(helix) - length
-    for i in range(numberOfHelices + 1):
-        newHelixId = '%s[%d:%d]' % (helix.id, i, length + i)
-        yield AAReadWithX(newHelixId, helix.sequence[i:length + i])
+    assert(length < len(string))
+    numberOfStrings = len(string) - length + 1
+    for i in range(numberOfStrings):
+        newStringId = '%s[%d:%d]' % (string.id, i, length + i)
+        yield AAReadWithX(newStringId, string.sequence[i:length + i])
 
 
-allHelices = list(FastaReads(sys.stdin, readClass=AAReadWithX,
+allStrings = list(FastaReads(sys.stdin, readClass=AAReadWithX,
                              checkAlphabet=0))
 
-allLengths = [len(helix) for helix in allHelices]
+allLengths = [len(string) for string in allStrings]
 minLength = min(allLengths)
 maxLength = max(allLengths)
 
 for length in range(minLength, maxLength + 1):
-    for helix in allHelices:
-        if length == len(helix):
-            newHelix = AAReadWithX(helix.id, helix.sequence)
-            print(newHelix.toString(format_='fasta'), end='')
-        elif length < len(helix):
-            for newHelix in makeSubstring(length, helix):
-                print(newHelix.toString(format_='fasta'), end='')
+    for string in allStrings:
+        if length == len(string):
+            newString = AAReadWithX(string.id, string.sequence)
+            print(newString.toString(format_='fasta'), end='')
+        elif length < len(string):
+            for newString in makeSubstring(length, string):
+                print(newString.toString(format_='fasta'), end='')

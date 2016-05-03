@@ -13,7 +13,7 @@ Write the modified output to stdout.
 The input will typically be the ss.txt secondary structure file available at
 http://www.rcsb.org/pdb/static.do?p=download/http/index.html
 """
-
+from __future__ import print_function
 import sys
 
 from light.performance.utils import pdbNameToPythonName

@@ -162,7 +162,6 @@ shift
 errs=$jobid.error
 
 $DM/virtualenv/bin/python %(executableName)s $jobid.fasta %(db)s $jobid.out \
-2> $errs
 
 cat $errs >> $jobid.error
 

@@ -39,7 +39,7 @@ for index, queryId in enumerate(_Z_SCORES_TABLE):
             except IndexError:
                 # The logic here may appear backwards, but it's not. To
                 # convince yourself either think about it or look at the
-                # testLogic test in test/performance/test_polymerase.py
+                # testLogic test in test/performance/test_ha.py
                 score = Z_SCORES[subjectId][queryId]
 
             Z_SCORES[queryId][subjectId] = score

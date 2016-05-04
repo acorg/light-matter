@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
+
+import argparse
 import re
 import sys
 
@@ -8,82 +10,50 @@ from dark.fasta_ss import SSFastaReads
 from dark.fasta import FastaReads
 from dark.reads import AAReadWithX
 
-
-def evaluateMatch(structureString, start, end):
-    """
-    Test if a match is correct. There are four scenarios:
-    1) The alpha helix matches part of a sequence that's not an alpha helix.
-        --> false positive
-    2) The alpha helix matches part of a sequence that's an alpha helix. The
-       alpha helix in the sequence doesn't extend to the left or right.
-        --> true positive.
-    3) The alpha helix matches part of a sequence that's an alpha helix. The
-       alpha helix in the sequence extends to the left.
-        --> false positive.
-    4) The alpha helix matches part of a sequence that's an alpha helix. The
-       alpha helix in the sequence extends to the right.
-        --> true positive.
-
-    @param structureString: A C{str} of a structure sequence.
-    @param start: An C{int} start of the match.
-    @param end: An C{int} end of the match.
-
-    @return: C{True} if the match is a true positive and C{False} if the match
-        is a false positive.
-    """
-    assert 0 <= start < end
-
-    if start > 0 and structureString[start - 1] == 'H':
-        return False
-
-    for aaIndex in range(start, end):
-        if structureString[aaIndex] != 'H':
-            return False
-
-    return True
+from light.performance.evaluate import evaluateMatch, evaluateMatchNoPrefix
 
 
-def evaluateHelices(helixFile, pdbFile, outFile):
-    """
-    For each helix in the helixFile, evaluate its true and false positives.
+parser = argparse.ArgumentParser(
+    description=('For each helix in the given on stdin, evaluate its true and '
+                 'false positives and print the result to stdout.'))
 
-    @param helixFile: A C{str} filename of a file with known alpha helix
-        sequences.
-    @param pdbFile: A C{str} filename of the pdb file containing sequence and
-        their structure annotation.
-    @param outFile: A C{str} filename of the output file.
-    """
-    pdbReads = [(read.sequence, read.structure) for read in
-                SSFastaReads(pdbFile, checkAlphabet=0)]
-    helices = FastaReads(helixFile, readClass=AAReadWithX, checkAlphabet=0)
+parser.add_argument(
+    '--pdbFile', help='A filename of the pdb file containing sequence and '
+    'their structure annotation.')
 
-    with open(outFile, 'w') as fp:
-        for i, helix in enumerate(helices):
-            truePositive = falsePositive = 0
-            helixSequence = helix.sequence
-            if ('X' in helixSequence or 'Z' in helixSequence or 'B' in
-                    helixSequence):
-                continue
-            else:
-                uniqueRegex = re.compile(helixSequence)
-                for sequence, structure in pdbReads:
-                    for match in uniqueRegex.finditer(sequence):
-                        start = match.start()
-                        end = match.end()
-                        if evaluateMatch(structure, start, end):
-                            truePositive += 1
-                        else:
-                            falsePositive += 1
+parser.add_argument(
+    '--evaluateNoPrefix', default=True,
+    help=('If True the evaluateMatchNoPrefix function will be used to '
+          'evaluate the helix. If False use the evaluateMatch function.'))
 
-                fp.write('%s %d %d\n' % (helix.sequence, truePositive,
-                                         falsePositive))
+args = parser.parse_args()
 
 
-if __name__ == '__main__':
-    if len(sys.argv) != 4:
-        from os.path import basename
-        print('Usage: %s helixFile, pdbFile, outFile' % basename(sys.argv[0]),
-              file=sys.stderr)
+pdbReads = [(read.sequence, read.structure) for read in
+            SSFastaReads(args.pdbFile, checkAlphabet=0)]
+helices = FastaReads(sys.stdin, readClass=AAReadWithX, checkAlphabet=0)
+
+if args.evaluateNoPrefix:
+    evaluationFunction = evaluateMatchNoPrefix
+else:
+    evaluationFunction = evaluateMatch
+
+for i, helix in enumerate(helices):
+    truePositive = falsePositive = 0
+    helixSequence = helix.sequence
+    if ('X' in helixSequence or 'Z' in helixSequence or 'B' in
+            helixSequence):
+        continue
     else:
-        helixFile, pdbFile, outFile = sys.argv[1:]
-        evaluateHelices(helixFile, pdbFile, outFile)
+        uniqueRegex = re.compile(helixSequence)
+        for sequence, structure in pdbReads:
+            for match in uniqueRegex.finditer(sequence):
+                start = match.start()
+                end = match.end()
+                if evaluationFunction(structure, start, end):
+                    truePositive += 1
+                else:
+                    falsePositive += 1
+
+        print('%s %d %d\n' % (helix.sequence, truePositive, falsePositive),
+              file=sys.stdout)

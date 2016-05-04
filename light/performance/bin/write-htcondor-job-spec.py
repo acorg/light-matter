@@ -85,7 +85,7 @@ log                       = job.log
 #   %(sequenceCount)d sequences split into %(nJobs)d jobs of \
 %(seqsPerJob)d sequences each.
 
-arguments                 = $(Process)
+arguments                 = $(Process) %(db)d %(evaluateNoPrefix)d
 input                     = $(Process).fasta
 output                    = $(Process).done
 error                     = $(Process).error
@@ -126,7 +126,7 @@ for jobid in "$@"
 do
     cat >>$tmp <<EOF
 
-arguments                 = $jobid
+arguments                 = $jobid %(db)d %(evaluateNoPrefix)d
 input                     = $jobid.fasta
 output                    = $jobid.done
 error                     = $jobid.error
@@ -161,7 +161,8 @@ shift
 
 errs=$jobid.error
 
-$DM/virtualenv/bin/python %(executableName)s $jobid.fasta %(db)s $jobid.out \
+$DM/virtualenv/bin/python %(executableName)s --pdbFile %(db)s \
+--evaluateNoPrefix %(evaluateNoPrefix)d < $jobid.fasta > $jobid.out 2> $errs
 
 cat $errs >> $jobid.error
 
@@ -244,6 +245,10 @@ if __name__ == '__main__':
         '--executable-name',
         type=str, default=DEFAULT_EXECUTABLE_NAME, dest='executableName',
         help='the name of the executable to run.')
+    parser.add_argument(
+        '--evaluate-no-prefix', type=bool, default=True,
+        dest='evaluateNoPrefix',
+        help='Wether prefixes should not be evaluated.')
 
     args = parser.parse_args()
 
@@ -257,6 +262,7 @@ if __name__ == '__main__':
         'executableName': args.executableName,
         'fastaFile': args.fasta,
         'seqsPerJob': args.seqsPerJob,
+        'evaluateNoPrefix': args.evaluateNoPrefix,
     }
     params['nJobs'], params['sequenceCount'] = splitFASTA(params)
     printJobSpec(params)

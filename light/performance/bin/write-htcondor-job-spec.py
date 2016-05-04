@@ -85,7 +85,7 @@ log                       = job.log
 #   %(sequenceCount)d sequences split into %(nJobs)d jobs of \
 %(seqsPerJob)d sequences each.
 
-arguments                 = $(Process) %(db)s
+arguments                 = $(Process)
 input                     = $(Process).fasta
 output                    = $(Process).done
 error                     = $(Process).error
@@ -126,7 +126,7 @@ for jobid in "$@"
 do
     cat >>$tmp <<EOF
 
-arguments                 = $jobid %(db)s
+arguments                 = $jobid
 input                     = $jobid.fasta
 output                    = $jobid.done
 error                     = $jobid.error
@@ -154,14 +154,17 @@ def printProcessScript(params):
 #!/bin/sh
 
 DM=/usr/local/dark-matter
-export PYTHONPATH=$DM/light-matter/
+export PYTHONPATH=$DM/light-matter/:$DM/dark-matter/
 
 jobid=$1
 shift
 
 errs=$jobid.error
 
-%(executableName)s $jobid.fasta %(db)s $jobid.out 2> $errs
+$DM/virtualenv/bin/python %(executableName)s $jobid.fasta %(db)s $jobid.out \
+2> $errs
+
+cat $errs >> $jobid.error
 
 if [ -s $errs ]
 then

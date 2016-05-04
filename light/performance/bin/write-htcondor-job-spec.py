@@ -13,7 +13,7 @@ from dark.fasta import FastaReads
 from dark.reads import AAReadWithX
 
 
-DEFAULT_STRUCTURE_DB = 'path to ss.txt'
+DEFAULT_STRUCTURE_DB = '/usr/local/dark-matter/seqs/ss-03032016.txt'
 DEFAULT_EXECUTABLE_NAME = ('/usr/local/dark-matter/light-matter/light/'
                            'performance/bin/evaluate_helices.py')
 DEFAULT_EMAIL = 'tcj25@cam.ac.uk'
@@ -59,7 +59,7 @@ def splitFASTA(params):
             outfp = open('%d.fasta' % fileCount, 'w')
             fileCount += 1
         count += 1
-        print(read.toString(), file=outfp)
+        print(read.toString(format_='fasta'), end='', file=outfp)
     outfp.close()
     return fileCount, seqCount
 
@@ -87,7 +87,7 @@ log                       = job.log
 
 arguments                 = $(Process) %(db)s
 input                     = $(Process).fasta
-output                    = $(Process).out
+output                    = $(Process).done
 error                     = $(Process).error
 
 queue %(nJobs)d
@@ -128,11 +128,12 @@ do
 
 arguments                 = $jobid %(db)s
 input                     = $jobid.fasta
-output                    = $jobid.out
+output                    = $jobid.done
 error                     = $jobid.error
+
 queue
 EOF
-
+    rm -f $jobid.error $jobid.done
 done
 
 rm -f job.log
@@ -158,18 +159,16 @@ export PYTHONPATH=$DM/light-matter/
 jobid=$1
 shift
 
-shift
-
 errs=$jobid.error
 
-%(executableName)s $jobid.fasta -db "$db" $jobid.out 2> $errs
+%(executableName)s $jobid.fasta %(db)s $jobid.out 2> $errs
 
 if [ -s $errs ]
 then
-    echo "Completed WITH ERRORS ($errs) on `hostname` at `date`." > $jobid.out
+    echo "Completed WITH ERRORS ($errs) on `hostname` at `date`." > $jobid.done
 else
     rm $errs
-    echo "Completed on `hostname` at `date`." > $jobid.out
+    echo "Completed on `hostname` at `date`." > $jobid.done
 fi
 """ % params)
 
@@ -197,7 +196,7 @@ for i in *.fasta
 do
     n=`echo $i | cut -f1 -d.`
     error=$n.error
-    json=$n.json.bz2
+    result=$n.out
 
     if [ -f $error ]
     then

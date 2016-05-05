@@ -21,7 +21,8 @@ trap "rm -f $tmp" 0 1 2 3 15
 
     cat >$tmp <<EOF
 universe                  = vanilla
-executable                = process.sh
+executable                = /usr/local/dark-matter/light-matter/light/\
+                            performance/bin/htcondor/process.sh
 should_transfer_files     = YES
 when_to_transfer_output   = ON_EXIT
 notify_user               = tcj25@cam.ac.uk

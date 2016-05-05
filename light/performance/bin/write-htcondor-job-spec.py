@@ -12,9 +12,9 @@ from dark.fasta import FastaReads
 from dark.reads import AAReadWithX
 
 
-DEFAULT_STRUCTURE_DB = '/usr/local/dark-matter/seqs/ss-03032016.txt'
+DEFAULT_PDB_FILE = '/usr/local/dark-matter/seqs/ss-03032016.txt'
 DEFAULT_EXECUTABLE_NAME = ('/usr/local/dark-matter/light-matter/light/'
-                           'performance/bin/evaluate_helices.py')
+                           'performance/bin/evaluate-helices.py')
 DEFAULT_EMAIL = 'tcj25@cam.ac.uk'
 DEFAULT_SEQUENCES_PER_FILE = 100
 
@@ -73,7 +73,8 @@ def printJobSpec(params):
     with open('job.htcondor', 'w') as outfp:
         outfp.write("""\
 universe                  = vanilla
-executable                = process.sh
+executable                = /usr/local/dark-matter/light-matter/light/\
+                            performance/bin/htcondor/process.sh
 should_transfer_files     = YES
 when_to_transfer_output   = ON_EXIT
 notify_user               = %(email)s
@@ -86,8 +87,8 @@ log                       = job.log
 #   %(sequenceCount)d sequences split into %(nJobs)d jobs of \
 %(seqsPerJob)d sequences each.
 
-arguments                 = $(Process) %(executableName)d %(pdbFile)d \
-                                       %(evaluateNoPrefix)d
+arguments                 = $(Process) %(executableName)s %(pdbFile)s \
+                                       %(evaluateNoPrefix)s
 input                     = $(Process).fasta
 output                    = $(Process).done
 error                     = $(Process).error
@@ -112,8 +113,7 @@ if __name__ == '__main__':
         help=('the number (>0) of sequences to pass to evaluate_helices.py on '
               'each run.'))
     parser.add_argument(
-        '--structure-db-name', metavar='structure-database-name',
-        default=DEFAULT_STRUCTURE_DB, dest='db',
+        '--pdb-file', default=DEFAULT_PDB_FILE, dest='pdbFile',
         help='the structure database to run against.')
     parser.add_argument(
         '--email', metavar='name@host',
@@ -135,7 +135,7 @@ if __name__ == '__main__':
         sys.exit(1)
 
     params = {
-        'db': args.db,
+        'pdbFile': args.pdbFile,
         'email': args.email,
         'executableName': args.executableName,
         'fastaFile': args.fasta,

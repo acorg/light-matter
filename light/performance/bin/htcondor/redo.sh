@@ -1,7 +1,7 @@
 #!/bin/sh -e
 
 # A shell script that writes a job spec file for HTCondor to process multiple
-# FASTA input files via evaluate_helices.py, runs these jobs, and removes the
+# FASTA input files via evaluate-helices.py, runs these jobs, and removes the
 # one-time spec file it wrote.
 
 if [ $# -lt 4 ]

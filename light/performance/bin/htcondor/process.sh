@@ -29,7 +29,6 @@ $DM/virtualenv/bin/python $executableName --pdbFile $pdbFile \
 
 if [ -s $errs ]
 then
-    cat $errs >> $jobid.done
     echo "Completed WITH ERRORS ($errs) on `hostname` at `date`." > $jobid.done
 else
     rm $errs

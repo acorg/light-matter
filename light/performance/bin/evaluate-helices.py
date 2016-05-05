@@ -22,7 +22,7 @@ parser.add_argument(
     'their structure annotation.')
 
 parser.add_argument(
-    '--evaluateNoPrefix', default=True,
+    '--evaluateNoPrefix', default=True, type=bool,
     help=('If True the evaluateMatchNoPrefix function will be used to '
           'evaluate the helix. If False use the evaluateMatch function.'))
 

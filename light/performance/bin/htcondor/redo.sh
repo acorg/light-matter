@@ -6,8 +6,7 @@
 
 if [ $# -lt 4 ]
 then
-    echo "Usage: `basename $0` executableName pdbFile evaluateNoPrefix \
-                 jobid" >&2
+    echo "Usage: `basename $0` executableName pdbFile evaluateNoPrefix jobid" >&2
 else
     executableName=$1
     pdbFile=$2

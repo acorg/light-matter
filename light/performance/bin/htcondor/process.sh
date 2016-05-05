@@ -12,8 +12,7 @@ case $# in
         evaluateNoPrefix=$4
         ;;
 
-    *) echo "Usage: `basename $0` jobId executableName pdbFile \
-            evaluateNoPrefix" >&2 ;;
+    *) echo "Usage: `basename $0` jobId executableName pdbFile evaluateNoPrefix" >&2 ;;
 esac
 
 
@@ -22,8 +21,8 @@ export PYTHONPATH=$DM/light-matter/:$DM/dark-matter
 
 errs=$jobid.error
 
-$DM/virtualenv/bin/python %(executableName)s --pdbFile %(db)s \
---evaluateNoPrefix %(evaluateNoPrefix)d < $jobid.fasta > $jobid.out 2> $errs
+$DM/virtualenv/bin/python $executableName --pdbFile $pdbFile \
+--evaluateNoPrefix $evaluateNoPrefix < $jobid.fasta > $jobid.out 2> $errs
 
 if [ -s $errs ]
 then

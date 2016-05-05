@@ -124,7 +124,7 @@ if __name__ == '__main__':
         default=DEFAULT_EXECUTABLE_NAME, dest='executableName',
         help='the name of the executable to run.')
     parser.add_argument(
-        '--evaluate-no-prefix', action='store_false', default=True,
+        '--evaluate-no-prefix', type=bool, default=True,
         dest='evaluateNoPrefix',
         help='Whether prefixes should not be evaluated.')
 

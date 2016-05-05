@@ -50,7 +50,8 @@ def splitFASTA(params):
     fileCount = count = seqCount = 0
     outfp = None
 
-    reads = FastaReads(params['fastaFile'], readClass=AAReadWithX)
+    reads = FastaReads(params['fastaFile'], readClass=AAReadWithX,
+                       checkAlphabet=0)
     for read in reads:
         seqCount += 1
         if count == params['seqsPerJob']:

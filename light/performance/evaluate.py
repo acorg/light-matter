@@ -25,11 +25,7 @@ def evaluateMatch(structureString, start, end):
     if start > 0 and structureString[start - 1] == 'H':
         return False
 
-    for aaIndex in range(start, end):
-        if structureString[aaIndex] != 'H':
-            return False
-
-    return True
+    return all(structureString[i] == 'H' for i in range(start, end))
 
 
 def evaluateMatchNoPrefix(structureString, start, end):
@@ -49,8 +45,4 @@ def evaluateMatchNoPrefix(structureString, start, end):
     """
     assert 0 <= start < end
 
-    for aaIndex in range(start, end):
-        if structureString[aaIndex] != 'H':
-            return False
-
-    return True
+    return all(structureString[i] == 'H' for i in range(start, end))

@@ -18,7 +18,7 @@ parser = argparse.ArgumentParser(
                  'false positives and print the result to stdout.'))
 
 parser.add_argument(
-    '--pdbFile', help='A filename of the pdb file containing sequence and '
+    '--pdbFile', help='A filename of the pdb file containing sequences and '
     'their structure annotation.')
 
 parser.add_argument(
@@ -55,5 +55,4 @@ for i, helix in enumerate(helices):
                 else:
                     falsePositive += 1
 
-        print('%s %d %d\n' % (helix.sequence, truePositive, falsePositive),
-              file=sys.stdout)
+        print('%s %d %d\n' % (helix.sequence, truePositive, falsePositive))

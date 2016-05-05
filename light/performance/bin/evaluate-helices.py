@@ -55,4 +55,4 @@ for i, helix in enumerate(helices):
                 else:
                     falsePositive += 1
 
-        print('%s %d %d\n' % (helix.sequence, truePositive, falsePositive))
+        print('%s %d %d' % (helix.sequence, truePositive, falsePositive))

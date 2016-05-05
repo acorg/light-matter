@@ -161,7 +161,10 @@ def getScore(matrix, queryId, subjectId):
         they did not match.
     """
     analysis = matrix[queryId][subjectId]
-    return analysis['overallScore'] if analysis else 0.0
+    if analysis:
+        if analysis['bestBinScore'] is not None:
+            return analysis['bestBinScore']
+    return 0.0
 
 
 class AffinityMatrices(object):

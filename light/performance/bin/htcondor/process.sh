@@ -5,14 +5,17 @@
 
 
 case $# in
-    5)
+    4)
         jobid=$1
         executableName=$2
         pdbFile=$3
         evaluateNoPrefix=$4
         ;;
 
-    *) echo "Usage: `basename $0` jobId executableName pdbFile evaluateNoPrefix" >&2 ;;
+    *)
+        echo "Usage: `basename $0` jobid executableName pdbFile evaluateNoPrefix" >&2
+        exit 1
+        ;;
 esac
 
 

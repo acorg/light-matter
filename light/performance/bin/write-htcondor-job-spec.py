@@ -74,7 +74,7 @@ def printJobSpec(params):
         outfp.write("""\
 universe                  = vanilla
 executable                = /usr/local/dark-matter/light-matter/light/\
-                            performance/bin/htcondor/process.sh
+performance/bin/htcondor/process.sh
 should_transfer_files     = YES
 when_to_transfer_output   = ON_EXIT
 notify_user               = %(email)s

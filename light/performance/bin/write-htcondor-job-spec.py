@@ -6,7 +6,6 @@ See the 'EPILOG' variable below, or (better) run with --help for help.
 
 from __future__ import print_function
 
-import os
 import sys
 
 from dark.fasta import FastaReads
@@ -29,8 +28,9 @@ EPILOG = """Given a FASTA file argument, write out the following:
      FASTA files.
 
 NOTE: A 'redo.sh' script that can be used to re-submit sub-FASTA files on which
-the initial processing failed and a 'finalize.sh' script that removes empty
-error files are available in light/performance/bin/htcondor.
+the initial processing failed, a 'finalize.sh' script that removes empty
+error files and a process.sh script which calls the specified executable with
+the specified arguments are available in light/performance/bin/htcondor.
 
 NOTE: files are overwritten. It is suggested you run this command in an
 empty directory.
@@ -86,47 +86,14 @@ log                       = job.log
 #   %(sequenceCount)d sequences split into %(nJobs)d jobs of \
 %(seqsPerJob)d sequences each.
 
-arguments                 = $(Process)
+arguments                 = $(Process) %(executableName)d %(pdbFile)d \
+                                       %(evaluateNoPrefix)d
 input                     = $(Process).fasta
 output                    = $(Process).done
 error                     = $(Process).error
 
 queue %(nJobs)d
 """ % params)
-
-
-def printProcessScript(params):
-    """
-    Write out a simple process script to call evaluate_helices.py.
-    """
-    with open('process.sh', 'w') as outfp:
-        outfp.write("""\
-#!/bin/sh
-
-DM=/usr/local/dark-matter
-export PYTHONPATH=$DM/light-matter/:$DM/dark-matter
-
-jobid=$1
-shift
-
-errs=$jobid.error
-
-$DM/virtualenv/bin/python %(executableName)s --pdbFile %(db)s \
---evaluateNoPrefix %(evaluateNoPrefix)d < $jobid.fasta > $jobid.out 2> $errs
-
-cat $errs >> $jobid.done
-
-if [ -s $errs ]
-then
-    echo "Completed WITH ERRORS ($errs) on `hostname` at `date`." > $jobid.done
-else
-    rm $errs
-    echo "Completed on `hostname` at `date`." > $jobid.done
-fi
-""" % params)
-
-    # Make the script executable so we can run it.
-    os.chmod('process.sh', 0o755)
 
 
 if __name__ == '__main__':
@@ -177,7 +144,6 @@ if __name__ == '__main__':
     }
     params['nJobs'], params['sequenceCount'] = splitFASTA(params)
     printJobSpec(params)
-    printProcessScript(params)
 
     print(('%(sequenceCount)d sequences split into %(nJobs)d jobs of '
            '%(seqsPerJob)d sequences each.' % params))

@@ -1,12 +1,20 @@
 #!/bin/sh -e
 
-# A shell script that writes a job spec file for HTCondor to process a single
-# FASTA input file via evaluate_helices.py, runs that job, and removes the
+# A shell script that writes a job spec file for HTCondor to process multiple
+# FASTA input files via evaluate_helices.py, runs these jobs, and removes the
 # one-time spec file it wrote.
 
-case $# in
-    0) echo "Usage: `basename $0` jobid1, jobid2, ..." >&2; exit 1;;
-esac
+if [ $# -lt 4 ]
+then
+    echo "Usage: `basename $0` executableName pdbFile evaluateNoPrefix \
+                 jobid" >&2
+else
+    executableName=$1
+    pdbFile=$2
+    evaluateNoPrefix=$3
+    shift 3
+    jobids="$@"
+fi
 
 tmp=redo.tmp.$$
 trap "rm -f $tmp" 0 1 2 3 15
@@ -22,11 +30,11 @@ max_transfer_output_mb    = -1
 log                       = job.log
 EOF
 
-for jobid in "$@"
+for jobid in $jobids
 do
     cat >>$tmp <<EOF
 
-arguments                 = $jobid
+arguments                 = $jobid $1 $2 $3
 input                     = $jobid.fasta
 output                    = $jobid.done
 error                     = $jobid.error

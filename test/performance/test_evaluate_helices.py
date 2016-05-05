@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from light.performance.bin.evaluate_helices import evaluateMatch
+from light.performance.evaluate import evaluateMatch, evaluateMatchNoPrefix
 
 
 class TestEvaluateMatch(TestCase):
@@ -64,3 +64,31 @@ class TestEvaluateMatch(TestCase):
         --> false positive.
         """
         self.assertFalse(evaluateMatch('HHHHHHHH', 1, 7))
+
+
+class TestEvaluateMatchNoPrefix(TestCase):
+    """
+    Tests for the evaluateMatchNoPrefix function. For a description of the
+    cases tested see the docstring of evaluateMatchNoPrefix.
+    """
+    def testCase1(self):
+        """
+        The alpha helix matches part of a sequence that's not an alpha helix.
+        --> false positive.
+        """
+        self.assertFalse(evaluateMatchNoPrefix('GSSSGGGGG', 1, 7))
+
+    def testCase2(self):
+        """
+        The alpha helix matches part of a sequence that's an alpha helix.
+        --> true positive.
+        """
+        self.assertTrue(evaluateMatchNoPrefix('SHHHHHHG', 1, 7))
+
+    def testCase2ExactMatch(self):
+        """
+        The alpha helix matches part of a sequence that's an alpha helix.
+        --> true positive.
+        The helix starts at 0 and matches exactly.
+        """
+        self.assertTrue(evaluateMatchNoPrefix('HHH', 0, 3))

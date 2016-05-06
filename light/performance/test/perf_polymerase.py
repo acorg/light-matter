@@ -19,8 +19,8 @@ class TestLightMatterZScoreCorrelation(TestCase):
         """
         Examine the correlation between light matter scores and Z scores.
         """
-        scoreTypeX = 'Light matter score'
-        scoreTypeY = 'Z score'
+        scoreTypeX = 'Secondary structure as measured by\nLight matter score'
+        scoreTypeY = 'Tertiary structure as measured by\nZ score'
 
         for parameterSet in testArgs.parameterSets:
             affinity = _AFFINITY[parameterSet]
@@ -47,8 +47,8 @@ class TestLightMatterBitScoreCorrelation(TestCase):
         """
         Examine the correlation between our scores and blast bit scores.
         """
-        scoreTypeX = 'Light matter score'
-        scoreTypeY = 'Bit score'
+        scoreTypeX = 'Secondary structure as measured by\nLight matter score'
+        scoreTypeY = 'Primary structure as measured by\nBit score'
 
         for parameterSet in testArgs.parameterSets:
             affinity = _AFFINITY[parameterSet]
@@ -75,8 +75,8 @@ class TestBitScoreZScoreCorrelation(TestCase):
         """
         Examine the correlation between BLAST bit scores and Z scores.
         """
-        scoreTypeX = 'Bit score'
-        scoreTypeY = 'Z score'
+        scoreTypeX = 'Primary structure as measured by\nBit score'
+        scoreTypeY = 'Tertiary structure as measured by\nZ score'
 
         for parameterSet in testArgs.parameterSets:
             dirName = makeOutputDir(
@@ -102,6 +102,10 @@ class TestBitScoreZScoreLightMatterScore3D(TestCase):
         """
         Make a 3D plot of BLAST bit scores, Z scores, and light matter scores.
         """
+        scoreTypeX = 'Primary structure as measured by\nBit score'
+        scoreTypeY = 'Tertiary structure as measured by\nZ score'
+        scoreTypeZ = 'Secondary structure as measured by\nlight matter score'
+
         for parameterSet in testArgs.parameterSets:
             affinity = _AFFINITY[parameterSet]
             dirName = makeOutputDir(DATASET, parameterSet, '3d')
@@ -116,5 +120,5 @@ class TestBitScoreZScoreLightMatterScore3D(TestCase):
                         lmScore = getScore(affinity, queryId, subjectId)
                         lmScores.append(lmScore)
                 plot3D(bitScores, zScores, lmScores, queryId,
-                       'Bit score', 'Z score', 'Light matter score',
-                       dirName, testArgs.interactive)
+                       scoreTypeX, scoreTypeY, scoreTypeZ, dirName,
+                       testArgs.interactive)

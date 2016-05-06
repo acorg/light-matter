@@ -162,8 +162,7 @@ def getScore(matrix, queryId, subjectId):
     """
     analysis = matrix[queryId][subjectId]
     if analysis:
-        if analysis['bestBinScore'] is not None:
-            return analysis['bestBinScore']
+        return analysis.get('overallScore') or 0.0
     return 0.0
 
 

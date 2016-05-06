@@ -52,17 +52,17 @@ def plot(x, y, readId, scoreTypeX, scoreTypeY, dirName):
     ax.set_xlabel(scoreTypeX)
 
     # Light matter scores are always <= 1.0.
-    if scoreTypeX == 'Light matter score':
+    if scoreTypeX == 'Secondary structure as measured by\nLight matter score':
         ax.set_xlim(right=1.0)
-    if scoreTypeY == 'Light matter score':
+    if scoreTypeY == 'Secondary structure as measured by\nLight matter score':
         ax.set_ylim(top=1.0)
 
     # Z scores are always <= 60.0 (with sanity check).
-    if scoreTypeX == 'Z score':
+    if scoreTypeX == 'Tertiary structure as measured by\nZ score':
         if x:
             assert max(x) <= 65.0
         ax.set_xlim(right=65.0)
-    if scoreTypeY == 'Z score':
+    if scoreTypeY == 'Tertiary structure as measured by\nZ score':
         if y:
             assert max(y) <= 65.0
         ax.set_ylim(top=65.0)

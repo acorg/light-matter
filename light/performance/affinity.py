@@ -161,7 +161,9 @@ def getScore(matrix, queryId, subjectId):
         they did not match.
     """
     analysis = matrix[queryId][subjectId]
-    return analysis['overallScore'] if analysis else 0.0
+    if analysis:
+        return analysis.get('overallScore') or 0.0
+    return 0.0
 
 
 class AffinityMatrices(object):

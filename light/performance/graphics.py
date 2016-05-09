@@ -37,7 +37,7 @@ def plot(x, y, readId, scoreTypeX, scoreTypeY, dirName):
         slope, intercept, rValue, pValue, se = stats.linregress(x, y)
 
         # Plot.
-        plt.plot(x, y, 'o', markerfacecolor='blue', markeredgecolor='blue')
+        plt.plot(x, y, 'o', markerfacecolor='blue', markeredgecolor='white')
         plt.plot([0, max(x)], [intercept, slope * max(x) + intercept], '-',
                  color='green' if slope >= 0 else 'red')
 

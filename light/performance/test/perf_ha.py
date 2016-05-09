@@ -30,6 +30,8 @@ class TestLightMatterZScoreCorrelation(TestCase):
                 parameterSet,
                 '%s-%s' % (FILESYSTEM_NAME[scoreTypeX],
                            FILESYSTEM_NAME[scoreTypeY]))
+            allZScores = []
+            allLmScores = []
             for queryId in Z_SCORES:
                 zScores = []
                 lmScores = []
@@ -38,8 +40,12 @@ class TestLightMatterZScoreCorrelation(TestCase):
                         lmScore = getScore(affinity, queryId, subjectId)
                         lmScores.append(lmScore)
                         zScores.append(Z_SCORES[queryId][subjectId])
+                allZScores.extend(zScores)
+                allLmScores.extend(lmScores)
                 plot(lmScores, zScores, queryId,
                      scoreTypeX, scoreTypeY, dirName)
+            plot(allLmScores, allZScores, 'all',
+                 scoreTypeX, scoreTypeY, dirName)
 
 
 class TestLightMatterBitScoreCorrelation(TestCase):
@@ -58,16 +64,23 @@ class TestLightMatterBitScoreCorrelation(TestCase):
                 parameterSet,
                 '%s-%s' % (FILESYSTEM_NAME[scoreTypeX],
                            FILESYSTEM_NAME[scoreTypeY]))
+
+            allBitScores = []
+            allLmScores = []
             for queryId in BIT_SCORES:
-                zScores = []
+                bitScores = []
                 lmScores = []
                 for subjectId in BIT_SCORES[queryId]:
                     if queryId != subjectId:
                         lmScore = getScore(affinity, queryId, subjectId)
                         lmScores.append(lmScore)
-                        zScores.append(BIT_SCORES[queryId][subjectId])
-                plot(lmScores, zScores, queryId, scoreTypeX, scoreTypeY,
+                        bitScores.append(BIT_SCORES[queryId][subjectId])
+                allBitScores.extend(bitScores)
+                allLmScores.extend(lmScores)
+                plot(lmScores, bitScores, queryId, scoreTypeX, scoreTypeY,
                      dirName)
+            plot(allLmScores, allBitScores, 'all', scoreTypeX, scoreTypeY,
+                 dirName)
 
 
 class TestBitScoreZScoreCorrelation(TestCase):
@@ -86,6 +99,8 @@ class TestBitScoreZScoreCorrelation(TestCase):
                 '%s-%s' % (FILESYSTEM_NAME[scoreTypeX],
                            FILESYSTEM_NAME[scoreTypeY]))
 
+            allZScores = []
+            allBitScores = []
             for queryId in BIT_SCORES:
                 zScores = []
                 bitScores = []
@@ -93,8 +108,12 @@ class TestBitScoreZScoreCorrelation(TestCase):
                     if queryId != subjectId:
                         bitScores.append(BIT_SCORES[queryId][subjectId])
                         zScores.append(Z_SCORES[queryId][subjectId])
+                allZScores.extend(zScores)
+                allBitScores.extend(bitScores)
                 plot(bitScores, zScores, queryId, scoreTypeX, scoreTypeY,
                      dirName)
+            plot(allBitScores, allZScores, 'all', scoreTypeX, scoreTypeY,
+                 dirName)
 
 
 class TestBitScoreZScoreLightMatterScore3D(TestCase):
@@ -106,6 +125,9 @@ class TestBitScoreZScoreLightMatterScore3D(TestCase):
         for parameterSet in testArgs.parameterSets:
             affinity = _AFFINITY[parameterSet]
             dirName = makeOutputDir(DATASET, parameterSet, '3d')
+            allZScores = []
+            allBitScores = []
+            allLmScores = []
             for queryId in sorted(BIT_SCORES):
                 zScores = []
                 bitScores = []
@@ -116,6 +138,15 @@ class TestBitScoreZScoreLightMatterScore3D(TestCase):
                         zScores.append(Z_SCORES[queryId][subjectId])
                         lmScore = getScore(affinity, queryId, subjectId)
                         lmScores.append(lmScore)
+                allZScores.extend(zScores)
+                allBitScores.extend(bitScores)
+                allLmScores.extend(lmScores)
+
                 plot3D(bitScores, zScores, lmScores, queryId,
                        'Bit score', 'Z score', 'Light matter score',
                        dirName, testArgs.interactive)
+
+            # Plot all scores on one plot.
+            plot3D(allBitScores, allZScores, allLmScores, 'all',
+                   'Bit score', 'Z score', 'Light matter score',
+                   dirName, testArgs.interactive)

@@ -29,15 +29,15 @@ class TestLightMatterZScoreCorrelation(TestCase):
                 parameterSet,
                 '%s-%s' % (FILESYSTEM_NAME[scoreTypeX],
                            FILESYSTEM_NAME[scoreTypeY]))
-            for queryId in Z_SCORES:
+            for subject in SUBJECTS:
                 lmScores = []
                 zScores = []
-                for subjectId in Z_SCORES[queryId]:
-                    if queryId != subjectId:
-                        zScores.append(Z_SCORES[queryId][subjectId])
-                        lmScore = getScore(affinity, queryId, subjectId)
+                for query in QUERIES:
+                    if query.id != subject.id:
+                        zScores.append(Z_SCORES[query.id][subject.id])
+                        lmScore = getScore(affinity, query.id, subject.id)
                         lmScores.append(lmScore)
-                plot(lmScores, zScores, queryId, scoreTypeX, scoreTypeY,
+                plot(lmScores, zScores, subject.id, scoreTypeX, scoreTypeY,
                      dirName)
 
 
@@ -57,15 +57,15 @@ class TestLightMatterBitScoreCorrelation(TestCase):
                 parameterSet,
                 '%s-%s' % (FILESYSTEM_NAME[scoreTypeX],
                            FILESYSTEM_NAME[scoreTypeY]))
-            for queryId in BIT_SCORES:
+            for subject in SUBJECTS:
                 lmScores = []
                 bitScores = []
-                for subjectId in BIT_SCORES[queryId]:
-                    if queryId != subjectId:
-                        bitScores.append(BIT_SCORES[queryId][subjectId])
-                        lmScore = getScore(affinity, queryId, subjectId)
+                for query in QUERIES:
+                    if query.id != subject.id:
+                        bitScores.append(BIT_SCORES[query.id][subject.id])
+                        lmScore = getScore(affinity, query.id, subject.id)
                         lmScores.append(lmScore)
-                plot(lmScores, bitScores, queryId, scoreTypeX, scoreTypeY,
+                plot(lmScores, bitScores, subject.id, scoreTypeX, scoreTypeY,
                      dirName)
 
 
@@ -84,36 +84,36 @@ class TestBitScoreZScoreCorrelation(TestCase):
                 parameterSet,
                 '%s-%s' % (FILESYSTEM_NAME[scoreTypeX],
                            FILESYSTEM_NAME[scoreTypeY]))
-            for queryId in BIT_SCORES:
-                zScores = []
+            for subject in SUBJECTS:
                 bitScores = []
-                for subjectId in BIT_SCORES[queryId]:
-                    if queryId != subjectId:
-                        bitScores.append(BIT_SCORES[queryId][subjectId])
-                        zScores.append(Z_SCORES[queryId][subjectId])
-                plot(bitScores, zScores, queryId, scoreTypeX, scoreTypeY,
+                zScores = []
+                for query in QUERIES:
+                    if query.id != subject.id:
+                        zScores.append(Z_SCORES[query.id][subject.id])
+                        bitScores.append(BIT_SCORES[query.id][subject.id])
+                plot(bitScores, zScores, subject.id, scoreTypeX, scoreTypeY,
                      dirName)
 
 
 class TestBitScoreZScoreLightMatterScore3D(TestCase):
 
-    def test2HLA(self):
+    def testPlotsMTP3D(self):
         """
         Make a 3D plot of BLAST bit scores, Z scores, and light matter scores.
         """
         for parameterSet in testArgs.parameterSets:
             affinity = _AFFINITY[parameterSet]
             dirName = makeOutputDir(DATASET, parameterSet, '3d')
-            for queryId in sorted(BIT_SCORES):
+            for subject in SUBJECTS:
                 zScores = []
                 bitScores = []
                 lmScores = []
-                for subjectId in BIT_SCORES[queryId]:
-                    if queryId != subjectId:
-                        bitScores.append(BIT_SCORES[queryId][subjectId])
-                        zScores.append(Z_SCORES[queryId][subjectId])
-                        lmScore = getScore(affinity, queryId, subjectId)
+                for query in QUERIES:
+                    if query.id != subject.id:
+                        bitScores.append(BIT_SCORES[query.id][subject.id])
+                        zScores.append(Z_SCORES[query.id][subject.id])
+                        lmScore = getScore(affinity, query.id, subject.id)
                         lmScores.append(lmScore)
-                plot3D(bitScores, zScores, lmScores, queryId,
+                plot3D(bitScores, zScores, lmScores, subject.id,
                        'Bit score', 'Z score', 'Light matter score',
                        dirName, testArgs.interactive)

@@ -11,7 +11,8 @@ from time import gmtime, strftime
 from light.parameters import DatabaseParameters, FindParameters
 import light.performance
 from light.performance.parameters import PARAMETER_SETS
-from light.performance.runner import PerformanceTestRunner, filterTestSuite
+from light.performance.runner import (
+    PerformanceTestRunner, filterTestSuite, suiteTestNames)
 from light.performance.utils import makeDir
 
 # The overall JSON result will be written to a file with this name, in the
@@ -29,6 +30,12 @@ if __name__ == '__main__':
         help=('If True, performance tests will display interactive windows of '
               'results as they are computed. If False, just compute results '
               'and store them.'))
+
+    parser.add_argument(
+        '--listTests', action='store_true', default=False,
+        help=('If True, the names of the performance tests that would be run '
+              'will be printed to standard output. The tests will not be '
+              'run.'))
 
     parser.add_argument(
         '--parameterSet', action='append', dest='parameterSets',
@@ -92,10 +99,15 @@ if __name__ == '__main__':
                                                 pattern='perf_*.py')
     if args.testIdPrefix:
         suite = filterTestSuite(args.testIdPrefix, suite)
-        if suite.countTestCases() == 0:
-            print('%s: No test cases match %r.' % (
-                basename(sys.argv[0]), args.testIdPrefix), file=sys.stderr)
-            sys.exit(1)
+
+    if args.listTests:
+        print('\n'.join(suiteTestNames(suite)))
+        sys.exit(0)
+
+    if suite.countTestCases() == 0:
+        print('%s: No test cases match %r.' % (
+            basename(sys.argv[0]), args.testIdPrefix), file=sys.stderr)
+        sys.exit(1)
 
     result = PerformanceTestRunner(args).run(suite)
 

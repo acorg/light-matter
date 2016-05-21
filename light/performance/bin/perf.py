@@ -85,15 +85,10 @@ if __name__ == '__main__':
             'findParams': FindParameters.fromArgs(args),
         }
 
-    outputDir = args.outputDir
-    makeDir(outputDir)
-
     # Make the command-line args available to the tests. There doesn't seem
     # to be another way to pass information like this when using a unittest
     # test suite.
     light.performance.testArgs = args
-
-    print('Writing output to directory %r.' % outputDir, file=sys.stderr)
 
     suite = unittest.defaultTestLoader.discover(args.startDir,
                                                 pattern='perf_*.py')
@@ -108,6 +103,10 @@ if __name__ == '__main__':
         print('%s: No test cases match %r.' % (
             basename(sys.argv[0]), args.testIdPrefix), file=sys.stderr)
         sys.exit(1)
+
+    outputDir = args.outputDir
+    makeDir(outputDir)
+    print('Writing output to directory %r.' % outputDir, file=sys.stderr)
 
     result = PerformanceTestRunner(args).run(suite)
 

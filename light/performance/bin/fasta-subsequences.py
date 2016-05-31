@@ -34,7 +34,7 @@ def makeSubsequences(length, sequence):
     if length == seqLen:
         yield sequence
     elif length <= seqLen:
-        numberOfSubsequences = len(sequence) - length + 1
+        numberOfSubsequences = seqLen - length + 1
         for i in range(numberOfSubsequences):
             result = sequence[i:length + i]
             result.id += '[%d:%d]' % (i, length + i)

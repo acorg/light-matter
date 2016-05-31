@@ -8,6 +8,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
+import plotly
+import plotly.graph_objs as go
+
 from light.performance.utils import pythonNameToPdbName
 
 # Keep pyflakes quiet by pretending to use Axes3D.
@@ -203,3 +206,72 @@ def plot3D(x, y, z, readId, scoreTypeX, scoreTypeY, scoreTypeZ,
     if interactive:
         plt.show()
     plt.close()
+
+
+def plot3DPlotly(x, y, z, readId, scoreTypeX, scoreTypeY, scoreTypeZ,
+                 dirName, interactive=False):
+    """
+    Make a 3D plot of the test results using Plotly.
+
+    @param x: a C{list} of C{float} X axis bit score values.
+    @param y: a C{list} of C{float} Y axis Z score values.
+    @param z: a C{list} of C{float} Z axis light matter score values.
+    @param readId: The C{str} id of the read whose values are being plotted.
+    @param scoreTypeX: A C{str} X-axis title indicating the type of score.
+    @param scoreTypeY: A C{str} Y-axis title indicating the type of score.
+    @param scoreTypeZ: A C{str} Z-axis title indicating the type of score.
+    @param dirName: A C{str} name of the output directory in which to store
+        the plot image. The image will be saved to dirName + readId + '.png'
+    @param interactive: If C{True} use plt.show() to display interactive plots
+        that the user will need to manually dismiss.
+    @raises AssertionError: If the length of C{x} is not the same as the
+        length of C{y} and the length of C{z}.
+    """
+    assert len(x) == len(y) == len(z)
+
+    trace1 = go.Scatter3d(
+        x=x,
+        y=y,
+        z=z,
+        mode='markers',
+        marker=dict(
+            size=12,
+            line=dict(
+                color='rgba(217, 217, 217, 0.14)',
+                width=0.5
+            ),
+            opacity=0.8
+        )
+    )
+
+    data = [trace1]
+    layout = go.Layout(
+        title=pythonNameToPdbName(readId),
+        margin=dict(
+            l=0,
+            r=0,
+            b=0,
+            t=0
+        ),
+        xaxis=dict(
+            title=scoreTypeX,
+            titlefont=dict(
+                family='Courier New, monospace',
+                size=18,
+                color='#7f7f7f'
+            )
+        ),
+        yaxis=dict(
+            title=scoreTypeY,
+            titlefont=dict(
+                family='Courier New, monospace',
+                size=18,
+                color='#7f7f7f'
+            )
+        )
+    )
+
+    fig = go.Figure(data=data, layout=layout)
+    filename = join(dirName, '%s.html' % readId)
+    plotly.offline.plot(fig, show_link=False, filename=filename,
+                        auto_open=interactive)

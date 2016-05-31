@@ -196,6 +196,22 @@ def filterTestSuite(pattern, suite):
     return new
 
 
+def suiteTestNames(suite):
+    """
+    Get the names of the tests in a suite.
+
+    @param suite: A C{TestSuite} instance.
+    @return: A C{list} of C{str} test names.
+    """
+    result = []
+    for test in suite:
+        if isinstance(test, TestSuite):
+            result.extend(suiteTestNames(test))
+        else:
+            result.append(test.id())
+    return result
+
+
 class PerformanceTestRunner(object):
     """
     A performance test runner.

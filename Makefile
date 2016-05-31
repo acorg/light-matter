@@ -21,10 +21,12 @@ pep8:
             -path ./light/performance/data/ha/bitScores.py -prune -o \
             -name '*.py' -print0 | xargs -0 pep8 --ignore=E402
 	pep8 --ignore=E201,E241,E501 \
+            light/performance/data/ha/zScores.py \
             light/performance/data/polymerase/zScores.py \
             light/performance/data/pdb_2hla_a/zScores.py \
             light/performance/data/pdb_4mtp_a/zScores.py
 	pep8 --ignore=E121 \
+            light/performance/data/ha/bitScores.py \
             light/performance/data/polymerase/bitScores.py \
             light/performance/data/pdb_2hla_a/bitScores.py \
             light/performance/data/pdb_4mtp_a/bitScores.py

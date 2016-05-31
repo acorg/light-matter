@@ -229,18 +229,61 @@ def plot3DPlotly(x, y, z, readId, scoreTypeX, scoreTypeY, scoreTypeZ,
     """
     assert len(x) == len(y) == len(z)
 
+    # All the Z scores we've observed so far are less than 65. We have a
+    # fixed upper limit here so all graphs produced will have the same Y
+    # axis upper limit.
+    zScoreLimit = 65.0
+    if y:
+        assert max(y) <= zScoreLimit
+
+    # Values less than these cutoffs are considered bad, values bigger are
+    # good. Planes will be drawn to separate each axis into bad/good
+    # points (assuming there are any good points in a given dimension).
+    bitScoreCutoff = 50.0
+    zScoreCutoff = 20.0
+    lmScoreCutoff = 0.5
+
+    # cutoffStringToColor converts a binary string of length 3 to a color.
+    # The positions in the string represent bad/good (0/1) values for bit
+    # score, Z score, light matter score according to the bad/good cutoff
+    # values above. From best to worst: yellow, green, black, blue, red.
+    # Blue isn't bad, it just indicates that two sequences are similar but
+    # that they have no common structure (they may have no structure at
+    # all).
+    cutoffStringToColor = {
+        '000': 'green',   # OK - no conflict.
+        '001': 'red',     # Really bad - lm disagrees with both other scores.
+        '010': 'black',   # Quite bad - Lm disagrees with Z score.
+        '011': 'yellow',  # Good - bit score low, structure scores both high.
+        '100': 'blue',    # Weird - bit score is the only one that's high.
+        '101': 'black',   # Quite bad - Lm disagrees with Z score.
+        '110': 'red',     # Really bad - lm disagrees with both other scores.
+        '111': 'green',   # OK - no conflict.
+    }
+
+    # Assign each x, y, z triple a color.
+    colors = []
+    for bitScore, zScore, lmScore in zip(x, y, z):
+        key = (('1' if bitScore > bitScoreCutoff else '0') +
+               ('1' if zScore > zScoreCutoff else '0') +
+               ('1' if lmScore > lmScoreCutoff else '0'))
+        colors.append(cutoffStringToColor[key])
+
+    axisFont = dict(
+        family='Courier New, monospace',
+        size=16,
+        color='#7f7f7f',
+    )
+
     trace1 = go.Scatter3d(
         x=x,
         y=y,
         z=z,
         mode='markers',
         marker=dict(
-            size=12,
-            line=dict(
-                color='rgba(217, 217, 217, 0.14)',
-                width=0.5
-            ),
-            opacity=0.8
+            size=10,
+            color=colors,
+            opacity=0.8,
         )
     )
 
@@ -251,24 +294,26 @@ def plot3DPlotly(x, y, z, readId, scoreTypeX, scoreTypeY, scoreTypeZ,
             l=0,
             r=0,
             b=0,
-            t=0
+            t=0,
         ),
-        xaxis=dict(
-            title=scoreTypeX,
-            titlefont=dict(
-                family='Courier New, monospace',
-                size=18,
-                color='#7f7f7f'
-            )
+        # scene docs are at https://plot.ly/python/reference/#layout-scene
+        scene=dict(
+            xaxis=dict(
+                rangemode='tozero',
+                title=scoreTypeX,
+                titlefont=axisFont,
+            ),
+            yaxis=dict(
+                range=[0.0, zScoreLimit],
+                title=scoreTypeY,
+                titlefont=axisFont,
+            ),
+            zaxis=dict(
+                range=[0.0, 1.0],
+                title=scoreTypeZ,
+                titlefont=axisFont,
+            ),
         ),
-        yaxis=dict(
-            title=scoreTypeY,
-            titlefont=dict(
-                family='Courier New, monospace',
-                size=18,
-                color='#7f7f7f'
-            )
-        )
     )
 
     fig = go.Figure(data=data, layout=layout)

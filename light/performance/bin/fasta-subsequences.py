@@ -33,7 +33,7 @@ def makeSubsequences(length, sequence):
     seqLen = len(sequence)
     if length == seqLen:
         yield sequence
-    elif length <= seqLen:
+    elif length < seqLen:
         numberOfSubsequences = seqLen - length + 1
         for i in range(numberOfSubsequences):
             result = sequence[i:length + i]

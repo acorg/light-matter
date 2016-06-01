@@ -209,7 +209,7 @@ def plot3D(x, y, z, readId, scoreTypeX, scoreTypeY, scoreTypeZ,
 
 
 def plot3DPlotly(x, y, z, readId, scoreTypeX, scoreTypeY, scoreTypeZ,
-                 dirName, interactive=False):
+                 dirName, interactive=False, labels=''):
     """
     Make a 3D plot of the test results using Plotly.
 
@@ -224,6 +224,8 @@ def plot3DPlotly(x, y, z, readId, scoreTypeX, scoreTypeY, scoreTypeZ,
         the plot image. The image will be saved to dirName + readId + '.png'
     @param interactive: If C{True} use plt.show() to display interactive plots
         that the user will need to manually dismiss.
+    @param labels: A C{list} of C{str} labels for the points in the plot. If
+        a C{str} is passed, that will be used as the label for all points.
     @raises AssertionError: If the length of C{x} is not the same as the
         length of C{y} and the length of C{z}.
     """
@@ -269,51 +271,52 @@ def plot3DPlotly(x, y, z, readId, scoreTypeX, scoreTypeY, scoreTypeZ,
                ('1' if lmScore > lmScoreCutoff else '0'))
         colors.append(cutoffStringToColor[key])
 
-    axisFont = dict(
-        family='Courier New, monospace',
-        size=16,
-        color='#7f7f7f',
-    )
+    axisFont = {
+        'family': 'Courier New, monospace',
+        'size': 16,
+        'color': '#7f7f7f',
+    }
 
     trace1 = go.Scatter3d(
         x=x,
         y=y,
         z=z,
         mode='markers',
-        marker=dict(
-            size=10,
-            color=colors,
-            opacity=0.8,
-        )
+        marker={
+            'size': 10,
+            'color': colors,
+            'opacity': 0.8,
+        },
+        text=labels,
     )
 
     data = [trace1]
     layout = go.Layout(
         title=pythonNameToPdbName(readId),
-        margin=dict(
-            l=0,
-            r=0,
-            b=0,
-            t=0,
-        ),
+        margin={
+            'l': 0,
+            'r': 0,
+            'b': 0,
+            't': 0,
+        },
         # scene docs are at https://plot.ly/python/reference/#layout-scene
-        scene=dict(
-            xaxis=dict(
-                rangemode='tozero',
-                title=scoreTypeX,
-                titlefont=axisFont,
-            ),
-            yaxis=dict(
-                range=[0.0, zScoreLimit],
-                title=scoreTypeY,
-                titlefont=axisFont,
-            ),
-            zaxis=dict(
-                range=[0.0, 1.0],
-                title=scoreTypeZ,
-                titlefont=axisFont,
-            ),
-        ),
+        scene={
+            'xaxis': {
+                'rangemode': 'tozero',
+                'title': scoreTypeX,
+                'titlefont': axisFont,
+            },
+            'yaxis': {
+                'range': [0.0, zScoreLimit],
+                'title': scoreTypeY,
+                'titlefont': axisFont,
+            },
+            'zaxis': {
+                'range': [0.0, 1.0],
+                'title': scoreTypeZ,
+                'titlefont': axisFont,
+            },
+        },
     )
 
     fig = go.Figure(data=data, layout=layout)

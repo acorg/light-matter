@@ -4,11 +4,10 @@ from six.moves import input
 from light.performance import testArgs
 from light.performance.affinity import AffinityMatrices, getScore
 from light.performance.graphics import plot, plot3D, plot3DPlotly
-from light.performance.utils import makeOutputDir
+from light.performance.utils import makeOutputDir, pythonNameToPdbName
 from light.performance.data.polymerase import (
     Z_SCORES, BIT_SCORES, QUERIES, SUBJECTS, DATASET)
 from light.performance.test.filesystem import FILESYSTEM_NAME
-
 
 _AFFINITY = AffinityMatrices(QUERIES, SUBJECTS, returnDict=True,
                              returnAnalysis=True)
@@ -166,19 +165,21 @@ class TestBitScoreZScoreLightMatterScore3D(TestCase):
                 zScores = []
                 bitScores = []
                 lmScores = []
+                labels = []
                 for subjectId in BIT_SCORES[queryId]:
                     if queryId != subjectId:
                         bitScores.append(BIT_SCORES[queryId][subjectId])
                         zScores.append(Z_SCORES[queryId][subjectId])
                         lmScore = getScore(affinity, queryId, subjectId)
                         lmScores.append(lmScore)
+                        labels.append(pythonNameToPdbName(subjectId))
                 allZScores.extend(zScores)
                 allBitScores.extend(bitScores)
                 allLmScores.extend(lmScores)
 
                 plot3DPlotly(bitScores, zScores, lmScores, queryId,
                              'Bit score', 'Z score', 'Light matter score',
-                             dirName, testArgs.interactive)
+                             dirName, testArgs.interactive, labels)
 
                 if testArgs.interactive:
                     response = input('Continue? ')

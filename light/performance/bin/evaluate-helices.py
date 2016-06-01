@@ -14,8 +14,8 @@ from light.performance.evaluate import evaluateMatch, evaluateMatchNoPrefix
 
 
 parser = argparse.ArgumentParser(
-    description=('For each helix in the given on stdin, evaluate its true and '
-                 'false positives and print the result to stdout.'))
+    description=('For each helix in the file given on stdin, evaluate its '
+                 'true and false positives and print the result to stdout.'))
 
 parser.add_argument(
     '--pdbFile', help='A filename of the pdb file containing sequences and '

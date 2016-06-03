@@ -1,4 +1,4 @@
-from unittest import TestCase
+from unittest import TestCase, skip
 from six.moves import input
 
 from light.performance import testArgs
@@ -118,6 +118,7 @@ class TestBitScoreZScoreCorrelation(TestCase):
 
 class TestBitScoreZScoreLightMatterScore3D(TestCase):
 
+    @skip('3D scores now implemented via plot.ly')
     def test3Dpolymerase(self):
         """
         Make a 3D plot of BLAST bit scores, Z scores, and light matter scores.
@@ -178,8 +179,8 @@ class TestBitScoreZScoreLightMatterScore3D(TestCase):
                 allLmScores.extend(lmScores)
 
                 plot3DPlotly(bitScores, zScores, lmScores, queryId,
-                             'Bit score', 'Z score', 'Light matter score',
-                             dirName, testArgs.interactive, labels)
+                             dirName, interactive=testArgs.interactive,
+                             labels=labels)
 
                 if testArgs.interactive:
                     response = input('Continue? ')
@@ -188,8 +189,7 @@ class TestBitScoreZScoreLightMatterScore3D(TestCase):
 
             # Plot all scores on one plot.
             plot3DPlotly(allBitScores, allZScores, allLmScores, 'all',
-                         'Bit score', 'Z score', 'Light matter score',
-                         dirName, testArgs.interactive)
+                         dirName, interactive=testArgs.interactive)
 
             if testArgs.interactive:
                 response = input('Continue? ')

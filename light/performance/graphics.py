@@ -8,6 +8,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
+import plotly
+import plotly.graph_objs as go
+
 from light.performance.utils import pythonNameToPdbName
 
 # Keep pyflakes quiet by pretending to use Axes3D.
@@ -203,3 +206,192 @@ def plot3D(x, y, z, readId, scoreTypeX, scoreTypeY, scoreTypeZ,
     if interactive:
         plt.show()
     plt.close()
+
+
+def plot3DPlotly(bitScores, zScores, lmScores, readId, dirName,
+                 scoreTypeX='Bit score', scoreTypeY='Z score',
+                 scoreTypeZ='Light matter score', interactive=False,
+                 labels=''):
+    """
+    Make a 3D plot of the test results using Plotly.
+
+    @param bitScores: a C{list} of C{float} bit scores for the X axis.
+    @param zScores: a C{list} of C{float} Z scores for the Y axis.
+    @param lmScores: a C{list} of C{float} light matter scores for the Z axis.
+    @param readId: The C{str} id of the read whose values are being plotted.
+    @param dirName: A C{str} name of the output directory in which to store
+        the plot image. The image will be saved to dirName + readId + '.png'
+    @param scoreTypeX: A C{str} X-axis title indicating the type of score.
+    @param scoreTypeY: A C{str} Y-axis title indicating the type of score.
+    @param scoreTypeZ: A C{str} Z-axis title indicating the type of score.
+    @param interactive: If C{True} use plt.show() to display interactive plots
+        that the user will need to manually dismiss.
+    @param labels: A C{list} of C{str} labels for the points in the plot. If
+        a C{str} is passed, that will be used as the label for all points.
+    @raises AssertionError: If the length of C{bitScores} is not the same as
+        the length of C{zScores} and the length of C{lmScores}.
+    """
+    assert len(bitScores) == len(zScores) == len(lmScores)
+
+    # Values less than these cutoffs are considered bad, values bigger are
+    # good. Planes will be drawn to separate each axis into good/bad
+    # points (assuming there are any good points in a given dimension).
+    bitScoreCutoff = 50.0
+    zScoreCutoff = 20.0
+    lmScoreCutoff = 0.5
+
+    # There's no limit on how high a bit score could be and because their
+    # range can be so great it's not practical to have a fixed upper limit
+    # for the X axis upper limit (otherwise the plots look weird when no
+    # bit scores approach that high upper limit). So we set an artificial
+    # max possible bit score based on the values we received and the bit
+    # score cut-off value used to display the good/bad bit score plane.
+    maxPossibleBitScore = max(max(bitScores), (bitScoreCutoff + 5))
+    maxPossibleZScore = 65.0
+    maxPossibleLmScore = 1.0
+
+    # All the Z scores we've observed so far are less than 65. We set a
+    # fixed upper limit above so all graphs produced will have the same Y
+    # axis upper limit.
+    if zScores:
+        assert max(zScores) <= maxPossibleZScore
+
+    minPossibleBitScore = minPossibleZScore = minPossibleLmScore = 0.0
+
+    # cutoffStringToColor converts a binary string of length 3 to a color.
+    # The positions in the string represent bad/good (0/1) values for bit
+    # score, Z score, light matter score according to the bad/good cutoff
+    # values above. From best to worst: yellow, green, black, blue, red.
+    # Blue isn't bad, it just indicates that two sequences are similar but
+    # that they have no common structure (they may have no structure at
+    # all).
+    cutoffStringToColor = {
+        '000': 'green',   # OK - no conflict.
+        '001': 'red',     # Really bad - lm disagrees with both other scores.
+        '010': 'black',   # Quite bad - Lm disagrees with Z score.
+        '011': 'yellow',  # Good - bit score low, structure scores both high.
+        '100': 'blue',    # Weird - bit score is the only one that's high.
+        '101': 'black',   # Quite bad - Lm disagrees with Z score.
+        '110': 'red',     # Really bad - lm disagrees with both other scores.
+        '111': 'green',   # OK - no conflict.
+    }
+
+    # Assign each (bit score, Z score, light matter score) triple a color.
+    colors = []
+    for bitScore, zScore, lmScore in zip(bitScores, zScores, lmScores):
+        key = (('1' if bitScore > bitScoreCutoff else '0') +
+               ('1' if zScore > zScoreCutoff else '0') +
+               ('1' if lmScore > lmScoreCutoff else '0'))
+        colors.append(cutoffStringToColor[key])
+
+    # Plot the score triples.
+    data = [
+        go.Scatter3d(
+            x=bitScores,
+            y=zScores,
+            z=lmScores,
+            mode='markers',
+            name='Scores',
+            marker={
+                'size': 9,
+                'color': colors,
+                'opacity': 0.45,
+            },
+            text=labels,
+        )
+    ]
+
+    # The alpha value for the good/bad cut-off planes.
+    planeAlpha = 0.1
+
+    planeLine = {
+        'color': 'black',
+        'width': 1,
+    }
+
+    # Bit score (x) good/bad plane.
+    data.append(
+        go.Scatter3d(
+            x=[bitScoreCutoff] * 5,
+            y=[minPossibleZScore, maxPossibleZScore, maxPossibleZScore,
+               minPossibleZScore, minPossibleZScore],
+            z=[maxPossibleLmScore, maxPossibleLmScore, minPossibleLmScore,
+               minPossibleLmScore, maxPossibleLmScore],
+            mode='lines',
+            name=scoreTypeX + ' plane',
+            surfaceaxis=0,
+            surfacecolor='blue',
+            opacity=planeAlpha,
+            hoverinfo='none',
+            line=planeLine))
+
+    # Z score (y) good/bad plane.
+    data.append(
+        go.Scatter3d(
+            x=[minPossibleBitScore, maxPossibleBitScore,
+               maxPossibleBitScore, minPossibleBitScore,
+               minPossibleBitScore],
+            y=[zScoreCutoff] * 5,
+            z=[maxPossibleLmScore, maxPossibleLmScore, minPossibleZScore,
+               minPossibleZScore, maxPossibleLmScore],
+            mode='lines',
+            name=scoreTypeY + ' plane',
+            surfaceaxis=1,
+            surfacecolor='green',
+            opacity=planeAlpha,
+            hoverinfo='none',
+            line=planeLine))
+
+    # LM score (z) good/bad plane.
+    data.append(
+        go.Scatter3d(
+            x=[minPossibleBitScore, maxPossibleBitScore,
+               maxPossibleBitScore, minPossibleBitScore,
+               minPossibleBitScore],
+            y=[maxPossibleZScore, maxPossibleZScore, minPossibleZScore,
+               minPossibleZScore, maxPossibleZScore],
+            z=[lmScoreCutoff] * 5,
+            mode='lines',
+            name=scoreTypeZ + ' plane',
+            surfaceaxis=2,
+            surfacecolor='purple',
+            opacity=planeAlpha,
+            hoverinfo='none',
+            line=planeLine))
+
+    axisFont = {
+        'size': 16,
+    }
+
+    layout = go.Layout(
+        title=pythonNameToPdbName(readId),
+        margin={
+            'l': 0,
+            'r': 0,
+            'b': 0,
+            't': 50,
+            'pad': 5,
+        },
+        scene={
+            'xaxis': {
+                'range': [minPossibleBitScore, maxPossibleBitScore],
+                'title': scoreTypeX,
+                'titlefont': axisFont,
+            },
+            'yaxis': {
+                'range': [minPossibleZScore, maxPossibleZScore],
+                'title': scoreTypeY,
+                'titlefont': axisFont,
+            },
+            'zaxis': {
+                'range': [minPossibleLmScore, maxPossibleLmScore],
+                'title': scoreTypeZ,
+                'titlefont': axisFont,
+            },
+        },
+    )
+
+    fig = go.Figure(data=data, layout=layout)
+    filename = join(dirName, '%s.html' % readId)
+    plotly.offline.plot(fig, show_link=False, filename=filename,
+                        auto_open=interactive)

@@ -1,9 +1,9 @@
-from unittest import TestCase
+from unittest import TestCase, skip
 
 from light.performance import testArgs
 from light.performance.affinity import AffinityMatrices, getScore
-from light.performance.graphics import plot, plot3D
-from light.performance.utils import makeOutputDir
+from light.performance.graphics import plot, plot3D, plot3DPlotly
+from light.performance.utils import makeOutputDir, pythonNameToPdbName
 from light.performance.data.pdb_4mtp_a import (
     Z_SCORES, BIT_SCORES, QUERIES, SUBJECTS, DATASET)
 from light.performance.test.filesystem import FILESYSTEM_NAME
@@ -15,7 +15,7 @@ _AFFINITY = AffinityMatrices(QUERIES, SUBJECTS, symmetric=False,
 
 class TestLightMatterZScoreCorrelation(TestCase):
 
-    def testPlotsMTP(self):
+    def testPlots4MTP(self):
         """
         Examine the correlation between our scores and Z scores.
         """
@@ -43,7 +43,7 @@ class TestLightMatterZScoreCorrelation(TestCase):
 
 class TestLightMatterBitScoreCorrelation(TestCase):
 
-    def testPlotsMTP(self):
+    def testPlots4MTP(self):
         """
         Examine the correlation between our scores and blast bit scores.
         """
@@ -71,7 +71,7 @@ class TestLightMatterBitScoreCorrelation(TestCase):
 
 class TestBitScoreZScoreCorrelation(TestCase):
 
-    def testPlotsMTP(self):
+    def testPlots4MTP(self):
         """
         Examine the correlation between Z scores and blast bit scores.
         """
@@ -97,7 +97,8 @@ class TestBitScoreZScoreCorrelation(TestCase):
 
 class TestBitScoreZScoreLightMatterScore3D(TestCase):
 
-    def testPlotsMTP3D(self):
+    @skip('3D scores now implemented via plot.ly')
+    def testPlots4MTP3D(self):
         """
         Make a 3D plot of BLAST bit scores, Z scores, and light matter scores.
         """
@@ -117,3 +118,26 @@ class TestBitScoreZScoreLightMatterScore3D(TestCase):
                 plot3D(bitScores, zScores, lmScores, subject.id,
                        'Bit score', 'Z score', 'Light matter score',
                        dirName, testArgs.interactive)
+
+    def testPlots4MTP3DPlotly(self):
+        """
+        Make a 3D plot of BLAST bit scores, Z scores, and light matter scores.
+        """
+        for parameterSet in testArgs.parameterSets:
+            affinity = _AFFINITY[parameterSet]
+            dirName = makeOutputDir(DATASET, parameterSet, '3d')
+            for subject in SUBJECTS:
+                zScores = []
+                bitScores = []
+                lmScores = []
+                labels = []
+                for query in QUERIES:
+                    if query.id != subject.id:
+                        bitScores.append(BIT_SCORES[query.id][subject.id])
+                        zScores.append(Z_SCORES[query.id][subject.id])
+                        lmScore = getScore(affinity, query.id, subject.id)
+                        lmScores.append(lmScore)
+                        labels.append(pythonNameToPdbName(query.id))
+                plot3DPlotly(bitScores, zScores, lmScores, subject.id,
+                             dirName, interactive=testArgs.interactive,
+                             labels=labels)

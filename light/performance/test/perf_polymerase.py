@@ -1,13 +1,13 @@
-from unittest import TestCase
+from unittest import TestCase, skip
+from six.moves import input
 
 from light.performance import testArgs
 from light.performance.affinity import AffinityMatrices, getScore
-from light.performance.graphics import plot, plot3D
-from light.performance.utils import makeOutputDir
+from light.performance.graphics import plot, plot3D, plot3DPlotly
+from light.performance.utils import makeOutputDir, pythonNameToPdbName
 from light.performance.data.polymerase import (
     Z_SCORES, BIT_SCORES, QUERIES, SUBJECTS, DATASET)
 from light.performance.test.filesystem import FILESYSTEM_NAME
-
 
 _AFFINITY = AffinityMatrices(QUERIES, SUBJECTS, returnDict=True,
                              returnAnalysis=True)
@@ -118,6 +118,7 @@ class TestBitScoreZScoreCorrelation(TestCase):
 
 class TestBitScoreZScoreLightMatterScore3D(TestCase):
 
+    @skip('3D scores now implemented via plot.ly')
     def test3Dpolymerase(self):
         """
         Make a 3D plot of BLAST bit scores, Z scores, and light matter scores.
@@ -150,3 +151,47 @@ class TestBitScoreZScoreLightMatterScore3D(TestCase):
             plot3D(allBitScores, allZScores, allLmScores, 'all',
                    'Bit score', 'Z score', 'Light matter score',
                    dirName, testArgs.interactive)
+
+    def test3DPolymerasePlotly(self):
+        """
+        Make a 3D plot of BLAST bit scores, Z scores, and light matter scores.
+        """
+        for parameterSet in testArgs.parameterSets:
+            affinity = _AFFINITY[parameterSet]
+            dirName = makeOutputDir(DATASET, parameterSet, '3d-plotly')
+            allZScores = []
+            allBitScores = []
+            allLmScores = []
+            for queryId in sorted(BIT_SCORES):
+                zScores = []
+                bitScores = []
+                lmScores = []
+                labels = []
+                for subjectId in BIT_SCORES[queryId]:
+                    if queryId != subjectId:
+                        bitScores.append(BIT_SCORES[queryId][subjectId])
+                        zScores.append(Z_SCORES[queryId][subjectId])
+                        lmScore = getScore(affinity, queryId, subjectId)
+                        lmScores.append(lmScore)
+                        labels.append(pythonNameToPdbName(subjectId))
+                allZScores.extend(zScores)
+                allBitScores.extend(bitScores)
+                allLmScores.extend(lmScores)
+
+                plot3DPlotly(bitScores, zScores, lmScores, queryId,
+                             dirName, interactive=testArgs.interactive,
+                             labels=labels)
+
+                if testArgs.interactive:
+                    response = input('Continue? ')
+                    if response and response[0].lower() == 'n':
+                        return
+
+            # Plot all scores on one plot.
+            plot3DPlotly(allBitScores, allZScores, allLmScores, 'all',
+                         dirName, interactive=testArgs.interactive)
+
+            if testArgs.interactive:
+                response = input('Continue? ')
+                if response and response[0].lower() == 'n':
+                    return

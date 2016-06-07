@@ -233,11 +233,20 @@ def plot3DPlotly(bitScores, zScores, lmScores, readId, dirName,
     """
     assert len(bitScores) == len(zScores) == len(lmScores)
 
+    # Values less than these cutoffs are considered bad, values bigger are
+    # good. Planes will be drawn to separate each axis into good/bad
+    # points (assuming there are any good points in a given dimension).
+    bitScoreCutoff = 50.0
+    zScoreCutoff = 20.0
+    lmScoreCutoff = 0.5
+
     # There's no limit on how high a bit score could be and because their
     # range can be so great it's not practical to have a fixed upper limit
     # for the X axis upper limit (otherwise the plots look weird when no
-    # bit scores approach that high upper limit).
-    maxPossibleBitScore = max(bitScores)
+    # bit scores approach that high upper limit). So we set an artificial
+    # max possible bit score based on the values we received and the bit
+    # score cut-off value used to display the good/bad bit score plane.
+    maxPossibleBitScore = max(max(bitScores), (bitScoreCutoff + 5))
     maxPossibleZScore = 65.0
     maxPossibleLmScore = 1.0
 
@@ -248,17 +257,6 @@ def plot3DPlotly(bitScores, zScores, lmScores, readId, dirName,
         assert max(zScores) <= maxPossibleZScore
 
     minPossibleBitScore = minPossibleZScore = minPossibleLmScore = 0.0
-
-    maxBitScore = max(bitScores)
-    maxZScore = max(zScores)
-    maxLmScore = max(lmScores)
-
-    # Values less than these cutoffs are considered bad, values bigger are
-    # good. Planes will be drawn to separate each axis into good/bad
-    # points (assuming there are any good points in a given dimension).
-    bitScoreCutoff = 50.0
-    zScoreCutoff = 20.0
-    lmScoreCutoff = 0.5
 
     # cutoffStringToColor converts a binary string of length 3 to a color.
     # The positions in the string represent bad/good (0/1) values for bit
@@ -297,7 +295,7 @@ def plot3DPlotly(bitScores, zScores, lmScores, readId, dirName,
             marker={
                 'size': 9,
                 'color': colors,
-                'opacity': 0.8,
+                'opacity': 0.45,
             },
             text=labels,
         )
@@ -312,57 +310,54 @@ def plot3DPlotly(bitScores, zScores, lmScores, readId, dirName,
     }
 
     # Bit score (x) good/bad plane.
-    if maxBitScore >= bitScoreCutoff:
-        data.append(
-            go.Scatter3d(
-                x=[bitScoreCutoff] * 5,
-                y=[minPossibleZScore, maxPossibleZScore, maxPossibleZScore,
-                   minPossibleZScore, minPossibleZScore],
-                z=[maxPossibleLmScore, maxPossibleLmScore, minPossibleLmScore,
-                   minPossibleLmScore, maxPossibleLmScore],
-                mode='lines',
-                name=scoreTypeX + ' plane',
-                surfaceaxis=0,
-                surfacecolor='blue',
-                opacity=planeAlpha,
-                hoverinfo='none',
-                line=planeLine))
+    data.append(
+        go.Scatter3d(
+            x=[bitScoreCutoff] * 5,
+            y=[minPossibleZScore, maxPossibleZScore, maxPossibleZScore,
+               minPossibleZScore, minPossibleZScore],
+            z=[maxPossibleLmScore, maxPossibleLmScore, minPossibleLmScore,
+               minPossibleLmScore, maxPossibleLmScore],
+            mode='lines',
+            name=scoreTypeX + ' plane',
+            surfaceaxis=0,
+            surfacecolor='blue',
+            opacity=planeAlpha,
+            hoverinfo='none',
+            line=planeLine))
 
     # Z score (y) good/bad plane.
-    if maxZScore >= zScoreCutoff:
-        data.append(
-            go.Scatter3d(
-                x=[minPossibleBitScore, maxPossibleBitScore,
-                   maxPossibleBitScore, minPossibleBitScore,
-                   minPossibleBitScore],
-                y=[zScoreCutoff] * 5,
-                z=[maxPossibleLmScore, maxPossibleLmScore, minPossibleZScore,
-                   minPossibleZScore, maxPossibleLmScore],
-                mode='lines',
-                name=scoreTypeY + ' plane',
-                surfaceaxis=1,
-                surfacecolor='green',
-                opacity=planeAlpha,
-                hoverinfo='none',
-                line=planeLine))
+    data.append(
+        go.Scatter3d(
+            x=[minPossibleBitScore, maxPossibleBitScore,
+               maxPossibleBitScore, minPossibleBitScore,
+               minPossibleBitScore],
+            y=[zScoreCutoff] * 5,
+            z=[maxPossibleLmScore, maxPossibleLmScore, minPossibleZScore,
+               minPossibleZScore, maxPossibleLmScore],
+            mode='lines',
+            name=scoreTypeY + ' plane',
+            surfaceaxis=1,
+            surfacecolor='green',
+            opacity=planeAlpha,
+            hoverinfo='none',
+            line=planeLine))
 
     # LM score (z) good/bad plane.
-    if maxLmScore >= lmScoreCutoff:
-        data.append(
-            go.Scatter3d(
-                x=[minPossibleBitScore, maxPossibleBitScore,
-                   maxPossibleBitScore, minPossibleBitScore,
-                   minPossibleBitScore],
-                y=[maxPossibleZScore, maxPossibleZScore, minPossibleZScore,
-                   minPossibleZScore, maxPossibleZScore],
-                z=[lmScoreCutoff] * 5,
-                mode='lines',
-                name=scoreTypeZ + ' plane',
-                surfaceaxis=2,
-                surfacecolor='purple',
-                opacity=planeAlpha,
-                hoverinfo='none',
-                line=planeLine))
+    data.append(
+        go.Scatter3d(
+            x=[minPossibleBitScore, maxPossibleBitScore,
+               maxPossibleBitScore, minPossibleBitScore,
+               minPossibleBitScore],
+            y=[maxPossibleZScore, maxPossibleZScore, minPossibleZScore,
+               minPossibleZScore, maxPossibleZScore],
+            z=[lmScoreCutoff] * 5,
+            mode='lines',
+            name=scoreTypeZ + ' plane',
+            surfaceaxis=2,
+            surfacecolor='purple',
+            opacity=planeAlpha,
+            hoverinfo='none',
+            line=planeLine))
 
     axisFont = {
         'size': 16,
@@ -370,9 +365,6 @@ def plot3DPlotly(bitScores, zScores, lmScores, readId, dirName,
 
     layout = go.Layout(
         title=pythonNameToPdbName(readId),
-        # width=800,
-        # height=800,
-        # autosize=False,
         margin={
             'l': 0,
             'r': 0,
@@ -382,7 +374,7 @@ def plot3DPlotly(bitScores, zScores, lmScores, readId, dirName,
         },
         scene={
             'xaxis': {
-                'range': [minPossibleBitScore, maxBitScore],
+                'range': [minPossibleBitScore, maxPossibleBitScore],
                 'title': scoreTypeX,
                 'titlefont': axisFont,
             },

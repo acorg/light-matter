@@ -202,12 +202,6 @@ def selectSubstringsForAhoCorasick(alphaHelixInfo, minTruePositives=0,
         If -1, no limit is applied.
     @raise ValueError: If a substring occurs more than once in
         C{alphaHelixInfo}.
-    @return: A 3-C{tuple} consisting of a C{dict}, the C{int} number of
-        substrings that did not have a high enough true positive count, and the
-        C{int} number of substrings that did not have a high enough true
-        positives to overall (true + false) positives fraction. The C{dict} has
-        C{str} substring keys and (true positive, false positive, fraction)
-        (C{int}, C{int}, C{float}) values.
     @return: A C{dict}, with C{str} keys as follows:
         fractionTooLow: The C{int} number of substrings whose true positive
             fraction was below the threshold given by

@@ -1,3 +1,4 @@
+import six
 from dark.aa import PROPERTY_CLUSTERS
 
 from light.landmarks import THAlphaHelix
@@ -178,4 +179,135 @@ def analyzeAlphaHelices(reads):
         'consecutivePeaks': consecutivePeaks,
         'consecutiveTroughs': consecutiveTroughs,
         'noExtremaLength': noExtremaLength,
+    }
+
+
+def selectSubstringsForAhoCorasick(alphaHelixInfo, minTruePositives=0,
+                                   minTruePositiveFraction=0.0,
+                                   maxSubstrings=-1):
+    """
+    Select alpha helix substrings for use in the Aho Corasick finder.
+
+    @param alphaHelixInfo: An iterable of C{str}s, each having three
+        space-separated fields: an alpha helix substring, the integer true
+        positive count, and the integer false positive count.
+    @param minTruePositives: The C{int} minimum number of true positives a
+        substring must have to be considered.
+    @param minTruePositiveFraction: The minimum ratio of true positives to
+        overall (true + false) positives a substring must have to be
+        considered.
+    @param maxSubstrings: An C{int} limit on the number of substrings returned.
+        If -1, no limit is applied.
+    @raise ValueError: If a substring occurs more than once in
+        C{alphaHelixInfo}.
+    @return: A 3-C{tuple} consisting of a C{dict}, the C{int} number of
+        substrings that did not have a high enough true positive count, and the
+        C{int} number of substrings that did not have a high enough true
+        positives to overall (true + false) positives fraction. The C{dict} has
+        C{str} substring keys and (true positive, false positive, fraction)
+        (C{int}, C{int}, C{float}) values.
+    @return: A C{dict}, with C{str} keys as follows:
+        fractionTooLow: The C{int} number of substrings whose true positive
+            fraction was below the threshold given by
+            C{minTruePositiveFraction}.
+        inferior: The C{int} number of substrings that were discarded because
+            they had a subsubstring whose true positive fraction was better.
+        inputCount: The C{int} number of substrings given in
+            C{alphaHelixInfo}.
+        notEnoughTruePositives: The C{int} number of substrings whose true
+            positive count was below the threshold given by
+            C{minTruePositives}.
+        substrings: A C{list} of (substring, (truePositives, falsePositives,
+            fraction)) tuples. The tuples are sorted on true positive fraction
+            (decreasing), then on substring length (increasing), and then on
+            the substring itself (increasing).
+    """
+    substrings = {}
+    inputCount = notEnoughTruePositives = fractionTooLow = inferior = 0
+
+    for line in alphaHelixInfo:
+        inputCount += 1
+        (substring, truePositives, falsePositives) = line.split()
+        if substring in substrings:
+            raise ValueError('Substring %r found multiple times' % substring)
+        truePositives = int(truePositives)
+        if truePositives < minTruePositives:
+            notEnoughTruePositives += 1
+            continue
+        falsePositives = int(falsePositives)
+        fraction = truePositives / (truePositives + falsePositives)
+        if fraction < minTruePositiveFraction:
+            fractionTooLow += 1
+            continue
+        substrings[substring] = (truePositives, falsePositives, fraction)
+
+    minLength = min(len(s) for s in substrings) if substrings else 0
+
+    def getSubstrings(s, minLength):
+        """
+        Generate all substrings of a string, from longest to shortest.
+
+        @param s: A C{str}.
+        @param minLength: The C{int} minimal length substring to return.
+        @return: A generator that yields C{str} substrings.
+        """
+        length = len(s)
+        for substringLength in reversed(range(minLength, length)):
+            numberOfSubstrings = length - substringLength + 1
+            for offset in range(numberOfSubstrings):
+                yield s[offset:offset + substringLength]
+
+    # Reduce the substring set. We do this by examining substrings in turn.
+    # For a given substring, if the first prefix (in order of decreasing
+    # length) of the substring that was seen has the same true and false
+    # positive counts, we discard the substring. If no prefix is known, we
+    # keep the substring.
+    reducedSubstrings = []
+    for substring, counts in six.iteritems(substrings):
+        fraction = counts[2]
+        for subsubstring in getSubstrings(substring, minLength):
+            if subsubstring in substrings:
+                if fraction <= substrings[subsubstring][2]:
+                    # No need to keep this substring as its true positive
+                    # fraction is no better than (at least) one of its
+                    # substrings.
+                    inferior += 1
+                    break
+        else:
+            # No subsubstring was better. Keep this substring.
+            reducedSubstrings.append((substring, counts))
+
+    def lengthThenSubstringKey(item):
+        """
+        Return a tuple of a substring's length and the substring.
+
+        @param item: A 2-tuple of
+            (substring, (truePositives, falsePositives, fraction)).
+        @return: A 2-C{tuple} of the substring length and the substring.
+        """
+        substring = item[0]
+        return len(substring), substring
+
+    def fractionKey(item):
+        """
+        Return a substring's true positive fraction.
+
+        @param item: A 2-tuple of
+            (substring, (truePositives, falsePositives, fraction)).
+        @return: The C{float} substring true positive fraction.
+        """
+        return item[1][2]
+
+    reducedSubstrings.sort(key=lengthThenSubstringKey)
+    reducedSubstrings.sort(key=fractionKey, reverse=True)
+
+    if maxSubstrings > -1:
+        reducedSubstrings = reducedSubstrings[:maxSubstrings]
+
+    return {
+        'fractionTooLow': fractionTooLow,
+        'inferior': inferior,
+        'inputCount': inputCount,
+        'notEnoughTruePositives': notEnoughTruePositives,
+        'substrings': reducedSubstrings,
     }

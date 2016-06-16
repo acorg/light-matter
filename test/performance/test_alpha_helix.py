@@ -1,8 +1,9 @@
+import six
 from unittest import TestCase
 
 from dark.reads import AARead, Reads
 from light.performance.alpha_helix import (
-    analyzeAlphaHelix, analyzeAlphaHelices)
+    analyzeAlphaHelix, analyzeAlphaHelices, selectSubstringsForAhoCorasick)
 from light.performance.stats import Stats
 
 # In the tests below, 'F' has "peak" hydrophobic, 'R' has "trough"
@@ -318,3 +319,357 @@ class TestAnalyzeAlphaHelices(TestCase):
                 'noExtremaLength': [3],        # id4
             },
             analyzeAlphaHelices(reads))
+
+
+class TestSelectSubstringsForAhoCorasick(TestCase):
+    """
+    Tests for the selectSubstringsForAhoCorasick function.
+    """
+    def testRepeatedSubstring(self):
+        """
+        If the passed substrings include a duplicate, a ValueError must
+        be raised.
+        """
+        error = "^Substring 'abc' found multiple times$"
+        six.assertRaisesRegex(self, ValueError, error,
+                              selectSubstringsForAhoCorasick,
+                              ['abc 1 0', 'abc 1 0'])
+
+    def testEmpty(self):
+        """
+        If no substrings are passed, the resulting substrings list must be
+        empty and the counts must be zero.
+        """
+        self.assertEqual(
+            {
+                'fractionTooLow': 0,
+                'inferior': 0,
+                'inputCount': 0,
+                'notEnoughTruePositives': 0,
+                'substrings': [],
+            },
+            selectSubstringsForAhoCorasick([]))
+
+    def testAllowAll(self):
+        """
+        If there is no restriction on number or fraction of true positives
+        all substrings must be returned.
+        """
+        self.assertEqual(
+            {
+                'fractionTooLow': 0,
+                'inferior': 0,
+                'inputCount': 2,
+                'notEnoughTruePositives': 0,
+                'substrings': [
+                    ('abc', (21, 21, 0.5)),
+                    ('def', (20, 80, 0.2)),
+                ],
+            },
+            selectSubstringsForAhoCorasick(
+                [
+                    'abc 21 21',
+                    'def 20 80',
+                ]
+            )
+        )
+
+    def testTruePositiveCount(self):
+        """
+        If there is a restriction on the number of true positives
+        the expected result must be returned.
+        """
+        self.assertEqual(
+            {
+                'fractionTooLow': 0,
+                'inferior': 0,
+                'inputCount': 3,
+                'notEnoughTruePositives': 2,
+                'substrings': [
+                    ('abc', (21, 21, 0.5)),
+                ],
+            },
+            selectSubstringsForAhoCorasick(
+                [
+                    'abc 21 21',
+                    'def 20 80',
+                    'ghi 10 80',
+                ],
+                minTruePositives=21
+            )
+        )
+
+    def testTruePositiveFraction(self):
+        """
+        If there is a restriction on the fraction of true positives
+        the expected result must be returned.
+        """
+        self.assertEqual(
+            {
+                'fractionTooLow': 2,
+                'inferior': 0,
+                'inputCount': 3,
+                'notEnoughTruePositives': 0,
+                'substrings': [
+                    ('abc', (21, 21, 0.5)),
+                ],
+            },
+            selectSubstringsForAhoCorasick(
+                [
+                    'abc 21 21',
+                    'def 20 80',
+                    'ghi 10 80',
+                ],
+                minTruePositiveFraction=0.3
+            )
+        )
+
+    def testTruePositiveCountAndFraction(self):
+        """
+        If there is a restriction on both the number and fraction of true
+        positives the expected result must be returned.
+        """
+        self.assertEqual(
+            {
+                'fractionTooLow': 1,
+                'inferior': 0,
+                'inputCount': 4,
+                'notEnoughTruePositives': 2,
+                'substrings': [
+                    ('jkl', (30, 10, 0.75)),
+                ],
+            },
+            selectSubstringsForAhoCorasick(
+                [
+                    'abc 21 21',
+                    'def 20 80',
+                    'ghi 10 80',
+                    'jkl 30 10',
+                ],
+                minTruePositives=21, minTruePositiveFraction=0.7
+            )
+        )
+
+    def testIdenticalFractionSubstringOneShorter(self):
+        """
+        If a substring's true positive fraction is the same as that of a
+        subsubstring (that is one character shorter than the substring), the
+        substring should not appear in the results.
+        """
+        self.assertEqual(
+            {
+                'fractionTooLow': 0,
+                'inferior': 1,
+                'inputCount': 2,
+                'notEnoughTruePositives': 0,
+                'substrings': [
+                    ('abc', (21, 21, 0.5)),
+                ],
+            },
+            selectSubstringsForAhoCorasick(
+                [
+                    'abc 21 21',
+                    'abcd 21 21',
+                ]
+            )
+        )
+
+    def testIdenticalFractionSubstringTwoShorter(self):
+        """
+        If a substring's true positive fraction is the same as that of a
+        subsubstring (that is two characters shorter than the substring), the
+        substring should not appear in the results.
+        """
+        self.assertEqual(
+            {
+                'fractionTooLow': 0,
+                'inferior': 1,
+                'inputCount': 2,
+                'notEnoughTruePositives': 0,
+                'substrings': [
+                    ('abc', (21, 21, 0.5)),
+                ],
+            },
+            selectSubstringsForAhoCorasick(
+                [
+                    'abc 21 21',
+                    'abcde 21 21',
+                ]
+            )
+        )
+
+    def testManyIdenticalCountPrefixes(self):
+        """
+        If many substrings' true positive fractions are the same as their
+        subsubstrings (that are one character shorter), none of the longer
+        substrings should appear in the results.
+        """
+        self.assertEqual(
+            {
+                'fractionTooLow': 0,
+                'inferior': 5,
+                'inputCount': 7,
+                'notEnoughTruePositives': 0,
+                'substrings': [
+                    ('abc', (21, 21, 0.5)),
+                    ('d', (10, 40, 0.2)),
+                ],
+            },
+            selectSubstringsForAhoCorasick(
+                [
+                    'd 10 40',
+                    'abc 21 21',
+                    'abcd 21 21',
+                    'abcde 21 21',
+                    'abcdef 21 21',
+                    'abcdefg 21 21',
+                    'abcdefgh 21 21',
+                ]
+            )
+        )
+
+    def testNonIdenticalFractionSubstringOneShorter(self):
+        """
+        If a substring's true positive fraction is better than that of one of
+        its substrings (that is one character shorter than the substring),
+        the substring should appear in the results.
+        """
+        self.assertEqual(
+            {
+                'fractionTooLow': 0,
+                'inferior': 0,
+                'inputCount': 2,
+                'notEnoughTruePositives': 0,
+                'substrings': [
+                    ('abcd', (21, 21, 0.5)),
+                    ('abc', (20, 60, 0.25)),
+                ],
+            },
+            selectSubstringsForAhoCorasick(
+                [
+                    'abc 20 60',
+                    'abcd 21 21',
+                ]
+            )
+        )
+
+    def testNonIdenticalFractionSubstringTwoShorter(self):
+        """
+        If a substring's true positive fraction is better than that of one of
+        its substrings (that is two characters shorter than the substring),
+        the substring should appear in the results.
+        """
+        self.assertEqual(
+            {
+                'fractionTooLow': 0,
+                'inferior': 0,
+                'inputCount': 2,
+                'notEnoughTruePositives': 0,
+                'substrings': [
+                    ('abcde', (21, 21, 0.5)),
+                    ('abc', (20, 60, 0.25)),
+                ],
+            },
+            selectSubstringsForAhoCorasick(
+                [
+                    'abc 20 60',
+                    'abcde 21 21',
+                ]
+            )
+        )
+
+    def testSort(self):
+        """
+        Returned substrings must be sorted on true positive fraction
+        (decreasing), length (increasing), and then alphabetically
+        (increasing).
+        """
+        self.assertEqual(
+            {
+                'fractionTooLow': 0,
+                'inferior': 0,
+                'inputCount': 8,
+                'notEnoughTruePositives': 0,
+                'substrings': [
+                    ('best', (10, 0, 1.0)),
+                    ('abc', (20, 20, 0.5)),
+                    ('defg', (20, 60, 0.25)),
+                    ('hijkl', (20, 60, 0.25)),
+                    ('m12345', (20, 60, 0.25)),
+                    ('mnopqr', (20, 60, 0.25)),
+                    ('stuvwx', (20, 60, 0.25)),
+                    ('worst', (1, 9, 0.1)),
+                ],
+            },
+            selectSubstringsForAhoCorasick(
+                [
+                    'abc 20 20',
+                    'hijkl 20 60',
+                    'defg 20 60',
+                    'worst 1 9',
+                    'best 10 0',
+                    'stuvwx 20 60',
+                    'mnopqr 20 60',
+                    'm12345 20 60',
+                ]
+            )
+        )
+
+    def testMaxSubstringsZero(self):
+        """
+        A passed zero maxSubstrings value must be respected.
+        """
+        self.assertEqual(
+            {
+                'fractionTooLow': 0,
+                'inferior': 0,
+                'inputCount': 8,
+                'notEnoughTruePositives': 0,
+                'substrings': [],
+            },
+            selectSubstringsForAhoCorasick(
+                [
+                    'abc 20 20',
+                    'hijkl 20 60',
+                    'defg 20 60',
+                    'worst 1 9',
+                    'best 10 0',
+                    'stuvwx 20 60',
+                    'mnopqr 20 60',
+                    'm12345 20 60',
+                ],
+                maxSubstrings=0
+            )
+        )
+
+    def testMaxSubstringsNonZero(self):
+        """
+        A passed non-zero maxSubstrings value must be respected.
+        """
+        self.assertEqual(
+            {
+                'fractionTooLow': 0,
+                'inferior': 0,
+                'inputCount': 8,
+                'notEnoughTruePositives': 0,
+                'substrings': [
+                    ('best', (10, 0, 1.0)),
+                    ('abc', (20, 20, 0.5)),
+                    ('defg', (20, 60, 0.25)),
+                    ('hijkl', (20, 60, 0.25)),
+                ],
+            },
+            selectSubstringsForAhoCorasick(
+                [
+                    'abc 20 20',
+                    'hijkl 20 60',
+                    'defg 20 60',
+                    'worst 1 9',
+                    'best 10 0',
+                    'stuvwx 20 60',
+                    'mnopqr 20 60',
+                    'm12345 20 60',
+                ],
+                maxSubstrings=4
+            )
+        )

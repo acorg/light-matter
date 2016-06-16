@@ -1,3 +1,5 @@
+from __future__ import division
+
 import six
 from dark.aa import PROPERTY_CLUSTERS
 
@@ -247,7 +249,7 @@ def selectSubstringsForAhoCorasick(alphaHelixInfo, minTruePositives=0,
         """
         Generate all substrings of a string, from longest to shortest.
 
-        @param s: A C{str}.
+        @param s: A C{str} string whose substrings are wanted.
         @param minLength: The C{int} minimal length substring to return.
         @return: A generator that yields C{str} substrings.
         """
@@ -258,16 +260,15 @@ def selectSubstringsForAhoCorasick(alphaHelixInfo, minTruePositives=0,
                 yield s[offset:offset + substringLength]
 
     # Reduce the substring set. We do this by examining substrings in turn.
-    # For a given substring, if the first prefix (in order of decreasing
-    # length) of the substring that was seen has the same true and false
-    # positive counts, we discard the substring. If no prefix is known, we
-    # keep the substring.
+    # For a given substring, if any of its substrings (i.e., the
+    # sub-substrings) has an equally good or better (higher) true positive
+    # fraction, we discard the substring. If not, we keep the substring.
     reducedSubstrings = []
     for substring, counts in six.iteritems(substrings):
         fraction = counts[2]
         for subsubstring in getSubstrings(substring, minLength):
             if subsubstring in substrings:
-                if fraction <= substrings[subsubstring][2]:
+                if substrings[subsubstring][2] >= fraction:
                     # No need to keep this substring as its true positive
                     # fraction is no better than (at least) one of its
                     # substrings.
@@ -285,8 +286,7 @@ def selectSubstringsForAhoCorasick(alphaHelixInfo, minTruePositives=0,
             (substring, (truePositives, falsePositives, fraction)).
         @return: A 2-C{tuple} of the substring length and the substring.
         """
-        substring = item[0]
-        return len(substring), substring
+        return len(item[0]), item[0]
 
     def fractionKey(item):
         """

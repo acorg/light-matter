@@ -15,7 +15,7 @@ follows (this assumes you're using `bash` and running in the light matter
 [dark matter](https://github.com/acorg/dark-matter/) `bin` directory in
 your shell's `PATH`)
 
-    $ gzcat ss.txt.gz | clean-pdb-ss-fasta.py | bzip2 > pdb-`date '+%Y-%m-%d'`-ss.txt.bz2
+    $ gzcat ss.txt.gz | clean-pdb-ss-fasta.py | bzip2 > pdb-`date '+%Y%m%d'`-ss.txt.bz2
 
 See the `light/bin/performance/clean-pdb-ss-fasta.py` script for details of
 what's done in the clean up.

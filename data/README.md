@@ -12,7 +12,7 @@ or via this direct link:
 downloaded, clean up the file to be suitable for light matter processing as
 follows (this assumes you're using `bash` and running in the light matter
 `data` directory and that you have the `light/performance/bin` and
-[dark matter](https://github.com/acorg/dark-matter/) `bin` directory in
+the [dark matter](https://github.com/acorg/dark-matter/) `bin` directory in
 your shell's `PATH`)
 
     $ gzcat ss.txt.gz | clean-pdb-ss-fasta.py | bzip2 > pdb-`date '+%Y%m%d'`-ss.txt.bz2
@@ -34,7 +34,7 @@ described. Each line has 3 fields:
 
 This file was created on multiple cores on a cluster, where each core
 processes a subset of the alpha helix substrings. Here's how that was set
-up and run (this assumes you have both the `light/performance/bin` and
+up and run (this assumes you have both the `light/performance/bin` and the
 [dark matter](https://github.com/acorg/dark-matter/) `bin` directories in
 your shell's `PATH` in order for it to find the commands below):
 

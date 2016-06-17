@@ -13,7 +13,7 @@ class TestEvaluateMatch(TestCase):
         The alpha helix matches part of a sequence that's not an alpha helix.
         --> false positive.
         """
-        self.assertFalse(evaluateMatch('GSSSGGGGG', 1, 7))
+        self.assertFalse(evaluateMatch('GSSSGGGGG', 1, 7, 'H'))
 
     def testCase2(self):
         """
@@ -21,7 +21,7 @@ class TestEvaluateMatch(TestCase):
         alpha helix in the sequence doesn't extend to the left or right.
         --> true positive.
         """
-        self.assertTrue(evaluateMatch('SHHHHHHG', 1, 7))
+        self.assertTrue(evaluateMatch('SHHHHHHG', 1, 7, 'H'))
 
     def testCase2ExactMatch(self):
         """
@@ -30,7 +30,7 @@ class TestEvaluateMatch(TestCase):
         --> true positive.
         The helix starts at 0 and matches exactly.
         """
-        self.assertTrue(evaluateMatch('HHH', 0, 3))
+        self.assertTrue(evaluateMatch('HHH', 0, 3, 'H'))
 
     def testCase3(self):
         """
@@ -38,7 +38,7 @@ class TestEvaluateMatch(TestCase):
         alpha helix in the sequence extends to the left.
         --> false positive.
         """
-        self.assertFalse(evaluateMatch('HHHHHHHG', 1, 7))
+        self.assertFalse(evaluateMatch('HHHHHHHG', 1, 7, 'H'))
 
     def testCase4(self):
         """
@@ -46,7 +46,7 @@ class TestEvaluateMatch(TestCase):
         alpha helix in the sequence extends to the right.
         --> true positive.
         """
-        self.assertTrue(evaluateMatch('GHHHHHHH', 1, 7))
+        self.assertTrue(evaluateMatch('GHHHHHHH', 1, 7, 'H'))
 
     def testCase4HelixStartsAt0(self):
         """
@@ -55,7 +55,7 @@ class TestEvaluateMatch(TestCase):
         --> true positive.
         The helix starts at 0 and extends to the right.
         """
-        self.assertTrue(evaluateMatch('HHHHHHHH', 0, 6))
+        self.assertTrue(evaluateMatch('HHHHHHHH', 0, 6, 'H'))
 
     def testHelixExtendsBothSides(self):
         """
@@ -63,7 +63,7 @@ class TestEvaluateMatch(TestCase):
         alpha helix in the sequence extends to both sides.
         --> false positive.
         """
-        self.assertFalse(evaluateMatch('HHHHHHHH', 1, 7))
+        self.assertFalse(evaluateMatch('HHHHHHHH', 1, 7, 'H'))
 
 
 class TestEvaluateMatchNoPrefix(TestCase):
@@ -76,14 +76,14 @@ class TestEvaluateMatchNoPrefix(TestCase):
         The alpha helix matches part of a sequence that's not an alpha helix.
         --> false positive.
         """
-        self.assertFalse(evaluateMatchNoPrefix('GSSSGGGGG', 1, 7))
+        self.assertFalse(evaluateMatchNoPrefix('GSSSGGGGG', 1, 7, 'H'))
 
     def testCase2(self):
         """
         The alpha helix matches part of a sequence that's an alpha helix.
         --> true positive.
         """
-        self.assertTrue(evaluateMatchNoPrefix('SHHHHHHG', 1, 7))
+        self.assertTrue(evaluateMatchNoPrefix('SHHHHHHG', 1, 7, 'H'))
 
     def testCase2ExactMatch(self):
         """
@@ -91,4 +91,4 @@ class TestEvaluateMatchNoPrefix(TestCase):
         --> true positive.
         The helix starts at 0 and matches exactly.
         """
-        self.assertTrue(evaluateMatchNoPrefix('HHH', 0, 3))
+        self.assertTrue(evaluateMatchNoPrefix('HHH', 0, 3, 'H'))

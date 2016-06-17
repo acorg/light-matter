@@ -89,7 +89,7 @@ log                       = job.log
 %(seqsPerJob)d sequences each.
 
 arguments                 = $(Process) %(executableName)s %(pdbFile)s \
-                                       %(evaluateNoPrefix)s
+                                       %(evaluateNoPrefix)s %(structureType)s
 input                     = $(Process).fasta
 output                    = $(Process).done
 error                     = $(Process).error
@@ -128,6 +128,11 @@ if __name__ == '__main__':
         '--evaluate-no-prefix', type=bool, default=True,
         dest='evaluateNoPrefix',
         help='Whether prefixes should not be evaluated.')
+    parser.add_argument(
+        '--structureType', default='H',
+        help=('The type of structure that should be evaluated against. '
+              'H: Alpha helix, G: Alpha helix 3 10, I: Alpha helix pi, I: '
+              'Extended strand.'))
 
     args = parser.parse_args()
 
@@ -142,6 +147,7 @@ if __name__ == '__main__':
         'fastaFile': args.fasta,
         'seqsPerJob': args.seqsPerJob,
         'evaluateNoPrefix': args.evaluateNoPrefix,
+        'structureType': args.structureType,
     }
     params['nJobs'], params['sequenceCount'] = splitFASTA(params)
     printJobSpec(params)

@@ -10,10 +10,11 @@ case $# in
         executableName=$2
         pdbFile=$3
         evaluateNoPrefix=$4
+        structureType=$5
         ;;
 
     *)
-        echo "Usage: `basename $0` jobid executableName pdbFile evaluateNoPrefix" >&2
+        echo "Usage: `basename $0` jobid executableName pdbFile evaluateNoPrefix structureType" >&2
         exit 1
         ;;
 esac
@@ -25,7 +26,8 @@ export PYTHONPATH=$DM/light-matter/:$DM/dark-matter
 errs=$jobid.error
 
 $DM/virtualenv/bin/python $executableName --pdbFile $pdbFile \
---evaluateNoPrefix $evaluateNoPrefix < $jobid.fasta > $jobid.out 2> $errs
+--evaluateNoPrefix $evaluateNoPrefix --structureType $structureType \
+< $jobid.fasta > $jobid.out 2> $errs
 
 if [ -s $errs ]
 then

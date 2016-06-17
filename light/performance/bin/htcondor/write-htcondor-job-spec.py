@@ -129,7 +129,7 @@ if __name__ == '__main__':
         dest='evaluateNoPrefix',
         help='Whether prefixes should not be evaluated.')
     parser.add_argument(
-        '--structureType', default='H',
+        '--structureType', default='H', choices={'H', 'G', 'I', 'E'},
         help=('The type of structure that should be evaluated against. '
               'H: Alpha helix, G: Alpha helix 3 10, I: Alpha helix pi, I: '
               'Extended strand.'))

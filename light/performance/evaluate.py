@@ -18,7 +18,7 @@ def evaluateMatch(structureString, start, end, structureType):
     @param end: An C{int} end of the match.
     @param structureType: A C{str} letter of the structure type that should
         be evaluated. H: Alpha helix, G: Alpha helix 3 10, I: Alpha helix pi,
-        I: Extended strand.
+        E: Extended strand.
 
     @return: C{True} if the match is a true positive and C{False} if the match
         is a false positive.
@@ -44,7 +44,7 @@ def evaluateMatchNoPrefix(structureString, start, end, structureType):
     @param end: An C{int} end of the match.
     @param structureType: A C{str} letter of the structure type that should
         be evaluated. H: Alpha helix, G: Alpha helix 3 10, I: Alpha helix pi,
-        I: Extended strand.
+        E: Extended strand.
 
     @return: C{True} if the match is a true positive and C{False} if the match
         is a false positive.

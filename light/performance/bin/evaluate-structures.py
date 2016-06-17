@@ -29,7 +29,7 @@ parser.add_argument(
 parser.add_argument(
     '--structureType', default='H', choices={'H', 'G', 'I', 'E'},
     help=('The type of structure that should be evaluated against. '
-          'H: Alpha helix, G: Alpha helix 3 10, I: Alpha helix pi, I: '
+          'H: Alpha helix, G: Alpha helix 3 10, I: Alpha helix pi, E: '
           'Extended strand.'))
 
 args = parser.parse_args()

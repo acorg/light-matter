@@ -26,8 +26,13 @@ parser.add_argument(
     help=('If True the evaluateMatchNoPrefix function will be used to '
           'evaluate the helix. If False use the evaluateMatch function.'))
 
-args = parser.parse_args()
+parser.add_argument(
+    '--structureType', default='H', choices={'H', 'G', 'I', 'E'},
+    help=('The type of structure that should be evaluated against. '
+          'H: Alpha helix, G: Alpha helix 3 10, I: Alpha helix pi, E: '
+          'Extended strand.'))
 
+args = parser.parse_args()
 
 pdbReads = [(read.sequence, read.structure) for read in
             SSFastaReads(args.pdbFile, checkAlphabet=0)]
@@ -50,7 +55,8 @@ for i, helix in enumerate(helices):
             for match in uniqueRegex.finditer(sequence):
                 start = match.start()
                 end = match.end()
-                if evaluationFunction(structure, start, end):
+                if evaluationFunction(structure, start, end,
+                                      args.structureType):
                     truePositive += 1
                 else:
                     falsePositive += 1

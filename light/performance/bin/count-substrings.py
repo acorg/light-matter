@@ -37,7 +37,9 @@ pdbReads = SSFastaReads(args.pdbFile, readClass=SSAAReadWithX,
 exclude = set()
 with open(args.excludeFile) as fp:
     for line in fp:
-        exclude.add(line.split(' ')[0])
+        string = line.split(' ')[0]
+        if len(string) == args.length:
+            exclude.add(string)
 
 # We only want to make subsets that are at least of length 4.
 if args.length < 4:

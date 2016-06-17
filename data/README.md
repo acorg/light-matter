@@ -75,12 +75,20 @@ substrings for use by the Aho Corasick alpha helix finder:
 
     $ bzcat pdb-20160303-alpha-helix-substrings.bz2 |
     alpha-helix-substrings-for-aho-corasick.py --minTruePositives 20 \
-        --minTruePositiveFraction 0.75 --printCounts --printSummary >
+        --minTruePositiveFraction 0.75 --printSummary >
         aho-corasick-alpha-helix-substrings-20-0.75
     Kept 183653 of 13206964 (1.39%) candidate substrings seen on input.
     12051251 substrings did not meet the minimum true positive requirement (20).
     283137 substrings did not have a high enough true positive fraction (0.750000).
     688923 substrings were inferior to (at least) one of their own substrings.
+
+If you want to see the true/false positive counts and the true positive /
+all positives fraction in the selected subset, run
+`alpha-helix-substrings-for-aho-corasick.py` with the `--printCounts`
+option.  The Aho Corasick alpha helix substring finder expects just the
+alpha helix substrings to be on its input, so a file with counts in it
+cannot be used unless the counts are stripped out (via e.g., `awk '{print
+$1}'`).
 
 Note that the current repo substring file
 `aho-corasick-alpha-helix-substrings-20-0.75` has not been evaluated so we

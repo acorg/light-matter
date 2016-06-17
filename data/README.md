@@ -41,7 +41,8 @@ your shell's `PATH` in order for it to find the commands below):
     $ bzcat pdb-20160303-ss.txt.bz2 |
     extract-structures-from-pdb-ss.py --featureType 'PDB AlphaHelix' |
     fasta-subsequences.py --pdb --minLength 4 |
-    filter-fasta.py --removeDuplicates > pdb-alpha-helix-substrings-no-duplicates.fasta
+    filter-fasta.py --readClass fasta-ss --saveAs fasta --removeDuplicates >
+        pdb-alpha-helix-substrings-no-duplicates.fasta
 
 Then transfer the `pdb-alpha-helix-substrings-no-duplicates.fasta` file to
 the cluster and there run:

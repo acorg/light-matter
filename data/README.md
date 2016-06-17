@@ -20,6 +20,11 @@ your shell's `PATH`)
 See the `light/bin/performance/clean-pdb-ss-fasta.py` script for details of
 what's done in the clean up.
 
+The PDB `ss.txt.gz` file changes frequently, so we have a specific dated
+copy that we work on to ensure consistency. It can be updated periodically,
+but in that case the true and false positive counts computed earlier will
+be slightly inaccurate.
+
 ## PDB alpha helix substrings
 
 The file `pdb-20160303-alpha-helix-substrings.bz2` contains all substrings

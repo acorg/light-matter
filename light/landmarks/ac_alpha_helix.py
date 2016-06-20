@@ -55,6 +55,7 @@ class AC_AlphaHelix(Finder):
         global _AC
         if _AC is None:
             _AC = _loadDatabase(self._dbParams.ahocorasickFilename)
+            print('AC:', self._dbParams.ahocorasickFilename)
 
         for end, length in _AC.iter(read.sequence):
             yield Landmark(self.NAME, self.SYMBOL, end - length + 1, length)

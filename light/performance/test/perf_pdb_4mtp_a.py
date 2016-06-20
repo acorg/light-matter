@@ -119,7 +119,7 @@ class TestBitScoreZScoreLightMatterScore3D(TestCase):
                        'Bit score', 'Z score', 'Light matter score',
                        dirName, testArgs.interactive)
 
-    def testPlots4MTP3DPlotly(self):
+    def stestPlots4MTP3DPlotly(self):
         """
         Make a 3D plot of BLAST bit scores, Z scores, and light matter scores.
         """

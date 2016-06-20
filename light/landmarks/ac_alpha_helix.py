@@ -58,8 +58,7 @@ class AC_AlphaHelix(Finder):
 
         @return: A generator that yields C{Landmark} instances.
         """
-        global _AC
-        global _STORED_AC_FILENAME
+        global _AC, _STORED_AC_FILENAME
         if _AC is None or (
                 _STORED_AC_FILENAME != self._dbParams.ahocorasickFilename):
             _AC = _loadDatabase(self._dbParams.ahocorasickFilename)

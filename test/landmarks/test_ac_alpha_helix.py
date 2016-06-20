@@ -19,16 +19,23 @@ def setAlphaHelices(helices):
     """
     Make an Aho Corasick matcher for the given helices and monkey patch
     light.landmarks.ac_alpha_helix to use it.
+    Also set the ahocorasickFilename database parameter to 'xxx', to make sure
+    that the right Aho Corasick matcher is used.
 
     This function is used by tests that want to check against a specific
     set of helices instead of the full set.
 
     @param helices: An interable of C{str} helix sequences.
+
+    @return: A C{light.landmarks.ac_alpha_helix} instance with its
+        ahocorasickFilename set to 'xxx'.
     """
     ac = ahocorasick.Automaton(ahocorasick.STORE_LENGTH)
     list(map(ac.add_word, helices))
     ac.make_automaton()
     light.landmarks.ac_alpha_helix._AC = ac
+    dbParams = DatabaseParameters(ahocorasickFilename='xxx')
+    return AC_AlphaHelix(dbParams)
 
 
 class TestACAlphaHelix(TestCase):
@@ -47,10 +54,8 @@ class TestACAlphaHelix(TestCase):
         The find method must return an empty generator when no helix is
         present.
         """
-        dbParams = DatabaseParameters(ahocorasickFilename='xxx')
-        setAlphaHelices(['XXX', 'YYY'])
+        finder = setAlphaHelices(['XXX', 'YYY'])
         read = AARead('id', 'FRFRFRFRFRFRFRFRFRFF')
-        finder = AC_AlphaHelix(dbParams)
         result = list(finder.find(read))
         self.assertEqual([], result)
 
@@ -59,10 +64,8 @@ class TestACAlphaHelix(TestCase):
         The find method must return the full read sequence when it fully
         matches an alpha helix.
         """
-        dbParams = DatabaseParameters(ahocorasickFilename='xxx')
-        setAlphaHelices(['FFFF'])
+        finder = setAlphaHelices(['FFFF'])
         read = AARead('id', 'FFFF')
-        finder = AC_AlphaHelix(dbParams)
         result = list(finder.find(read))
         self.assertEqual([Landmark('AC AlphaHelix', 'ACAH', 0, 4)], result)
 
@@ -70,10 +73,8 @@ class TestACAlphaHelix(TestCase):
         """
         The find method must find matches that are contiguous.
         """
-        dbParams = DatabaseParameters(ahocorasickFilename='xxx')
-        setAlphaHelices(['RRR', 'FFF'])
+        finder = setAlphaHelices(['RRR', 'FFF'])
         read = AARead('id', 'FFFRRR')
-        finder = AC_AlphaHelix(dbParams)
         result = list(finder.find(read))
         self.assertEqual(
             [
@@ -86,10 +87,8 @@ class TestACAlphaHelix(TestCase):
         """
         The find method must find matches that are separated.
         """
-        dbParams = DatabaseParameters(ahocorasickFilename='xxx')
-        setAlphaHelices(['RRRRR', 'FFF'])
+        finder = setAlphaHelices(['RRRRR', 'FFF'])
         read = AARead('id', 'FFFMMRRRRR')
-        finder = AC_AlphaHelix(dbParams)
         result = list(finder.find(read))
         self.assertEqual(
             [
@@ -102,10 +101,8 @@ class TestACAlphaHelix(TestCase):
         """
         The find method must return overlapping helices.
         """
-        dbParams = DatabaseParameters(ahocorasickFilename='xxx')
-        setAlphaHelices(['FFFFR', 'FRMMM'])
+        finder = setAlphaHelices(['FFFFR', 'FRMMM'])
         read = AARead('id', 'FFFFRMMM')
-        finder = AC_AlphaHelix(dbParams)
         result = list(finder.find(read))
         self.assertEqual(
             [
@@ -118,10 +115,8 @@ class TestACAlphaHelix(TestCase):
         """
         The find method must return all helices, including those that overlap.
         """
-        dbParams = DatabaseParameters(ahocorasickFilename='xxx')
-        setAlphaHelices(['FF', 'FFF'])
+        finder = setAlphaHelices(['FF', 'FFF'])
         read = AARead('id', 'FFF')
-        finder = AC_AlphaHelix(dbParams)
         result = list(finder.find(read))
         self.assertEqual(
             [
@@ -137,8 +132,6 @@ class TestACAlphaHelix(TestCase):
         helix prefix file loaded by light/landscapes/ac_alpha_helix.py
         (in data/aho-corasick-alpha-helix-prefixes).
         """
-        # TODO: Change this once data/aho-corasick-alpha-helix-prefixes has
-        # been populated
         read = AARead('id', 'RCELARTLKR VAWRN')
         finder = AC_AlphaHelix()
         result = list(finder.find(read))
@@ -150,4 +143,7 @@ class TestACAlphaHelix(TestCase):
                 Landmark('AC AlphaHelix', 'ACAH', 11, 5),
             ],
             sorted(result))
+
+        # Set _STORED_AC_FILENAME back to 'xxx' so that it doesn't interfere
+        # with the following tests.
         light.landmarks.ac_alpha_helix._STORED_AC_FILENAME = 'xxx'

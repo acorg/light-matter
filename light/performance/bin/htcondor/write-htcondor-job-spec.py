@@ -24,7 +24,7 @@ EPILOG = """Given a FASTA file argument, write out the following:
      number of sequences (given by --seqs-per-evaluation).
 
   2) An HTCondor job spec file 'job.htcondor' that can be given to
-     condor_submit to have it run the evaluate_structures.py on all the small
+     condor_submit to have it run the evaluate-structures.py on all the small
      FASTA files.
 
 NOTE: A 'redo.sh' script that can be used to re-submit sub-FASTA files on which
@@ -69,7 +69,7 @@ def splitFASTA(params):
 def printJobSpec(params):
     """
     Write out a job spec file for HTCondor to process all the small
-    FASTA input files via evaluate_structures.py.
+    FASTA input files via evaluate-structures.py.
     """
     with open('job.htcondor', 'w') as outfp:
         outfp.write("""\
@@ -103,7 +103,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(
         description=('Given a FASTA file with structures and an ss.txt file, '
-                     'write an HTCondor job spec for evaluate_structures.py'),
+                     'write an HTCondor job spec for evaluate-structures.py'),
         epilog=EPILOG)
     parser.add_argument(
         'fasta', metavar='FASTA-file',
@@ -111,7 +111,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--seqs-per-evaluation', metavar='N',
         type=int, default=DEFAULT_SEQUENCES_PER_FILE, dest='seqsPerJob',
-        help=('the number (>0) of sequences to pass to evaluate_structures.py '
+        help=('the number (>0) of sequences to pass to evaluate-structures.py '
               'on each run.'))
     parser.add_argument(
         '--pdb-file', default=DEFAULT_PDB_FILE, dest='pdbFile',

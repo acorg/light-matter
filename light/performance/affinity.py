@@ -55,6 +55,8 @@ def affinityMatrix(queries, findParams=None, subjects=None, symmetric=True,
         C{queries}, and then the subject index (in C{subjects}). The values in
         the returned structure are as described in C{returnAnalysis}, above.
     """
+    import sys
+    print('In affinityMatrix', file=sys.stderr)
     if isinstance(queries, str):
         queries = list(FastaReads(queries, readClass=AAReadWithX,
                        upperCase=True))

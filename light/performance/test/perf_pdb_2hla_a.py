@@ -142,3 +142,19 @@ class TestBitScoreZScoreLightMatterScore3D(TestCase):
                 plot3DPlotly(bitScores, zScores, lmScores, subject.id,
                              dirName, interactive=testArgs.interactive,
                              labels=labels)
+
+
+class AffinityBuildTime(TestCase):
+
+    def testBuildTime(self):
+        """
+        Just create the 2HLA affinity matrix.
+        """
+        # testArgs.parameterSets is a list. Make sure it has just one
+        # element in it so we don't accidentally compute multiple affinity
+        # matrix.
+        [parameterSet] = testArgs.parameterSets
+        import sys
+        print('Making affinity matrix for', parameterSet, file=sys.stderr)
+        _AFFINITY[parameterSet]
+        print('Made affinity matrix', file=sys.stderr)

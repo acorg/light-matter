@@ -7,6 +7,7 @@ from dark.reads import AARead
 from light.features import Landmark
 import light.landmarks.ac_alpha_helix
 from light.landmarks.ac_alpha_helix import AC_AlphaHelix
+from light.parameters import DatabaseParameters
 
 # Keep track of the original Aho Corasick matcher so we can restore it
 # after each test. This allows tests to install their own matcher without
@@ -46,9 +47,10 @@ class TestACAlphaHelix(TestCase):
         The find method must return an empty generator when no helix is
         present.
         """
+        dbParams = DatabaseParameters(ahocorasickFilename='xxx')
         setAlphaHelices(['XXX', 'YYY'])
         read = AARead('id', 'FRFRFRFRFRFRFRFRFRFF')
-        finder = AC_AlphaHelix()
+        finder = AC_AlphaHelix(dbParams)
         result = list(finder.find(read))
         self.assertEqual([], result)
 
@@ -57,9 +59,10 @@ class TestACAlphaHelix(TestCase):
         The find method must return the full read sequence when it fully
         matches an alpha helix.
         """
+        dbParams = DatabaseParameters(ahocorasickFilename='xxx')
         setAlphaHelices(['FFFF'])
         read = AARead('id', 'FFFF')
-        finder = AC_AlphaHelix()
+        finder = AC_AlphaHelix(dbParams)
         result = list(finder.find(read))
         self.assertEqual([Landmark('AC AlphaHelix', 'ACAH', 0, 4)], result)
 
@@ -67,9 +70,10 @@ class TestACAlphaHelix(TestCase):
         """
         The find method must find matches that are contiguous.
         """
+        dbParams = DatabaseParameters(ahocorasickFilename='xxx')
         setAlphaHelices(['RRR', 'FFF'])
         read = AARead('id', 'FFFRRR')
-        finder = AC_AlphaHelix()
+        finder = AC_AlphaHelix(dbParams)
         result = list(finder.find(read))
         self.assertEqual(
             [
@@ -82,9 +86,10 @@ class TestACAlphaHelix(TestCase):
         """
         The find method must find matches that are separated.
         """
+        dbParams = DatabaseParameters(ahocorasickFilename='xxx')
         setAlphaHelices(['RRRRR', 'FFF'])
         read = AARead('id', 'FFFMMRRRRR')
-        finder = AC_AlphaHelix()
+        finder = AC_AlphaHelix(dbParams)
         result = list(finder.find(read))
         self.assertEqual(
             [
@@ -97,9 +102,10 @@ class TestACAlphaHelix(TestCase):
         """
         The find method must return overlapping helices.
         """
+        dbParams = DatabaseParameters(ahocorasickFilename='xxx')
         setAlphaHelices(['FFFFR', 'FRMMM'])
         read = AARead('id', 'FFFFRMMM')
-        finder = AC_AlphaHelix()
+        finder = AC_AlphaHelix(dbParams)
         result = list(finder.find(read))
         self.assertEqual(
             [
@@ -112,9 +118,10 @@ class TestACAlphaHelix(TestCase):
         """
         The find method must return all helices, including those that overlap.
         """
+        dbParams = DatabaseParameters(ahocorasickFilename='xxx')
         setAlphaHelices(['FF', 'FFF'])
         read = AARead('id', 'FFF')
-        finder = AC_AlphaHelix()
+        finder = AC_AlphaHelix(dbParams)
         result = list(finder.find(read))
         self.assertEqual(
             [
@@ -143,3 +150,4 @@ class TestACAlphaHelix(TestCase):
                 Landmark('AC AlphaHelix', 'ACAH', 11, 5),
             ],
             sorted(result))
+        light.landmarks.ac_alpha_helix._STORED_AC_FILENAME = 'xxx'

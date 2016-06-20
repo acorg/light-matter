@@ -34,6 +34,12 @@ def _loadDatabase(filename):
 # ACAlphaHelix.find method.
 _AC = None
 
+# Store the ahocorasick filename for checking.
+# For testing, we want to prevent the if statement in find() from running.
+# Therefore, we set _STORED_AC_FILENAME to 'xxx', so that
+# self._dbParams.ahocorasickFilename can also be set to 'xxx'.
+_STORED_AC_FILENAME = 'xxx'
+
 
 class AC_AlphaHelix(Finder):
     """
@@ -53,8 +59,11 @@ class AC_AlphaHelix(Finder):
         @return: A generator that yields C{Landmark} instances.
         """
         global _AC
-        if _AC is None:
+        global _STORED_AC_FILENAME
+        if _AC is None or (
+                _STORED_AC_FILENAME != self._dbParams.ahocorasickFilename):
             _AC = _loadDatabase(self._dbParams.ahocorasickFilename)
+            _STORED_AC_FILENAME = self._dbParams.ahocorasickFilename
 
         for end, length in _AC.iter(read.sequence):
             yield Landmark(self.NAME, self.SYMBOL, end - length + 1, length)

@@ -9,12 +9,6 @@ import light.landmarks.ac_alpha_helix
 from light.landmarks.ac_alpha_helix import AC_AlphaHelix
 from light.parameters import DatabaseParameters
 
-# Keep track of the original Aho Corasick matcher and stored filename so we can
-# restore them after each test. This allows tests to install their own matcher
-# and filename without breaking things for tests that want to use the original.
-_ORIGINAL_AC = light.landmarks.ac_alpha_helix._AC
-_ORIGINAL_AC_FILE = light.landmarks.ac_alpha_helix._STORED_AC_FILENAME
-
 
 def setAlphaHelices(helices):
     """
@@ -43,13 +37,22 @@ class TestACAlphaHelix(TestCase):
     """
     Tests for the light.landmarks.ac_alpha_helix.AC_AlphaHelix class.
     """
+    def setUp(self):
+        """
+        Keep track of the original Aho Corasick matcher and stored filename so
+        we can restore them after each test. This allows tests to install their
+        own matcher and filename without breaking things for tests that want to
+        use the original.
+        """
+        self.originalAC = light.landmarks.ac_alpha_helix._AC
+        self.originalFile = light.landmarks.ac_alpha_helix._STORED_AC_FILENAME
 
     def tearDown(self):
         """
         Restore the original Aho Corasick state machine.
         """
-        light.landmarks.ac_alpha_helix._AC = _ORIGINAL_AC
-        light.landmarks.ac_alpha_helix._STORED_AC_FILENAME = _ORIGINAL_AC_FILE
+        light.landmarks.ac_alpha_helix._AC = self.originalAC
+        light.landmarks.ac_alpha_helix._STORED_AC_FILENAME = self.originalFile
 
     def testFindNothing(self):
         """
@@ -145,7 +148,3 @@ class TestACAlphaHelix(TestCase):
                 Landmark('AC AlphaHelix', 'ACAH', 11, 5),
             ],
             sorted(result))
-
-        # Set _STORED_AC_FILENAME and _AC back to the originals so that they
-        # don't interfere with the following tests.
-        self.tearDown()

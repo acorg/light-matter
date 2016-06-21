@@ -5,7 +5,7 @@
 
 
 case $# in
-    4)
+    5)
         jobid=$1
         executableName=$2
         pdbFile=$3

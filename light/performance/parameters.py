@@ -10,8 +10,9 @@ from os.path import dirname, join
 import light
 from light.parameters import DatabaseParameters, FindParameters
 
-_ac_filename = join(dirname(light.__file__), '..', 'data',
-                    'aho-corasick-alpha-helices-1.0')
+_AC_ALPHA_HELIX_DEFAULT_FILENAME = join(
+    dirname(light.__file__), '..', 'data',
+    'aho-corasick-alpha-helix-substrings-20-0.9')
 
 
 PARAMETER_SETS = {
@@ -48,13 +49,15 @@ PARAMETER_SETS = {
         ),
     },
 
+    # AC-helices is just the Aho Corasick alpha helix substring finder,
+    # with some typical other parameter settings.
     'AC-helices': {
         'dbParams': DatabaseParameters(
             landmarks=['AC AlphaHelix'],
             trigPoints=[],
             maxDistance=5000,
             limitPerLandmark=50,
-            ahocorasickFilename=_ac_filename,
+            ahocorasickFilename=_AC_ALPHA_HELIX_DEFAULT_FILENAME,
         ),
         'findParams': FindParameters(
             binScoreMethod='FeatureAAScore',

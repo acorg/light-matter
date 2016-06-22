@@ -14,7 +14,7 @@ def setAlphaHelices(helices):
     """
     Make an Aho Corasick matcher for the given helices and monkey patch
     light.landmarks.ac_alpha_helix to use it.
-    Also set the ahocorasickFilename database parameter to 'xxx', to make sure
+    Also set the acAlphaHelixFilename database parameter to 'xxx', to make sure
     that the right Aho Corasick matcher is used.
 
     This function is used by tests that want to check against a specific
@@ -23,13 +23,13 @@ def setAlphaHelices(helices):
     @param helices: An interable of C{str} helix sequences.
 
     @return: A C{light.landmarks.ac_alpha_helix} instance with its
-        ahocorasickFilename set to 'xxx'.
+        acAlphaHelixFilename set to 'xxx'.
     """
     ac = ahocorasick.Automaton(ahocorasick.STORE_LENGTH)
     list(map(ac.add_word, helices))
     ac.make_automaton()
     light.landmarks.ac_alpha_helix._AC = ac
-    dbParams = DatabaseParameters(ahocorasickFilename='xxx')
+    dbParams = DatabaseParameters(acAlphaHelixFilename='xxx')
     return AC_AlphaHelix(dbParams)
 
 
@@ -135,7 +135,7 @@ class TestACAlphaHelix(TestCase):
         """
         The find method must be able to find helices in the default alpha
         helix prefix file loaded by light/landscapes/ac_alpha_helix.py
-        (in data/aho-corasick-alpha-helix-prefixes).
+        (in data/ac-alpha-helix-substrings-20-0.9).
         """
         read = AARead('id', 'RCELARTLKR VAWRN')
         finder = AC_AlphaHelix()
@@ -143,7 +143,13 @@ class TestACAlphaHelix(TestCase):
         self.assertEqual(
             [
                 Landmark('AC AlphaHelix', 'ACAH', 0, 4),
-                Landmark('AC AlphaHelix', 'ACAH', 0, 10),
+                Landmark('AC AlphaHelix', 'ACAH', 0, 5),
+                Landmark('AC AlphaHelix', 'ACAH', 1, 4),
+                Landmark('AC AlphaHelix', 'ACAH', 1, 5),
+                Landmark('AC AlphaHelix', 'ACAH', 2, 6),
+                Landmark('AC AlphaHelix', 'ACAH', 3, 6),
+                Landmark('AC AlphaHelix', 'ACAH', 4, 5),
+                Landmark('AC AlphaHelix', 'ACAH', 4, 6),
                 Landmark('AC AlphaHelix', 'ACAH', 11, 4),
                 Landmark('AC AlphaHelix', 'ACAH', 11, 5),
             ],

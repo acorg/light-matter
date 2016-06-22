@@ -13,13 +13,13 @@ from light.finder import Finder
 
 def _loadDatabase(filename):
     """
-    Read alpha helix prefix strings and add them to an Aho Corasick matcher.
+    Read alpha helix strings and add them to an Aho Corasick matcher.
 
     @param filename: A C{str} filename of a file with alpha helices.
 
     @return: An C{ahocorasick.Automaton} instance.
     """
-    # We only need to store the lengths of the prefixes, not the prefixes
+    # We only need to store the lengths of the helices, not the helices
     # themselves.
     ac = ahocorasick.Automaton(ahocorasick.STORE_LENGTH)
     add = ac.add_word
@@ -31,7 +31,7 @@ def _loadDatabase(filename):
 
 
 # Read the alpha helix database (only once) into a singleton for use in the
-# ACAlphaHelix.find method.
+# AC_AlphaHelix.find method.
 _AC = None
 
 # Store the ahocorasick filename for checking.
@@ -43,7 +43,7 @@ _STORED_AC_FILENAME = 'xxx'
 
 class AC_AlphaHelix(Finder):
     """
-    A class for finding alpha helices using Aho Corasick to store prefixes.
+    A class for finding alpha helices using Aho Corasick to store helices.
     """
     NAME = 'AC AlphaHelix'
     SYMBOL = 'ACAH'
@@ -60,9 +60,9 @@ class AC_AlphaHelix(Finder):
         """
         global _AC, _STORED_AC_FILENAME
         if _AC is None or (
-                _STORED_AC_FILENAME != self._dbParams.ahocorasickFilename):
-            _AC = _loadDatabase(self._dbParams.ahocorasickFilename)
-            _STORED_AC_FILENAME = self._dbParams.ahocorasickFilename
+                _STORED_AC_FILENAME != self._dbParams.acAlphaHelixFilename):
+            _AC = _loadDatabase(self._dbParams.acAlphaHelixFilename)
+            _STORED_AC_FILENAME = self._dbParams.acAlphaHelixFilename
 
         for end, length in _AC.iter(read.sequence):
             yield Landmark(self.NAME, self.SYMBOL, end - length + 1, length)

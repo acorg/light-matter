@@ -230,13 +230,13 @@ class TestDatabaseParameters(TestCase):
                                       minDistance=66,
                                       randomLandmarkDensity=0.1,
                                       randomTrigPointDensity=0.2,
-                                      ahocorasickFilename=(
+                                      acAlphaHelixFilename=(
             '../data/aho-corasick-alpha-helix-prefixes-91'))
 
         self.assertEqual(
             {
-                'ahocorasickFilename': '../data/aho-corasick-alpha-helix-'
-                                       'prefixes-91',
+                'acAlphaHelixFilename': '../data/aho-corasick-alpha-helix-'
+                                        'prefixes-91',
                 'distanceBase': 3.0,
                 'featureLengthBase': 1.7,
                 'landmarks': ['AlphaHelix', 'BetaStrand'],
@@ -299,11 +299,11 @@ class TestDatabaseParameters(TestCase):
                                       distanceBase=1.2, featureLengthBase=1.7,
                                       randomLandmarkDensity=0.3,
                                       randomTrigPointDensity=0.9,
-                                      ahocorasickFilename='xxx')
+                                      acAlphaHelixFilename='xxx')
         fp = StringIO()
         dbParams.save(fp)
         expected = {
-            'ahocorasickFilename': 'xxx',
+            'acAlphaHelixFilename': 'xxx',
             'landmarks': ['AlphaHelix'],
             'trigPoints': ['Peaks'],
             'limitPerLandmark': 3,
@@ -360,10 +360,10 @@ class TestDatabaseParameters(TestCase):
         found when the parameters are later loaded, a ValueError error must be
         raised.
         """
-        dbParams = DatabaseParameters(landmarks=[AlphaHelix])
+        dbParams = DatabaseParameters(landmarks=[BetaStrand])
         fp = StringIO()
         dbParams.save(fp)
-        newSave = fp.getvalue().replace('AlphaHelix', 'Non-existent')
+        newSave = fp.getvalue().replace('BetaStrand', 'Non-existent')
         if six.PY3:
             error = "^Could not find landmark finder class 'Non-existent'\.$"
         else:

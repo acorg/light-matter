@@ -22,7 +22,20 @@ def _loadDatabase(filename):
     # We only need to store the lengths of the prefixes, not the prefixes
     # themselves.
     ac = ahocorasick.Automaton(ahocorasick.STORE_LENGTH)
-    add = ac.add_word
+
+    if ahocorasick.unicode:
+        add = ac.add_word
+    else:
+        # The Aho Corasick module has been compiled without unicode
+        # support, to reduce its memory use. Arrange to give it bytes.
+        def add(s):
+            """
+            Add a string to an Aho Corasick automaton as bytes.
+
+            @param s: A C{str} to add.
+            """
+            ac.add_word(s.encode('utf-8'))
+
     with open(filename) as fp:
         for line in fp:
             add(line[:-1])
@@ -64,5 +77,10 @@ class AC_AlphaHelix(Finder):
             _AC = _loadDatabase(self._dbParams.ahocorasickFilename)
             _STORED_AC_FILENAME = self._dbParams.ahocorasickFilename
 
-        for end, length in _AC.iter(read.sequence):
+        if ahocorasick.unicode:
+            sequence = read.sequence
+        else:
+            sequence = read.sequence.encode('utf-8')
+
+        for end, length in _AC.iter(sequence):
             yield Landmark(self.NAME, self.SYMBOL, end - length + 1, length)

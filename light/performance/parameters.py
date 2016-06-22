@@ -51,13 +51,13 @@ PARAMETER_SETS = {
 
     # AC-helices is just the Aho Corasick alpha helix substring finder,
     # with some typical other parameter settings.
-    'AC-helices': {
+    'AC-alpha-helix': {
         'dbParams': DatabaseParameters(
             landmarks=['AC AlphaHelix'],
             trigPoints=[],
             maxDistance=5000,
             limitPerLandmark=50,
-            ahocorasickFilename=_AC_ALPHA_HELIX_DEFAULT_FILENAME,
+            ahocorasickFilename=DatabaseParameters.DEFAULT_AHOCORASICK_FILENAME
         ),
         'findParams': FindParameters(
             binScoreMethod='FeatureAAScore',

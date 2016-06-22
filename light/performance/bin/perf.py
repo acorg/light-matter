@@ -92,10 +92,9 @@ if __name__ == '__main__':
     if args.printParams:
         for parameterSet in args.parameterSets:
             print('Parameter set %r' % parameterSet, file=sys.stderr)
-            print(PARAMETER_SETS[parameterSet]['dbParams'].print_(
-                margin='  '), file=sys.stderr)
-            print(PARAMETER_SETS[parameterSet]['findParams'].print_(
-                margin='  '), file=sys.stderr)
+            params = PARAMETER_SETS[parameterSet]
+            print(params['dbParams'].print_(margin='  '), file=sys.stderr)
+            print(params['findParams'].print_(margin='  '), file=sys.stderr)
 
     # Make the command-line args available to the tests. There doesn't seem
     # to be another way to pass information like this when using a unittest

@@ -5,14 +5,7 @@ When running light/performance/bin/perf.py you can refer to these via
 --parameterSet XXX (where XXX is a key from the dictionary below).
 """
 
-from os.path import dirname, join
-
-import light
 from light.parameters import DatabaseParameters, FindParameters
-
-_AC_ALPHA_HELIX_DEFAULT_FILENAME = join(
-    dirname(light.__file__), '..', 'data',
-    'aho-corasick-alpha-helix-substrings-20-0.9')
 
 
 PARAMETER_SETS = {

@@ -7,7 +7,6 @@ When running light/performance/bin/perf.py you can refer to these via
 
 from light.parameters import DatabaseParameters, FindParameters
 
-
 PARAMETER_SETS = {
     # The command-line parameter set is special. It is made dynamically
     # from command-line arguments, if any.

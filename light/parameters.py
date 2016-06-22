@@ -300,8 +300,14 @@ class DatabaseParameters(object):
         landmarks to generate.
     @param randomTrigPointDensity: The C{float} density of random trig points
         to generate.
-    @param ahocorasickFilename: The C{str} name of a file to be used by the
+    @param acAlphaHelixFilename: The C{str} name of a file to be used by the
         AC_AlphaHelix finder.
+    @param acAlphaHelix310Filename: The C{str} name of a file to be used by the
+        AC_AlphaHelix_3_10 finder.
+    @param acAlphaHelixPiFilename: The C{str} name of a file to be used by the
+        AC_AlphaHelix_pi finder.
+    @param acExtendedStrandFilename: The C{str} name of a file to be used by
+        the AC_ExtendedStrand finder.
     @raise ValueError: If an unknown landmark or trig point finder name is
         given in C{landmarks} or C{trigPoints}.
     """
@@ -314,14 +320,25 @@ class DatabaseParameters(object):
     DEFAULT_FEATURE_LENGTH_BASE = 1.35
     DEFAULT_RANDOM_LANDMARK_DENSITY = 0.1
     DEFAULT_RANDOM_TRIG_POINT_DENSITY = 0.1
-    DEFAULT_AHOCORASICK_FILENAME = join(dirname(light.__file__), '..', 'data',
-                                        'aho-corasick-alpha-helix-prefixes-1')
+    DEFAULT_AC_ALPHAHELIX_FILENAME = join(
+        dirname(light.__file__), '..', 'data',
+        'ac-alpha-helix-substrings-20-0.9')
+    DEFAULT_AC_ALPHAHELIX_3_10_FILENAME = join(
+        dirname(light.__file__), '..', 'data',
+        'ac-alpha-helix-3-10-substrings-1-0.5')
+    DEFAULT_AC_ALPHAHELIX_PI_FILENAME = join(
+        dirname(light.__file__), '..', 'data',
+        'ac-alpha-helix-pi-substrings-1-0.5')
+    DEFAULT_AC_EXTENDED_STRAND_FILENAME = join(
+        dirname(light.__file__), '..', 'data',
+        'ac-extended-strand-substrings-10-0.5')
 
     def __init__(self, landmarks=None, trigPoints=None,
                  limitPerLandmark=None, maxDistance=None, minDistance=None,
                  distanceBase=None, featureLengthBase=None,
                  randomLandmarkDensity=None, randomTrigPointDensity=None,
-                 ahocorasickFilename=None):
+                 acAlphaHelixFilename=None, acAlphaHelix310Filename=None,
+                 acAlphaHelixPiFilename=None, acExtendedStrandFilename=None):
 
         # First set the simple scalar parameters.
         self.limitPerLandmark = (
@@ -356,9 +373,21 @@ class DatabaseParameters(object):
             self.DEFAULT_RANDOM_TRIG_POINT_DENSITY if
             randomTrigPointDensity is None else randomTrigPointDensity)
 
-        self.ahocorasickFilename = (
-            self.DEFAULT_AHOCORASICK_FILENAME if
-            ahocorasickFilename is None else ahocorasickFilename)
+        self.acAlphaHelixFilename = (
+            self.DEFAULT_AC_ALPHAHELIX_FILENAME if
+            acAlphaHelixFilename is None else acAlphaHelixFilename)
+
+        self.acAlphaHelix310Filename = (
+            self.DEFAULT_AC_ALPHAHELIX_3_10_FILENAME if
+            acAlphaHelix310Filename is None else acAlphaHelix310Filename)
+
+        self.acAlphaHelixPiFilename = (
+            self.DEFAULT_AC_ALPHAHELIX_PI_FILENAME if
+            acAlphaHelixPiFilename is None else acAlphaHelixPiFilename)
+
+        self.acExtendedStrandFilename = (
+            self.DEFAULT_AC_EXTENDED_STRAND_FILENAME if
+            acExtendedStrandFilename is None else acExtendedStrandFilename)
 
         if landmarks is None:
             landmarkClasses = DEFAULT_LANDMARK_CLASSES
@@ -421,7 +450,7 @@ class DatabaseParameters(object):
                            self.featureLengthBase,
                            self.randomLandmarkDensity,
                            self.randomTrigPointDensity,
-                           basename(self.ahocorasickFilename)))))
+                           basename(self.acAlphaHelixFilename)))))
         return checksum.value
 
     @staticmethod
@@ -501,9 +530,27 @@ class DatabaseParameters(object):
             help=('The (float) density of random trig points to generate.'))
 
         parser.add_argument(
-            '--ahocorasickFilename', type=str,
-            default=DatabaseParameters.DEFAULT_AHOCORASICK_FILENAME,
+            '--acAlphaHelixFilename',
+            default=DatabaseParameters.DEFAULT_AC_ALPHAHELIX_FILENAME,
             help=('The name of the file to be used by the AC_AlphaHelix '
+                  'finder.'))
+
+        parser.add_argument(
+            '--acAlphaHelix310Filename',
+            default=DatabaseParameters.DEFAULT_AC_ALPHAHELIX_3_10_FILENAME,
+            help=('The name of the file to be used by the AC_AlphaHelix_3_10 '
+                  'finder.'))
+
+        parser.add_argument(
+            '--acAlphaHelixPiFilename',
+            default=DatabaseParameters.DEFAULT_AC_ALPHAHELIX_PI_FILENAME,
+            help=('The name of the file to be used by the AC_AlphaHelix_pi '
+                  'finder.'))
+
+        parser.add_argument(
+            '--acExtendedStrandFilename',
+            default=DatabaseParameters.DEFAULT_AC_EXTENDED_STRAND_FILENAME,
+            help=('The name of the file to be used by the AC_ExtendedStrand '
                   'finder.'))
 
     @classmethod
@@ -548,7 +595,10 @@ class DatabaseParameters(object):
                    featureLengthBase=args.featureLengthBase,
                    randomLandmarkDensity=args.randomLandmarkDensity,
                    randomTrigPointDensity=args.randomTrigPointDensity,
-                   ahocorasickFilename=args.ahocorasickFilename)
+                   acAlphaHelixFilename=args.acAlphaHelixFilename,
+                   acAlphaHelix310Filename=args.acAlphaHelix310Filename,
+                   acAlphaHelixPiFilename=args.acAlphaHelixPiFilename,
+                   acExtendedStrandFilename=args.acExtendedStrandFilename)
 
     def toDict(self):
         """
@@ -565,7 +615,10 @@ class DatabaseParameters(object):
                     featureLengthBase=self.featureLengthBase,
                     randomLandmarkDensity=self.randomLandmarkDensity,
                     randomTrigPointDensity=self.randomTrigPointDensity,
-                    ahocorasickFilename=self.ahocorasickFilename)
+                    acAlphaHelixFilename=self.acAlphaHelixFilename,
+                    acAlphaHelix310Filename=self.acAlphaHelix310Filename,
+                    acAlphaHelixPiFilename=self.acAlphaHelixPiFilename,
+                    acExtendedStrandFilename=self.acExtendedStrandFilename)
 
     def save(self, fp=sys.stdout):
         """
@@ -584,7 +637,10 @@ class DatabaseParameters(object):
             'featureLengthBase': self.featureLengthBase,
             'randomLandmarkDensity': self.randomLandmarkDensity,
             'randomTrigPointDensity': self.randomTrigPointDensity,
-            'ahocorasickFilename': self.ahocorasickFilename,
+            'acAlphaHelixFilename': self.acAlphaHelixFilename,
+            'acAlphaHelix310Filename': self.acAlphaHelix310Filename,
+            'acAlphaHelixPiFilename': self.acAlphaHelixPiFilename,
+            'acExtendedStrandFilename': self.acExtendedStrandFilename,
         }
 
         print(dumps(state), file=fp)
@@ -652,7 +708,13 @@ class DatabaseParameters(object):
             'Feature length base: %f' % self.featureLengthBase,
             'Random landmark density: %f' % self.randomLandmarkDensity,
             'Random trig point density: %f' % self.randomTrigPointDensity,
-            'Ahocorasick filename: %s' % basename(self.ahocorasickFilename),
+            'AC AlphaHelix filename: %s' % basename(self.acAlphaHelixFilename),
+            'AC AlphaHelix 3-10 filename: %s' %
+            basename(self.acAlphaHelix310Filename),
+            'AC AlphaHelix pi filename: %s' %
+            basename(self.acAlphaHelixPiFilename),
+            'AC ExtendedStrand filename: %s' %
+            basename(self.acExtendedStrandFilename),
         ])
 
         result.outdent()
@@ -687,7 +749,9 @@ class DatabaseParameters(object):
         for param in (
                 'limitPerLandmark', 'maxDistance', 'minDistance',
                 'distanceBase', 'featureLengthBase', 'randomLandmarkDensity',
-                'randomTrigPointDensity', 'ahocorasickFilename'):
+                'randomTrigPointDensity', 'acAlphaHelixFilename',
+                'acAlphaHelix310Filename', 'acAlphaHelixPiFilename',
+                'acExtendedStrandFilename'):
             ours = getattr(self, param)
             others = getattr(other, param)
             if ours != others:

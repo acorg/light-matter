@@ -230,13 +230,25 @@ class TestDatabaseParameters(TestCase):
                                       minDistance=66,
                                       randomLandmarkDensity=0.1,
                                       randomTrigPointDensity=0.2,
-                                      ahocorasickFilename=(
-            '../data/aho-corasick-alpha-helix-prefixes-91'))
+                                      acAlphaHelixFilename=(
+            '../data/ac-alpha-helix-substrings-20-0.9'),
+            acAlphaHelix310Filename=(
+            '../data/ac-alpha-helix-3-10-substrings-1-0.5'),
+            acAlphaHelixPiFilename=(
+            '../data/ac-alpha-helix-pi-substrings-1-0.5'),
+            acExtendedStrandFilename=(
+            '../data/ac-extended-strand-substrings-10-0.5'))
 
         self.assertEqual(
             {
-                'ahocorasickFilename': '../data/aho-corasick-alpha-helix-'
-                                       'prefixes-91',
+                'acAlphaHelix310Filename': '../data/ac-alpha-helix-3-10-'
+                'substrings-1-0.5',
+                'acAlphaHelixFilename': '../data/ac-alpha-helix-substrings'
+                '-20-0.9',
+                'acAlphaHelixPiFilename': '../data/ac-alpha-helix-pi-'
+                'substrings-1-0.5',
+                'acExtendedStrandFilename': '../data/ac-extended-strand-'
+                'substrings-10-0.5',
                 'distanceBase': 3.0,
                 'featureLengthBase': 1.7,
                 'landmarks': ['AlphaHelix', 'BetaStrand'],
@@ -299,11 +311,17 @@ class TestDatabaseParameters(TestCase):
                                       distanceBase=1.2, featureLengthBase=1.7,
                                       randomLandmarkDensity=0.3,
                                       randomTrigPointDensity=0.9,
-                                      ahocorasickFilename='xxx')
+                                      acAlphaHelixFilename='xxx',
+                                      acAlphaHelix310Filename='yyy',
+                                      acAlphaHelixPiFilename='zzz',
+                                      acExtendedStrandFilename='aaa')
         fp = StringIO()
         dbParams.save(fp)
         expected = {
-            'ahocorasickFilename': 'xxx',
+            'acAlphaHelixFilename': 'xxx',
+            'acAlphaHelix310Filename': 'yyy',
+            'acAlphaHelixPiFilename': 'zzz',
+            'acExtendedStrandFilename': 'aaa',
             'landmarks': ['AlphaHelix'],
             'trigPoints': ['Peaks'],
             'limitPerLandmark': 3,
@@ -360,10 +378,10 @@ class TestDatabaseParameters(TestCase):
         found when the parameters are later loaded, a ValueError error must be
         raised.
         """
-        dbParams = DatabaseParameters(landmarks=[AlphaHelix])
+        dbParams = DatabaseParameters(landmarks=[BetaStrand])
         fp = StringIO()
         dbParams.save(fp)
-        newSave = fp.getvalue().replace('AlphaHelix', 'Non-existent')
+        newSave = fp.getvalue().replace('BetaStrand', 'Non-existent')
         if six.PY3:
             error = "^Could not find landmark finder class 'Non-existent'\.$"
         else:

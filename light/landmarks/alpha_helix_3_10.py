@@ -10,7 +10,7 @@ ALPHA_HELIX_3_10 = re.compile('OIIO(?:IIO)+')
 
 class AlphaHelix_3_10(Finder):
     """
-    A class for computing statistics based on 3-10 alpha helices.  Based
+    A class for computing statistics based on 3-10 alpha helices. Based
     around the assumption that a 3-10 alpha helix is composed of at least two
     repeats of one hydrophobic and then 2 hydrophilic amino acids.
 

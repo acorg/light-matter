@@ -21,3 +21,7 @@ Run
 ```sh
 $ make performance-data
 ```
+
+## Reducing RAM usage of the Aho Corasick based finders
+
+See [here](doc/aho-corasick.md).

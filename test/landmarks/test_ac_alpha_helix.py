@@ -26,7 +26,21 @@ def setAlphaHelices(helices):
         acAlphaHelixFilename set to 'xxx'.
     """
     ac = ahocorasick.Automaton(ahocorasick.STORE_LENGTH)
-    list(map(ac.add_word, helices))
+
+    if ahocorasick.unicode:
+        add = ac.add_word
+    else:
+        # The Aho Corasick module has been compiled without unicode
+        # support, to reduce its memory use. Arrange to give it bytes.
+        def add(s):
+            """
+            Add a string to an Aho Corasick automaton as bytes.
+
+            @param s: A C{str} to add.
+            """
+            ac.add_word(s.encode('utf-8'))
+
+    list(map(add, helices))
     ac.make_automaton()
     light.landmarks.ac_alpha_helix._AC = ac
     dbParams = DatabaseParameters(acAlphaHelixFilename='xxx')

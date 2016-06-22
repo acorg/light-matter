@@ -24,6 +24,9 @@ class TestCalculateOverlap(TestCase):
             # Landmarks.
             'AC AlphaHelix': {8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 31, 32,
                               33, 34, 35},
+            'AC AlphaHelix_3_10': set(),
+            'AC AlphaHelixPi': set(),
+            'AC ExtendedStrand': set(),
             'AlphaHelix': set(),
             'AlphaHelix_3_10': {
                 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
@@ -96,5 +99,5 @@ class TestCalculateOverlap(TestCase):
         # examined by default by CalculateOverlap. So there are 22 * 21 / 2
         # = 231 pairs of features. So these two tests are just testing that
         # all pairs of features are present in the returned dicts.
-        self.assertEqual(231, len(intersection))
-        self.assertEqual(231, len(union))
+        self.assertEqual(300, len(intersection))
+        self.assertEqual(300, len(union))

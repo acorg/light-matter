@@ -1,5 +1,5 @@
 """
-Aho Corasick based alpha helix finder.
+Aho Corasick based extended strand finder.
 
 The Aho Corasick implementation is taken from
 https://github.com/WojciechMula/pyahocorasick
@@ -13,13 +13,13 @@ from light.finder import Finder
 
 def _loadDatabase(filename):
     """
-    Read alpha helix strings and add them to an Aho Corasick matcher.
+    Read extended strand strings and add them to an Aho Corasick matcher.
 
-    @param filename: A C{str} filename of a file with alpha helices.
+    @param filename: A C{str} filename of a file with extended strands.
 
     @return: An C{ahocorasick.Automaton} instance.
     """
-    # We only need to store the lengths of the helices, not the helices
+    # We only need to store the lengths of the strands, not the strands
     # themselves.
     ac = ahocorasick.Automaton(ahocorasick.STORE_LENGTH)
 
@@ -43,29 +43,29 @@ def _loadDatabase(filename):
     return ac
 
 
-# Read the alpha helix database (only once) into a singleton for use in the
-# AC_AlphaHelix.find method.
+# Read the extended strand database (only once) into a singleton for use in the
+# AC_ExtendedStrand.find method.
 _AC = None
 
-# Store the ac alpha helix filename for checking.
+# Store the ahocorasick filename for checking.
 # For testing, we want to prevent the if statement in find() from running.
 # Therefore, we set _STORED_AC_FILENAME to 'xxx', so that
-# self._dbParams.acAlphaHelixFilename can also be set to 'xxx'.
+# self._dbParams.acExtendedStrandFilename can also be set to 'xxx'.
 _STORED_AC_FILENAME = 'xxx'
 
 
-class AC_AlphaHelix(Finder):
+class AC_ExtendedStrand(Finder):
     """
-    A class for finding alpha helices using Aho Corasick to store helices.
+    A class for finding extended strands using Aho Corasick to store strands.
     """
-    NAME = 'AC AlphaHelix'
-    SYMBOL = 'ACAH'
+    NAME = 'AC ExtendedStrand'
+    SYMBOL = 'ACES'
 
     def find(self, read):
         """
-        A function that finds and yields (as C{Landmark}s instances) alpha
-        helices.
-        No attempt is made to disallow overlapping alpha helices.
+        A function that finds and yields (as C{Landmark}s instances) extended
+        strands.
+        No attempt is made to disallow overlapping extended strands.
 
         @param read: An instance of C{dark.reads.AARead}.
 
@@ -73,9 +73,10 @@ class AC_AlphaHelix(Finder):
         """
         global _AC, _STORED_AC_FILENAME
         if _AC is None or (
-                _STORED_AC_FILENAME != self._dbParams.acAlphaHelixFilename):
-            _AC = _loadDatabase(self._dbParams.acAlphaHelixFilename)
-            _STORED_AC_FILENAME = self._dbParams.acAlphaHelixFilename
+                _STORED_AC_FILENAME !=
+                self._dbParams.acExtendedStrandFilename):
+            _AC = _loadDatabase(self._dbParams.acExtendedStrandFilename)
+            _STORED_AC_FILENAME = self._dbParams.acExtendedStrandFilename
 
         if ahocorasick.unicode:
             sequence = read.sequence

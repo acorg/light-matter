@@ -50,7 +50,8 @@ TABLEAU20 = [
 
 # We need more than 20 colors, so that we have one color per feature.
 ADDITIONAL_COLORS = [(153, 86, 136), (240, 39, 32), (234, 107, 115),
-                     (255, 217, 74), (57, 115, 124)]
+                     (255, 217, 74), (57, 115, 124), (219, 161, 58),
+                     (95, 90, 65), (130, 133, 59)]
 
 # Scale the above RGB values to the [0, 1] range, the format matplotlib
 # accepts.

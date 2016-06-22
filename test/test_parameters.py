@@ -231,12 +231,24 @@ class TestDatabaseParameters(TestCase):
                                       randomLandmarkDensity=0.1,
                                       randomTrigPointDensity=0.2,
                                       acAlphaHelixFilename=(
-            '../data/aho-corasick-alpha-helix-prefixes-91'))
+            '../data/ac-alpha-helix-substrings-20-0.9'),
+            acAlphaHelix310Filename=(
+            '../data/ac-alpha-helix-3-10-substrings-1-0.5'),
+            acAlphaHelixPiFilename=(
+            '../data/ac-alpha-helix-pi-substrings-1-0.5'),
+            acExtendedStrandFilename=(
+            '../data/ac-extended-strand-substrings-10-0.5'))
 
         self.assertEqual(
             {
-                'acAlphaHelixFilename': '../data/aho-corasick-alpha-helix-'
-                                        'prefixes-91',
+                'acAlphaHelix310Filename': '../data/ac-alpha-helix-3-10-'
+                'substrings-1-0.5',
+                'acAlphaHelixFilename': '../data/ac-alpha-helix-substrings'
+                '-20-0.9',
+                'acAlphaHelixPiFilename': '../data/ac-alpha-helix-pi-'
+                'substrings-1-0.5',
+                'acExtendedStrandFilename': '../data/ac-extended-strand-'
+                'substrings-10-0.5',
                 'distanceBase': 3.0,
                 'featureLengthBase': 1.7,
                 'landmarks': ['AlphaHelix', 'BetaStrand'],
@@ -299,11 +311,17 @@ class TestDatabaseParameters(TestCase):
                                       distanceBase=1.2, featureLengthBase=1.7,
                                       randomLandmarkDensity=0.3,
                                       randomTrigPointDensity=0.9,
-                                      acAlphaHelixFilename='xxx')
+                                      acAlphaHelixFilename='xxx',
+                                      acAlphaHelix310Filename='yyy',
+                                      acAlphaHelixPiFilename='zzz',
+                                      acExtendedStrandFilename='aaa')
         fp = StringIO()
         dbParams.save(fp)
         expected = {
             'acAlphaHelixFilename': 'xxx',
+            'acAlphaHelix310Filename': 'yyy',
+            'acAlphaHelixPiFilename': 'zzz',
+            'acExtendedStrandFilename': 'aaa',
             'landmarks': ['AlphaHelix'],
             'trigPoints': ['Peaks'],
             'limitPerLandmark': 3,

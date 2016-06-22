@@ -1,6 +1,5 @@
 import six
 import argparse
-from os.path import basename
 from unittest import TestCase, skip
 from six import StringIO
 from six.moves import builtins
@@ -745,7 +744,10 @@ class TestDatabase(TestCase):
                                       minDistance=0, distanceBase=1,
                                       randomLandmarkDensity=0.6,
                                       randomTrigPointDensity=0.4,
-                                      acAlphaHelixFilename='xxx')
+                                      acAlphaHelixFilename='xxx',
+                                      acAlphaHelix310Filename='yyy',
+                                      acAlphaHelixPiFilename='zzz',
+                                      acExtendedStrandFilename='aaa')
         db = Database(dbParams)
         db.addSubject(subject)
         expected = (
@@ -764,6 +766,9 @@ class TestDatabase(TestCase):
             '  Random landmark density: 0.600000\n'
             '  Random trig point density: 0.400000\n'
             '  AC AlphaHelix filename: xxx\n'
+            '  AC AlphaHelix 3-10 filename: yyy\n'
+            '  AC AlphaHelix pi filename: zzz\n'
+            '  AC ExtendedStrand filename: aaa\n'
             'Connector class: SimpleConnector\n'
             'Subject count: 1\n'
             'Hash count: 3\n'
@@ -785,7 +790,6 @@ class TestDatabase(TestCase):
                                       minDistance=0, distanceBase=1)
         db = Database(dbParams)
         db.addSubject(subject)
-        self.maxDiff = None
         expected = (
             'Parameters:\n'
             '  Landmark finders:\n'
@@ -801,8 +805,12 @@ class TestDatabase(TestCase):
             '  Feature length base: 1.350000\n'
             '  Random landmark density: 0.100000\n'
             '  Random trig point density: 0.100000\n'
-            '  AC AlphaHelix filename: ' +
-            basename('ac-alpha-helix-substrings-20-0.9') + '\n'
+            '  AC AlphaHelix filename: ac-alpha-helix-substrings-20-0.9\n'
+            '  AC AlphaHelix 3-10 filename: ac-alpha-helix-3-10-substrings-'
+            '1-0.5\n'
+            '  AC AlphaHelix pi filename: ac-alpha-helix-pi-substrings-1-0.5\n'
+            '  AC ExtendedStrand filename: ac-extended-strand-substrings-'
+            '10-0.5\n'
             'Connector class: SimpleConnector\n'
             'Subject count: 1\n'
             'Hash count: 3\n'
@@ -833,7 +841,6 @@ class TestDatabase(TestCase):
         The print_ function should report the expected result if no hashes are
         found in the subject.
         """
-        self.maxDiff = None
         subject = AARead('subject', '')
         dbParams = DatabaseParameters(landmarks=[AlphaHelix, BetaStrand],
                                       trigPoints=[Peaks, Troughs],
@@ -856,8 +863,12 @@ class TestDatabase(TestCase):
             '  Feature length base: 1.350000\n'
             '  Random landmark density: 0.100000\n'
             '  Random trig point density: 0.100000\n'
-            '  AC AlphaHelix filename: ' +
-            basename('ac-alpha-helix-substrings-20-0.9') + '\n'
+            '  AC AlphaHelix filename: ac-alpha-helix-substrings-20-0.9\n'
+            '  AC AlphaHelix 3-10 filename: ac-alpha-helix-3-10-substrings-'
+            '1-0.5\n'
+            '  AC AlphaHelix pi filename: ac-alpha-helix-pi-substrings-1-0.5\n'
+            '  AC ExtendedStrand filename: ac-extended-strand-substrings-'
+            '10-0.5\n'
             'Connector class: SimpleConnector\n'
             'Subject count: 1\n'
             'Hash count: 0\n'

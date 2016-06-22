@@ -530,25 +530,25 @@ class DatabaseParameters(object):
             help=('The (float) density of random trig points to generate.'))
 
         parser.add_argument(
-            '--acAlphaHelixFilename', type=str,
+            '--acAlphaHelixFilename',
             default=DatabaseParameters.DEFAULT_AC_ALPHAHELIX_FILENAME,
             help=('The name of the file to be used by the AC_AlphaHelix '
                   'finder.'))
 
         parser.add_argument(
-            '--acAlphaHelix310Filename', type=str,
+            '--acAlphaHelix310Filename',
             default=DatabaseParameters.DEFAULT_AC_ALPHAHELIX_3_10_FILENAME,
             help=('The name of the file to be used by the AC_AlphaHelix_3_10 '
                   'finder.'))
 
         parser.add_argument(
-            '--acAlphaHelixPiFilename', type=str,
+            '--acAlphaHelixPiFilename',
             default=DatabaseParameters.DEFAULT_AC_ALPHAHELIX_PI_FILENAME,
             help=('The name of the file to be used by the AC_AlphaHelix_pi '
                   'finder.'))
 
         parser.add_argument(
-            '--acExtendedStrandFilename', type=str,
+            '--acExtendedStrandFilename',
             default=DatabaseParameters.DEFAULT_AC_EXTENDED_STRAND_FILENAME,
             help=('The name of the file to be used by the AC_ExtendedStrand '
                   'finder.'))

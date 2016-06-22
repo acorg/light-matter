@@ -6,7 +6,7 @@ from dark.reads import AARead
 
 from light.features import Landmark
 import light.landmarks.ac_alpha_helix
-from light.landmarks.ac_alpha_helix import AC_AlphaHelix
+from light.landmarks import AC_AlphaHelix
 from light.parameters import DatabaseParameters
 
 
@@ -20,7 +20,7 @@ def setAlphaHelices(helices):
     This function is used by tests that want to check against a specific
     set of helices instead of the full set.
 
-    @param helices: An interable of C{str} helix sequences.
+    @param helices: An iterable of C{str} helix sequences.
 
     @return: A C{light.landmarks.ac_alpha_helix} instance with its
         acAlphaHelixFilename set to 'xxx'.

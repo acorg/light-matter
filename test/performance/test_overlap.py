@@ -25,7 +25,7 @@ class TestCalculateOverlap(TestCase):
             'AC AlphaHelix': {8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 31, 32,
                               33, 34, 35},
             'AC AlphaHelix_3_10': set(),
-            'AC AlphaHelixPi': set(),
+            'AC AlphaHelix_pi': set(),
             'AC ExtendedStrand': set(),
             'AlphaHelix': set(),
             'AlphaHelix_3_10': {
@@ -95,9 +95,9 @@ class TestCalculateOverlap(TestCase):
             },
             union[frozenset(('IndividualTroughs', 'Troughs'))])
 
-        # Note that the following don't test much. There are 22 features
-        # examined by default by CalculateOverlap. So there are 22 * 21 / 2
-        # = 231 pairs of features. So these two tests are just testing that
+        # Note that the following don't test much. There are 25 features
+        # examined by default by CalculateOverlap. So there are 25 * 24 / 2
+        # = 300 pairs of features. So these two tests are just testing that
         # all pairs of features are present in the returned dicts.
         self.assertEqual(300, len(intersection))
         self.assertEqual(300, len(union))

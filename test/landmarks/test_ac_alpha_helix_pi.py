@@ -6,7 +6,7 @@ from dark.reads import AARead
 
 from light.features import Landmark
 import light.landmarks.ac_alpha_helix_pi
-from light.landmarks.ac_alpha_helix_pi import AC_AlphaHelix_pi
+from light.landmarks import AC_AlphaHelix_pi
 from light.parameters import DatabaseParameters
 
 
@@ -20,7 +20,7 @@ def setAlphaHelices_pi(helices):
     This function is used by tests that want to check against a specific
     set of helices instead of the full set.
 
-    @param helices: An interable of C{str} helix sequences.
+    @param helices: An iterable of C{str} helix sequences.
 
     @return: A C{light.landmarks.ac_alpha_helix_pi} instance with its
         acAlphaHelixPiFilename set to 'xxx'.
@@ -88,7 +88,7 @@ class TestACAlphaHelix_pi(TestCase):
         finder = setAlphaHelices_pi(['FFFF'])
         read = AARead('id', 'FFFF')
         result = list(finder.find(read))
-        self.assertEqual([Landmark('AC AlphaHelixPi', 'ACAHP', 0, 4)], result)
+        self.assertEqual([Landmark('AC AlphaHelix_pi', 'ACAHP', 0, 4)], result)
 
     def testFindContiguousMatches(self):
         """
@@ -99,8 +99,8 @@ class TestACAlphaHelix_pi(TestCase):
         result = list(finder.find(read))
         self.assertEqual(
             [
-                Landmark('AC AlphaHelixPi', 'ACAHP', 0, 3),
-                Landmark('AC AlphaHelixPi', 'ACAHP', 3, 3),
+                Landmark('AC AlphaHelix_pi', 'ACAHP', 0, 3),
+                Landmark('AC AlphaHelix_pi', 'ACAHP', 3, 3),
             ],
             sorted(result))
 
@@ -113,8 +113,8 @@ class TestACAlphaHelix_pi(TestCase):
         result = list(finder.find(read))
         self.assertEqual(
             [
-                Landmark('AC AlphaHelixPi', 'ACAHP', 0, 3),
-                Landmark('AC AlphaHelixPi', 'ACAHP', 5, 5),
+                Landmark('AC AlphaHelix_pi', 'ACAHP', 0, 3),
+                Landmark('AC AlphaHelix_pi', 'ACAHP', 5, 5),
             ],
             sorted(result))
 
@@ -127,8 +127,8 @@ class TestACAlphaHelix_pi(TestCase):
         result = list(finder.find(read))
         self.assertEqual(
             [
-                Landmark('AC AlphaHelixPi', 'ACAHP', 0, 5),
-                Landmark('AC AlphaHelixPi', 'ACAHP', 3, 5),
+                Landmark('AC AlphaHelix_pi', 'ACAHP', 0, 5),
+                Landmark('AC AlphaHelix_pi', 'ACAHP', 3, 5),
             ],
             sorted(result))
 
@@ -141,9 +141,9 @@ class TestACAlphaHelix_pi(TestCase):
         result = list(finder.find(read))
         self.assertEqual(
             [
-                Landmark('AC AlphaHelixPi', 'ACAHP', 0, 2),
-                Landmark('AC AlphaHelixPi', 'ACAHP', 0, 3),
-                Landmark('AC AlphaHelixPi', 'ACAHP', 1, 2),
+                Landmark('AC AlphaHelix_pi', 'ACAHP', 0, 2),
+                Landmark('AC AlphaHelix_pi', 'ACAHP', 0, 3),
+                Landmark('AC AlphaHelix_pi', 'ACAHP', 1, 2),
             ],
             sorted(result))
 
@@ -158,6 +158,6 @@ class TestACAlphaHelix_pi(TestCase):
         result = list(finder.find(read))
         self.assertEqual(
             [
-                Landmark('AC AlphaHelixPi', 'ACAHP', 10, 6),
+                Landmark('AC AlphaHelix_pi', 'ACAHP', 10, 6),
             ],
             sorted(result))

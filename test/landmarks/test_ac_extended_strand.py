@@ -6,7 +6,7 @@ from dark.reads import AARead
 
 from light.features import Landmark
 import light.landmarks.ac_extended_strand
-from light.landmarks.ac_extended_strand import AC_ExtendedStrand
+from light.landmarks import AC_ExtendedStrand
 from light.parameters import DatabaseParameters
 
 
@@ -20,7 +20,7 @@ def setExtendedStrands(strands):
     This function is used by tests that want to check against a specific
     set of strands instead of the full set.
 
-    @param strands: An interable of C{str} strand sequences.
+    @param strands: An iterable of C{str} strand sequences.
 
     @return: A C{light.landmarks.ac_extended_strand} instance with its
         acExtendedStrandFilename set to 'xxx'.

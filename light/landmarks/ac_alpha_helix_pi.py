@@ -58,7 +58,7 @@ class AC_AlphaHelix_pi(Finder):
     """
     A class for finding pi alpha helices using Aho Corasick to store helices.
     """
-    NAME = 'AC AlphaHelixPi'
+    NAME = 'AC AlphaHelix_pi'
     SYMBOL = 'ACAHP'
 
     def find(self, read):

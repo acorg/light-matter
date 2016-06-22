@@ -1,4 +1,6 @@
-pyahocorasick==1.0.0
+# pyahocorasick can optionally be built without unicode support,
+# to save RAM. See doc/aho-corasick.md
+pyahocorasick==1.1.0
 autobahn==0.10.9
 biopython==1.65
 crossbar[all]

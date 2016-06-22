@@ -142,3 +142,27 @@ class TestBitScoreZScoreLightMatterScore3D(TestCase):
                 plot3DPlotly(bitScores, zScores, lmScores, subject.id,
                              dirName, interactive=testArgs.interactive,
                              labels=labels)
+
+
+class AffinityBuildTime(TestCase):
+
+    def testBuildTime(self):
+        """
+        Create the 2HLA affinity matrix. The build time will appear in the JSON
+        performance test output.
+        """
+        # For its result to be informative, this test should be run in
+        # isolation. If you run multiple tests in this file, the order in
+        # which they are run will determine when the affinity matrix is
+        # computed. So to get an accurate elapsed time measure, run
+        #
+        # light/performance/bin/perf.py \
+        #     --testIdPrefix perf_pdb_2hla_a.AffinityBuildTime \
+        #     --parameterSet AC-helices
+        #
+
+        # testArgs.parameterSets is a list. This assignment makes sure it
+        # has just one element in it so we don't accidentally compute
+        # multiple affinity matrices.
+        [parameterSet] = testArgs.parameterSets
+        _AFFINITY[parameterSet]

@@ -49,7 +49,8 @@ PARAMETER_SETS = {
             trigPoints=[],
             maxDistance=5000,
             limitPerLandmark=50,
-            ahocorasickFilename=DatabaseParameters.DEFAULT_AHOCORASICK_FILENAME
+            acAlphaHelixFilename=(
+                DatabaseParameters.DEFAULT_AC_ALPHAHELIX_FILENAME),
         ),
         'findParams': FindParameters(
             binScoreMethod='FeatureAAScore',

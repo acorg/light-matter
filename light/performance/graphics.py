@@ -11,6 +11,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import plotly
 import plotly.graph_objs as go
 
+from light.performance.evaluate import PdbSubsetStatistics
 from light.performance.utils import pythonNameToPdbName
 
 # Keep pyflakes quiet by pretending to use Axes3D.
@@ -395,3 +396,92 @@ def plot3DPlotly(bitScores, zScores, lmScores, readId, dirName,
     filename = join(dirName, '%s.html' % readId)
     plotly.offline.plot(fig, show_link=False, filename=filename,
                         auto_open=interactive)
+
+
+def plotEvaluation(y, x, names, yAxisLabel):
+    """
+    Plot the evaluation for different subsets of substrings.
+
+    @param x: a C{list} of x coordinates.
+    @param y: a C{list} of y coordinates.
+    @param names: a C{list} of x tick names.
+    @param title: a C{str} label for the y axis.
+    """
+    fig = plt.figure(figsize=(7, 5))
+    ax = fig.add_subplot(111)
+
+    ax.plot(x, y, 'o',
+            markerfacecolor='steelblue', markeredgecolor='steelblue')
+    ax.set_ylim(0.0, 1.0)
+    ax.set_ylabel(yAxisLabel, fontsize=15)
+    plt.xticks(x, names, rotation=90, fontsize=15)
+
+
+def plotEvaluations(fileList, totalTpr=True, fractionOfPdbCovered=True,
+                    fractionOfStructuresCovered=True, correlation=True):
+    """
+    Plot the evaluation for different subsets.
+
+    @param fileList: a C{list} of C{lists}, where each list contains the
+        following: a C{str} filename with substrings that should be evaluated,
+        a C{str} filename with substrings that should be evaluated as well as
+        their rates of true and false positives, a C{str} filename of the pdb
+        ss.txt file, a C{str} filename of the structure strings extracted from
+        the pdbFile, a C{str} name of the structure type that should be
+        considered. Must be one of 'AlphaHelix', 'AlphaHelix_3_10',
+        'AlphaHelix_pi', 'ExtendedStrand' and a C{str} name of this subset of
+        substrings.
+    @param totalTpr: if C{True}, evaluation about the total true positive rate
+        will be performed.
+    @param fractionOfPdbCovered: if C{True}, evaluation about the fraction of
+        pdb structure sequences matched at least once will be performed.
+    @param fractionOfStructuresCovered: if C{true}, evaluation about the
+        fraction of known structures matched at least once will be performed.
+    @param correlation: if C{True}, evaluation about the correlation between
+        light matter scores of the known PDB finder and it's AC equivalent will
+        be performed.
+    """
+    if totalTpr:
+        x = []
+        names = []
+        for files in fileList:
+            names.append(files[5])
+            evaluation = PdbSubsetStatistics(files[0], files[1], files[2],
+                                             files[3], files[4])
+            x.append(evaluation.getTotalTpr())
+        plotEvaluation(x, range(len(x)), names, 'Total TPR')
+
+    if fractionOfPdbCovered:
+        x = []
+        names = []
+        for files in fileList:
+            names.append(files[5])
+            evaluation = PdbSubsetStatistics(files[0], files[1], files[2],
+                                             files[3], files[4])
+            x.append(evaluation.getFractionOfPdbCovered())
+        plotEvaluation(x, range(len(x)), names,
+                       'Fraction of structures in PDB matched by a substring')
+
+    if fractionOfStructuresCovered:
+        x = []
+        names = []
+        for files in fileList:
+            names.append(files[5])
+            evaluation = PdbSubsetStatistics(files[0], files[1], files[2],
+                                             files[3], files[4])
+            x.append(evaluation.getFractionOfStructuresCovered())
+        plotEvaluation(x, range(len(x)), names,
+                       ('Fraction of unique known %s matched by a substring' %
+                        files[4]))
+
+    if correlation:
+        x = []
+        names = []
+        for files in fileList:
+            names.append(files[5])
+            evaluation = PdbSubsetStatistics(files[0], files[1], files[2],
+                                             files[3], files[4])
+            x.append(evaluation.getCorrelation())
+        plotEvaluation(x, (4 * [i] for i in range(len(x))), names,
+                       'Correlation coefficient between PDB LM scores and '
+                       'scores using subset')

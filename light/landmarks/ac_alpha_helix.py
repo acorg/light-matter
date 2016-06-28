@@ -22,7 +22,6 @@ def _loadDatabase(filename):
     # We only need to store the lengths of the helices, not the helices
     # themselves.
     ac = ahocorasick.Automaton(ahocorasick.STORE_LENGTH)
-    print(filename)
 
     if ahocorasick.unicode:
         add = ac.add_word

@@ -398,26 +398,51 @@ def plot3DPlotly(bitScores, zScores, lmScores, readId, dirName,
                         auto_open=interactive)
 
 
-def plotEvaluation(y, x, names, yAxisLabel):
+def plotEvaluation(y, x, names, yAxisLabel, title):
     """
     Plot the evaluation for different subsets of substrings.
 
     @param x: a C{list} of x coordinates.
     @param y: a C{list} of y coordinates.
     @param names: a C{list} of x tick names.
-    @param title: a C{str} label for the y axis.
+    @param yAxisLabel: a C{str} label for the y axis.
+    @param title: a C{str} label for the title.
     """
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
+    ax.grid()
+    gridlines = ax.get_xgridlines() + ax.get_ygridlines()
+    for line in gridlines:
+        line.set_linestyle('-')
+        line.set_color('lightgrey')
+    ax.set_axisbelow(True)
+
     ax.plot(x, y, 'o',
-            markerfacecolor='steelblue', markeredgecolor='steelblue')
-    ax.set_ylim(0.0, 1.0)
+            markerfacecolor='darkcyan', markeredgecolor='white',
+            markersize=16)
+
+    ax.set_ylim(0.0, 1.05)
+    ax.set_xlim(-0.5, len(names) - 0.5)
     ax.set_ylabel(yAxisLabel, fontsize=15)
-    plt.xticks(x, names, rotation=90, fontsize=15)
+    ax.set_title(title, fontsize=20)
+
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['bottom'].set_linewidth(0.5)
+    ax.spines['left'].set_linewidth(0.5)
+
+    ax.set_xticks(range(8))
+    ax.set_xticklabels(names, rotation=90, fontsize=15)
+    plt.tick_params(axis='x', which='both', bottom='on', top='off',
+                    labelbottom='on')
+    plt.tick_params(axis='y', which='both', left='on', right='off',
+                    labelbottom='on')
+    ax.xaxis.set_ticks_position('none')
+    ax.yaxis.set_ticks_position('none')
 
 
-def plotEvaluations(fileList, totalTpr=True, fractionOfPdbCovered=True,
+def plotEvaluations(fileList, title, totalTpr=True, fractionOfPdbCovered=True,
                     fractionOfStructuresCovered=True, correlation=True):
     """
     Plot the evaluation for different subsets.
@@ -431,6 +456,7 @@ def plotEvaluations(fileList, totalTpr=True, fractionOfPdbCovered=True,
         considered. Must be one of 'AlphaHelix', 'AlphaHelix_3_10',
         'AlphaHelix_pi', 'ExtendedStrand' and a C{str} name of this subset of
         substrings.
+    @param title: a C{str} title for the plot.
     @param totalTpr: if C{True}, evaluation about the total true positive rate
         will be performed.
     @param fractionOfPdbCovered: if C{True}, evaluation about the fraction of
@@ -449,7 +475,7 @@ def plotEvaluations(fileList, totalTpr=True, fractionOfPdbCovered=True,
             evaluation = PdbSubsetStatistics(files[0], files[1], files[2],
                                              files[3], files[4])
             x.append(evaluation.getTotalTpr())
-        plotEvaluation(x, range(len(x)), names, 'Total TPR')
+        plotEvaluation(x, range(len(x)), names, 'Total TPR', title)
 
     if fractionOfPdbCovered:
         x = []
@@ -460,7 +486,8 @@ def plotEvaluations(fileList, totalTpr=True, fractionOfPdbCovered=True,
                                              files[3], files[4])
             x.append(evaluation.getFractionOfPdbCovered())
         plotEvaluation(x, range(len(x)), names,
-                       'Fraction of structures in PDB matched by a substring')
+                       'Fraction of structures in PDB matched by a substring',
+                       title)
 
     if fractionOfStructuresCovered:
         x = []
@@ -472,7 +499,7 @@ def plotEvaluations(fileList, totalTpr=True, fractionOfPdbCovered=True,
             x.append(evaluation.getFractionOfStructuresCovered())
         plotEvaluation(x, range(len(x)), names,
                        ('Fraction of unique known %s matched by a substring' %
-                        files[4]))
+                        files[4]), title)
 
     if correlation:
         x = []
@@ -482,6 +509,6 @@ def plotEvaluations(fileList, totalTpr=True, fractionOfPdbCovered=True,
             evaluation = PdbSubsetStatistics(files[0], files[1], files[2],
                                              files[3], files[4])
             x.append(evaluation.getCorrelation())
-        plotEvaluation(x, (4 * [i] for i in range(len(x))), names,
+        plotEvaluation(x, sum([4 * [i] for i in range(len(x))], []), names,
                        'Correlation coefficient between PDB LM scores and '
-                       'scores using subset')
+                       'scores using subset', title)

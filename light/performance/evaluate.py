@@ -110,6 +110,20 @@ class PdbSubsetStatistics(object):
         self.findParams = FindParameters(significanceFraction=0.01,
                                          binScoreMethod='FeatureAAScore')
 
+        self.acAlphaHelixFilename = None
+        self.acAlphaHelix310Filename = None
+        self.acAlphaHelixPiFilename = None
+        self.acExtendedStrandFilename = None
+
+        if self.structureType == 'AlphaHelix':
+            self.acAlphaHelixFilename = self.fileToEvaluate
+        elif self.structureType == 'AlphaHelix_3_10':
+            self.acAlphaHelix310Filename = self.fileToEvaluate
+        elif self.structureType == 'AlphaHelix_pi':
+            self.acAlphaHelixPiFilename = self.fileToEvaluate
+        elif self.structureType == 'ExtendedStrand':
+            self.acExtendedStrandFilename = self.fileToEvaluate
+
     def getTotalTpr(self):
         """
         Return the total true positive rate of the subset of substrings that is
@@ -137,7 +151,10 @@ class PdbSubsetStatistics(object):
         db = DatabaseSpecifier().getDatabaseFromKeywords(
             trigPoints=[],
             landmarks=['AC ' + self.structureType],
-            acExtendedStrandFilename=self.fileToEvaluate)
+            acAlphaHelixFilename=self.acAlphaHelixFilename,
+            acAlphaHelix310Filename=self.acAlphaHelix310Filename,
+            acAlphaHelixPiFilename=self.acAlphaHelixPiFilename,
+            acExtendedStrandFilename=self.acExtendedStrandFilename)
 
         backend = Backend()
         backend.configure(db.dbParams)
@@ -163,7 +180,10 @@ class PdbSubsetStatistics(object):
         db = DatabaseSpecifier().getDatabaseFromKeywords(
             trigPoints=[],
             landmarks=['AC ' + self.structureType],
-            acExtendedStrandFilename=self.fileToEvaluate)
+            acAlphaHelixFilename=self.acAlphaHelixFilename,
+            acAlphaHelix310Filename=self.acAlphaHelix310Filename,
+            acAlphaHelixPiFilename=self.acAlphaHelixPiFilename,
+            acExtendedStrandFilename=self.acExtendedStrandFilename)
 
         backend = Backend()
         backend.configure(db.dbParams)
@@ -207,13 +227,15 @@ class PdbSubsetStatistics(object):
             pdbScores = []
             evaluateScores = []
 
-            pdbMatrix = affinityMatrix(datasets[data]['queries'],
-                                       subjects=datasets[data]['subjects'],
-                                       symmetric=False, computeDiagonal=True,
-                                       returnDict=False,
-                                       findParams=self.findParams,
-                                       landmarks=['PDB ' + self.structureType],
-                                       trigPoints=[])
+            pdbMatrix = affinityMatrix(
+                datasets[data]['queries'], subjects=datasets[data]['subjects'],
+                symmetric=False, computeDiagonal=True, returnDict=False,
+                findParams=self.findParams,
+                landmarks=['PDB ' + self.structureType], trigPoints=[],
+                acAlphaHelixFilename=self.acAlphaHelixFilename,
+                acAlphaHelix310Filename=self.acAlphaHelix310Filename,
+                acAlphaHelixPiFilename=self.acAlphaHelixPiFilename,
+                acExtendedStrandFilename=self.acExtendedStrandFilename)
 
             for i, query in enumerate(datasets[data]['queries']):
                 for j, subject in enumerate(datasets[data]['subjects']):
@@ -224,7 +246,11 @@ class PdbSubsetStatistics(object):
                 symmetric=False, computeDiagonal=True, returnDict=False,
                 findParams=self.findParams,
                 landmarks=['AC ' + self.structureType],
-                trigPoints=[])
+                trigPoints=[],
+                acAlphaHelixFilename=self.acAlphaHelixFilename,
+                acAlphaHelix310Filename=self.acAlphaHelix310Filename,
+                acAlphaHelixPiFilename=self.acAlphaHelixPiFilename,
+                acExtendedStrandFilename=self.acExtendedStrandFilename)
 
             for i, query in enumerate(datasets[data]['queries']):
                 for j, subject in enumerate(datasets[data]['subjects']):

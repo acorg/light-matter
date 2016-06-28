@@ -407,7 +407,7 @@ def plotEvaluation(y, x, names, yAxisLabel):
     @param names: a C{list} of x tick names.
     @param title: a C{str} label for the y axis.
     """
-    fig = plt.figure(figsize=(7, 5))
+    fig = plt.figure()
     ax = fig.add_subplot(111)
 
     ax.plot(x, y, 'o',

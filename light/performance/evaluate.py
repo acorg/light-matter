@@ -1,3 +1,5 @@
+from __future__ import division
+
 from scipy import stats
 
 from dark.fasta import FastaReads
@@ -115,15 +117,13 @@ class PdbSubsetStatistics(object):
         """
         totalTp = 0
         totalFp = 0
-        totalLength = 0
 
         with open(self.fileToEvaluateTpFp) as fp:
             for line in fp:
-                substring, stats = line.split('')
-                tp, fp, r = stats.split(' ')
-                totalTp += int(tp[:-1])
-                totalFp += int(fp[:-1])
-                totalLength += len(substring.strip())
+                substring, stats = line.split('(')
+                tp, fp, r = stats.split(',')
+                totalTp += int(tp)
+                totalFp += int(fp)
         return totalTp / (totalTp + totalFp)
 
     def getFractionOfPdbCovered(self):

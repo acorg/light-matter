@@ -178,9 +178,10 @@ will not be in any category. We have not investigated all of these, but in
 one case here's what is happening. `5DTG` entered PDB and its sequence and
 structure are still in the PDB `ss.txt` file.  But at some point PDB
 realized it was the same as `5HCU` or they renamed it to `5HCU` for some
-reason. As a result, there is only an entry in `pdb-structures-by-year.txt`
-for `5HCU`. So when we split `pdb-20160303-ss.txt.bz2` by year we drop
-`5HCU`.
+reason. As a result, in `pdb-structures-by-year.txt` there is only a
+category (2016) for `5HCU`. So when we split `pdb-20160303-ss.txt.bz2` by
+year, `5HCU` is omitted (and a warning is printed by
+`../light/performance/bin/split-pdb-ss-by-category.py`).
 
 ## PDB by year, cumulatively
 

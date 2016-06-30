@@ -156,6 +156,8 @@ The file `pdb-structures-by-year.txt` contains a listing of which PDB id
 entered PDB according to year. The first field of each line is a year and
 subsequent fields are space-separated PDB sequence ids.
 
+## PDB by year
+
 This file can be processed (by
 `../light/performance/bin/split-pdb-ss-by-category.py`) to produce
 individual FASTA files giving the sequences that entered PDB by year.
@@ -170,6 +172,17 @@ $ bzcat pdb-20160303-ss.txt.bz2 |
 
 Which will produce files named `pdb-1976.fasta`, `pdb-1977.fasta`,
 `pdb-1978.fasta`, etc.
+
+Note that when you do the above, 445 sequences in `pdb-20160303-ss.txt.bz2`
+will not be in any category. We have not investigated all of these, but in
+one case here's what is happening. `5DTG` entered PDB and its sequence and
+structure are still in the PDB `ss.txt` file.  But at some point PDB
+realized it was the same as `5HCU` or they renamed it to `5HCU` for some
+reason. As a result, there is only an entry in `pdb-structures-by-year.txt`
+for `5HCU`. So when we split `pdb-20160303-ss.txt.bz2` by year we drop
+`5HCU`.
+
+## PDB by year, cumulatively
 
 The `pdb-structures-by-year.txt` file can also be used to produce
 cumulative FASTA containing all PDB sequences over time. This is done by

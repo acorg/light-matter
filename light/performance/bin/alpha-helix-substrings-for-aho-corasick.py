@@ -89,7 +89,7 @@ result = selectSubstringsForAhoCorasick(
 
 if args.printCounts:
     for substring, counts in result['substrings']:
-        print(substring, counts)
+        print('%s %d %d %f' % (substring, counts[0], counts[1], counts[2]))
 else:
     for substring, _ in result['substrings']:
         print(substring)

@@ -18,7 +18,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument(
     '--length', type=int,
     help='The length of the substrings that will be produced. Must be bigger '
-         'than 3.')
+         'than 2.')
 
 parser.add_argument(
     '--pdbFile', help='A filename of the pdb file containing sequences and '
@@ -42,8 +42,8 @@ with open(args.excludeFile) as fp:
             exclude.add(string)
 
 # We only want to make subsets that are at least of length 4.
-if args.length < 4:
-    print('The length of the substrings must be >= 4. It\'s currently %d.' % (
+if args.length < 3:
+    print('The length of the substrings must be >= 3. It\'s currently %d.' % (
           args.length), file=sys.stderr)
     sys.exit(0)
 

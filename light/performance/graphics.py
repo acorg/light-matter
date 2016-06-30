@@ -6,11 +6,13 @@ from os.path import join
 from scipy import stats
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 from mpl_toolkits.mplot3d import Axes3D
 
 import plotly
 import plotly.graph_objs as go
 
+from light.performance.evaluate import PdbSubsetStatistics
 from light.performance.utils import pythonNameToPdbName
 
 # Keep pyflakes quiet by pretending to use Axes3D.
@@ -395,3 +397,241 @@ def plot3DPlotly(bitScores, zScores, lmScores, readId, dirName,
     filename = join(dirName, '%s.html' % readId)
     plotly.offline.plot(fig, show_link=False, filename=filename,
                         auto_open=interactive)
+
+
+def plotEvaluationTpr(x, y, names, structureType):
+    """
+    Plot the evaluation for different subsets of substrings.
+
+    @param x: a C{list} of x coordinates.
+    @param y: a C{list} of y coordinates.
+    @param names: a C{list} of x tick names.
+    @param structureType: a C{str} name of the structure type.
+    """
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    ax.grid()
+    gridlines = ax.get_xgridlines() + ax.get_ygridlines()
+    for line in gridlines:
+        line.set_linestyle('-')
+        line.set_color('lightgrey')
+    ax.set_axisbelow(True)
+
+    ax.plot(x, y, 'o-',
+            markerfacecolor='darkcyan', markeredgecolor='white', color='grey',
+            markersize=16)
+
+    ax.set_ylim(0.0, 1.05)
+    ax.set_xlim(-0.5, len(names) - 0.5)
+    ax.set_ylabel('Total TPR', fontsize=15)
+    ax.set_title('%s: total TPR' % structureType, fontsize=20)
+
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['bottom'].set_linewidth(0.5)
+    ax.spines['left'].set_linewidth(0.5)
+
+    ax.set_xticks(range(len(names)))
+    ax.set_xticklabels(names, rotation=90, fontsize=15)
+    plt.tick_params(axis='x', which='both', bottom='on', top='off',
+                    labelbottom='on')
+    plt.tick_params(axis='y', which='both', left='on', right='off',
+                    labelbottom='on')
+    ax.xaxis.set_ticks_position('none')
+    ax.yaxis.set_ticks_position('none')
+
+
+def plotEvaluationFraction(x, y1, y2, names, structureType):
+    """
+    Plot the evaluation of the fraction of PDB structures and the fraction of
+    known structures for different subsets of substrings.
+
+    @param x: a C{list} of x coordinates.
+    @param y1: a C{list} of y coordinates, corresponding to the fraction of
+        pdb covered.
+    @param y2: a C{list} of y coordinates, corresponding to the fraction of
+        structures covered.
+    @param names: a C{list} of x tick names.
+    @param structureType: a C{str} name of the structure type.
+    """
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    ax.grid()
+    gridlines = ax.get_xgridlines() + ax.get_ygridlines()
+    for line in gridlines:
+        line.set_linestyle('-')
+        line.set_color('lightgrey')
+    ax.set_axisbelow(True)
+
+    ax.plot(x, y1, 'o-',
+            markerfacecolor='darkcyan', markeredgecolor='white', color='grey',
+            markersize=16)
+    ax.plot(x, y2, 'o-',
+            markerfacecolor='steelblue', markeredgecolor='white', color='grey',
+            markersize=16)
+
+    ax.set_ylim(0.0, 1.05)
+    ax.set_xlim(-0.5, len(names) - 0.5)
+    ax.set_ylabel('Fraction matched by a substring', fontsize=15)
+    ax.set_title(
+        ('%s: fractions of PDB structures and known structures matched' %
+         structureType), fontsize=20)
+
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['bottom'].set_linewidth(0.5)
+    ax.spines['left'].set_linewidth(0.5)
+
+    ax.set_xticks(range(len(names)))
+    ax.set_xticklabels(names, rotation=90, fontsize=15)
+    plt.tick_params(axis='x', which='both', bottom='on', top='off',
+                    labelbottom='on')
+    plt.tick_params(axis='y', which='both', left='on', right='off',
+                    labelbottom='on')
+    ax.xaxis.set_ticks_position('none')
+    ax.yaxis.set_ticks_position('none')
+
+    darkcyan = mpatches.Patch(color='darkcyan',
+                              label='Fraction of PDB matched')
+    steelblue = mpatches.Patch(color='steelblue',
+                               label='Fraction of structures matched')
+
+    plt.legend(handles=[steelblue, darkcyan], loc=1)
+
+
+def plotEvaluationCorrelation(x, y1, y2, y3, y4, names, structureType):
+    """
+    Plot the evaluation for different subsets of substrings.
+
+    @param x: a C{list} of x coordinates.
+    @param y1: a C{list} of y coordinates.
+    @param y2: a C{list} of y coordinates.
+    @param y3: a C{list} of y coordinates.
+    @param y4: a C{list} of y coordinates.
+    @param names: a C{list} of x tick names.
+    @param structureType: a C{str} name of the structure type.
+    """
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    ax.grid()
+    gridlines = ax.get_xgridlines() + ax.get_ygridlines()
+    for line in gridlines:
+        line.set_linestyle('-')
+        line.set_color('lightgrey')
+    ax.set_axisbelow(True)
+
+    ax.plot(x, y1, 'o-',
+            markerfacecolor='darkcyan', markeredgecolor='white', color='grey',
+            markersize=16)
+    ax.plot(x, y2, 'o-',
+            markerfacecolor='steelblue', markeredgecolor='white', color='grey',
+            markersize=16)
+    ax.plot(x, y3, 'o-',
+            markerfacecolor='darkslateblue', markeredgecolor='white',
+            color='grey', markersize=16)
+    ax.plot(x, y4, 'o-',
+            markerfacecolor='dodgerblue', markeredgecolor='white',
+            color='grey', markersize=16)
+
+    ax.set_ylim(0.0, 1.05)
+    ax.set_xlim(-0.5, len(names) - 0.5)
+    ax.set_ylabel('Correlation coefficient', fontsize=15)
+    ax.set_title(
+        ('%s: Correlation coefficient PDB scores vs. scores from dataset' %
+         structureType), fontsize=20)
+
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['bottom'].set_linewidth(0.5)
+    ax.spines['left'].set_linewidth(0.5)
+
+    ax.set_xticks(range(len(names)))
+    ax.set_xticklabels(names, rotation=90, fontsize=15)
+    plt.tick_params(axis='x', which='both', bottom='on', top='off',
+                    labelbottom='on')
+    plt.tick_params(axis='y', which='both', left='on', right='off',
+                    labelbottom='on')
+    ax.xaxis.set_ticks_position('none')
+    ax.yaxis.set_ticks_position('none')
+
+    darkcyan = mpatches.Patch(color='darkcyan', label='2HLA')
+    steelblue = mpatches.Patch(color='steelblue', label='4MTP')
+    darkslateblue = mpatches.Patch(color='darkslateblue', label='Polymerase')
+    dodgerblue = mpatches.Patch(color='dodgerblue', label='HA')
+
+    plt.legend(handles=[steelblue, darkcyan, darkslateblue, dodgerblue], loc=1)
+
+
+def plotEvaluations(fileList, totalTpr=True, fractionsCovered=True,
+                    correlation=True):
+    """
+    Plot the evaluation for different subsets.
+
+    @param fileList: a C{list} of C{lists}, where each sub-list of length 6
+        contains the following:
+        - a C{str} filename with substrings that should be evaluated.
+        - a C{str} filename with substrings that should be evaluated as well as
+          their rates of true and false positives.
+        - a C{str} filename of the pdb ss.txt file.
+        - a C{str} filename of the structure strings extracted from the
+          pdbFile.
+        - a C{str} name of the structure type that should be considered. Must
+          be one of 'AlphaHelix', 'AlphaHelix_3_10', 'AlphaHelix_pi',
+          'ExtendedStrand'.
+        - C{str} name of this subset of substrings.
+    @param totalTpr: if C{True}, evaluation of the total true positive rate
+        will be performed.
+    @param fractionsCovered: if C{True}, evaluation of the fraction of pdb
+        and structure sequences matched at least once will be performed.
+    @param correlation: if C{True}, evaluation of the correlation between
+        light matter scores of the known PDB finder and its AC equivalent will
+        be performed.
+    """
+    if totalTpr:
+        y = []
+        names = []
+        for (fileToEvaluate, fileToEvaluateTpFp, pdbFile, structureFile,
+             structureType, filename) in fileList:
+            names.append(filename)
+            evaluation = PdbSubsetStatistics(fileToEvaluate,
+                                             fileToEvaluateTpFp, pdbFile,
+                                             structureFile, structureType)
+            y.append(evaluation.getTotalTpr())
+        plotEvaluationTpr(range(len(y)), y, names, structureType)
+
+    if fractionsCovered:
+        y1 = []
+        y2 = []
+        names = []
+        for (fileToEvaluate, fileToEvaluateTpFp, pdbFile, structureFile,
+             structureType, filename) in fileList:
+            names.append(filename)
+            evaluation = PdbSubsetStatistics(fileToEvaluate,
+                                             fileToEvaluateTpFp, pdbFile,
+                                             structureFile, structureType)
+            y1.append(evaluation.getFractionOfPdbCovered())
+            y2.append(evaluation.getFractionOfStructuresCovered())
+        plotEvaluationFraction(range(len(names)), y1, y2, names, structureType)
+
+    if correlation:
+        y_2hla = []
+        y_4mtp = []
+        y_poly = []
+        y_ha = []
+        names = []
+        for (fileToEvaluate, fileToEvaluateTpFp, pdbFile, structureFile,
+             structureType, filename) in fileList:
+            names.append(filename)
+            evaluation = PdbSubsetStatistics(fileToEvaluate,
+                                             fileToEvaluateTpFp, pdbFile,
+                                             structureFile, structureType)
+            result = evaluation.getCorrelation()
+            y_2hla.append(result['2HLA'])
+            y_4mtp.append(result['4MTP'])
+            y_poly.append(result['Polymerase'])
+            y_ha.append(result['HA'])
+        plotEvaluationCorrelation(range(len(names)), y_2hla, y_4mtp, y_poly,
+                                  y_ha, names, structureType)

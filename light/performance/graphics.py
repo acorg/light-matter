@@ -6,6 +6,7 @@ from os.path import join
 from scipy import stats
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 from mpl_toolkits.mplot3d import Axes3D
 
 import plotly
@@ -398,15 +399,14 @@ def plot3DPlotly(bitScores, zScores, lmScores, readId, dirName,
                         auto_open=interactive)
 
 
-def plotEvaluation(y, x, names, yAxisLabel, title):
+def plotEvaluationTpr(x, y, names, structureType):
     """
     Plot the evaluation for different subsets of substrings.
 
     @param x: a C{list} of x coordinates.
     @param y: a C{list} of y coordinates.
     @param names: a C{list} of x tick names.
-    @param yAxisLabel: a C{str} label for the y axis.
-    @param title: a C{str} label for the title.
+    @param structureType: a C{str} name of the structure type.
     """
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -418,21 +418,21 @@ def plotEvaluation(y, x, names, yAxisLabel, title):
         line.set_color('lightgrey')
     ax.set_axisbelow(True)
 
-    ax.plot(x, y, 'o',
-            markerfacecolor='darkcyan', markeredgecolor='white',
+    ax.plot(x, y, 'o-',
+            markerfacecolor='darkcyan', markeredgecolor='white', color='grey',
             markersize=16)
 
     ax.set_ylim(0.0, 1.05)
     ax.set_xlim(-0.5, len(names) - 0.5)
-    ax.set_ylabel(yAxisLabel, fontsize=15)
-    ax.set_title(title, fontsize=20)
+    ax.set_ylabel('Total TPR', fontsize=15)
+    ax.set_title('%s: total TPR' % structureType, fontsize=20)
 
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.spines['bottom'].set_linewidth(0.5)
     ax.spines['left'].set_linewidth(0.5)
 
-    ax.set_xticks(range(8))
+    ax.set_xticks(range(len(names)))
     ax.set_xticklabels(names, rotation=90, fontsize=15)
     plt.tick_params(axis='x', which='both', bottom='on', top='off',
                     labelbottom='on')
@@ -442,8 +442,131 @@ def plotEvaluation(y, x, names, yAxisLabel, title):
     ax.yaxis.set_ticks_position('none')
 
 
-def plotEvaluations(fileList, title, totalTpr=True, fractionOfPdbCovered=True,
-                    fractionOfStructuresCovered=True, correlation=True):
+def plotEvaluationFraction(x, y1, y2, names, structureType):
+    """
+    Plot the evaluation of the fraction of PDB structures and the fraction of
+    known structures for different subsets of substrings.
+
+    @param x: a C{list} of x coordinates.
+    @param y1: a C{list} of y coordinates, corresponding to the fraction of
+        pdb covered.
+    @param y2: a C{list} of y coordinates, corresponding to the fraction of
+        structures covered.
+    @param names: a C{list} of x tick names.
+    @param structureType: a C{str} name of the structure type.
+    """
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    ax.grid()
+    gridlines = ax.get_xgridlines() + ax.get_ygridlines()
+    for line in gridlines:
+        line.set_linestyle('-')
+        line.set_color('lightgrey')
+    ax.set_axisbelow(True)
+
+    ax.plot(x, y1, 'o-',
+            markerfacecolor='darkcyan', markeredgecolor='white', color='grey',
+            markersize=16)
+    ax.plot(x, y2, 'o-',
+            markerfacecolor='steelblue', markeredgecolor='white', color='grey',
+            markersize=16)
+
+    ax.set_ylim(0.0, 1.05)
+    ax.set_xlim(-0.5, len(names) - 0.5)
+    ax.set_ylabel('Fraction matched by a substring', fontsize=15)
+    ax.set_title(
+        ('%s: fractions of PDB structures and known structures matched' %
+         structureType), fontsize=20)
+
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['bottom'].set_linewidth(0.5)
+    ax.spines['left'].set_linewidth(0.5)
+
+    ax.set_xticks(range(len(names)))
+    ax.set_xticklabels(names, rotation=90, fontsize=15)
+    plt.tick_params(axis='x', which='both', bottom='on', top='off',
+                    labelbottom='on')
+    plt.tick_params(axis='y', which='both', left='on', right='off',
+                    labelbottom='on')
+    ax.xaxis.set_ticks_position('none')
+    ax.yaxis.set_ticks_position('none')
+
+    darkcyan = mpatches.Patch(color='darkcyan',
+                              label='Fraction of PDB matched')
+    steelblue = mpatches.Patch(color='steelblue',
+                               label='Fraction of structures matched')
+
+    plt.legend(handles=[steelblue, darkcyan], loc=1)
+
+
+def plotEvaluationCorrelation(x, y1, y2, y3, y4, names, structureType):
+    """
+    Plot the evaluation for different subsets of substrings.
+
+    @param x: a C{list} of x coordinates.
+    @param y1: a C{list} of y coordinates.
+    @param y2: a C{list} of y coordinates.
+    @param y3: a C{list} of y coordinates.
+    @param y4: a C{list} of y coordinates.
+    @param names: a C{list} of x tick names.
+    @param structureType: a C{str} name of the structure type.
+    """
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    ax.grid()
+    gridlines = ax.get_xgridlines() + ax.get_ygridlines()
+    for line in gridlines:
+        line.set_linestyle('-')
+        line.set_color('lightgrey')
+    ax.set_axisbelow(True)
+
+    ax.plot(x, y1, 'o-',
+            markerfacecolor='darkcyan', markeredgecolor='white', color='grey',
+            markersize=16)
+    ax.plot(x, y2, 'o-',
+            markerfacecolor='steelblue', markeredgecolor='white', color='grey',
+            markersize=16)
+    ax.plot(x, y3, 'o-',
+            markerfacecolor='darkslateblue', markeredgecolor='white',
+            color='grey', markersize=16)
+    ax.plot(x, y4, 'o-',
+            markerfacecolor='dodgerblue', markeredgecolor='white',
+            color='grey', markersize=16)
+
+    ax.set_ylim(0.0, 1.05)
+    ax.set_xlim(-0.5, len(names) - 0.5)
+    ax.set_ylabel('Correlation coefficient', fontsize=15)
+    ax.set_title(
+        ('%s: Correlation coefficient PDB scores vs. scores from dataset' %
+         structureType), fontsize=20)
+
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['bottom'].set_linewidth(0.5)
+    ax.spines['left'].set_linewidth(0.5)
+
+    ax.set_xticks(range(len(names)))
+    ax.set_xticklabels(names, rotation=90, fontsize=15)
+    plt.tick_params(axis='x', which='both', bottom='on', top='off',
+                    labelbottom='on')
+    plt.tick_params(axis='y', which='both', left='on', right='off',
+                    labelbottom='on')
+    ax.xaxis.set_ticks_position('none')
+    ax.yaxis.set_ticks_position('none')
+
+    darkcyan = mpatches.Patch(color='darkcyan', label='2HLA')
+    steelblue = mpatches.Patch(color='steelblue', label='4MTP')
+    darkslateblue = mpatches.Patch(color='darkslateblue', label='Polymerase')
+    dodgerblue = mpatches.Patch(color='dodgerblue', label='HA')
+
+    plt.legend(handles=[steelblue, darkcyan, darkslateblue, dodgerblue], loc=1)
+
+
+def plotEvaluations(fileList, totalTpr=True, fractionsCovered=True,
+                    correlation=True):
     """
     Plot the evaluation for different subsets.
 
@@ -456,59 +579,50 @@ def plotEvaluations(fileList, title, totalTpr=True, fractionOfPdbCovered=True,
         considered. Must be one of 'AlphaHelix', 'AlphaHelix_3_10',
         'AlphaHelix_pi', 'ExtendedStrand' and a C{str} name of this subset of
         substrings.
-    @param title: a C{str} title for the plot.
     @param totalTpr: if C{True}, evaluation about the total true positive rate
         will be performed.
-    @param fractionOfPdbCovered: if C{True}, evaluation about the fraction of
-        pdb structure sequences matched at least once will be performed.
-    @param fractionOfStructuresCovered: if C{true}, evaluation about the
-        fraction of known structures matched at least once will be performed.
+    @param fractionsCovered: if C{True}, evaluation about the fraction of pdb
+        and structure sequences matched at least once will be performed.
     @param correlation: if C{True}, evaluation about the correlation between
         light matter scores of the known PDB finder and it's AC equivalent will
         be performed.
     """
     if totalTpr:
-        x = []
+        y = []
         names = []
         for files in fileList:
             names.append(files[5])
             evaluation = PdbSubsetStatistics(files[0], files[1], files[2],
                                              files[3], files[4])
-            x.append(evaluation.getTotalTpr())
-        plotEvaluation(x, range(len(x)), names, 'Total TPR', title)
+            y.append(evaluation.getTotalTpr())
+        plotEvaluationTpr(range(len(y)), y, names, files[4])
 
-    if fractionOfPdbCovered:
-        x = []
+    if fractionsCovered:
+        y1 = []
+        y2 = []
         names = []
         for files in fileList:
             names.append(files[5])
             evaluation = PdbSubsetStatistics(files[0], files[1], files[2],
                                              files[3], files[4])
-            x.append(evaluation.getFractionOfPdbCovered())
-        plotEvaluation(x, range(len(x)), names,
-                       'Fraction of structures in PDB matched by a substring',
-                       title)
-
-    if fractionOfStructuresCovered:
-        x = []
-        names = []
-        for files in fileList:
-            names.append(files[5])
-            evaluation = PdbSubsetStatistics(files[0], files[1], files[2],
-                                             files[3], files[4])
-            x.append(evaluation.getFractionOfStructuresCovered())
-        plotEvaluation(x, range(len(x)), names,
-                       ('Fraction of unique known %s matched by a substring' %
-                        files[4]), title)
+            y1.append(evaluation.getFractionOfPdbCovered())
+            y2.append(evaluation.getFractionOfStructuresCovered())
+        plotEvaluationFraction(range(len(names)), y1, y2, names, files[4])
 
     if correlation:
-        x = []
+        y_2hla = []
+        y_4mtp = []
+        y_poly = []
+        y_ha = []
         names = []
         for files in fileList:
             names.append(files[5])
             evaluation = PdbSubsetStatistics(files[0], files[1], files[2],
                                              files[3], files[4])
-            x.append(evaluation.getCorrelation())
-        plotEvaluation(x, sum([4 * [i] for i in range(len(x))], []), names,
-                       'Correlation coefficient between PDB LM scores and '
-                       'scores using subset', title)
+            result = evaluation.getCorrelation()
+            y_2hla.append(result['2HLA'])
+            y_4mtp.append(result['4MTP'])
+            y_poly.append(result['Polymerase'])
+            y_ha.append(result['HA'])
+        plotEvaluationCorrelation(range(len(names)), y_2hla, y_4mtp, y_poly,
+                                  y_ha, names, files[4])

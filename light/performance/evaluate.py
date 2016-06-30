@@ -78,29 +78,27 @@ def evaluateMatchNoPrefix(structureString, start, end, structureType):
 
 
 class PdbSubsetStatistics(object):
+    """
+    A class which provides functions to assess the performance of a subset
+    of substrings.
+
+    @param fileToEvaluate: a C{str} filename with substrings that should be
+        evaluated.
+    @param fileToEvaluateTpFp: a C{str} filename with substrings that
+        should be evaluated and their rates of true and false positives. Each
+        line in the file should consist of:
+        structureString true positive count false positive count true positive
+        rate.
+    @param pdbFile: a C{str} filename of the pdb ss.txt file.
+    @param structureFile: a C{str} filename of the structure strings
+        extracted from the pdbFile.
+    @param structureType: a C{str} name of the structure type that should
+        be considered. Must be one of 'AlphaHelix', 'AlphaHelix_3_10',
+        'AlphaHelix_pi', 'ExtendedStrand'.
+    """
 
     def __init__(self, fileToEvaluate, fileToEvaluateTpFp, pdbFile,
                  structureFile, structureType):
-        """
-        A class which provides functions to assess the performance of a subset
-        of substrings.
-
-        @param fileToEvaluate: a C{str} filename with substrings that should be
-            evaluated.
-        @param fileToEvaluateTpFp: a C{str} filename with substrings that
-            should be evaluated and their rates of true and false positives.
-        @param pdbFile: a C{str} filename of the pdb ss.txt file.
-        @param structureFile: a C{str} filename of the structure strings
-            extracted from the pdbFile.
-        @param structureType: a C{str} name of the structure type that should
-            be considered. Must be one of 'AlphaHelix', 'AlphaHelix_3_10',
-            'AlphaHelix_pi', 'ExtendedStrand'.
-        """
-        assert structureType in (
-            'AlphaHelix', 'AlphaHelix_3_10', 'AlphaHelix_pi',
-            'ExtendedStrand'), (
-            'structureType %s must be one of "AlphaHelix", "AlphaHelix_3_10", '
-            '"AlphaHelix_pi", "ExtendedStrand"' % structureType)
 
         self.fileToEvaluate = fileToEvaluate
         self.fileToEvaluateTpFp = fileToEvaluateTpFp
@@ -123,6 +121,10 @@ class PdbSubsetStatistics(object):
             self.acAlphaHelixPiFilename = self.fileToEvaluate
         elif self.structureType == 'ExtendedStrand':
             self.acExtendedStrandFilename = self.fileToEvaluate
+        else:
+            ('structureType %s must be one of "AlphaHelix", '
+             '"AlphaHelix_3_10", "AlphaHelix_pi", "ExtendedStrand"' %
+             structureType)
 
     def getTotalTpr(self):
         """
@@ -134,16 +136,15 @@ class PdbSubsetStatistics(object):
 
         with open(self.fileToEvaluateTpFp) as fp:
             for line in fp:
-                substring, stats = line.split('(')
-                tp, fp, r = stats.split(',')
+                substring, tp, fp, tpr = line.split(' ')
                 totalTp += int(tp)
                 totalFp += int(fp)
         return totalTp / (totalTp + totalFp)
 
     def getFractionOfPdbCovered(self):
         """
-        Return the fraction of reads in PDB that are covered by at least one
-        substring in the subset of substrings that is being evaluated.
+        Return the fraction of sequences in PDB that are matched by at least
+        one substring in the subset of substrings that is being evaluated.
         """
         hit = 0
         total = 0
@@ -161,17 +162,16 @@ class PdbSubsetStatistics(object):
 
         for read in SSFastaReads(self.pdbFile, readClass=SSAAReadWithX,
                                  checkAlphabet=0):
-            if len(read) > 3:
-                total += 1
-                scannedRead = backend.scan(read)
-                if len(scannedRead.landmarks) > 0:
-                    hit += 1
+            total += 1
+            scannedRead = backend.scan(read)
+            if len(scannedRead.landmarks) > 0:
+                hit += 1
 
         return hit / total
 
     def getFractionOfStructuresCovered(self):
         """
-        Return the fraction of know structures covered by at least one
+        Return the fraction of known structures matched by at least one
         substring in the subset that is being evaluated.
         """
         hit = 0
@@ -190,11 +190,10 @@ class PdbSubsetStatistics(object):
 
         for read in FastaReads(self.structureFile, readClass=AAReadWithX,
                                checkAlphabet=0):
-            if len(read) > 2:
-                total += 1
-                scannedRead = backend.scan(read)
-                if len(scannedRead.landmarks) > 0:
-                    hit += 1
+            total += 1
+            scannedRead = backend.scan(read)
+            if len(scannedRead.landmarks) > 0:
+                hit += 1
 
         return hit / total
 
@@ -229,7 +228,7 @@ class PdbSubsetStatistics(object):
 
             pdbMatrix = affinityMatrix(
                 datasets[data]['queries'], subjects=datasets[data]['subjects'],
-                symmetric=False, computeDiagonal=True, returnDict=False,
+                symmetric=False, computeDiagonal=True, returnDict=True,
                 findParams=self.findParams,
                 landmarks=['PDB ' + self.structureType], trigPoints=[],
                 acAlphaHelixFilename=self.acAlphaHelixFilename,
@@ -237,13 +236,14 @@ class PdbSubsetStatistics(object):
                 acAlphaHelixPiFilename=self.acAlphaHelixPiFilename,
                 acExtendedStrandFilename=self.acExtendedStrandFilename)
 
-            for i, query in enumerate(datasets[data]['queries']):
-                for j, subject in enumerate(datasets[data]['subjects']):
-                    pdbScores.append(pdbMatrix[i][j])
+            for queryId in datasets[data]['queries']:
+                for subjectId in datasets[data]['subjects']:
+                    if queryId != subjectId:
+                        pdbScores.append(pdbMatrix[queryId][subjectId])
 
             evaluateMatrix = affinityMatrix(
                 datasets[data]['queries'], subjects=datasets[data]['subjects'],
-                symmetric=False, computeDiagonal=True, returnDict=False,
+                symmetric=False, computeDiagonal=True, returnDict=True,
                 findParams=self.findParams,
                 landmarks=['AC ' + self.structureType],
                 trigPoints=[],
@@ -252,9 +252,11 @@ class PdbSubsetStatistics(object):
                 acAlphaHelixPiFilename=self.acAlphaHelixPiFilename,
                 acExtendedStrandFilename=self.acExtendedStrandFilename)
 
-            for i, query in enumerate(datasets[data]['queries']):
-                for j, subject in enumerate(datasets[data]['subjects']):
-                    evaluateScores.append(evaluateMatrix[i][j])
+            for queryId in datasets[data]['queries']:
+                for subjectId in datasets[data]['subjects']:
+                    if queryId != subjectId:
+                        evaluateScores.append(
+                            evaluateMatrix[queryId][subjectId])
 
             slope, intercept, rValue, pValue, se = stats.linregress(
                 pdbScores, evaluateScores)
@@ -266,6 +268,9 @@ class PdbSubsetStatistics(object):
     def runAll(self):
         """
         Return the result of all evaluations.
+
+        @return: the result of running getTotalTpr, getFractionOfPdbCovered,
+            getFractionOfStructuresCovered, getCorrelation
         """
         totalTpr = self.getTotalTpr()
         fractionOfPdbCovered = self.getFractionOfPdbCovered()

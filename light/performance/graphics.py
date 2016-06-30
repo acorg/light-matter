@@ -570,44 +570,51 @@ def plotEvaluations(fileList, totalTpr=True, fractionsCovered=True,
     """
     Plot the evaluation for different subsets.
 
-    @param fileList: a C{list} of C{lists}, where each list contains the
-        following: a C{str} filename with substrings that should be evaluated,
-        a C{str} filename with substrings that should be evaluated as well as
-        their rates of true and false positives, a C{str} filename of the pdb
-        ss.txt file, a C{str} filename of the structure strings extracted from
-        the pdbFile, a C{str} name of the structure type that should be
-        considered. Must be one of 'AlphaHelix', 'AlphaHelix_3_10',
-        'AlphaHelix_pi', 'ExtendedStrand' and a C{str} name of this subset of
-        substrings.
-    @param totalTpr: if C{True}, evaluation about the total true positive rate
+    @param fileList: a C{list} of C{lists}, where each sub-list of length 6
+        contains the following:
+        - a C{str} filename with substrings that should be evaluated.
+        - a C{str} filename with substrings that should be evaluated as well as
+          their rates of true and false positives.
+        - a C{str} filename of the pdb ss.txt file.
+        - a C{str} filename of the structure strings extracted from the
+          pdbFile.
+        - a C{str} name of the structure type that should be considered. Must
+          be one of 'AlphaHelix', 'AlphaHelix_3_10', 'AlphaHelix_pi',
+          'ExtendedStrand'.
+        - C{str} name of this subset of substrings.
+    @param totalTpr: if C{True}, evaluation of the total true positive rate
         will be performed.
-    @param fractionsCovered: if C{True}, evaluation about the fraction of pdb
+    @param fractionsCovered: if C{True}, evaluation of the fraction of pdb
         and structure sequences matched at least once will be performed.
-    @param correlation: if C{True}, evaluation about the correlation between
-        light matter scores of the known PDB finder and it's AC equivalent will
+    @param correlation: if C{True}, evaluation of the correlation between
+        light matter scores of the known PDB finder and its AC equivalent will
         be performed.
     """
     if totalTpr:
         y = []
         names = []
-        for files in fileList:
-            names.append(files[5])
-            evaluation = PdbSubsetStatistics(files[0], files[1], files[2],
-                                             files[3], files[4])
+        for (fileToEvaluate, fileToEvaluateTpFp, pdbFile, structureFile,
+             structureType, filename) in fileList:
+            names.append(filename)
+            evaluation = PdbSubsetStatistics(fileToEvaluate,
+                                             fileToEvaluateTpFp, pdbFile,
+                                             structureFile, structureType)
             y.append(evaluation.getTotalTpr())
-        plotEvaluationTpr(range(len(y)), y, names, files[4])
+        plotEvaluationTpr(range(len(y)), y, names, structureType)
 
     if fractionsCovered:
         y1 = []
         y2 = []
         names = []
-        for files in fileList:
-            names.append(files[5])
-            evaluation = PdbSubsetStatistics(files[0], files[1], files[2],
-                                             files[3], files[4])
+        for (fileToEvaluate, fileToEvaluateTpFp, pdbFile, structureFile,
+             structureType, filename) in fileList:
+            names.append(filename)
+            evaluation = PdbSubsetStatistics(fileToEvaluate,
+                                             fileToEvaluateTpFp, pdbFile,
+                                             structureFile, structureType)
             y1.append(evaluation.getFractionOfPdbCovered())
             y2.append(evaluation.getFractionOfStructuresCovered())
-        plotEvaluationFraction(range(len(names)), y1, y2, names, files[4])
+        plotEvaluationFraction(range(len(names)), y1, y2, names, structureType)
 
     if correlation:
         y_2hla = []
@@ -615,14 +622,16 @@ def plotEvaluations(fileList, totalTpr=True, fractionsCovered=True,
         y_poly = []
         y_ha = []
         names = []
-        for files in fileList:
-            names.append(files[5])
-            evaluation = PdbSubsetStatistics(files[0], files[1], files[2],
-                                             files[3], files[4])
+        for (fileToEvaluate, fileToEvaluateTpFp, pdbFile, structureFile,
+             structureType, filename) in fileList:
+            names.append(filename)
+            evaluation = PdbSubsetStatistics(fileToEvaluate,
+                                             fileToEvaluateTpFp, pdbFile,
+                                             structureFile, structureType)
             result = evaluation.getCorrelation()
             y_2hla.append(result['2HLA'])
             y_4mtp.append(result['4MTP'])
             y_poly.append(result['Polymerase'])
             y_ha.append(result['HA'])
         plotEvaluationCorrelation(range(len(names)), y_2hla, y_4mtp, y_poly,
-                                  y_ha, names, files[4])
+                                  y_ha, names, structureType)

@@ -149,3 +149,45 @@ finder. The number at the end of the filename corresponds to the cut-off
 used to determine which helices should be in the file. E.g., all helices in
 `aho-corasick-alpha-helix-prefixes-1` have a true positive to false
 positive ratio of 1 or more.
+
+# PDB structures by individual year and cumulatively
+
+The file `pdb-structures-by-year.txt` contains a listing of which PDB id
+entered PDB according to year. The first field of each line is a year and
+subsequent fields are space-separated PDB sequence ids.
+
+This file can be processed (by
+`../light/performance/bin/split-pdb-ss-by-category.py`) to produce
+individual FASTA files giving the sequences that entered PDB by year.
+
+E.g.,
+
+```sh
+$ bzcat pdb-20160303-ss.txt.bz2 |
+  ../light/performance/bin/split-pdb-ss-by-category.py --prefix pdb- \
+  --categories pdb-structures-by-year.txt
+```
+
+Which will produce files named `pdb-1976.fasta`, `pdb-1977.fasta`,
+`pdb-1978.fasta`, etc.
+
+The `pdb-structures-by-year.txt` file can also be used to produce
+cumulative FASTA containing all PDB sequences over time. This is done by
+first making a cumulative category file:
+
+```sh
+$ ../light/performance/bin/convert-pdb-id-by-category-to-cumulative.py < \
+    pdb-structures-by-year.txt > pdb-structures-by-year-cumulative.txt
+```
+
+and then using `../light/performance/bin/split-pdb-ss-by-category.py` (just
+as above) to produce FASTA files with cumulative sets of sequences:
+
+```sh
+$ bzcat pdb-20160303-ss.txt.bz2 |
+  ../light/performance/bin/split-pdb-ss-by-category.py --prefix pdb-cumulative- \
+  --categories pdb-structures-by-year-cumulative.txt
+```
+
+which will produce files named `pdb-cumulative-1976-1976.fasta`,
+`pdb-cumulative-1976-1977.fasta`, `pdb-cumulative-1976-1978.fasta`, etc.

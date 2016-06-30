@@ -180,8 +180,9 @@ structure are still in the PDB `ss.txt` file.  But at some point PDB
 realized it was the same as `5HCU` or they renamed it to `5HCU` for some
 reason. As a result, in `pdb-structures-by-year.txt` there is only a
 category (2016) for `5HCU`. So when we split `pdb-20160303-ss.txt.bz2` by
-year, `5HCU` is omitted (and a warning is printed by
-`../light/performance/bin/split-pdb-ss-by-category.py`).
+category using `../light/performance/bin/split-pdb-ss-by-category.py`,
+`5DTG` has no category (i.e., no year). It is therefore skipped and a
+warning is printed.
 
 ## PDB by year, cumulatively
 

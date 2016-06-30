@@ -149,3 +149,60 @@ finder. The number at the end of the filename corresponds to the cut-off
 used to determine which helices should be in the file. E.g., all helices in
 `aho-corasick-alpha-helix-prefixes-1` have a true positive to false
 positive ratio of 1 or more.
+
+# PDB structures by individual year and cumulatively
+
+The file `pdb-structures-by-year.txt` contains a listing of which PDB id
+entered PDB according to year. The first field of each line is a year and
+subsequent fields are space-separated PDB sequence ids.
+
+## PDB by year
+
+This file can be processed (by
+`../light/performance/bin/split-pdb-ss-by-category.py`) to produce
+individual FASTA files giving the sequences that entered PDB by year.
+
+E.g.,
+
+```sh
+$ bzcat pdb-20160303-ss.txt.bz2 |
+  ../light/performance/bin/split-pdb-ss-by-category.py --prefix pdb- \
+  --categories pdb-structures-by-year.txt
+```
+
+Which will produce files named `pdb-1976.fasta`, `pdb-1977.fasta`,
+`pdb-1978.fasta`, etc.
+
+Note that when you do the above, 445 sequences in `pdb-20160303-ss.txt.bz2`
+will not be in any category. We have not investigated all of these, but in
+one case here's what is happening. `5DTG` entered PDB and its sequence and
+structure are still in the PDB `ss.txt` file.  But at some point PDB
+realized it was the same as `5HCU` or they renamed it to `5HCU` for some
+reason. As a result, in `pdb-structures-by-year.txt` there is only a
+category (2016) for `5HCU`. So when we split `pdb-20160303-ss.txt.bz2` by
+category using `../light/performance/bin/split-pdb-ss-by-category.py`,
+`5DTG` has no category (i.e., no year). It is therefore skipped and a
+warning is printed.
+
+## PDB by year, cumulatively
+
+The `pdb-structures-by-year.txt` file can also be used to produce
+cumulative FASTA containing all PDB sequences over time. This is done by
+first making a cumulative category file:
+
+```sh
+$ ../light/performance/bin/convert-pdb-id-by-category-to-cumulative.py < \
+    pdb-structures-by-year.txt > pdb-structures-by-year-cumulative.txt
+```
+
+and then using `../light/performance/bin/split-pdb-ss-by-category.py` (just
+as above) to produce FASTA files with cumulative sets of sequences:
+
+```sh
+$ bzcat pdb-20160303-ss.txt.bz2 |
+  ../light/performance/bin/split-pdb-ss-by-category.py --prefix pdb-cumulative- \
+  --categories pdb-structures-by-year-cumulative.txt
+```
+
+which will produce files named `pdb-cumulative-1976-1976.fasta`,
+`pdb-cumulative-1976-1977.fasta`, `pdb-cumulative-1976-1978.fasta`, etc.

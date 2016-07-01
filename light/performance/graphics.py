@@ -420,7 +420,7 @@ def plotEvaluationTpr(x, y, names, structureType):
 
     ax.plot(x, y, 'o-',
             markerfacecolor='darkcyan', markeredgecolor='white', color='grey',
-            markersize=16)
+            markersize=16, alpha=0.7)
 
     ax.set_ylim(0.0, 1.05)
     ax.set_xlim(-0.5, len(names) - 0.5)
@@ -467,10 +467,10 @@ def plotEvaluationFraction(x, y1, y2, names, structureType):
 
     ax.plot(x, y1, 'o-',
             markerfacecolor='darkcyan', markeredgecolor='white', color='grey',
-            markersize=16)
+            markersize=16, alpha=0.7)
     ax.plot(x, y2, 'o-',
             markerfacecolor='steelblue', markeredgecolor='white', color='grey',
-            markersize=16)
+            markersize=16, alpha=0.7)
 
     ax.set_ylim(0.0, 1.05)
     ax.set_xlim(-0.5, len(names) - 0.5)
@@ -493,12 +493,13 @@ def plotEvaluationFraction(x, y1, y2, names, structureType):
     ax.xaxis.set_ticks_position('none')
     ax.yaxis.set_ticks_position('none')
 
-    darkcyan = mpatches.Patch(color='darkcyan',
+    darkcyan = mpatches.Patch(color='darkcyan', alpha=0.7,
                               label='Fraction of PDB matched')
-    steelblue = mpatches.Patch(color='steelblue',
+    steelblue = mpatches.Patch(color='steelblue', alpha=0.7,
                                label='Fraction of structures matched')
 
-    plt.legend(handles=[steelblue, darkcyan], loc=1)
+    plt.legend(handles=[steelblue, darkcyan], bbox_to_anchor=(1.43, 1.02),
+               framealpha=0.0)
 
 
 def plotEvaluationCorrelation(x, y1, y2, y3, y4, names, structureType):
@@ -525,22 +526,22 @@ def plotEvaluationCorrelation(x, y1, y2, y3, y4, names, structureType):
 
     ax.plot(x, y1, 'o-',
             markerfacecolor='darkcyan', markeredgecolor='white', color='grey',
-            markersize=16)
+            markersize=16, alpha=0.7)
     ax.plot(x, y2, 'o-',
             markerfacecolor='steelblue', markeredgecolor='white', color='grey',
-            markersize=16)
+            markersize=16, alpha=0.7)
     ax.plot(x, y3, 'o-',
             markerfacecolor='darkslateblue', markeredgecolor='white',
-            color='grey', markersize=16)
+            color='grey', markersize=16, alpha=0.7)
     ax.plot(x, y4, 'o-',
             markerfacecolor='dodgerblue', markeredgecolor='white',
-            color='grey', markersize=16)
+            color='grey', markersize=16, alpha=0.7)
 
-    ax.set_ylim(0.0, 1.05)
+    ax.set_ylim(-1.05, 1.05)
     ax.set_xlim(-0.5, len(names) - 0.5)
     ax.set_ylabel('Correlation coefficient', fontsize=15)
     ax.set_title(
-        ('%s: Correlation coefficient PDB scores vs. scores from dataset' %
+        ('%s: Correlation coefficient PDB scores vs scores from subset' %
          structureType), fontsize=20)
 
     ax.spines['top'].set_visible(False)
@@ -557,12 +558,14 @@ def plotEvaluationCorrelation(x, y1, y2, y3, y4, names, structureType):
     ax.xaxis.set_ticks_position('none')
     ax.yaxis.set_ticks_position('none')
 
-    darkcyan = mpatches.Patch(color='darkcyan', label='2HLA')
-    steelblue = mpatches.Patch(color='steelblue', label='4MTP')
-    darkslateblue = mpatches.Patch(color='darkslateblue', label='Polymerase')
-    dodgerblue = mpatches.Patch(color='dodgerblue', label='HA')
+    darkcyan = mpatches.Patch(color='darkcyan', alpha=0.7, label='2HLA')
+    steelblue = mpatches.Patch(color='steelblue', alpha=0.7, label='4MTP')
+    darkslateblue = mpatches.Patch(color='darkslateblue', alpha=0.7,
+                                   label='Polymerase')
+    dodgerblue = mpatches.Patch(color='dodgerblue', alpha=0.7, label='HA')
 
-    plt.legend(handles=[steelblue, darkcyan, darkslateblue, dodgerblue], loc=1)
+    plt.legend(handles=[steelblue, darkcyan, darkslateblue, dodgerblue],
+               bbox_to_anchor=(1.42, 1.02), framealpha=0.0)
 
 
 def plotEvaluations(fileList, totalTpr=True, fractionsCovered=True,

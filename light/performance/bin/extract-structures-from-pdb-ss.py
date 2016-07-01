@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+
 """
 Read PDB secondary structure records from stdin, find the desired structure
 (from the predicted secondary structure) and print just the desired structure

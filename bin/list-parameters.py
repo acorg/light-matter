@@ -5,6 +5,8 @@ Print all database and find parameters available via the command line,
 with their default values (according to argparse).
 """
 
+from __future__ import print_function
+
 import argparse
 
 from light.parameters import DatabaseParameters, FindParameters

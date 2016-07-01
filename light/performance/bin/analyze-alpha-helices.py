@@ -7,6 +7,8 @@ their properties (primarily amino acid hydropathy). Write a summary to
 stdout.
 """
 
+from __future__ import print_function
+
 import sys
 import argparse
 

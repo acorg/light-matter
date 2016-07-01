@@ -7,6 +7,8 @@ its subsequences to stdout, also in FASTA format.
 Run with --help to see all options.
 """
 
+from __future__ import print_function
+
 import sys
 import argparse
 from collections import Counter

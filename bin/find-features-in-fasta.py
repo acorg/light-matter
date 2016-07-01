@@ -10,6 +10,8 @@ taken from PDB secondary structures) and check to see if our finders can find
 the features.
 """
 
+from __future__ import print_function
+
 import sys
 import argparse
 from collections import Counter

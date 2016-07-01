@@ -26,6 +26,8 @@ the case of years this would normally be going forward in time. Other
 categories and accumulation orders can be imagined.
 """
 
+from __future__ import print_function
+
 import sys
 import argparse
 

@@ -182,7 +182,8 @@ reason. As a result, in `pdb-structures-by-year.txt` there is only a
 category (2016) for `5HCU`. So when we split `pdb-20160303-ss.txt.bz2` by
 category using `../light/performance/bin/split-pdb-ss-by-category.py`,
 `5DTG` has no category (i.e., no year). It is therefore skipped and a
-warning is printed.
+warning is printed. You can turn off these warnings via
+`--ignoreUncategorizedSequences`.
 
 ## PDB by year, cumulatively
 
@@ -195,13 +196,16 @@ $ ../light/performance/bin/convert-pdb-id-by-category-to-cumulative.py < \
     pdb-structures-by-year.txt > pdb-structures-by-year-cumulative.txt
 ```
 
-and then using `../light/performance/bin/split-pdb-ss-by-category.py` (just
-as above) to produce FASTA files with cumulative sets of sequences:
+and then again using `../light/performance/bin/split-pdb-ss-by-category.py`
+to produce FASTA files with cumulative sets of sequences. We need to pass a
+flag to allow a sequence id to appear in multiple categories (i.e., years)
+seeing as the categories are cumulative:
 
 ```sh
 $ bzcat pdb-20160303-ss.txt.bz2 |
   ../light/performance/bin/split-pdb-ss-by-category.py --prefix pdb-cumulative- \
-  --categories pdb-structures-by-year-cumulative.txt
+  --categories pdb-structures-by-year-cumulative.txt \
+  --allowSeqsInMultipleCategories
 ```
 
 which will produce files named `pdb-cumulative-1976-1976.fasta`,

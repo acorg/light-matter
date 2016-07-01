@@ -37,10 +37,25 @@ parser.add_argument(
           'considered in matching. If not, the chain is ignored, making '
           'it simple to extract all chains via a single sequence id.'))
 
+parser.add_argument(
+    '--allowSeqsInMultipleCategories', default=False, action='store_true',
+    help=('If True, sequence ids may be in multiple categories. If not, '
+          'a ValueError is raised if a sequence id appears in more than '
+          'one category.'))
+
+parser.add_argument(
+    '--ignoreUncategorizedSequences', default=False, action='store_true',
+    help=('If True, sequence ids that are not in any category will be '
+          'reported to stderr. If not, they are silently ignored.'))
+
 args = parser.parse_args()
 
-sequenceIdToCategory = {}
-categories = set()
+# sequenceIdToCategories is keyed by a sequence id and its values hold all
+# the categories that sequence id is in.
+sequenceIdToCategories = defaultdict(set)
+
+# Hold the name of all categories seen in args.categories.
+categoryNames = set()
 
 # Read all categories and their sequence ids.
 
@@ -49,26 +64,32 @@ with open(args.categories) as fp:
         fields = line.split()
         category = fields.pop(0)
         sequenceIds = fields
-        if category in categories:
+        if category in categoryNames:
             raise ValueError('Duplicate category %r found in %r' %
                              (category, args.categories))
-        categories.add(category)
+        categoryNames.add(category)
         for sequenceId in map(str.lower, sequenceIds):
-            if sequenceId in sequenceIdToCategory:
-                if sequenceIdToCategory[sequenceId] == category:
-                    # At the moment we only allow a sequence to be in a
-                    # single category. That could be relaxed.
+            if sequenceId in sequenceIdToCategories:
+                if category in sequenceIdToCategories[sequenceId]:
+                    # The sequence id has been given more than once in the
+                    # *same* category.  We could just ignore this, but this
+                    # kind of thing is often indicative of an error in
+                    # whatever was used to produce the input, so I prefer
+                    # to flag it.
                     raise ValueError(
                         'Sequence id %r found more than once in category %r '
                         'in %r' % (sequenceId, category, args.categories))
                 else:
-                    raise ValueError(
-                        'Sequence id %r found in multiple categories (%r '
-                        'and %r) in %r' %
-                        (sequenceId, category,
-                         sequenceIdToCategory[sequenceId],
-                         args.categories))
-            sequenceIdToCategory[sequenceId] = category
+                    if not args.allowSeqsInMultipleCategories:
+                        sequenceIdToCategories[sequenceId].add(category)
+                        raise ValueError(
+                            'Sequence id %r found in multiple categories (%s) '
+                            'in %r' %
+                            (sequenceId,
+                             ', '.join(sorted(
+                                 sequenceIdToCategories[sequenceId])),
+                             args.categories))
+            sequenceIdToCategories[sequenceId].add(category)
 
 # Read the PDB sequence information and add each sequence to its category.
 #
@@ -85,19 +106,19 @@ for sequence in SSFastaReads(sys.stdin, readClass=SSAAReadWithX,
     if args.keepChain:
         sequenceId += '_' + chain
 
-    try:
-        category = sequenceIdToCategory[sequenceId]
-    except KeyError:
-        print('Sequence %r on stdin is not in any category.' % sequence.id,
-              file=sys.stderr)
+    if sequenceId in sequenceIdToCategories:
+        for category in sequenceIdToCategories[sequenceId]:
+            sequencesByCategory[category].add(sequence)
     else:
-        sequencesByCategory[category].add(sequence)
+        if not args.ignoreUncategorizedSequences:
+            print('Sequence %r on stdin is not in any category.' % sequence.id,
+                  file=sys.stderr)
 
 # Write out all the sequences for each category. Loop over the keys of
-# categories (not sequencesByCategory) to make sure we write an empty file
-# for categories that have no sequences in them.
+# categoryNames (not sequencesByCategory) to make sure we write an empty
+# file for categories that have no sequences in them.
 
-for category in sorted(categories):
+for category in sorted(categoryNames):
     filename = args.prefix + category + '.fasta'
     sequences = sequencesByCategory[category]
     with open(filename, 'w') as fp:

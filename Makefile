@@ -1,5 +1,12 @@
 .PHONY: check, tcheck, pep8, pyflakes, lint, wc, clean, update-prosite, perf
 
+# If you are on OS X, you'll need the GNU version of find. If you're using
+# brew, run brew install findutils (which installs gfind in /usr/local/bin).
+FIND := $(shell which gfind || which find)
+
+XARGS := $(shell which parallel || which xargs) $(shell test $$(uname) = Linux && echo -r)
+
+
 check: light/_distance.so
 	python -m discover -v
 
@@ -10,7 +17,7 @@ light/_distance.so: src/distance.py
 	python setup.py build_ext -i
 
 pep8:
-	find . -path ./light/colors -prune -o \
+	$(FIND) . -path ./light/colors -prune -o \
             -path ./light/performance/data/polymerase/zScores.py -prune -o \
             -path ./light/performance/data/polymerase/bitScores.py -prune -o \
             -path ./light/performance/data/pdb_2hla_a/zScores.py -prune -o \
@@ -19,7 +26,7 @@ pep8:
             -path ./light/performance/data/pdb_4mtp_a/bitScores.py -prune -o \
             -path ./light/performance/data/ha/zScores.py -prune -o \
             -path ./light/performance/data/ha/bitScores.py -prune -o \
-            -name '*.py' -print0 | xargs -0 pep8 --ignore=E402
+            -name '*.py' -print0 | $(XARGS) -0 pep8 --ignore=E402
 	pep8 --ignore=E201,E241,E501 \
             light/performance/data/ha/zScores.py \
             light/performance/data/polymerase/zScores.py \
@@ -32,17 +39,17 @@ pep8:
             light/performance/data/pdb_4mtp_a/bitScores.py
 
 pyflakes:
-	find . -path ./light/colors/six.py -prune -o -name '*.py' -print0 | xargs -0 pyflakes 2>&1 | bin/check-pyflakes-output.sh
+	$(FIND) . -path ./light/colors/six.py -prune -o -name '*.py' -print0 | $(XARGS) -0 pyflakes 2>&1 | bin/check-pyflakes-output.sh
 
 lint: pep8 pyflakes
 
 wc:
-	find . -path ./light/colors -prune -o -path ./test/colors -prune -o -name '*.py' -print0 | xargs -0 wc -l
+	$(FIND) . -path ./light/colors -prune -o -path ./test/colors -prune -o -name '*.py' -print0 | $(XARGS) -0 wc -l
 
 clean:
-	find . \( -name '*.pyc' -o -name '*~' \) -print0 | xargs -0 rm
-	find . -name __pycache__ -type d -print0 | xargs -0 rmdir
-	find . -name _trial_temp -type d -print0 | xargs -0 rm -r
+	$(FIND) . \( -name '*.pyc' -o -name '*~' \) -print0 | $(XARGS) -0 rm
+	$(FIND) . -name __pycache__ -type d -print0 | $(XARGS) -0 rmdir
+	$(FIND) . -name _trial_temp -type d -print0 | $(XARGS) -0 rm -r
 	rm -f light/*.so
 	rm -fr build
 
@@ -50,7 +57,7 @@ perf:
 	light/performance/bin/perf.py
 
 performance-data:
-	find light/performance/data -name __pycache__ -prune -o -type d -depth 1 -print0 | xargs -0 -n 1 make -C
+	$(FIND) light/performance/data -maxdepth 1 -mindepth 1 \( \! -name __pycache__ \) -type d -print0 | $(XARGS) -0 -n 1 make -C
 
 update-prosite:
 	@echo "Downloading Prosite database... this may take a while."

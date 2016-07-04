@@ -62,7 +62,8 @@ def splitFASTA(params):
             fileCount += 1
         count += 1
         print(read.toString(format_='fasta'), end='', file=outfp)
-    outfp.close()
+    if outfp is not None:
+        outfp.close()
     return fileCount, seqCount
 
 

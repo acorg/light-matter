@@ -46,7 +46,7 @@ class TestGOR4AlphaHelix(TestCase):
         # The GOR IV secondary structure prediction is
         # 'CCCCCCCCCCHHHHHHHCCHHHHHHHHHHHCCCCEEEEECCEEEEEEEEC'
         self.assertEqual([Landmark('GOR4AlphaHelix', 'GA', 10, 7, scaled7),
-                          Landmark('GOR4AlphaHelix', 'GA', 19, 11, scaled11)],
+                          Landmark('GOR4AlphaHelix', 'GA', 19, 9, scaled11)],
                          result)
 
     def testApoamicyaninTwoAlphaHelixsWithNonDefaultFeatureLengthBase(self):
@@ -67,7 +67,7 @@ class TestGOR4AlphaHelix(TestCase):
         # The GOR IV secondary structure prediction is
         # 'CCCCCCCCCCHHHHHHHCCHHHHHHHHHHHCCCCEEEEECCEEEEEEEEC'
         self.assertEqual([Landmark('GOR4AlphaHelix', 'GA', 10, 7, scaled7),
-                          Landmark('GOR4AlphaHelix', 'GA', 19, 11, scaled11)],
+                          Landmark('GOR4AlphaHelix', 'GA', 19, 9, scaled11)],
                          result)
 
     def testStoreLengthCorrectly(self):
@@ -80,7 +80,7 @@ class TestGOR4AlphaHelix(TestCase):
         landmark = GOR4AlphaHelix(dbParams)
         result = list(landmark.find(read))
         scaled47 = scaleLog(47, 1.5)
-        self.assertEqual([Landmark('GOR4AlphaHelix', 'GA', 10, 47, scaled47)],
+        self.assertEqual([Landmark('GOR4AlphaHelix', 'GA', 10, 46, scaled47)],
                          result)
 
 

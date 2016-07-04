@@ -113,4 +113,4 @@ BIT_SCORES = """, end='')
 if args.compact:
     print(dumps(result, separators=(',', ':')))
 else:
-    print(dumps(result, indent='  ', sort_keys=True))
+    print(dumps(result, indent=2, sort_keys=True))

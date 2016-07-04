@@ -3,7 +3,7 @@
 pyahocorasick==1.1.0
 autobahn==0.10.9
 biopython==1.65
-dark-matter==>=1.0.31
+dark-matter==>=1.0.32
 discover==0.4.0
 matplotlib==1.4.3
 --allow-external mysql-connector-python

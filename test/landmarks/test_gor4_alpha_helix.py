@@ -63,11 +63,11 @@ class TestGOR4AlphaHelix(TestCase):
         landmark = GOR4AlphaHelix(dbParams)
         result = list(landmark.find(read))
         scaled7 = scaleLog(7, featureLengthBase)
-        scaled11 = scaleLog(11, featureLengthBase)
+        scaled9 = scaleLog(9, featureLengthBase)
         # The GOR IV secondary structure prediction is
         # 'CCCCCCCCCCHHHHHHHCCHHHHHHHHHHHCCCCEEEEECCEEEEEEEEC'
         self.assertEqual([Landmark('GOR4AlphaHelix', 'GA', 10, 7, scaled7),
-                          Landmark('GOR4AlphaHelix', 'GA', 19, 9, scaled11)],
+                          Landmark('GOR4AlphaHelix', 'GA', 19, 9, scaled9)],
                          result)
 
     def testStoreLengthCorrectly(self):

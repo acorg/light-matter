@@ -101,10 +101,10 @@ don't know how well it performs yet.
 
 ### The current default subsets for the Aho Corasick finders are:
 
-ac-alpha-helix-substrings-20-0.85
-ac-alpha-helix-3-10-substrings-1-0.5
-ac-alpha-helix-pi-substrings-1-0.5
-ac-extended-strand-substrings-10-0.5
+* ac-alpha-helix-substrings-20-0.85
+* ac-alpha-helix-3-10-substrings-1-0.5
+* ac-alpha-helix-pi-substrings-1-0.5
+* ac-extended-strand-substrings-10-0.5
 
 For a description of how they were made, see [PDB alpha helices substrings evaluations, 17/6/2016](https://notebooks.antigenic-cartography.org/barbara/pages/features/pdb-alpha-helix-evaluation.html) and [Finders based on PDB AlphaHelix_3_10, PDB AlphaHelix_pi and PDB ExtendedStrand, 27/4/2016](https://notebooks.antigenic-cartography.org/barbara/pages/features/pdb-finders.html).
 

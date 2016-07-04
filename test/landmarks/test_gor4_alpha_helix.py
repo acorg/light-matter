@@ -31,7 +31,7 @@ class TestGOR4AlphaHelix(TestCase):
         result = list(landmark.find(read))
         self.assertEqual([], result)
 
-    def testApoamicyaninTwoAlphaHelixs(self):
+    def testApoamicyaninTwoAlphaHelices(self):
         """
         The GOR4AlphaHelix landmark finder must find the two expected landmarks
         in a fragment of the APOAMICYANIN sequence from the GOR IV reference
@@ -42,11 +42,11 @@ class TestGOR4AlphaHelix(TestCase):
         landmark = GOR4AlphaHelix()
         result = list(landmark.find(read))
         scaled7 = scaleLog(7, DatabaseParameters.DEFAULT_FEATURE_LENGTH_BASE)
-        scaled11 = scaleLog(11, DatabaseParameters.DEFAULT_FEATURE_LENGTH_BASE)
+        scaled9 = scaleLog(9, DatabaseParameters.DEFAULT_FEATURE_LENGTH_BASE)
         # The GOR IV secondary structure prediction is
         # 'CCCCCCCCCCHHHHHHHCCHHHHHHHHHHHCCCCEEEEECCEEEEEEEEC'
         self.assertEqual([Landmark('GOR4AlphaHelix', 'GA', 10, 7, scaled7),
-                          Landmark('GOR4AlphaHelix', 'GA', 19, 11, scaled11)],
+                          Landmark('GOR4AlphaHelix', 'GA', 19, 9, scaled9)],
                          result)
 
     def testApoamicyaninTwoAlphaHelixsWithNonDefaultFeatureLengthBase(self):
@@ -63,11 +63,11 @@ class TestGOR4AlphaHelix(TestCase):
         landmark = GOR4AlphaHelix(dbParams)
         result = list(landmark.find(read))
         scaled7 = scaleLog(7, featureLengthBase)
-        scaled11 = scaleLog(11, featureLengthBase)
+        scaled9 = scaleLog(9, featureLengthBase)
         # The GOR IV secondary structure prediction is
         # 'CCCCCCCCCCHHHHHHHCCHHHHHHHHHHHCCCCEEEEECCEEEEEEEEC'
         self.assertEqual([Landmark('GOR4AlphaHelix', 'GA', 10, 7, scaled7),
-                          Landmark('GOR4AlphaHelix', 'GA', 19, 11, scaled11)],
+                          Landmark('GOR4AlphaHelix', 'GA', 19, 9, scaled9)],
                          result)
 
     def testStoreLengthCorrectly(self):
@@ -79,8 +79,8 @@ class TestGOR4AlphaHelix(TestCase):
         dbParams = DatabaseParameters(featureLengthBase=1.5)
         landmark = GOR4AlphaHelix(dbParams)
         result = list(landmark.find(read))
-        scaled47 = scaleLog(47, 1.5)
-        self.assertEqual([Landmark('GOR4AlphaHelix', 'GA', 10, 47, scaled47)],
+        scaled46 = scaleLog(46, 1.5)
+        self.assertEqual([Landmark('GOR4AlphaHelix', 'GA', 10, 46, scaled46)],
                          result)
 
 

@@ -322,7 +322,7 @@ class DatabaseParameters(object):
     DEFAULT_RANDOM_TRIG_POINT_DENSITY = 0.1
     DEFAULT_AC_ALPHAHELIX_FILENAME = join(
         dirname(light.__file__), '..', 'data',
-        'ac-alpha-helix-substrings-20-0.9')
+        'ac-alpha-helix-substrings-20-0.85')
     DEFAULT_AC_ALPHAHELIX_3_10_FILENAME = join(
         dirname(light.__file__), '..', 'data',
         'ac-alpha-helix-3-10-substrings-1-0.5')

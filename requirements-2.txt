@@ -8,6 +8,16 @@ dark-matter>=1.0.32
 discover==0.4.0
 matplotlib==1.4.3
 mock==1.0.1
+#
+# Sometimes pip complains that it cannot find the mysql-connector-python
+# module. So if the following mysql-connector-python lines do not work,
+# install the module manually via:
+#
+#   $ wget https://cdn.mysql.com/Downloads/Connector-Python/mysql-connector-python-2.0.3.zip
+#   $ unzip mysql-connector-python-2.0.3.zip
+#   $ cd mysql-connector-python-2.0.3
+#   $ python setup.py install
+#
 --allow-external mysql-connector-python
 mysql-connector-python==2.0.4
 numpy==1.10.1

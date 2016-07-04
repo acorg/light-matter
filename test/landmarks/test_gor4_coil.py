@@ -27,10 +27,11 @@ class TestGOR4Coil(TestCase):
         read = AARead('id', 'VICVIC')
         landmark = GOR4Coil()
         result = list(landmark.find(read))
-        scaled1 = scaleLog(1, DatabaseParameters.DEFAULT_FEATURE_LENGTH_BASE)
+        scaled2 = scaleLog(2, DatabaseParameters.DEFAULT_FEATURE_LENGTH_BASE)
+        scaled0 = scaleLog(0, DatabaseParameters.DEFAULT_FEATURE_LENGTH_BASE)
         # The GOR IV secondary structure prediction is 'EECEEC'.
-        self.assertEqual([Landmark('GOR4Coil', 'GC', 2, 1, scaled1),
-                          Landmark('GOR4Coil', 'GC', 5, 1, scaled1)],
+        self.assertEqual([Landmark('GOR4Coil', 'GC', 0, 2, scaled2),
+                          Landmark('GOR4Coil', 'GC', 5, 1, scaled0)],
                          result)
 
     def testAllCoil(self):
@@ -56,17 +57,17 @@ class TestGOR4Coil(TestCase):
         read = AARead('id', seq)
         landmark = GOR4Coil()
         result = list(landmark.find(read))
-        scaled1 = scaleLog(1, DatabaseParameters.DEFAULT_FEATURE_LENGTH_BASE)
         scaled2 = scaleLog(2, DatabaseParameters.DEFAULT_FEATURE_LENGTH_BASE)
-        scaled4 = scaleLog(4, DatabaseParameters.DEFAULT_FEATURE_LENGTH_BASE)
+        scaled3 = scaleLog(3, DatabaseParameters.DEFAULT_FEATURE_LENGTH_BASE)
+        scaled5 = scaleLog(5, DatabaseParameters.DEFAULT_FEATURE_LENGTH_BASE)
         scaled10 = scaleLog(10, DatabaseParameters.DEFAULT_FEATURE_LENGTH_BASE)
         # The GOR IV secondary structure prediction is
         # 'CCCCCCCCCCHHHHHHHCCHHHHHHHHHHHCCCCEEEEECCEEEEEEEEC'.
         self.assertEqual([Landmark('GOR4Coil', 'GC', 0, 10, scaled10),
                           Landmark('GOR4Coil', 'GC', 17, 2, scaled2),
-                          Landmark('GOR4Coil', 'GC', 30, 4, scaled4),
-                          Landmark('GOR4Coil', 'GC', 39, 2, scaled2),
-                          Landmark('GOR4Coil', 'GC', 49, 1, scaled1)],
+                          Landmark('GOR4Coil', 'GC', 28, 6, scaled5),
+                          Landmark('GOR4Coil', 'GC', 39, 3, scaled3),
+                          Landmark('GOR4Coil', 'GC', 45, 5, scaled5)],
                          result)
 
     def testApoamicyaninFiveCoilsWithNonDefaultFeatureLengthBase(self):
@@ -82,17 +83,18 @@ class TestGOR4Coil(TestCase):
         dbParams = DatabaseParameters(featureLengthBase=featureLengthBase)
         landmark = GOR4Coil(dbParams)
         result = list(landmark.find(read))
-        scaled1 = scaleLog(1, featureLengthBase)
         scaled2 = scaleLog(2, featureLengthBase)
+        scaled3 = scaleLog(3, featureLengthBase)
         scaled4 = scaleLog(4, featureLengthBase)
+        scaled6 = scaleLog(6, featureLengthBase)
         scaled10 = scaleLog(10, featureLengthBase)
         # The GOR IV secondary structure prediction is
         # 'CCCCCCCCCCHHHHHHHCCHHHHHHHHHHHCCCCEEEEECCEEEEEEEEC'.
         self.assertEqual([Landmark('GOR4Coil', 'GC', 0, 10, scaled10),
                           Landmark('GOR4Coil', 'GC', 17, 2, scaled2),
-                          Landmark('GOR4Coil', 'GC', 30, 4, scaled4),
-                          Landmark('GOR4Coil', 'GC', 39, 2, scaled2),
-                          Landmark('GOR4Coil', 'GC', 49, 1, scaled1)],
+                          Landmark('GOR4Coil', 'GC', 28, 6, scaled6),
+                          Landmark('GOR4Coil', 'GC', 39, 3, scaled3),
+                          Landmark('GOR4Coil', 'GC', 45, 5, scaled4)],
                          result)
 
     def testLengthMustBeStoredCorrectly(self):
@@ -102,8 +104,6 @@ class TestGOR4Coil(TestCase):
         read = AARead('id', 'DKATIPSESP')
         landmark = GOR4Coil()
         result = list(landmark.find(read))
-        scaled6 = scaleLog(6, DatabaseParameters.DEFAULT_FEATURE_LENGTH_BASE)
-        scaled1 = scaleLog(1, DatabaseParameters.DEFAULT_FEATURE_LENGTH_BASE)
-        self.assertEqual([Landmark('GOR4Coil', 'GC', 0, 6, scaled6),
-                          Landmark('GOR4Coil', 'GC', 9, 1, scaled1)],
+        scaled9 = scaleLog(9, DatabaseParameters.DEFAULT_FEATURE_LENGTH_BASE)
+        self.assertEqual([Landmark('GOR4Coil', 'GC', 0, 10, scaled9)],
                          result)

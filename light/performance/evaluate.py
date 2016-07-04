@@ -236,10 +236,10 @@ class PdbSubsetStatistics(object):
                 acAlphaHelixPiFilename=self.acAlphaHelixPiFilename,
                 acExtendedStrandFilename=self.acExtendedStrandFilename)
 
-            for queryId in datasets[data]['queries']:
-                for subjectId in datasets[data]['subjects']:
-                    if queryId != subjectId:
-                        pdbScores.append(pdbMatrix[queryId][subjectId])
+            for query in datasets[data]['queries']:
+                for subject in datasets[data]['subjects']:
+                    if query.id != subject.id:
+                        pdbScores.append(pdbMatrix[query.id][subject.id])
 
             evaluateMatrix = affinityMatrix(
                 datasets[data]['queries'], subjects=datasets[data]['subjects'],
@@ -252,11 +252,11 @@ class PdbSubsetStatistics(object):
                 acAlphaHelixPiFilename=self.acAlphaHelixPiFilename,
                 acExtendedStrandFilename=self.acExtendedStrandFilename)
 
-            for queryId in datasets[data]['queries']:
-                for subjectId in datasets[data]['subjects']:
-                    if queryId != subjectId:
+            for query in datasets[data]['queries']:
+                for subject in datasets[data]['subjects']:
+                    if query.id != subject.id:
                         evaluateScores.append(
-                            evaluateMatrix[queryId][subjectId])
+                            evaluateMatrix[query.id][subject.id])
 
             slope, intercept, rValue, pValue, se = stats.linregress(
                 pdbScores, evaluateScores)

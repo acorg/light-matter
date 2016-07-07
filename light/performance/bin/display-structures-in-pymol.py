@@ -38,18 +38,18 @@ ALL_FEATURES = [
 
 FEATURE_COLORS = dict(zip([feature[0] for feature in ALL_FEATURES], COLORS))
 
-CHAIN_COLORS = ['grey', 'scandium', 'tin', 'deuterium', 'deuterium']
+CHAIN_COLORS = ['grey', 'scandium', 'tin', 'deuterium', 'white']
 
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(
-        description='Displays a set of given structures and their features in '
-        'PyMOL.')
+        description=('Displays a set of given structures and their features '
+                     'in PyMOL.'))
 
     parser.add_argument(
         '--structureName', action='append', dest='structureNames',
-        help=('The names of the structures that should be displayed'))
+        help='The names of the structures that should be displayed')
 
     parser.add_argument(
         '--structureFile', action='append', dest='structureFiles',
@@ -58,30 +58,31 @@ if __name__ == '__main__':
 
     parser.add_argument(
         '--printParams', default=False, action='store_true',
-        help=('If given, print the values of all parameters used.'))
+        help='If given, print the values of all parameters used.')
 
     parser.add_argument(
         '--printColors', default=False, action='store_true',
-        help=('If given, print the colors for each finder.'))
+        help='If given, print the colors for each finder.')
 
     FindParameters.addArgsToParser(parser)
     DatabaseParameters.addArgsToParser(parser)
 
     args = parser.parse_args()
 
-dbParams = DatabaseParameters.fromArgs(args)
-findParams = FindParameters.fromArgs(args)
+    dbParams = DatabaseParameters.fromArgs(args)
+    findParams = FindParameters.fromArgs(args)
 
-if args.printParams:
-    print('DATABASE PARAMETERS')
-    print(dbParams.print_(margin='  '))
-    print('FIND PARAMETERS')
-    print(findParams.print_(margin='  '))
+    if args.printParams:
+        print('DATABASE PARAMETERS')
+        print(dbParams.print_(margin='  '))
+        print('FIND PARAMETERS')
+        print(findParams.print_(margin='  '))
 
-if args.printColors:
-    print('COLORS')
-    for i, feature in enumerate(ALL_FEATURES):
-        print(ALL_FEATURES[i][0], '\t', ALL_FEATURES[i][1], '\t', COLORS[i])
+    if args.printColors:
+        print('COLORS')
+        for i, feature in enumerate(ALL_FEATURES):
+            print(ALL_FEATURES[i][0], '\t', ALL_FEATURES[i][1], '\t',
+                  COLORS[i])
 
 notFirst = False
 
@@ -90,14 +91,13 @@ database = Database(dbParams)
 backend = Backend()
 backend.configure(database.dbParams)
 
-# Loop over the structures that where provided and display them.
+# Loop over the structures that were provided and display them.
 for i, structureName in enumerate(args.structureNames):
     # Read the sequence out of the PDB file.
     s = PDBParser(PERMISSIVE=1).get_structure(structureName,
                                               args.structureFiles[i])
     chains = Reads()
     for chain in s.get_chains():
-        chainId = chain.id
         chainSequence = ''
         for aa in chain.get_residues():
             try:
@@ -105,7 +105,7 @@ for i, structureName in enumerate(args.structureNames):
             except AttributeError:
                 aa1 = 'X'
             chainSequence += aa1
-        chains.add(AAReadWithX(chainId, chainSequence))
+        chains.add(AAReadWithX(chain.id, chainSequence))
 
     # Load the structure into PyMOL.
     cmd.load(args.structureFiles[i])
@@ -134,7 +134,7 @@ for i, structureName in enumerate(args.structureNames):
                     'stored.first=resv')
         # reassign the residue numbers.
         cmd.alter('%s' % structureChain,
-                  'resi=str(int(resi)-%s)' % str(int(stored.first) - 0))
+                  'resi=str(int(resi)-%s)' % str(int(stored.first)))
     cmd.rebuild()
 
     # Color the features and chains.
@@ -164,7 +164,7 @@ for i, structureName in enumerate(args.structureNames):
                                                    structureName)
             cmd.color(color, what)
 
-# Display the structures in a grid.
+# Display the structures next to each other.
 cmd.set('grid_mode')
 # Display the sequences.
 cmd.set('seq_view')

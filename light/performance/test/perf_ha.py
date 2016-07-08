@@ -163,6 +163,7 @@ class TestBitScoreZScoreLightMatterScore3D(TestCase):
             allZScores = []
             allBitScores = []
             allLmScores = []
+            allLabels = []
             for queryId in sorted(BIT_SCORES):
                 zScores = []
                 bitScores = []
@@ -175,6 +176,9 @@ class TestBitScoreZScoreLightMatterScore3D(TestCase):
                         lmScore = getScore(affinity, queryId, subjectId)
                         lmScores.append(lmScore)
                         labels.append(pythonNameToPdbName(subjectId))
+                        allLabels.append('%s vs. %s' % (
+                            pythonNameToPdbName(queryId),
+                            pythonNameToPdbName(subjectId)))
                 allZScores.extend(zScores)
                 allBitScores.extend(bitScores)
                 allLmScores.extend(lmScores)
@@ -190,7 +194,8 @@ class TestBitScoreZScoreLightMatterScore3D(TestCase):
 
             # Plot all scores on one plot.
             plot3DPlotly(allBitScores, allZScores, allLmScores, 'all',
-                         dirName, interactive=testArgs.interactive)
+                         dirName, interactive=testArgs.interactive,
+                         labels=allLabels)
 
             if testArgs.interactive:
                 response = input('Continue? ')

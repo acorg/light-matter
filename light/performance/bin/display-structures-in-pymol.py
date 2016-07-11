@@ -58,6 +58,12 @@ if __name__ == '__main__':
               'file format'))
 
     parser.add_argument(
+        '--colorBestBin', default=False, action='store_true',
+        help=('If given, features in the best bin will be colored red. If '
+              'there are multiple chains, then for each chain the best bin of '
+              'the best match with any other chain will be colored.'))
+
+    parser.add_argument(
         '--printParams', default=False, action='store_true',
         help='If given, print the values of all parameters used.')
 
@@ -66,7 +72,7 @@ if __name__ == '__main__':
         help='If given, print the colors for each finder.')
 
     parser.add_argument(
-        '--makeLegend', default=False, action='store_true',
+        '--showLegend', default=False, action='store_true',
         help='If given, display a legend of which color corresponds to which '
         'feature.')
 
@@ -90,7 +96,7 @@ if __name__ == '__main__':
             print(ALL_FEATURES[i][0], '\t', ALL_FEATURES[i][1], '\t',
                   COLORS[i])
 
-    if args.makeLegend:
+    if args.showLegend:
         cgo = makeLegend()
         cmd.load_cgo(cgo, 'legend')
 
@@ -127,6 +133,9 @@ if __name__ == '__main__':
         # Align all structures to the first structure that was loaded.
         if not notFirst:
             notFirst = structureName
+            if args.colorBestBin:
+                for chain in chains:
+                    database.addSubject(chain)
         else:
             cmd.align(notFirst, structureName)
 
@@ -174,6 +183,52 @@ if __name__ == '__main__':
                 what = 'resi %d-%d & chain %s & %s' % (start, end - 1,
                                                        chain.id, structureName)
                 cmd.color(color, what)
+
+    if args.colorBestBin:
+        if notFirst != structureName:
+            for chain in chains:
+                result = database.find(chain, findParams,
+                                       storeFullAnalysis=True)
+                analysis = result.analysis
+                # Get the best match
+                bestScore = 0
+                bestSubjectIndex = 0
+                for subjectIndex in analysis:
+                    if analysis[subjectIndex]['overallScore'] > bestScore:
+                        bestScore = analysis[subjectIndex]['overallScore']
+                        bestSubjectIndex = subjectIndex
+                bin_ = analysis[bestSubjectIndex]['significantBins'][0]['bin']
+                subjectChain = \
+                    database.getSubjectByIndex(bestSubjectIndex).read
+
+                for match in bin_:
+                    subjectLmStart = match['subjectLandmark'].offset
+                    subjectLmEnd = subjectLmStart + (
+                        match['subjectLandmark'].length)
+                    subjectLandmark = 'resi %d-%d & %s & chain %s' % (
+                        subjectLmStart, subjectLmEnd - 1, notFirst,
+                        subjectChain.id)
+                    cmd.color('br9', subjectLandmark)
+
+                    subjectTpStart = match['subjectTrigPoint'].offset
+                    subjectTpEnd = subjectTpStart + (
+                        match['subjectTrigPoint'].length)
+                    subjectTrigPoint = 'resi %d-%d & %s & chain %s' % (
+                        subjectTpStart, subjectTpEnd - 1, notFirst,
+                        subjectChain.id)
+                    cmd.color('br9', subjectTrigPoint)
+
+                    queryLmStart = match['queryLandmark'].offset
+                    queryLmEnd = queryLmStart + match['queryLandmark'].length
+                    queryLandmark = 'resi %d-%d & %s & chain %s' % (
+                        queryLmStart, queryLmEnd - 1, structureName, chain.id)
+                    cmd.color('br9', queryLandmark)
+
+                    queryTpStart = match['queryTrigPoint'].offset
+                    queryTpEnd = queryTpStart + match['queryTrigPoint'].length
+                    queryTrigPoint = 'resi %d-%d & %s & chain %s' % (
+                        queryTpStart, queryTpEnd - 1, structureName, chain.id)
+                    cmd.color('br9', queryTrigPoint)
 
     # Display the structures next to each other.
     cmd.set('grid_mode')

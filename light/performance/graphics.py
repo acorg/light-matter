@@ -13,7 +13,7 @@ import plotly
 import plotly.graph_objs as go
 
 from light.performance.evaluate import PdbSubsetStatistics
-from light.performance.utils import pythonNameToPdbName
+from light.performance.pdb import pythonNameToPdbName
 
 # Keep pyflakes quiet by pretending to use Axes3D.
 _ = Axes3D

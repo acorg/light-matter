@@ -2,11 +2,12 @@ from unittest import TestCase, skip
 
 from light.performance import testArgs
 from light.performance.affinity import AffinityMatrices, getScore
-from light.performance.graphics import plot, plot3D, plot3DPlotly
-from light.performance.utils import makeOutputDir, pythonNameToPdbName
 from light.performance.data.pdb_2hla_a import (
     Z_SCORES, BIT_SCORES, QUERIES, SUBJECTS, DATASET)
+from light.performance.graphics import plot, plot3D, plot3DPlotly
+from light.performance.pdb import pythonNameToPdbName
 from light.performance.test.filesystem import FILESYSTEM_NAME
+from light.performance.utils import makeOutputDir
 
 _AFFINITY = AffinityMatrices(QUERIES, SUBJECTS, symmetric=False,
                              computeDiagonal=True, returnDict=True,

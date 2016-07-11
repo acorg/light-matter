@@ -53,7 +53,7 @@ def pythonNameToPdbName(name):
         return name
 
 
-def loadObsoletePDB(filename):
+def loadObsolete(filename):
     """
     Read a file of obsolete PDB structures.
 
@@ -61,6 +61,7 @@ def loadObsoletePDB(filename):
     ftp://ftp.wwpdb.org/pub/pdb/data/status/obsolete.dat (we currently have a
     copy of this in data/pdb-20160711-obsolete.txt).
 
+    @param filename: A C{str} file name to read.
     @raises ValueError: If the input file is not in the expected format.
     @return: A C{dict} whose keys are C{str} PDB identifiers and whose
         values are C{dict}s with the following keys:
@@ -109,5 +110,81 @@ def loadObsoletePDB(filename):
                     'date': date,
                     'successors': successors,
                 }
+
+    return result
+
+
+def loadResolution(filename, whenConflicting='best'):
+    """
+    Read a file of PDB structure resolutions.
+
+    The file will typically be the one at
+    ftp://ftp.wwpdb.org/pub/pdb/derived_data/index/resolu.idx (we currently
+    have a copy of this in data/pdb-20160711-resolution.txt).
+
+    @param filename: A C{str} file name to read.
+    @param whenConflicting: A C{str} value indicating what to do when a
+        structure is found more than once on input. Possible values are
+        'best', 'worst', 'raise', to return the best (numerically smallest)
+        resolution, worst (numerically highest) resolution, or to raise
+        a C{ValueError}.
+    @raises ValueError: If the input file is not in the expected format or
+        if C{whenConflicting} is invalid.
+    @return: A C{dict} whose keys are C{str} PDB identifiers and whose
+        values are C{float} resolutions (in Angstroms).
+    """
+    conflictResolutions = ('best', 'worst', 'raise')
+    if whenConflicting not in conflictResolutions:
+        raise ValueError('whenConflicting must be one of %s.' %
+                         ', '.join(sorted(conflictResolutions)))
+
+    result = {}
+
+    headerLines = [
+        'PROTEIN DATA BANK LIST OF IDCODES AND DATA RESOLUTION VALUES\n',
+        None,  # Date line - not checked.
+        ('RESOLUTION VALUE IS -1.00 FOR ENTRIES DERIVED FROM NMR AND OTHER '
+         'EXPERIMENT METHODS (NOT INCLUDING X-RAY) IN WHICH THE FIELD '
+         'REFINE.LS_D_RES_HIGH IS EMPTY\n'),
+        '\n',
+        'IDCODE       RESOLUTION\n',
+        '------  -    ----------\n',
+    ]
+
+    headerLineCount = len(headerLines)
+
+    with open(filename) as fp:
+        for lineNum, line in enumerate(fp, start=1):
+            if lineNum <= headerLineCount:
+                expected = headerLines[lineNum - 1]
+                if expected is not None:
+                    if line != expected:
+                        raise ValueError(
+                            'Line %d of %r was expected to be %r but was %r.'
+                            % (lineNum, filename, expected, line))
+            else:
+                pdbId, semicolon, resolution = line.split()
+                if semicolon != ';':
+                    raise ValueError(
+                        'Line %d of %r does not contain expected semicolon '
+                        'separator.' % (lineNum, filename))
+
+                resolution = float(resolution)
+
+                try:
+                    existingResolution = result[pdbId]
+                except KeyError:
+                    result[pdbId] = resolution
+                else:
+                    if whenConflicting == 'best':
+                        if resolution < existingResolution:
+                            result[pdbId] = resolution
+                    elif whenConflicting == 'worst':
+                        if resolution > existingResolution:
+                            result[pdbId] = resolution
+                    else:
+                        raise ValueError(
+                            'Repeated PDB id %r found on line %d of input '
+                            'file %r.' % (pdbId, lineNum, filename))
 
     return result

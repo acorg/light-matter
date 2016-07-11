@@ -10,7 +10,7 @@ except ImportError:
 from ..mocking import mockOpen
 
 from light.performance.pdb import (
-    pdbNameToPythonName, pythonNameToPdbName, loadObsoletePDB)
+    pdbNameToPythonName, pythonNameToPdbName, loadObsolete, loadResolution)
 
 
 class TestPdbNameToPythonName(TestCase):
@@ -105,9 +105,9 @@ class TestPythonNameToPdbName(TestCase):
         self.assertEqual('1MLA:A', pythonNameToPdbName('pdb_1mla_a'))
 
 
-class TestLoadObsoletePDB(TestCase):
+class TestLoadObsolete(TestCase):
     """
-    Tests for the loadObsoletePDB function.
+    Tests for the loadObsolete function.
     """
 
     FIRST_LINE = ' LIST OF OBSOLETE COORDINATE ENTRIES AND SUCCESSORS'
@@ -120,7 +120,7 @@ class TestLoadObsoletePDB(TestCase):
         with patch.object(builtins, 'open', mockOpener):
             error = "^Unexpected first line of input file 'filename'."
             six.assertRaisesRegex(self, ValueError, error,
-                                  loadObsoletePDB, 'filename')
+                                  loadObsolete, 'filename')
 
     def testMissingOBSLTE(self):
         """
@@ -136,7 +136,7 @@ class TestLoadObsoletePDB(TestCase):
             error = ("^Line 2 of input file 'filename' does not start with "
                      "OBSLTE\.$")
             six.assertRaisesRegex(self, ValueError, error,
-                                  loadObsoletePDB, 'filename')
+                                  loadObsolete, 'filename')
 
     def testTooFewFields(self):
         """
@@ -151,7 +151,7 @@ class TestLoadObsoletePDB(TestCase):
             error = ("^Line 2 of input file 'filename' has 2 fields "
                      "\(expected 3 or more\)\.$")
             six.assertRaisesRegex(self, ValueError, error,
-                                  loadObsoletePDB, 'filename')
+                                  loadObsolete, 'filename')
 
     def testRepeatedId(self):
         """
@@ -167,7 +167,7 @@ class TestLoadObsoletePDB(TestCase):
             error = ("^Repeated PDB id '4HLA' found on line 3 of input "
                      "file 'filename'\.$")
             six.assertRaisesRegex(self, ValueError, error,
-                                  loadObsoletePDB, 'filename')
+                                  loadObsolete, 'filename')
 
     def testNoSuccessors(self):
         """
@@ -180,7 +180,7 @@ class TestLoadObsoletePDB(TestCase):
         ]) + '\n'
         mockOpener = mockOpen(read_data=data)
         with patch.object(builtins, 'open', mockOpener):
-            result = loadObsoletePDB('filename')
+            result = loadObsolete('filename')
         self.assertEqual([], result['4HLA']['successors'])
 
     def testExpectedCorrectResult(self):
@@ -194,7 +194,7 @@ class TestLoadObsoletePDB(TestCase):
         ]) + '\n'
         mockOpener = mockOpen(read_data=data)
         with patch.object(builtins, 'open', mockOpener):
-            result = loadObsoletePDB('filename')
+            result = loadObsolete('filename')
         self.assertEqual(
             {
                 '2ABC': {
@@ -207,5 +207,186 @@ class TestLoadObsoletePDB(TestCase):
                     'id': '4HLA',
                     'successors': ['5HML']
                 }
+            },
+            result)
+
+
+class TestLoadResolution(TestCase):
+    """
+    Tests for the loadResolution function.
+    """
+
+    HEADER_LINES = [
+        'PROTEIN DATA BANK LIST OF IDCODES AND DATA RESOLUTION VALUES',
+        'Fri Jul 01 14:17:44 EDT 2016',  # Date line - not checked.
+        ('RESOLUTION VALUE IS -1.00 FOR ENTRIES DERIVED FROM NMR AND OTHER '
+         'EXPERIMENT METHODS (NOT INCLUDING X-RAY) IN WHICH THE FIELD '
+         'REFINE.LS_D_RES_HIGH IS EMPTY'),
+        '',
+        'IDCODE       RESOLUTION',
+        '------  -    ----------',
+    ]
+
+    def testIncorrectLine1(self):
+        """
+        A ValueError must be raised if the first line is not as expected.
+        """
+        mockOpener = mockOpen(read_data='xxx\n')
+        with patch.object(builtins, 'open', mockOpener):
+            error = "^Line 1 of 'filename' was expected to be 'PROTEIN DATA "
+            six.assertRaisesRegex(self, ValueError, error,
+                                  loadResolution, 'filename')
+
+    def testIncorrectLine3(self):
+        """
+        A ValueError must be raised if the third line is not as expected.
+        """
+        data = '\n'.join(self.HEADER_LINES[:2] + ['xxx']) + '\n'
+        mockOpener = mockOpen(read_data=data)
+        with patch.object(builtins, 'open', mockOpener):
+            error = (
+                "^Line 3 of 'filename' was expected to be 'RESOLUTION VALUE ")
+            six.assertRaisesRegex(self, ValueError, error,
+                                  loadResolution, 'filename')
+
+    def testIncorrectLine4(self):
+        """
+        A ValueError must be raised if the fourth line is not as expected.
+        """
+        data = '\n'.join(self.HEADER_LINES[:3] + ['xxx']) + '\n'
+        mockOpener = mockOpen(read_data=data)
+        with patch.object(builtins, 'open', mockOpener):
+            error = "^Line 4 of 'filename' was expected to be '"
+            six.assertRaisesRegex(self, ValueError, error,
+                                  loadResolution, 'filename')
+
+    def testIncorrectLine5(self):
+        """
+        A ValueError must be raised if the fifth line is not as expected.
+        """
+        data = '\n'.join(self.HEADER_LINES[:4] + ['xxx']) + '\n'
+        mockOpener = mockOpen(read_data=data)
+        with patch.object(builtins, 'open', mockOpener):
+            error = "^Line 5 of 'filename' was expected to be 'IDCODE"
+            six.assertRaisesRegex(self, ValueError, error,
+                                  loadResolution, 'filename')
+
+    def testIncorrectLine6(self):
+        """
+        A ValueError must be raised if the sixth line is not as expected.
+        """
+        data = '\n'.join(self.HEADER_LINES[:5] + ['xxx']) + '\n'
+        mockOpener = mockOpen(read_data=data)
+        with patch.object(builtins, 'open', mockOpener):
+            error = "^Line 6 of 'filename' was expected to be '------"
+            six.assertRaisesRegex(self, ValueError, error,
+                                  loadResolution, 'filename')
+
+    def testMissingSemicolon(self):
+        """
+        A ValueError must be raised if an input line does not have a semicolon
+        separator.
+        """
+        data = '\n'.join(
+            self.HEADER_LINES + ['id + 5.0']
+        ) + '\n'
+        mockOpener = mockOpen(read_data=data)
+        with patch.object(builtins, 'open', mockOpener):
+            error = ("^Line 7 of 'filename' does not contain expected "
+                     "semicolon separator\.$")
+            six.assertRaisesRegex(self, ValueError, error,
+                                  loadResolution, 'filename')
+
+    def testTooFewFields(self):
+        """
+        A ValueError must be raised if an input line has too few fields.
+        """
+        data = '\n'.join(
+            self.HEADER_LINES + ['id 3.0']
+        ) + '\n'
+        mockOpener = mockOpen(read_data=data)
+        with patch.object(builtins, 'open', mockOpener):
+            error = '^not enough values to unpack \(expected 3, got 2\)$'
+            six.assertRaisesRegex(self, ValueError, error,
+                                  loadResolution, 'filename')
+
+    def testRepeatedIdBest(self):
+        """
+        The best (lowest) resolution must be returned if an input line repeats
+        a PDB id and the conflict resolution is set to 'best'.
+        """
+        data = '\n'.join(
+            self.HEADER_LINES + ['id1 ; 3.0', 'id1 ; 2.0']
+        ) + '\n'
+        mockOpener = mockOpen(read_data=data)
+        with patch.object(builtins, 'open', mockOpener):
+            result = loadResolution('filename', 'best')
+        self.assertEqual(
+            {
+                'id1': 2.0,
+            },
+            result)
+
+    def testRepeatedIdWorst(self):
+        """
+        The best (highest) resolution must be returned if an input line repeats
+        a PDB id and the conflict resolution is set to 'worst'.
+        """
+        data = '\n'.join(
+            self.HEADER_LINES + ['id1 ; 3.0', 'id1 ; 2.0']
+        ) + '\n'
+        mockOpener = mockOpen(read_data=data)
+        with patch.object(builtins, 'open', mockOpener):
+            result = loadResolution('filename', 'worst')
+        self.assertEqual(
+            {
+                'id1': 3.0,
+            },
+            result)
+
+    def testRepeatedIdRaise(self):
+        """
+        A ValueError must be raised if an input line repeats a PDB id and
+        the conflict resolution is set to 'raise'.
+        """
+        data = '\n'.join(
+            self.HEADER_LINES + ['id1 ; 3.0', 'id1 ; 3.0']
+        ) + '\n'
+        mockOpener = mockOpen(read_data=data)
+        with patch.object(builtins, 'open', mockOpener):
+            error = ("^Repeated PDB id 'id1' found on line 8 of input "
+                     "file 'filename'\.$")
+            six.assertRaisesRegex(self, ValueError, error,
+                                  loadResolution, 'filename', 'raise')
+
+    def testRepeatedIdUnknownResolutionMethod(self):
+        """
+        A ValueError must be raised if an input line repeats a PDB id and
+        the conflict resolution is unknown.
+        """
+        data = '\n'.join(
+            self.HEADER_LINES + ['id1 ; 3.0', 'id1 ; 3.0']
+        ) + '\n'
+        mockOpener = mockOpen(read_data=data)
+        with patch.object(builtins, 'open', mockOpener):
+            error = "^whenConflicting must be one of best, raise, worst\.$"
+            six.assertRaisesRegex(self, ValueError, error,
+                                  loadResolution, 'filename', 'unknown')
+
+    def testExpectedCorrectResult(self):
+        """
+        If a valid input file is passed, the expected result must be returned.
+        """
+        data = '\n'.join(
+            self.HEADER_LINES + ['id1 ; 3.0', 'id2 ; 2.0', 'id3 ; -1.0']
+        ) + '\n'
+        mockOpener = mockOpen(read_data=data)
+        with patch.object(builtins, 'open', mockOpener):
+            result = loadResolution('filename')
+        self.assertEqual(
+            {
+                'id1': 3.0,
+                'id2': 2.0,
+                'id3': -1.0,
             },
             result)

@@ -15,7 +15,8 @@ follows (this assumes you're using `bash` and running in the light matter
 the [dark matter](https://github.com/acorg/dark-matter/) `bin` directory in
 your shell's `PATH`)
 
-    $ gzcat ss.txt.gz | clean-pdb-ss-fasta.py | bzip2 > pdb-`date '+%Y%m%d'`-ss.txt.bz2
+    $ gzcat ss.txt.gz | tr ' ' - | clean-pdb-ss-fasta.py | \
+      bzip2 > pdb-`date '+%Y%m%d'`-ss.txt.bz2
 
 See the `light/bin/performance/clean-pdb-ss-fasta.py` script for details of
 what's done in the clean up.
@@ -24,6 +25,17 @@ The PDB `ss.txt.gz` file changes frequently, so we have a specific dated
 copy that we work on to ensure consistency. It can be updated periodically,
 but in that case the true and false positive counts computed earlier will
 be slightly inaccurate.
+
+## PDB obsoleted ids
+
+The file `pdb-20160711-obsolete.txt` contains details of sequences deleted
+from PDB. This file was obtained via
+
+    $ curl ftp://ftp.wwpdb.org/pub/pdb/data/status/obsolete.dat > \
+        pdb-`date '+%Y%m%d'`-obsolete.txt
+
+The file is used by `clean-pdb-ss-fasta.py`. If you update this file you
+should also change the default file used in that script.
 
 ## PDB alpha helix substrings
 

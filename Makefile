@@ -4,7 +4,7 @@
 # brew, run brew install findutils (which installs gfind in /usr/local/bin).
 FIND := $(shell which gfind || which find)
 
-XARGS := $(shell which parallel || which xargs) $(shell test $$(uname) = Linux && echo -r)
+XARGS := xargs $(shell test $$(uname) = Linux && echo -r)
 
 
 check: light/_distance.so

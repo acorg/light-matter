@@ -58,7 +58,6 @@ class Result(object):
         self.analysis = defaultdict(dict)
         deltaScale = findParams.deltaScale
         scoreGetter = itemgetter('score')
-        from light.backend import Backend
         be = Backend()
         be.configure(connector.dbParams)
 

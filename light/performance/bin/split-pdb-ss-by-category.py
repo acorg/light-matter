@@ -93,7 +93,7 @@ with open(args.categories) as fp:
 
 # Read the PDB sequence information and add each sequence to its category.
 #
-# Sequence ids must be in the form e.g., pdb_2hla_a as produced by the
+# Sequence ids must be in the form e.g., pdb_2hla_a as produced by
 # clean-pdb-ss-fasta.py (in this directory).
 
 sequencesByCategory = defaultdict(Reads)

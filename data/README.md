@@ -17,6 +17,10 @@ your shell's `PATH`)
 
     $ gzcat ss.txt.gz | tr ' ' - | clean-pdb-ss-fasta.py | \
       bzip2 > pdb-`date '+%Y%m%d'`-ss.txt.bz2
+    2174 sequence ids ignored due to PDB deletion.
+    93 sequences were ignored due to being too short (< 4 residues).
+    6804 sequences were ignored due to poor resolution (> 3.000 angstroms).
+    Use --printIgnoredIds to print ignored seqeunce ids.
 
 See the `light/bin/performance/clean-pdb-ss-fasta.py` script for details of
 what's done in the clean up.

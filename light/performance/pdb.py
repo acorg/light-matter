@@ -225,11 +225,10 @@ def loadEntries(filename):
         for lineNum, line in enumerate(fp, start=1):
             if lineNum <= headerLineCount:
                 expected = headerLines[lineNum - 1]
-                if expected is not None:
-                    if line != expected:
-                        raise ValueError(
-                            'Line %d of %r was expected to be %r but was %r.'
-                            % (lineNum, filename, expected, line))
+                if line != expected:
+                    raise ValueError(
+                        'Line %d of %r was expected to be %r but was %r.'
+                        % (lineNum, filename, expected, line))
             else:
                 (pdbId, header, accessionDate, compound, source, authorList,
                  resolution, experimentType) = line.split('\t')

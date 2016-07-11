@@ -2,8 +2,8 @@
 
 ## PDB known secondary structure file
 
-The file `pdb-20160303-ss.txt.bz2` is produced from a PDB secondary
-structure file downloaded on 2016-03-03.
+The file `pdb-20160711-ss.txt.bz2` is produced from a PDB secondary
+structure file downloaded on 2016-07-11.
 
 The source file, `ss.txt.gz` can be found
 [on this page](http://www.rcsb.org/pdb/static.do?p=download/http/index.html)
@@ -33,6 +33,19 @@ from PDB. This file was obtained via
 
     $ curl ftp://ftp.wwpdb.org/pub/pdb/data/status/obsolete.dat > \
         pdb-`date '+%Y%m%d'`-obsolete.txt
+
+The file is used by `clean-pdb-ss-fasta.py`. If you update this file you
+should also change the default file used in that script.
+
+## PDB low resolution structures
+
+The file `pdb-20160711-resolution.txt` contains the resolution of all PDB
+structures. It is mentioned in the
+[Summary of PDB data](http://www.rcsb.org/pdb/static.do?p=general_information/about_pdb/summaries.html)
+and was obtained via
+
+    $ curl ftp://ftp.wwpdb.org/pub/pdb/derived_data/index/resolu.idx > \
+        pdb-`date '+%Y%m%d'`-resolution.txt
 
 The file is used by `clean-pdb-ss-fasta.py`. If you update this file you
 should also change the default file used in that script.

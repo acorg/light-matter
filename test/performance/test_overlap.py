@@ -82,7 +82,6 @@ class TestCalculateOverlap(TestCase):
                 1, 33, 4, 37, 6, 39, 8, 10, 42, 13, 46, 49, 21, 53, 24, 30,
             },
         }
-        print(features)
 
         self.assertEqual(expected, features)
 

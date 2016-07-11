@@ -428,8 +428,8 @@ class TestLoadEntries(TestCase):
         with patch.object(builtins, 'open', mockOpener):
             error = (
                 "^Line 2 of 'filename' was expected to be '------- -------")
-            six.assertRaisesRegex(self, ValueError, error, loadEntries,
-                                  'filename')
+            six.assertRaisesRegex(self, ValueError, error,
+                                  loadEntries, 'filename')
 
     def testTooFewFields(self):
         """
@@ -459,6 +459,38 @@ class TestLoadEntries(TestCase):
         with patch.object(builtins, 'open', mockOpener):
             error = ("^Repeated PDB id '100D' found on line 4 of input "
                      "file 'filename'\.$")
+            six.assertRaisesRegex(self, ValueError, error,
+                                  loadEntries, 'filename')
+
+    def testUnparseableDate(self):
+        """
+        A ValueError must be raised if an input line contains a date that
+        cannot be split by '/'.
+        """
+        data = '\n'.join(
+            self.HEADER_LINES + [
+                "100D\tDNA\t12-05-94\tcompound\tsource\tauths\tres\ttype",
+            ]
+        ) + '\n'
+        mockOpener = mockOpen(read_data=data)
+        with patch.object(builtins, 'open', mockOpener):
+            error = "^invalid literal for int\(\) with base 10: '12-05-94'$"
+            six.assertRaisesRegex(self, ValueError, error,
+                                  loadEntries, 'filename')
+
+    def testNotEnoughDateFields(self):
+        """
+        A ValueError must be raised if an input line contains a date that
+        cannot be split into 3 parts by '/'.
+        """
+        data = '\n'.join(
+            self.HEADER_LINES + [
+                "100D\tDNA\t12/05\tcompound\tsource\tauths\tres\ttype",
+            ]
+        ) + '\n'
+        mockOpener = mockOpen(read_data=data)
+        with patch.object(builtins, 'open', mockOpener):
+            error = "^not enough values to unpack \(expected 3, got 2\)$"
             six.assertRaisesRegex(self, ValueError, error,
                                   loadEntries, 'filename')
 

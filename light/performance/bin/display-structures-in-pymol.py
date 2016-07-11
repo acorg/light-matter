@@ -6,8 +6,8 @@ A script which displays a set of given structures and their features in PyMOL.
 
 from __future__ import print_function
 
-from Bio.PDB.PDBParser import PDBParser
 import argparse
+from Bio.PDB.PDBParser import PDBParser
 from operator import attrgetter
 import pymol
 from pymol import cmd, stored
@@ -95,10 +95,6 @@ if __name__ == '__main__':
         for i, feature in enumerate(ALL_FEATURES):
             print(ALL_FEATURES[i][0], '\t', ALL_FEATURES[i][1], '\t',
                   COLORS[i])
-
-    if args.showLegend:
-        cgo = makeLegend()
-        cmd.load_cgo(cgo, 'legend')
 
     notFirst = False
 
@@ -232,5 +228,12 @@ if __name__ == '__main__':
 
     # Display the structures next to each other.
     cmd.set('grid_mode')
+
+    # Display the legend.
+    if args.showLegend:
+        cgo = makeLegend()
+        cmd.load_cgo(cgo, 'legend')
+        cmd.set('grid_slot', 0, 'legend')
+
     # Display the sequences.
     cmd.set('seq_view')

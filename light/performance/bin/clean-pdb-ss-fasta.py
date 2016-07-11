@@ -134,11 +134,12 @@ for sequence in SSFastaReads(sys.stdin, checkAlphabet=0):
 
 if deleted:
     if args.printIgnoredIds:
-        print('%d sequence ids ignored due to PDB deletion: %s.' % (
-            len(deleted), ', '.join(sorted(deleted))), file=sys.stderr)
-    else:
-        print('%d sequence ids ignored due to PDB deletion.' % len(deleted),
+        print('%d sequence ids ignored due to being marked as obsolete in '
+              'PDB: %s.' % (len(deleted), ', '.join(sorted(deleted))),
               file=sys.stderr)
+    else:
+        print('%d sequence ids ignored due to being PDB marked as obsolete in '
+              'PDB.' % len(deleted), file=sys.stderr)
 
 if tooShort:
     if args.printIgnoredIds:

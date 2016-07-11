@@ -20,6 +20,7 @@ from light.database import Database
 from light.landmarks import ALL_LANDMARK_CLASSES_INCLUDING_DEV
 from light.parameters import DatabaseParameters, FindParameters
 from light.trig import ALL_TRIG_CLASSES_INCLUDING_DEV
+from light.performance.pymolgraphics import makeLegend
 
 pymol.finish_launching()
 
@@ -27,7 +28,7 @@ pymol.finish_launching()
 COLORS = ['aquamarine', 'brightorange', 'darksalmon', 'deepolive',
           'deepsalmon', 'deepteal', 'firebrick', 'forest', 'greencyan',
           'lightblue', 'limon', 'marine', 'orange', 'palegreen', 'oxygen',
-          'slate', 'tv_blue', 'tv_green', 'tv_red', 'violettpurple',
+          'slate', 'tv_blue', 'tv_green', 'tv_red', 'violetpurple',
           'warmpink', 'violet', 'antimony', 'cesium', 'dubnium', 'gold',
           'iridium', 'phosphorus']
 
@@ -64,6 +65,11 @@ if __name__ == '__main__':
         '--printColors', default=False, action='store_true',
         help='If given, print the colors for each finder.')
 
+    parser.add_argument(
+        '--makeLegend', default=False, action='store_true',
+        help='If given, display a legend of which color corresponds to which '
+        'feature.')
+
     FindParameters.addArgsToParser(parser)
     DatabaseParameters.addArgsToParser(parser)
 
@@ -84,87 +90,92 @@ if __name__ == '__main__':
             print(ALL_FEATURES[i][0], '\t', ALL_FEATURES[i][1], '\t',
                   COLORS[i])
 
-notFirst = False
+    if args.makeLegend:
+        cgo = makeLegend()
+        cmd.load_cgo(cgo, 'legend')
 
-# Set up the database.
-database = Database(dbParams)
-backend = Backend()
-backend.configure(database.dbParams)
+    notFirst = False
 
-# Loop over the structures that were provided and display them.
-for i, structureName in enumerate(args.structureNames):
-    # Read the sequence out of the PDB file.
-    s = PDBParser(PERMISSIVE=1).get_structure(structureName,
-                                              args.structureFiles[i])
-    chains = Reads()
-    for chain in s.get_chains():
-        chainSequence = ''
-        for aa in chain.get_residues():
+    # Set up the database.
+    database = Database(dbParams)
+    backend = Backend()
+    backend.configure(database.dbParams)
+
+    # Loop over the structures that were provided and display them.
+    for i, structureName in enumerate(args.structureNames):
+        # Read the sequence out of the PDB file.
+        s = PDBParser(PERMISSIVE=1).get_structure(structureName,
+                                                  args.structureFiles[i])
+        chains = Reads()
+        for chain in s.get_chains():
+            chainSequence = ''
+            for aa in chain.get_residues():
+                try:
+                    aa1 = find(aa.resname).abbrev1
+                except AttributeError:
+                    aa1 = 'X'
+                chainSequence += aa1
+            chains.add(AAReadWithX(chain.id, chainSequence))
+
+        # Load the structure into PyMOL.
+        cmd.load(args.structureFiles[i])
+
+        # Set the display.
+        cmd.show('cartoon')
+        cmd.hide('lines')
+
+        # Align all structures to the first structure that was loaded.
+        if not notFirst:
+            notFirst = structureName
+        else:
+            cmd.align(notFirst, structureName)
+
+        # Make sure the residues in each chain are zero-based.
+        stored.first = None
+
+        structureList = ['(model %s and (%s))' % (p, structureName)
+                         for p in cmd.get_object_list(
+            '(' + structureName + ')')]
+        structureChainList = ['(%s and chain %s)' % (structure, chain)
+                              for structure in structureList for chain in
+                              cmd.get_chains(structure)]
+
+        for structureChain in structureChainList:
+            cmd.iterate('first %s and polymer and n. CA' % structureChain,
+                        'stored.first=resv')
+            # reassign the residue numbers.
+            cmd.alter('%s' % structureChain,
+                      'resi=str(int(resi)-%s)' % str(int(stored.first)))
+        cmd.rebuild()
+
+        # Color the features and chains.
+        for i, chain in enumerate(chains):
+            # Color each chain in a shade of grey.
+            what = '%s & chain %s' % (structureName, chain.id)
             try:
-                aa1 = find(aa.resname).abbrev1
-            except AttributeError:
-                aa1 = 'X'
-            chainSequence += aa1
-        chains.add(AAReadWithX(chain.id, chainSequence))
-
-    # Load the structure into PyMOL.
-    cmd.load(args.structureFiles[i])
-
-    # Set the display.
-    cmd.show('cartoon')
-    cmd.hide('lines')
-
-    # Align all structures to the first structure that was loaded.
-    if not notFirst:
-        notFirst = structureName
-    else:
-        cmd.align(notFirst, structureName)
-
-    # Make sure the residues in each chain are zero-based.
-    stored.first = None
-
-    structureList = ['(model %s and (%s))' % (p, structureName)
-                     for p in cmd.get_object_list('(' + structureName + ')')]
-    structureChainList = ['(%s and chain %s)' % (structure, chain)
-                          for structure in structureList for chain in
-                          cmd.get_chains(structure)]
-
-    for structureChain in structureChainList:
-        cmd.iterate('first %s and polymer and n. CA' % structureChain,
-                    'stored.first=resv')
-        # reassign the residue numbers.
-        cmd.alter('%s' % structureChain,
-                  'resi=str(int(resi)-%s)' % str(int(stored.first)))
-    cmd.rebuild()
-
-    # Color the features and chains.
-    for i, chain in enumerate(chains):
-        # Color each chain in a shade of grey.
-        what = '%s & chain %s' % (structureName, chain.id)
-        try:
-            color = CHAIN_COLORS[i]
-        except IndexError:
-            color = 'white'
-        cmd.color(color, what)
-
-        scannedQuery = backend.scan(chain)
-        for landmark in scannedQuery.landmarks:
-            color = FEATURE_COLORS[landmark.symbol]
-            start = landmark.offset
-            end = landmark.offset + landmark.length
-            what = 'resi %d-%d & %s & chain %s' % (start, end - 1,
-                                                   structureName, chain.id)
+                color = CHAIN_COLORS[i]
+            except IndexError:
+                color = 'white'
             cmd.color(color, what)
 
-        for trigPoint in scannedQuery.trigPoints:
-            color = FEATURE_COLORS[trigPoint.symbol]
-            start = trigPoint.offset
-            end = trigPoint.offset + trigPoint.length
-            what = 'resi %d-%d & chain %s & %s' % (start, end - 1, chain.id,
-                                                   structureName)
-            cmd.color(color, what)
+            scannedQuery = backend.scan(chain)
+            for landmark in scannedQuery.landmarks:
+                color = FEATURE_COLORS[landmark.symbol]
+                start = landmark.offset
+                end = landmark.offset + landmark.length
+                what = 'resi %d-%d & %s & chain %s' % (start, end - 1,
+                                                       structureName, chain.id)
+                cmd.color(color, what)
 
-# Display the structures next to each other.
-cmd.set('grid_mode')
-# Display the sequences.
-cmd.set('seq_view')
+            for trigPoint in scannedQuery.trigPoints:
+                color = FEATURE_COLORS[trigPoint.symbol]
+                start = trigPoint.offset
+                end = trigPoint.offset + trigPoint.length
+                what = 'resi %d-%d & chain %s & %s' % (start, end - 1,
+                                                       chain.id, structureName)
+                cmd.color(color, what)
+
+    # Display the structures next to each other.
+    cmd.set('grid_mode')
+    # Display the sequences.
+    cmd.set('seq_view')

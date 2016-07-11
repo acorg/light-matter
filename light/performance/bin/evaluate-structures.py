@@ -27,10 +27,10 @@ parser.add_argument(
           'evaluate the helix. If False use the evaluateMatch function.'))
 
 parser.add_argument(
-    '--structureType', default='H', choices={'H', 'G', 'I', 'E'},
+    '--structureType', default='H', choices={'H', 'G', 'I', 'E', 'K'},
     help=('The type of structure that should be evaluated against. '
           'H: Alpha helix, G: Alpha helix 3 10, I: Alpha helix pi, E: '
-          'Extended strand.'))
+          'Extended strand, K: Combined alpha helix.'))
 
 args = parser.parse_args()
 

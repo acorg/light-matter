@@ -125,7 +125,7 @@ class TestBitScoreZScoreLightMatterScore3D(TestCase):
         """
         for parameterSet in testArgs.parameterSets:
             affinity = _AFFINITY[parameterSet]
-            dirName = makeOutputDir(DATASET, parameterSet, '3d')
+            dirName = makeOutputDir(DATASET, parameterSet, '3d-plotly')
             for subject in SUBJECTS:
                 zScores = []
                 bitScores = []

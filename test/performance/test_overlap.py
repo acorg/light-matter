@@ -53,6 +53,10 @@ class TestCalculateOverlap(TestCase):
                 19, 20, 21, 22, 23, 24, 25, 26, 45, 46, 47, 48,
             },
             'PDB AlphaHelix_pi': set(),
+            'PDB Combined AlphaHelix': {
+                1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
+                19, 20, 21, 22, 23, 24, 25, 26, 45, 46, 47, 48
+            },
             'Prosite': {
                 32, 38, 39, 40, 41, 14, 15, 16, 19, 20, 21, 22, 30, 31,
             },
@@ -93,9 +97,9 @@ class TestCalculateOverlap(TestCase):
             },
             union[frozenset(('IndividualTroughs', 'Troughs'))])
 
-        # Note that the following don't test much. There are 25 features
-        # examined by default by CalculateOverlap. So there are 25 * 24 / 2
-        # = 300 pairs of features. So these two tests are just testing that
+        # Note that the following don't test much. There are 26 features
+        # examined by default by CalculateOverlap. So there are 26 * 25 / 2
+        # = 325 pairs of features. So these two tests are just testing that
         # all pairs of features are present in the returned dicts.
-        self.assertEqual(300, len(intersection))
-        self.assertEqual(300, len(union))
+        self.assertEqual(325, len(intersection))
+        self.assertEqual(325, len(union))

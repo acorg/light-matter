@@ -16,6 +16,7 @@ from light.landmarks.pdb_alpha_helix import PDB_AlphaHelix
 from light.landmarks.pdb_alpha_helix_3_10 import PDB_AlphaHelix_3_10
 from light.landmarks.pdb_alpha_helix_pi import PDB_AlphaHelix_pi
 from light.landmarks.pdb_extended_strand import PDB_ExtendedStrand
+from light.landmarks.pdb_combined_alpha_helix import PDB_CombinedAlphaHelix
 from light.landmarks.prosite import Prosite
 from light.landmarks.random import RandomLandmark
 from light.landmarks.th_alpha_helix import THAlphaHelix
@@ -29,7 +30,7 @@ ALL_LANDMARK_CLASSES = [
 
 DEV_LANDMARK_CLASSES = [
     PDB_AlphaHelix, PDB_AlphaHelix_3_10, PDB_AlphaHelix_pi,
-    PDB_ExtendedStrand, RandomLandmark]
+    PDB_ExtendedStrand, PDB_CombinedAlphaHelix, RandomLandmark]
 
 ALL_LANDMARK_CLASSES_INCLUDING_DEV = (ALL_LANDMARK_CLASSES +
                                       DEV_LANDMARK_CLASSES)

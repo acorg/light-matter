@@ -10,7 +10,8 @@ except ImportError:
 from ..mocking import mockOpen
 
 from light.performance.pdb import (
-    pdbNameToPythonName, pythonNameToPdbName, loadObsolete, loadResolution)
+    pdbNameToPythonName, pythonNameToPdbName, loadObsolete, loadResolution,
+    loadEntries)
 
 
 class TestPdbNameToPythonName(TestCase):
@@ -388,5 +389,109 @@ class TestLoadResolution(TestCase):
                 'id1': 3.0,
                 'id2': 2.0,
                 'id3': -1.0,
+            },
+            result)
+
+
+class TestLoadEntries(TestCase):
+    """
+    Tests for the loadEntries function.
+    """
+
+    HEADER_LINES = [
+        'IDCODE, HEADER, ACCESSION DATE, COMPOUND, SOURCE, AUTHOR LIST, '
+        'RESOLUTION, EXPERIMENT TYPE (IF NOT X-RAY)',
+        '------- ------- --------------- --------- ------- ------------ '
+        '----------- ---------------------------------------------------'
+        '---------------------------------------------------------------'
+        '---------------------------------------------------------------'
+        '---------------------------------------------------------------'
+        '----------------------------------------------------------'
+    ]
+
+    def testIncorrectLine1(self):
+        """
+        A ValueError must be raised if the first line is not as expected.
+        """
+        mockOpener = mockOpen(read_data='xxx\n')
+        with patch.object(builtins, 'open', mockOpener):
+            error = "^Line 1 of 'filename' was expected to be 'IDCODE, "
+            six.assertRaisesRegex(self, ValueError, error,
+                                  loadEntries, 'filename')
+
+    def testIncorrectLine2(self):
+        """
+        A ValueError must be raised if the second line is not as expected.
+        """
+        data = '\n'.join(self.HEADER_LINES[:1] + ['xxx']) + '\n'
+        mockOpener = mockOpen(read_data=data)
+        with patch.object(builtins, 'open', mockOpener):
+            error = (
+                "^Line 2 of 'filename' was expected to be '------- -------")
+            six.assertRaisesRegex(self, ValueError, error, loadEntries,
+                                  'filename')
+
+    def testTooFewFields(self):
+        """
+        A ValueError must be raised if an input line has too few fields.
+        """
+        data = '\n'.join(
+            self.HEADER_LINES + ["1\t2\t3"]
+        ) + '\n'
+        mockOpener = mockOpen(read_data=data)
+        with patch.object(builtins, 'open', mockOpener):
+            error = '^not enough values to unpack \(expected 8, got 3\)$'
+            six.assertRaisesRegex(self, ValueError, error,
+                                  loadEntries, 'filename')
+
+    def testRepeatedId(self):
+        """
+        A ValueError must be raised if an input line repeats a PDB id and
+        the conflict resolution is set to 'raise'.
+        """
+        data = '\n'.join(
+            self.HEADER_LINES + [
+                "100D\tDNA\t12/05/94\tcompound\tsource\tauths\tres\ttype",
+                "100D\tDNA\t01/27/03\tcompound\tsource\tauths\tres\ttype",
+            ]
+        ) + '\n'
+        mockOpener = mockOpen(read_data=data)
+        with patch.object(builtins, 'open', mockOpener):
+            error = ("^Repeated PDB id '100D' found on line 4 of input "
+                     "file 'filename'\.$")
+            six.assertRaisesRegex(self, ValueError, error,
+                                  loadEntries, 'filename')
+
+    def testExpectedCorrectResult(self):
+        """
+        If a valid input file is passed, the expected result must be returned.
+        """
+        data = '\n'.join(
+            self.HEADER_LINES + [
+                "100D\tDNA\t12/05/94\tcompound\tsource\tauths\tres\ttype",
+                "103F\tDNA\t01/27/03\tcompound\tsource\tauths\tres\ttype",
+                "123G\tDNA\t1/1/00\tcompound\tsource\tauths\tres\ttype",
+            ]
+        ) + '\n'
+        mockOpener = mockOpen(read_data=data)
+        with patch.object(builtins, 'open', mockOpener):
+            result = loadEntries('filename')
+        self.assertEqual(
+            {
+                '100D': {
+                    'day': 5,
+                    'month': 12,
+                    'year': 1994,
+                },
+                '103F': {
+                    'day': 27,
+                    'month': 1,
+                    'year': 2003,
+                },
+                '123G': {
+                    'day': 1,
+                    'month': 1,
+                    'year': 2000,
+                },
             },
             result)

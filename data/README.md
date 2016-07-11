@@ -30,6 +30,17 @@ copy that we work on to ensure consistency. It can be updated periodically,
 but in that case the true and false positive counts computed earlier will
 be slightly inaccurate.
 
+## PDB entries
+
+The file `pdb-20160711-entries.txt` contains details of sequences in
+PDB. This file was obtained via
+
+    $ curl ftp://ftp.wwpdb.org/pub/pdb/derived_data/index/entries.idx > \
+        pdb-`date '+%Y%m%d'`-entries.txt
+
+The file is used by `pdb-ss-fasta-to-year-categories.py`. If you update
+this file you should also change the default file used in that script.
+
 ## PDB obsoleted ids
 
 The file `pdb-20160711-obsolete.txt` contains details of sequences deleted
@@ -191,13 +202,19 @@ positive ratio of 1 or more.
 
 # PDB structures by individual year and cumulatively
 
-The file `pdb-structures-by-year.txt` contains a listing of which PDB id
-entered PDB according to year. The first field of each line is a year and
-subsequent fields are space-separated PDB sequence ids.
+The file `pdb-20160711-structures-by-year.txt` contains a listing of when
+PDB structures entered PDB by year. The first field of each line is a year
+and subsequent fields are space-separated PDB sequence ids.
+
+The file was produced by
+
+    $ bzcat pdb-20160711-ss.txt.bz2 | ../light/performance/bin/pdb-ss-fasta-to-year-categories.py > \
+        pdb-20160711-structures-by-year.txt
+    260847 sequences read, 260847 had a year, 0 had no year.
 
 ## PDB by year
 
-This file can be processed (by
+That file (`pdb-20160711-structures-by-year.txt`) can be processed (by
 `../light/performance/bin/split-pdb-ss-by-category.py`) to produce
 individual FASTA files giving the sequences that entered PDB by year.
 
@@ -206,39 +223,40 @@ E.g.,
 ```sh
 $ bzcat pdb-20160303-ss.txt.bz2 |
   ../light/performance/bin/split-pdb-ss-by-category.py --prefix pdb- \
-  --categories pdb-structures-by-year.txt
+  --categories pdb-20160711-structures-by-year.txt
 ```
 
 Which will produce files named `pdb-1976.fasta`, `pdb-1977.fasta`,
 `pdb-1978.fasta`, etc.
 
-Note that when you do the above, 445 sequences in `pdb-20160303-ss.txt.bz2`
-will not be in any category. We have not investigated all of these, but in
-one case here's what is happening. `5DTG` entered PDB and its sequence and
-structure are still in the PDB `ss.txt` file.  But at some point PDB
-realized it was the same as `5HCU` or they renamed it to `5HCU` for some
-reason. As a result, in `pdb-structures-by-year.txt` there is only a
-category (2016) for `5HCU`. So when we split `pdb-20160303-ss.txt.bz2` by
-category using `../light/performance/bin/split-pdb-ss-by-category.py`,
-`5DTG` has no category (i.e., no year). It is therefore skipped and a
-warning is printed. You can turn off these warnings via
-`--ignoreUncategorizedSequences`.
+Note that if you are trying to reproduce the above you may get a warning
+that some PDB `ss.txt` sequences do not have a year assigned to them in
+`pdb-20160711-structures-by-year.txt`. This will occur if the `ss.txt` file
+is newer than the `pdb-20160711-structures-by-year.txt` or
+`pdb-20160711-obsolete.txt` files. In that case, you should probabaly
+download and clean a new version of `ss.txt` as well as the PDB entries
+file and obsolete files (see above for details on all of these).
+
+You can turn off the warnings about sequences with no year in the year
+category file via `--ignoreUncategorizedSequences`, but this is not
+recommended.
 
 ## PDB by year, cumulatively
 
-The `pdb-structures-by-year.txt` file can also be used to produce
+The `pdb-20160711-structures-by-year.txt` file can also be used to produce
 cumulative FASTA containing all PDB sequences over time. This is done by
 first making a cumulative category file:
 
 ```sh
 $ ../light/performance/bin/convert-pdb-id-by-category-to-cumulative.py < \
-    pdb-structures-by-year.txt > pdb-structures-by-year-cumulative.txt
+    pdb-20160711-structures-by-year.txt > pdb-20160711-structures-by-year-cumulative.txt
 ```
 
 and then again using `../light/performance/bin/split-pdb-ss-by-category.py`
-to produce FASTA files with cumulative sets of sequences. We need to pass a
-flag to allow a sequence id to appear in multiple categories (i.e., years)
-seeing as the categories are cumulative:
+to produce FASTA files with cumulative sets of sequences. We need to give a
+command line option (`--allowSeqsInMultipleCategories`) to allow a sequence
+id to appear in multiple categories (i.e., years) seeing as the categories
+are cumulative:
 
 ```sh
 $ bzcat pdb-20160303-ss.txt.bz2 |
@@ -247,5 +265,5 @@ $ bzcat pdb-20160303-ss.txt.bz2 |
   --allowSeqsInMultipleCategories
 ```
 
-which will produce files named `pdb-cumulative-1976-1976.fasta`,
+this will produce files named `pdb-cumulative-1976-1976.fasta`,
 `pdb-cumulative-1976-1977.fasta`, `pdb-cumulative-1976-1978.fasta`, etc.

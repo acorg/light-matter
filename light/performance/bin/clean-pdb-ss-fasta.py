@@ -28,7 +28,8 @@ from os.path import dirname, join
 from dark.fasta_ss import SSFastaReads
 
 import light
-from light.performance.pdb import loadObsolete, loadResolution
+from light.performance.pdb import (
+    loadObsolete, loadResolution, pdbNameToPythonName)
 
 _DATA_DIR = dirname(dirname(light.__file__))
 _DEFAULT_PDB_DELETION_FILE = join(
@@ -124,10 +125,7 @@ for sequence in SSFastaReads(sys.stdin, checkAlphabet=0):
         tooShort.add(pdbId)
         continue
 
-    if sequence.id.endswith(':sequence'):
-        sequence.id = sequence.id[:-9]
-    else:
-        raise RuntimeError('Unrecognized sequence id line %r' % sequence.id)
+    sequence.id = pdbNameToPythonName(sequence.id)
 
     print(sequence.toString(), end='')
 

@@ -200,10 +200,10 @@ def loadEntries(filename):
     has TAB-separated fields.
 
     @param filename: A C{str} file name to read.
-    @raises ValueError: If the input file is not in the expected format or
-        if C{whenConflicting} is invalid.
+    @raises ValueError: If the input file is not in the expected format.
     @return: A C{dict} whose keys are C{str} PDB identifiers and whose
-        values are C{float} resolutions (in Angstroms).
+        values are C{dict}s with 'day', 'month', and 'year' keys with
+        C{int} values.
     """
 
     result = {}

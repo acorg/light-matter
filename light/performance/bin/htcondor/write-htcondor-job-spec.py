@@ -12,7 +12,7 @@ from dark.fasta import FastaReads
 from dark.reads import AAReadWithX
 
 
-DEFAULT_PDB_FILE = '/usr/local/dark-matter/seqs/ss-03032016.txt'
+DEFAULT_PDB_FILE = '/usr/local/dark-matter/seqs/pdb-20160711-ss.txt'
 DEFAULT_EXECUTABLE_NAME = ('/usr/local/dark-matter/light-matter/light/'
                            'performance/bin/evaluate-structures.py')
 DEFAULT_EMAIL = 'tcj25@cam.ac.uk'
@@ -130,10 +130,10 @@ if __name__ == '__main__':
         dest='evaluateNoPrefix',
         help='Whether prefixes should not be evaluated.')
     parser.add_argument(
-        '--structureType', default='H', choices={'H', 'G', 'I', 'E'},
+        '--structureType', default='H', choices={'H', 'G', 'I', 'E', 'K'},
         help=('The type of structure that should be evaluated against. '
               'H: Alpha helix, G: Alpha helix 3 10, I: Alpha helix pi, E: '
-              'Extended strand.'))
+              'Extended strand, K: Combined alpha helix.'))
 
     args = parser.parse_args()
 

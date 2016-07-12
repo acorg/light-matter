@@ -7,7 +7,7 @@ year followed by the PDB ids with accession dates for that year.
 The input will typically be our cleaned up version of the ss.txt secondary
 structure file available at
 http://www.rcsb.org/pdb/static.do?p=download/http/index.html  A cleaned
-version of this file is available in data/pdb-20160303-ss.txt.bz2
+version of this file is available in data/pdb-20160711-ss.txt.bz2
 """
 
 from __future__ import print_function
@@ -35,8 +35,7 @@ parser.add_argument(
     '--pdbEntriesFile', default=_DEFAULT_PDB_ENTRIES_FILE,
     metavar='PDB-entries-file',
     help=('A file containing details of PDB structures, such as that '
-          'found at ftp://ftp.wwpdb.org/pub/pdb/data/status/entries.dat '
-          'Specify /dev/null to skip PDB deletion.'))
+          'found at ftp://ftp.wwpdb.org/pub/pdb/data/status/entries.dat'))
 
 parser.add_argument(
     '--quiet', default=False, action='store_true',

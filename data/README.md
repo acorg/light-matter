@@ -145,7 +145,7 @@ Note that if you are trying to reproduce the above you may get a warning
 that some PDB `ss.txt` sequences do not have a year assigned to them in
 `pdb-20160711-structures-by-year.txt`. This will occur if the `ss.txt` file
 is newer than the `pdb-20160711-structures-by-year.txt` or
-`pdb-20160711-obsolete.txt` files. In that case, you should probabaly
+`pdb-20160711-obsolete.txt` files. In that case, you should probably
 download and clean a new version of `ss.txt` as well as the PDB entries
 file and obsolete files (see above for details on all of these).
 

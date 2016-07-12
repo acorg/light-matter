@@ -188,3 +188,64 @@ def loadResolution(filename, whenConflicting='best'):
                             'file %r.' % (pdbId, lineNum, filename))
 
     return result
+
+
+def loadEntries(filename):
+    """
+    Read a file of PDB entries information.
+
+    The file will typically be the one at
+    ftp://ftp.wwpdb.org/pub/pdb/derived_data/index/entries.idx (we currently
+    have a copy of this in data/pdb-20160711-entries.txt). Note that the file
+    has TAB-separated fields.
+
+    @param filename: A C{str} file name to read.
+    @raises ValueError: If the input file is not in the expected format.
+    @return: A C{dict} whose keys are C{str} PDB identifiers and whose
+        values are C{dict}s with 'day', 'month', and 'year' keys with
+        C{int} values.
+    """
+
+    result = {}
+
+    headerLines = [
+        'IDCODE, HEADER, ACCESSION DATE, COMPOUND, SOURCE, AUTHOR LIST, '
+        'RESOLUTION, EXPERIMENT TYPE (IF NOT X-RAY)\n',
+        '------- ------- --------------- --------- ------- ------------ '
+        '----------- ---------------------------------------------------'
+        '---------------------------------------------------------------'
+        '---------------------------------------------------------------'
+        '---------------------------------------------------------------'
+        '----------------------------------------------------------\n'
+    ]
+
+    headerLineCount = len(headerLines)
+
+    with open(filename) as fp:
+        for lineNum, line in enumerate(fp, start=1):
+            if lineNum <= headerLineCount:
+                expected = headerLines[lineNum - 1]
+                if line != expected:
+                    raise ValueError(
+                        'Line %d of %r was expected to be %r but was %r.'
+                        % (lineNum, filename, expected, line))
+            else:
+                (pdbId, header, accessionDate, compound, source, authorList,
+                 resolution, experimentType) = line.split('\t')
+
+                if pdbId in result:
+                    raise ValueError(
+                        'Repeated PDB id %r found on line %d of input file %r.'
+                        % (pdbId, lineNum, filename))
+
+                month, day, year = map(int, accessionDate.split('/'))
+
+                year += 1900 if year > 70 else 2000
+
+                result[pdbId] = {
+                    'day': day,
+                    'month': month,
+                    'year': year,
+                }
+
+    return result

@@ -20,7 +20,7 @@ def combineHelices(structure):
     return combinedStructure
 
 
-class PDB_CombinedAlphaHelix(Finder):
+class PDB_AlphaHelix_combined(Finder):
     """
     A class for finding PDB alpha helices based on predicted secondary
     structures. All three alpha helix types (AlphaHelix, AlphaHelix_3_10 and
@@ -30,8 +30,8 @@ class PDB_CombinedAlphaHelix(Finder):
     http://www.rcsb.org/pdb/files/ss.txt. The PDB predictions are made using
     the DSSP algorithm.
     """
-    NAME = 'PDB Combined AlphaHelix'
-    SYMBOL = 'PDB-C-A'
+    NAME = 'PDB AlphaHelix_combined'
+    SYMBOL = 'PDB-AC'
     STRUCTURE_LETTER = 'K'
 
     def find(self, read):

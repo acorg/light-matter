@@ -3,20 +3,20 @@ from unittest import TestCase
 from dark.fasta_ss import SSAARead
 
 from light.features import Landmark
-from light.landmarks.pdb_combined_alpha_helix import (PDB_CombinedAlphaHelix,
-                                                      combineHelices)
+from light.landmarks.pdb_alpha_helix_combined import (
+    PDB_AlphaHelix_combined, combineHelices)
 
 
-class TestPDB_CombinedAlphaHelix(TestCase):
+class TestPDB_AlphaHelix_combined(TestCase):
     """
-    Tests for the PDB_CombinedAlphaHelix.find function.
+    Tests for the PDB_AlphaHelix_combined.find function.
     """
     def testEmptyRead(self):
         """
         An empty read must not return any landmarks.
         """
         read = SSAARead('id', '', '')
-        landmark = PDB_CombinedAlphaHelix()
+        landmark = PDB_AlphaHelix_combined()
         result = landmark.find(read)
         self.assertEqual([], list(result))
 
@@ -25,7 +25,7 @@ class TestPDB_CombinedAlphaHelix(TestCase):
         A read that has no landmarks must result in an empty list.
         """
         read = SSAARead('id', 'RFRFRFRFR', 'SSSSSSSSS')
-        landmark = PDB_CombinedAlphaHelix()
+        landmark = PDB_AlphaHelix_combined()
         result = landmark.find(read)
         self.assertEqual([], list(result))
 
@@ -35,10 +35,10 @@ class TestPDB_CombinedAlphaHelix(TestCase):
         must be returned.
         """
         read = SSAARead('id', 'RFRFRFRFR', 'HHHSSSSSS')
-        landmark = PDB_CombinedAlphaHelix()
+        landmark = PDB_AlphaHelix_combined()
         result = landmark.find(read)
         self.assertEqual([
-                         Landmark('PDB Combined AlphaHelix', 'PDB-C-A', 0, 3)
+                         Landmark('PDB AlphaHelix_combined', 'PDB-AC', 0, 3)
                          ],
                          list(result))
 
@@ -48,10 +48,10 @@ class TestPDB_CombinedAlphaHelix(TestCase):
         landmark must be returned.
         """
         read = SSAARead('id', 'RFRFRFRFR', 'GGGSSSSSS')
-        landmark = PDB_CombinedAlphaHelix()
+        landmark = PDB_AlphaHelix_combined()
         result = landmark.find(read)
         self.assertEqual([
-                         Landmark('PDB Combined AlphaHelix', 'PDB-C-A', 0, 3)
+                         Landmark('PDB AlphaHelix_combined', 'PDB-AC', 0, 3)
                          ],
                          list(result))
 
@@ -61,10 +61,10 @@ class TestPDB_CombinedAlphaHelix(TestCase):
         landmark must be returned.
         """
         read = SSAARead('id', 'RFRFRFRFR', 'IIISSSSSS')
-        landmark = PDB_CombinedAlphaHelix()
+        landmark = PDB_AlphaHelix_combined()
         result = landmark.find(read)
         self.assertEqual([
-                         Landmark('PDB Combined AlphaHelix', 'PDB-C-A', 0, 3)
+                         Landmark('PDB AlphaHelix_combined', 'PDB-AC', 0, 3)
                          ],
                          list(result))
 
@@ -74,10 +74,10 @@ class TestPDB_CombinedAlphaHelix(TestCase):
         'I'), the right landmark must be returned.
         """
         read = SSAARead('id', 'RFRFRFRFR', 'HGISSSSSS')
-        landmark = PDB_CombinedAlphaHelix()
+        landmark = PDB_AlphaHelix_combined()
         result = landmark.find(read)
         self.assertEqual(
-            [Landmark('PDB Combined AlphaHelix', 'PDB-C-A', 0, 3)],
+            [Landmark('PDB AlphaHelix_combined', 'PDB-AC', 0, 3)],
             list(result))
 
     def testOneLandmarkAtStart(self):
@@ -86,10 +86,10 @@ class TestPDB_CombinedAlphaHelix(TestCase):
         landmark must be returned.
         """
         read = SSAARead('id', 'RFRFRFRFR', 'HHHSSSSSS')
-        landmark = PDB_CombinedAlphaHelix()
+        landmark = PDB_AlphaHelix_combined()
         result = landmark.find(read)
         self.assertEqual(
-            [Landmark('PDB Combined AlphaHelix', 'PDB-C-A', 0, 3)],
+            [Landmark('PDB AlphaHelix_combined', 'PDB-AC', 0, 3)],
             list(result))
 
     def testOneLandmarkInMiddle(self):
@@ -98,10 +98,10 @@ class TestPDB_CombinedAlphaHelix(TestCase):
         landmark must be returned.
         """
         read = SSAARead('id', 'RFRFRFRFR', 'SSHHHSSSS')
-        landmark = PDB_CombinedAlphaHelix()
+        landmark = PDB_AlphaHelix_combined()
         result = landmark.find(read)
         self.assertEqual(
-            [Landmark('PDB Combined AlphaHelix', 'PDB-C-A', 2, 3)],
+            [Landmark('PDB AlphaHelix_combined', 'PDB-AC', 2, 3)],
             list(result))
 
     def testOneLandmarkAtEnd(self):
@@ -110,10 +110,10 @@ class TestPDB_CombinedAlphaHelix(TestCase):
         landmark must be returned.
         """
         read = SSAARead('id', 'RFRFRFRFR', 'SSSSSSHHH')
-        landmark = PDB_CombinedAlphaHelix()
+        landmark = PDB_AlphaHelix_combined()
         result = landmark.find(read)
         self.assertEqual(
-            [Landmark('PDB Combined AlphaHelix', 'PDB-C-A', 6, 3)],
+            [Landmark('PDB AlphaHelix_combined', 'PDB-AC', 6, 3)],
             list(result))
 
     def testTwoLandmarks(self):
@@ -125,12 +125,12 @@ class TestPDB_CombinedAlphaHelix(TestCase):
             'id',
             'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
             '-HHHHHHHHHHHHHHHGGHHHHHIIHHT-TT-TTSS---TTT-TTHHHH-SS---')
-        landmark = PDB_CombinedAlphaHelix()
+        landmark = PDB_AlphaHelix_combined()
         result = landmark.find(read)
         self.assertEqual(
             [
-                Landmark('PDB Combined AlphaHelix', 'PDB-C-A', 1, 26),
-                Landmark('PDB Combined AlphaHelix', 'PDB-C-A', 45, 4),
+                Landmark('PDB AlphaHelix_combined', 'PDB-AC', 1, 26),
+                Landmark('PDB AlphaHelix_combined', 'PDB-AC', 45, 4),
             ], list(result))
 
 

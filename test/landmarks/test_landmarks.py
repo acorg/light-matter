@@ -8,7 +8,7 @@ from light.landmarks import (
     AlphaHelix_3_10, AlphaHelix_pi, AminoAcids, BetaStrand, BetaTurn,
     GOR4AlphaHelix, GOR4BetaStrand, GOR4Coil, PDB_AlphaHelix,
     PDB_AlphaHelix_3_10, PDB_AlphaHelix_pi, PDB_ExtendedStrand,
-    PDB_CombinedAlphaHelix, Prosite, RandomLandmark, THAlphaHelix,
+    PDB_AlphaHelix_combined, Prosite, RandomLandmark, THAlphaHelix,
     ClusterAlphaHelix, AC_AlphaHelix, AC_AlphaHelix_3_10, AC_AlphaHelix_pi,
     AC_ExtendedStrand)
 
@@ -159,7 +159,7 @@ class TestDevLandmarkClasses(TestCase):
         """
         self.assertEqual(
             [PDB_AlphaHelix, PDB_AlphaHelix_3_10, PDB_AlphaHelix_pi,
-             PDB_ExtendedStrand, PDB_CombinedAlphaHelix, RandomLandmark],
+             PDB_ExtendedStrand, PDB_AlphaHelix_combined, RandomLandmark],
             DEV_LANDMARK_CLASSES)
 
 
@@ -184,7 +184,7 @@ class TestAllLandmarkClassesIncludingDev(TestCase):
              Prosite, THAlphaHelix, ClusterAlphaHelix, AC_AlphaHelix,
              AC_AlphaHelix_3_10, AC_AlphaHelix_pi, AC_ExtendedStrand,
              PDB_AlphaHelix, PDB_AlphaHelix_3_10, PDB_AlphaHelix_pi,
-             PDB_ExtendedStrand, PDB_CombinedAlphaHelix, RandomLandmark],
+             PDB_ExtendedStrand, PDB_AlphaHelix_combined, RandomLandmark],
             ALL_LANDMARK_CLASSES_INCLUDING_DEV)
 
 

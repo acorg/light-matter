@@ -21,6 +21,10 @@ class TestCalculateOverlap(TestCase):
         self.maxDiff = None
         expected = {
             # Landmarks.
+            'EukaryoticLinearMotif': {
+                9, 10, 11, 12, 13, 14, 15, 16, 17, 35, 36, 37, 38, 39, 40, 41,
+                45, 46, 47, 48
+            },
             'AC AlphaHelix': {
                 32, 33, 34, 35, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 31,
             },
@@ -98,8 +102,8 @@ class TestCalculateOverlap(TestCase):
             union[frozenset(('IndividualTroughs', 'Troughs'))])
 
         # Note that the following don't test much. There are 26 features
-        # examined by default by CalculateOverlap. So there are 26 * 25 / 2
-        # = 325 pairs of features. So these two tests are just testing that
+        # examined by default by CalculateOverlap. So there are 27 * 26 / 2
+        # = 351 pairs of features. So these two tests are just testing that
         # all pairs of features are present in the returned dicts.
-        self.assertEqual(325, len(intersection))
-        self.assertEqual(325, len(union))
+        self.assertEqual(351, len(intersection))
+        self.assertEqual(351, len(union))

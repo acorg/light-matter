@@ -53,7 +53,7 @@ class Prosite(Finder):
     def find(self, read):
         """
         A function that finds and yields (as C{Landmark}s instances) Prosite
-        motifs from a sequence
+        motifs from a sequence.
 
         @param read: An instance of C{dark.reads.AARead}.
         @return: A generator that yields C{Landmark} instances.

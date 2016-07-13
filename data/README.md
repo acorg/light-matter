@@ -73,7 +73,8 @@ and subsequent fields are space-separated PDB sequence ids.
 
 The file was produced by
 
-    $ bzcat pdb-20160711-ss.txt.bz2 | ../light/performance/bin/pdb-ss-fasta-to-year-categories.py > \
+    $ bzcat pdb-20160711-ss.txt.bz2 | \
+        ../light/performance/bin/pdb-ss-fasta-to-year-categories.py --pdbEntriesFile pdb-20160711-entries.txt > \
         pdb-20160711-structures-by-year.txt
     260847 sequences read, 260847 had a year, 0 had no year.
     1972: 1 sequence

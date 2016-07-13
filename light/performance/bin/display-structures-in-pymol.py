@@ -25,12 +25,12 @@ from light.performance.pymolgraphics import makeLegend
 pymol.finish_launching()
 
 
-COLORS = ['aquamarine', 'brightorange', 'darksalmon', 'deepolive',
+COLORS = {'aquamarine', 'brightorange', 'darksalmon', 'deepolive',
           'deepsalmon', 'deepteal', 'firebrick', 'forest', 'greencyan',
           'lightblue', 'limon', 'marine', 'orange', 'palegreen', 'oxygen',
           'slate', 'tv_blue', 'tv_green', 'tv_red', 'violetpurple',
           'warmpink', 'violet', 'antimony', 'cesium', 'dubnium', 'gold',
-          'iridium', 'phosphorus']
+          'iridium', 'phosphorus'}
 
 ALL_FEATURES = [
     (feature.SYMBOL, feature.NAME) for feature in
@@ -231,7 +231,7 @@ if __name__ == '__main__':
 
     # Display the legend.
     if args.showLegend:
-        cgo = makeLegend()
+        cgo = makeLegend(ALL_FEATURES)
         cmd.load_cgo(cgo, 'legend')
         cmd.set('grid_slot', 0, 'legend')
 

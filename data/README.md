@@ -329,3 +329,7 @@ ELM classes can be downloaded by clicking on 'export 251 classes as tsv' on
 this [http://elm.eu.org/elms](http://elm.eu.org/elms) page.
 Viral ELM instances can be downloaded by clicking on 'export 239 instances as
 tsv' on this [http://elm.eu.org/viruses/](http://elm.eu.org/viruses/) page.
+
+The `elm-160713.json` file contains all ELM classes with viral instances. It was made using:
+
+    $ elm-to-json.py elm_classes.tsv elm_instances.tsv > elm-160713.json

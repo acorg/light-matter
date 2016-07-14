@@ -6,16 +6,16 @@ from json import dumps
 
 def elmToJSON(classesFile, viralInstancesFile, outFile=sys.stdout):
     """
-    Given a file with eukariotic linear motif (ELM) classes, and a file of vial
-    ELM instances, this function will write out a line of JSON containing a
-    regex 'pattern' and an ELM instance 'accession'.
+    Given a file with eukariotic linear motif (ELM) classes, and a file of
+    viral ELM instances, this function will write out a line of JSON containing
+    a regex 'pattern' and an ELM instance 'identifier'.
 
     Check data/README.md for a description of how to obtain the relevant files.
 
     @param classesFile: A C{str} filename of a file containing all ELM classes.
     @param viralInstancesFile: A C{str} filename of a file containing ELM
         instances specific to viruses.
-    @param outFile: A C{str} filename where the output will be written to.
+    @param outFile: A file pointer where the output will be written to.
     """
     viralIdentifiers = set()
 
@@ -31,8 +31,9 @@ def elmToJSON(classesFile, viralInstancesFile, outFile=sys.stdout):
         for line in cFp:
             lineCount += 1
             if lineCount > 6:
-                identifier = line.split('\t')[1][1:-1]
-                pattern = line.split('\t')[4][1:-1]
+                splittedLine = line.split('\t')
+                identifier = splittedLine[1][1:-1]
+                pattern = splittedLine[4][1:-1]
                 if identifier in viralIdentifiers:
                     print(dumps(
                         {

@@ -20,7 +20,7 @@ esac
 
 
 DM=/usr/local/dark-matter
-export PYTHONPATH=$DM/light-matter/:$DM/dark-matter
+export PYTHONPATH=$DM/light-matter:$DM/dark-matter
 
 errs=$jobid.error
 

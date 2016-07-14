@@ -51,7 +51,8 @@ TABLEAU20 = [
 # We need more than 20 colors, so that we have one color per feature.
 ADDITIONAL_COLORS = [(153, 86, 136), (240, 39, 32), (234, 107, 115),
                      (255, 217, 74), (57, 115, 124), (219, 161, 58),
-                     (95, 90, 65), (130, 133, 59), (225, 152, 150)]
+                     (95, 90, 65), (130, 133, 59), (225, 152, 150),
+                     (159, 205, 153)]
 
 # Scale the above RGB values to the [0, 1] range, the format matplotlib
 # accepts.
@@ -63,13 +64,13 @@ for i in range(len(ADDITIONAL_COLORS)):
     r, g, b = ADDITIONAL_COLORS[i]
     ADDITIONAL_COLORS[i] = (r / 255.0, g / 255.0, b / 255.0)
 
-TABLEAU26 = TABLEAU20 + ADDITIONAL_COLORS
+TABLEAU27 = TABLEAU20 + ADDITIONAL_COLORS
 
 # Make sure we have enough colors for our set of features.
-assert len(ALL_FEATURES) <= len(TABLEAU26)
+assert len(ALL_FEATURES) <= len(TABLEAU27)
 
 # The following maps from feature symbol to matplotlib color.
-COLORS = dict(zip([feature[0] for feature in ALL_FEATURES], TABLEAU26))
+COLORS = dict(zip([feature[0] for feature in ALL_FEATURES], TABLEAU27))
 
 
 def legendHandles(names):

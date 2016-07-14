@@ -316,3 +316,20 @@ finder. The number at the end of the filename corresponds to the cut-off
 used to determine which helices should be in the file. E.g., all helices in
 `aho-corasick-alpha-helix-prefixes-1` have a true positive to false
 positive ratio of 1 or more.
+
+# Eukariotic Linear Motifs (ELM)
+
+The eukariotic linear motif database is a repository of eukariotic linear
+motifs. Currently (13 July 2016) 251 ELM classes and 2799 ELM instances are
+present in the database. Each class can be described by a regex and can have
+multiple instances. 239 instances are specific to viruses. Only the classes
+which have instances specific to viruses are used here.
+
+ELM classes can be downloaded by clicking on 'export 251 classes as tsv' on
+this [http://elm.eu.org/elms](http://elm.eu.org/elms) page.
+Viral ELM instances can be downloaded by clicking on 'export 239 instances as
+tsv' on this [http://elm.eu.org/viruses/](http://elm.eu.org/viruses/) page.
+
+The `elm-160713.json` file contains all ELM classes with viral instances. It was made using:
+
+    $ elm-to-json.py elm_classes.tsv elm_instances.tsv > elm-160713.json

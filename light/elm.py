@@ -19,17 +19,13 @@ def elmToJSON(classesFile, viralInstancesFile, outFile=sys.stdout):
     """
     viralIdentifiers = set()
 
-    lineCount = 0
     with open(viralInstancesFile) as vFp:
-        for line in vFp:
-            lineCount += 1
+        for lineCount, line in enumerate(vFp, start=1):
             if lineCount > 6:
                 viralIdentifiers.add(line.split('\t')[2][1:-1])
 
-    lineCount = 0
     with open(classesFile) as cFp:
-        for line in cFp:
-            lineCount += 1
+        for lineCount, line in enumerate(cFp, start=1):
             if lineCount > 6:
                 splittedLine = line.split('\t')
                 identifier = splittedLine[1][1:-1]

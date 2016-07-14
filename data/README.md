@@ -73,7 +73,8 @@ and subsequent fields are space-separated PDB sequence ids.
 
 The file was produced by
 
-    $ bzcat pdb-20160711-ss.txt.bz2 | ../light/performance/bin/pdb-ss-fasta-to-year-categories.py > \
+    $ bzcat pdb-20160711-ss.txt.bz2 | \
+        ../light/performance/bin/pdb-ss-fasta-to-year-categories.py --pdbEntriesFile pdb-20160711-entries.txt > \
         pdb-20160711-structures-by-year.txt
     260847 sequences read, 260847 had a year, 0 had no year.
     1972: 1 sequence
@@ -133,7 +134,7 @@ individual FASTA files giving the sequences that entered PDB by year.
 E.g.,
 
 ```sh
-$ bzcat pdb-20160303-ss.txt.bz2 |
+$ bzcat pdb-20160711-ss.txt.bz2 |
   ../light/performance/bin/split-pdb-ss-by-category.py --prefix pdb- \
   --categories pdb-20160711-structures-by-year.txt
 ```
@@ -171,7 +172,7 @@ id to appear in multiple categories (i.e., years) seeing as the categories
 are cumulative:
 
 ```sh
-$ bzcat pdb-20160303-ss.txt.bz2 |
+$ bzcat pdb-20160711-ss.txt.bz2 |
   ../light/performance/bin/split-pdb-ss-by-category.py --prefix pdb-cumulative- \
   --categories pdb-structures-by-year-cumulative.txt \
   --allowSeqsInMultipleCategories
@@ -199,9 +200,9 @@ up and run (this assumes you have both the `light/performance/bin` and the
 your shell's `PATH` in order for it to find the commands below):
 
     $ bzcat pdb-20160303-ss.txt.bz2 |
-    extract-structures-from-pdb-ss.py --featureType 'PDB AlphaHelix' |
-    fasta-subsequences.py --pdb --minLength 4 |
-    filter-fasta.py --readClass fasta-ss --saveAs fasta --removeDuplicates >
+        extract-structures-from-pdb-ss.py --featureType 'PDB AlphaHelix' |
+        fasta-subsequences.py --pdb --minLength 4 |
+        filter-fasta.py --readClass fasta-ss --saveAs fasta --removeDuplicates >
         pdb-alpha-helix-substrings-no-duplicates.fasta
 
 Then transfer the `pdb-alpha-helix-substrings-no-duplicates.fasta` file to

@@ -51,7 +51,8 @@ parser.add_argument(
 
 parser.add_argument(
     '--featureType', default='PDB AlphaHelix',
-    choices=('PDB AlphaHelix', 'PDB AlphaHelix_3_10', 'PDB AlphaHelix_pi',
+    choices=('PDB AlphaHelix', 'PDB AlphaHelix_3_10',
+             'PDB AlphaHelix_combined', 'PDB AlphaHelix_pi',
              'PDB ExtendedStrand'),
     help='The type of structure that should be extracted.')
 

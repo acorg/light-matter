@@ -104,6 +104,13 @@ class TestEvaluateMatch(TestCase):
         """
         self.assertFalse(evaluateMatch('HHHHHHHH', 1, 7, 'H'))
 
+    def testAlphaHelixCombined(self):
+        """
+        The alpha helix combined matches part of a sequence that's an alpha
+        helix.
+        """
+        self.assertTrue(evaluateMatch('HHGHGHIH', 1, 7, 'K'))
+
 
 class TestEvaluateMatchNoPrefix(TestCase):
     """
@@ -159,3 +166,10 @@ class TestEvaluateMatchNoPrefix(TestCase):
         The structure starts at 0 and matches exactly.
         """
         self.assertTrue(evaluateMatchNoPrefix('EEE', 0, 3, 'E'))
+
+    def testAlphaHelixCombinedMustBeFound(self):
+        """
+        The alpha helix combined matches part of a sequence that's an alpha
+        helix.
+        """
+        self.assertTrue(evaluateMatchNoPrefix('GHHHGGIGGG', 1, 7, 'K'))

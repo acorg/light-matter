@@ -48,10 +48,15 @@ def evaluateMatch(structureString, start, end, structureType):
     """
     assert 0 <= start < end
 
+    if structureType == 'K':
+        structureTypes = {'H', 'G', 'I'}
+    else:
+        structureTypes = {structureType}
+
     if start > 0 and structureString[start - 1] == structureType:
         return False
 
-    return all(structureString[i] == structureType for i in range(start, end))
+    return all(structureString[i] in structureTypes for i in range(start, end))
 
 
 def evaluateMatchNoPrefix(structureString, start, end, structureType):
@@ -74,7 +79,12 @@ def evaluateMatchNoPrefix(structureString, start, end, structureType):
     """
     assert 0 <= start < end
 
-    return all(structureString[i] == structureType for i in range(start, end))
+    if structureType == 'K':
+        structureTypes = {'H', 'G', 'I'}
+    else:
+        structureTypes = {structureType}
+
+    return all(structureString[i] in structureTypes for i in range(start, end))
 
 
 class PdbSubsetStatistics(object):

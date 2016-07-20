@@ -94,7 +94,7 @@ class PdbSubsetStatistics(object):
         extracted from the pdbFile.
     @param structureType: a C{str} name of the structure type that should
         be considered. Must be one of 'AlphaHelix', 'AlphaHelix_3_10',
-        'AlphaHelix_pi', 'ExtendedStrand'.
+        'AlphaHelix_combined', 'AlphaHelix_pi', 'ExtendedStrand'.
     """
 
     def __init__(self, fileToEvaluate, fileToEvaluateTpFp, pdbFile,
@@ -117,13 +117,15 @@ class PdbSubsetStatistics(object):
             self.acAlphaHelixFilename = self.fileToEvaluate
         elif self.structureType == 'AlphaHelix_3_10':
             self.acAlphaHelix310Filename = self.fileToEvaluate
+        elif self.structureType == 'AlphaHelix_combined':
+            self.acAlphaHelixCombinedFilename = self.fileToEvaluate
         elif self.structureType == 'AlphaHelix_pi':
             self.acAlphaHelixPiFilename = self.fileToEvaluate
         elif self.structureType == 'ExtendedStrand':
             self.acExtendedStrandFilename = self.fileToEvaluate
         else:
             ('structureType %s must be one of "AlphaHelix", '
-             '"AlphaHelix_3_10", "AlphaHelix_pi", '
+             '"AlphaHelix_3_10", "AlphaHelix_combined", "AlphaHelix_pi", '
              '"ExtendedStrand"' % structureType)
 
     def getTotalTpr(self):
@@ -154,6 +156,7 @@ class PdbSubsetStatistics(object):
             landmarks=['AC ' + self.structureType],
             acAlphaHelixFilename=self.acAlphaHelixFilename,
             acAlphaHelix310Filename=self.acAlphaHelix310Filename,
+            acAlphaHelixCombinedFilename=self.acAlphaHelixCombinedFilename,
             acAlphaHelixPiFilename=self.acAlphaHelixPiFilename,
             acExtendedStrandFilename=self.acExtendedStrandFilename)
 
@@ -182,6 +185,7 @@ class PdbSubsetStatistics(object):
             landmarks=['AC ' + self.structureType],
             acAlphaHelixFilename=self.acAlphaHelixFilename,
             acAlphaHelix310Filename=self.acAlphaHelix310Filename,
+            acAlphaHelixCombinedFilename=self.acAlphaHelixCombinedFilename,
             acAlphaHelixPiFilename=self.acAlphaHelixPiFilename,
             acExtendedStrandFilename=self.acExtendedStrandFilename)
 
@@ -233,6 +237,7 @@ class PdbSubsetStatistics(object):
                 landmarks=['PDB ' + self.structureType], trigPoints=[],
                 acAlphaHelixFilename=self.acAlphaHelixFilename,
                 acAlphaHelix310Filename=self.acAlphaHelix310Filename,
+                acAlphaHelixCombinedFilename=self.acAlphaHelixCombinedFilename,
                 acAlphaHelixPiFilename=self.acAlphaHelixPiFilename,
                 acExtendedStrandFilename=self.acExtendedStrandFilename)
 
@@ -249,6 +254,7 @@ class PdbSubsetStatistics(object):
                 trigPoints=[],
                 acAlphaHelixFilename=self.acAlphaHelixFilename,
                 acAlphaHelix310Filename=self.acAlphaHelix310Filename,
+                acAlphaHelixCombinedFilename=self.acAlphaHelixCombinedFilename,
                 acAlphaHelixPiFilename=self.acAlphaHelixPiFilename,
                 acExtendedStrandFilename=self.acExtendedStrandFilename)
 

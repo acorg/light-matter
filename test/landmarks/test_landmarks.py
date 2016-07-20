@@ -9,8 +9,9 @@ from light.landmarks import (
     GOR4AlphaHelix, GOR4BetaStrand, GOR4Coil, PDB_AlphaHelix,
     PDB_AlphaHelix_3_10, PDB_AlphaHelix_pi, PDB_ExtendedStrand,
     PDB_AlphaHelix_combined, Prosite, RandomLandmark, THAlphaHelix,
-    ClusterAlphaHelix, AC_AlphaHelix, AC_AlphaHelix_3_10, AC_AlphaHelix_pi,
-    AC_ExtendedStrand, EukaryoticLinearMotif)
+    ClusterAlphaHelix, AC_AlphaHelix, AC_AlphaHelix_3_10,
+    AC_AlphaHelix_combined, AC_AlphaHelix_pi, AC_ExtendedStrand,
+    EukaryoticLinearMotif)
 
 
 class TestFindLandmark(TestCase):
@@ -138,8 +139,8 @@ class TestAllLandmarkClasses(TestCase):
             [AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, AminoAcids,
              BetaStrand, BetaTurn, GOR4AlphaHelix, GOR4BetaStrand, GOR4Coil,
              Prosite, THAlphaHelix, ClusterAlphaHelix, AC_AlphaHelix,
-             AC_AlphaHelix_3_10, AC_AlphaHelix_pi, AC_ExtendedStrand,
-             EukaryoticLinearMotif],
+             AC_AlphaHelix_3_10, AC_AlphaHelix_combined, AC_AlphaHelix_pi,
+             AC_ExtendedStrand, EukaryoticLinearMotif],
             ALL_LANDMARK_CLASSES)
 
 
@@ -184,10 +185,10 @@ class TestAllLandmarkClassesIncludingDev(TestCase):
             [AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, AminoAcids,
              BetaStrand, BetaTurn, GOR4AlphaHelix, GOR4BetaStrand, GOR4Coil,
              Prosite, THAlphaHelix, ClusterAlphaHelix, AC_AlphaHelix,
-             AC_AlphaHelix_3_10, AC_AlphaHelix_pi, AC_ExtendedStrand,
-             EukaryoticLinearMotif, PDB_AlphaHelix, PDB_AlphaHelix_3_10,
-             PDB_AlphaHelix_pi, PDB_ExtendedStrand, PDB_AlphaHelix_combined,
-             RandomLandmark],
+             AC_AlphaHelix_3_10, AC_AlphaHelix_combined, AC_AlphaHelix_pi,
+             AC_ExtendedStrand, EukaryoticLinearMotif, PDB_AlphaHelix,
+             PDB_AlphaHelix_3_10, PDB_AlphaHelix_pi, PDB_ExtendedStrand,
+             PDB_AlphaHelix_combined, RandomLandmark],
             ALL_LANDMARK_CLASSES_INCLUDING_DEV)
 
 

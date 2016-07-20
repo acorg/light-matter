@@ -234,6 +234,8 @@ class TestDatabaseParameters(TestCase):
             '../data/ac-alpha-helix-substrings-20-0.9'),
             acAlphaHelix310Filename=(
             '../data/ac-alpha-helix-3-10-substrings-1-0.5'),
+            acAlphaHelixCombinedFilename=(
+            '../data/ac-alpha-helix-3-10-substrings-1-0.5'),
             acAlphaHelixPiFilename=(
             '../data/ac-alpha-helix-pi-substrings-1-0.5'),
             acExtendedStrandFilename=(
@@ -242,6 +244,8 @@ class TestDatabaseParameters(TestCase):
         self.assertEqual(
             {
                 'acAlphaHelix310Filename': '../data/ac-alpha-helix-3-10-'
+                'substrings-1-0.5',
+                'acAlphaHelixCombinedFilename': '../data/ac-alpha-helix-3-10-'
                 'substrings-1-0.5',
                 'acAlphaHelixFilename': '../data/ac-alpha-helix-substrings'
                 '-20-0.9',
@@ -313,6 +317,7 @@ class TestDatabaseParameters(TestCase):
                                       randomTrigPointDensity=0.9,
                                       acAlphaHelixFilename='xxx',
                                       acAlphaHelix310Filename='yyy',
+                                      acAlphaHelixCombinedFilename='bbb',
                                       acAlphaHelixPiFilename='zzz',
                                       acExtendedStrandFilename='aaa')
         fp = StringIO()
@@ -320,6 +325,7 @@ class TestDatabaseParameters(TestCase):
         expected = {
             'acAlphaHelixFilename': 'xxx',
             'acAlphaHelix310Filename': 'yyy',
+            'acAlphaHelixCombinedFilename': 'bbb',
             'acAlphaHelixPiFilename': 'zzz',
             'acExtendedStrandFilename': 'aaa',
             'landmarks': ['AlphaHelix'],

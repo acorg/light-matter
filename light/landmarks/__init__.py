@@ -1,5 +1,6 @@
 from light.landmarks.ac_alpha_helix import AC_AlphaHelix
 from light.landmarks.ac_alpha_helix_3_10 import AC_AlphaHelix_3_10
+from light.landmarks.ac_alpha_helix_combined import AC_AlphaHelix_combined
 from light.landmarks.ac_alpha_helix_pi import AC_AlphaHelix_pi
 from light.landmarks.ac_extended_strand import AC_ExtendedStrand
 from light.landmarks.alpha_helix import AlphaHelix
@@ -26,7 +27,8 @@ ALL_LANDMARK_CLASSES = [
     AlphaHelix, AlphaHelix_3_10, AlphaHelix_pi, AminoAcids, BetaStrand,
     BetaTurn, GOR4AlphaHelix, GOR4BetaStrand, GOR4Coil, Prosite,
     THAlphaHelix, ClusterAlphaHelix, AC_AlphaHelix, AC_AlphaHelix_3_10,
-    AC_AlphaHelix_pi, AC_ExtendedStrand, EukaryoticLinearMotif]
+    AC_AlphaHelix_combined, AC_AlphaHelix_pi, AC_ExtendedStrand,
+    EukaryoticLinearMotif]
 
 DEV_LANDMARK_CLASSES = [
     PDB_AlphaHelix, PDB_AlphaHelix_3_10, PDB_AlphaHelix_pi,

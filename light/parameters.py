@@ -304,6 +304,8 @@ class DatabaseParameters(object):
         AC_AlphaHelix finder.
     @param acAlphaHelix310Filename: The C{str} name of a file to be used by the
         AC_AlphaHelix_3_10 finder.
+    @param acAlphaHelixCombinedFilename: The C{str} name of a file to be used
+        by the AC_AlphaHelix_combined finder.
     @param acAlphaHelixPiFilename: The C{str} name of a file to be used by the
         AC_AlphaHelix_pi finder.
     @param acExtendedStrandFilename: The C{str} name of a file to be used by
@@ -326,6 +328,10 @@ class DatabaseParameters(object):
     DEFAULT_AC_ALPHAHELIX_3_10_FILENAME = join(
         dirname(light.__file__), '..', 'data',
         'ac-alpha-helix-3-10-substrings-1-0.5')
+    # TODO: This default file should be substituted by the real default file!!!
+    DEFAULT_AC_ALPHAHELIX_COMBINED_FILENAME = join(
+        dirname(light.__file__), '..', 'data',
+        'ac-alpha-helix-3-10-substrings-1-0.5')
     DEFAULT_AC_ALPHAHELIX_PI_FILENAME = join(
         dirname(light.__file__), '..', 'data',
         'ac-alpha-helix-pi-substrings-1-0.5')
@@ -338,6 +344,7 @@ class DatabaseParameters(object):
                  distanceBase=None, featureLengthBase=None,
                  randomLandmarkDensity=None, randomTrigPointDensity=None,
                  acAlphaHelixFilename=None, acAlphaHelix310Filename=None,
+                 acAlphaHelixCombinedFilename=None,
                  acAlphaHelixPiFilename=None, acExtendedStrandFilename=None):
 
         # First set the simple scalar parameters.
@@ -380,6 +387,11 @@ class DatabaseParameters(object):
         self.acAlphaHelix310Filename = (
             self.DEFAULT_AC_ALPHAHELIX_3_10_FILENAME if
             acAlphaHelix310Filename is None else acAlphaHelix310Filename)
+
+        self.acAlphaHelixCombinedFilename = (
+            self.DEFAULT_AC_ALPHAHELIX_COMBINED_FILENAME if
+            acAlphaHelixCombinedFilename is None else
+            acAlphaHelixCombinedFilename)
 
         self.acAlphaHelixPiFilename = (
             self.DEFAULT_AC_ALPHAHELIX_PI_FILENAME if
@@ -450,7 +462,11 @@ class DatabaseParameters(object):
                            self.featureLengthBase,
                            self.randomLandmarkDensity,
                            self.randomTrigPointDensity,
-                           basename(self.acAlphaHelixFilename)))))
+                           basename(self.acAlphaHelixFilename),
+                           basename(self.acAlphaHelix310Filename),
+                           basename(self.acAlphaHelixCombinedFilename),
+                           basename(self.acAlphaHelixPiFilename),
+                           basename(self.acExtendedStrandFilename)))))
         return checksum.value
 
     @staticmethod
@@ -542,6 +558,12 @@ class DatabaseParameters(object):
                   'finder.'))
 
         parser.add_argument(
+            '--acAlphaHelixCombinedFilename',
+            default=DatabaseParameters.DEFAULT_AC_ALPHAHELIX_COMBINED_FILENAME,
+            help=('The name of the file to be used by the '
+                  'AC_AlphaHelix_combined finder.'))
+
+        parser.add_argument(
             '--acAlphaHelixPiFilename',
             default=DatabaseParameters.DEFAULT_AC_ALPHAHELIX_PI_FILENAME,
             help=('The name of the file to be used by the AC_AlphaHelix_pi '
@@ -597,6 +619,8 @@ class DatabaseParameters(object):
                    randomTrigPointDensity=args.randomTrigPointDensity,
                    acAlphaHelixFilename=args.acAlphaHelixFilename,
                    acAlphaHelix310Filename=args.acAlphaHelix310Filename,
+                   acAlphaHelixCombinedFilename=(
+                       args.acAlphaHelixCombinedFilename),
                    acAlphaHelixPiFilename=args.acAlphaHelixPiFilename,
                    acExtendedStrandFilename=args.acExtendedStrandFilename)
 
@@ -617,6 +641,8 @@ class DatabaseParameters(object):
                     randomTrigPointDensity=self.randomTrigPointDensity,
                     acAlphaHelixFilename=self.acAlphaHelixFilename,
                     acAlphaHelix310Filename=self.acAlphaHelix310Filename,
+                    acAlphaHelixCombinedFilename=(
+                        self.acAlphaHelixCombinedFilename),
                     acAlphaHelixPiFilename=self.acAlphaHelixPiFilename,
                     acExtendedStrandFilename=self.acExtendedStrandFilename)
 
@@ -639,6 +665,7 @@ class DatabaseParameters(object):
             'randomTrigPointDensity': self.randomTrigPointDensity,
             'acAlphaHelixFilename': self.acAlphaHelixFilename,
             'acAlphaHelix310Filename': self.acAlphaHelix310Filename,
+            'acAlphaHelixCombinedFilename': self.acAlphaHelixCombinedFilename,
             'acAlphaHelixPiFilename': self.acAlphaHelixPiFilename,
             'acExtendedStrandFilename': self.acExtendedStrandFilename,
         }
@@ -711,6 +738,8 @@ class DatabaseParameters(object):
             'AC AlphaHelix filename: %s' % basename(self.acAlphaHelixFilename),
             'AC AlphaHelix 3-10 filename: %s' %
             basename(self.acAlphaHelix310Filename),
+            'AC AlphaHelix Combined filename: %s' %
+            basename(self.acAlphaHelixCombinedFilename),
             'AC AlphaHelix pi filename: %s' %
             basename(self.acAlphaHelixPiFilename),
             'AC ExtendedStrand filename: %s' %
@@ -750,8 +779,8 @@ class DatabaseParameters(object):
                 'limitPerLandmark', 'maxDistance', 'minDistance',
                 'distanceBase', 'featureLengthBase', 'randomLandmarkDensity',
                 'randomTrigPointDensity', 'acAlphaHelixFilename',
-                'acAlphaHelix310Filename', 'acAlphaHelixPiFilename',
-                'acExtendedStrandFilename'):
+                'acAlphaHelix310Filename', 'acAlphaHelixCombinedFilename',
+                'acAlphaHelixPiFilename', 'acExtendedStrandFilename'):
             ours = getattr(self, param)
             others = getattr(other, param)
             if ours != others:

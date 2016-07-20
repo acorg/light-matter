@@ -123,8 +123,8 @@ class PdbSubsetStatistics(object):
             self.acExtendedStrandFilename = self.fileToEvaluate
         else:
             ('structureType %s must be one of "AlphaHelix", '
-             '"AlphaHelix_3_10", "AlphaHelix_pi", "ExtendedStrand"' %
-             structureType)
+             '"AlphaHelix_3_10", "AlphaHelix_pi", '
+             '"ExtendedStrand"' % structureType)
 
     def getTotalTpr(self):
         """

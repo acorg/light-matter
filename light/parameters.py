@@ -328,10 +328,9 @@ class DatabaseParameters(object):
     DEFAULT_AC_ALPHAHELIX_3_10_FILENAME = join(
         dirname(light.__file__), '..', 'data',
         'ac-alpha-helix-3-10-substrings-1-0.5')
-    # TODO: This default file should be substituted by the real default file!!!
     DEFAULT_AC_ALPHAHELIX_COMBINED_FILENAME = join(
         dirname(light.__file__), '..', 'data',
-        'ac-alpha-helix-3-10-substrings-1-0.5')
+        'ac-alpha-helix-combined-substrings-20-0.8')
     DEFAULT_AC_ALPHAHELIX_PI_FILENAME = join(
         dirname(light.__file__), '..', 'data',
         'ac-alpha-helix-pi-substrings-1-0.5')

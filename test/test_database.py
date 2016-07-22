@@ -786,6 +786,7 @@ class TestDatabase(TestCase):
         The print_ function should produce the expected output when asked to
         print hash information.
         """
+        self.maxDiff = None
         subject = AARead('subject-id', 'FRRRFRRRFASAASA')
         dbParams = DatabaseParameters(landmarks=[AlphaHelix, BetaStrand],
                                       trigPoints=[Peaks, Troughs],
@@ -811,8 +812,8 @@ class TestDatabase(TestCase):
             '  AC AlphaHelix filename: ac-alpha-helix-substrings-20-0.85\n'
             '  AC AlphaHelix 3-10 filename: ac-alpha-helix-3-10-substrings-'
             '1-0.5\n'
-            '  AC AlphaHelix Combined filename: ac-alpha-helix-3-10-substrings'
-            '-1-0.5\n'
+            '  AC AlphaHelix Combined filename: ac-alpha-helix-combined-'
+            'substrings-20-0.8\n'
             '  AC AlphaHelix pi filename: ac-alpha-helix-pi-substrings-1-0.5\n'
             '  AC ExtendedStrand filename: ac-extended-strand-substrings-'
             '10-0.5\n'
@@ -821,12 +822,12 @@ class TestDatabase(TestCase):
             'Hash count: 3\n'
             'Total residues: 15\n'
             'Coverage: 73.33%\n'
-            'Checksum: 1509907015\n'
+            'Checksum: 4216785149\n'
             'Connector:\n'
             'Backends:\n'
             '  Name: backend\n'
             '  Hash count: 3\n'
-            '  Checksum: 1509907015\n'
+            '  Checksum: 4216785149\n'
             '  Subjects (with offsets) by hash:\n'
             '    A2:P:10\n'
             '      0 [[0, 9, 10, 1]]\n'
@@ -846,6 +847,7 @@ class TestDatabase(TestCase):
         The print_ function should report the expected result if no hashes are
         found in the subject.
         """
+        self.maxDiff = None
         subject = AARead('subject', '')
         dbParams = DatabaseParameters(landmarks=[AlphaHelix, BetaStrand],
                                       trigPoints=[Peaks, Troughs],
@@ -871,8 +873,8 @@ class TestDatabase(TestCase):
             '  AC AlphaHelix filename: ac-alpha-helix-substrings-20-0.85\n'
             '  AC AlphaHelix 3-10 filename: ac-alpha-helix-3-10-substrings-'
             '1-0.5\n'
-            '  AC AlphaHelix Combined filename: ac-alpha-helix-3-10-substrings'
-            '-1-0.5\n'
+            '  AC AlphaHelix Combined filename: ac-alpha-helix-combined-'
+            'substrings-20-0.8\n'
             '  AC AlphaHelix pi filename: ac-alpha-helix-pi-substrings-1-0.5\n'
             '  AC ExtendedStrand filename: ac-extended-strand-substrings-'
             '10-0.5\n'
@@ -881,7 +883,7 @@ class TestDatabase(TestCase):
             'Hash count: 0\n'
             'Total residues: 0\n'
             'Coverage: 0.00%\n'
-            'Checksum: 1440834516\n'
+            'Checksum: 4046105506\n'
             'Connector:')
         self.assertEqual(expected, db.print_())
 

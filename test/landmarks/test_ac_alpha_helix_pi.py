@@ -153,11 +153,11 @@ class TestACAlphaHelix_pi(TestCase):
         helix substring file loaded by light/landmarks/ac_alpha_helix_pi.py
         (in data/ac-alpha-helix-pi-substrings-1-0.5).
         """
-        read = AARead('id', 'RCELARTLKRLREGIG')
+        read = AARead('id', 'RCELEWVNKREGIG')
         finder = AC_AlphaHelix_pi()
         result = list(finder.find(read))
         self.assertEqual(
             [
-                Landmark('AC AlphaHelix_pi', 'ACAHP', 10, 6),
+                Landmark('AC AlphaHelix_pi', 'ACAHP', 4, 5),
             ],
             sorted(result))

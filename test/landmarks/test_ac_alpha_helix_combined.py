@@ -152,18 +152,27 @@ class TestACAlphaHelix_combined(TestCase):
             ],
             sorted(result))
 
-    def stestFindUsingBuiltInAlphaHelices(self):
+    def testFindUsingBuiltInAlphaHelices(self):
         """
         The find method must be able to find helices in the default alpha
         helix substring file loaded by
         light/landmarks/ac_alpha_helix_combined.py
-        (in data/ac-alpha-helix-combined-substrings-1-0.5).
+        (in data/ac-alpha-helix-combined-substrings-20-0.8).
         """
-        read = AARead('id', 'RCELARTLKRLREGIG')
+        self.maxDiff = None
+        read = AARead('id', 'RCELARTLHFWMEGIG')
         finder = AC_AlphaHelix_combined()
         result = list(finder.find(read))
         self.assertEqual(
             [
-                Landmark('AC AlphaHelix_combined', 'ACAHC', 10, 6),
+                Landmark('AC AlphaHelix_combined', 'ACAHC', 0, 4),
+                Landmark('AC AlphaHelix_combined', 'ACAHC', 0, 5),
+                Landmark('AC AlphaHelix_combined', 'ACAHC', 1, 4),
+                Landmark('AC AlphaHelix_combined', 'ACAHC', 1, 5),
+                Landmark('AC AlphaHelix_combined', 'ACAHC', 2, 4),
+                Landmark('AC AlphaHelix_combined', 'ACAHC', 2, 5),
+                Landmark('AC AlphaHelix_combined', 'ACAHC', 2, 6),
+                Landmark('AC AlphaHelix_combined', 'ACAHC', 3, 5),
+                Landmark('AC AlphaHelix_combined', 'ACAHC', 8, 4),
             ],
             sorted(result))

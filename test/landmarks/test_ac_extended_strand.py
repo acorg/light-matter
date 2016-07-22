@@ -158,6 +158,7 @@ class TestACExtendedStrand(TestCase):
         result = list(finder.find(read))
         self.assertEqual(
             [
+                Landmark('AC ExtendedStrand', 'ACES', 9, 4),
                 Landmark('AC ExtendedStrand', 'ACES', 10, 4),
             ],
             sorted(result))

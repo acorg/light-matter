@@ -1,4 +1,5 @@
 git+http://bitbucket.org/pypy/numpy.git
+pyahocorasick==1.1.0
 biopython==1.64
 dark-matter==1.0.19
 discover==0.4.0

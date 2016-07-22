@@ -256,6 +256,7 @@ Note that the current repo substring file
 don't know how well it performs yet.
 
 ### The current default subsets for the Aho Corasick finders are:
+
 * ac-alpha-helix-substrings-20-0.85
 * ac-alpha-helix-3-10-substrings-1-0.5
 * ac-alpha-helix-pi-substrings-1-0.5
@@ -265,6 +266,7 @@ don't know how well it performs yet.
 For a description of how they were made, see [AC finders take two, 8/7/2016](https://notebooks.antigenic-cartography.org/barbara/pages/features/ac-finders-take-two.html).
 
 ### The first default subsets for the Aho Corasick finders were:
+
 * ac-alpha-helix-substrings-20-0.85-old
 * ac-alpha-helix-3-10-substrings-1-0.5-old
 * ac-alpha-helix-pi-substrings-1-0.5-old

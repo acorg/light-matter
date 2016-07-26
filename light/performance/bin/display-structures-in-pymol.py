@@ -25,12 +25,15 @@ from light.performance.pymolgraphics import makeLegend
 pymol.finish_launching()
 
 
-COLORS = {'aquamarine', 'brightorange', 'darksalmon', 'deepolive',
-          'deepsalmon', 'deepteal', 'firebrick', 'forest', 'greencyan',
+# For a list of available colors and names, see:
+# http://www.pymolwiki.org/index.php/Color_Values
+COLORS = ['aquamarine', 'brightorange', 'darksalmon', 'deepsalmon',
+          'deepolive', 'deepteal', 'firebrick', 'forest', 'greencyan',
           'lightblue', 'limon', 'marine', 'orange', 'palegreen', 'oxygen',
           'slate', 'tv_blue', 'tv_green', 'tv_red', 'violetpurple',
           'warmpink', 'violet', 'antimony', 'cesium', 'dubnium', 'gold',
-          'iridium', 'phosphorus'}
+          'iridium', 'phosphorus', 'magenta', 'yellow', 'zirconium',
+          'actinium']
 
 ALL_FEATURES = [
     (feature.SYMBOL, feature.NAME) for feature in
@@ -188,14 +191,18 @@ if __name__ == '__main__':
                 analysis = result.analysis
                 # Get the best match
                 bestScore = 0
-                bestSubjectIndex = 0
+                bestSbjctInd = 0
                 for subjectIndex in analysis:
                     if analysis[subjectIndex]['overallScore'] > bestScore:
                         bestScore = analysis[subjectIndex]['overallScore']
-                        bestSubjectIndex = subjectIndex
-                bin_ = analysis[bestSubjectIndex]['significantBins'][0]['bin']
-                subjectChain = \
-                    database.getSubjectByIndex(bestSubjectIndex).read
+                        bestSbjctInd = subjectIndex
+                try:
+                    # Make sure there's no error if there's no significant bin
+                    bin_ = analysis[bestSbjctInd]['significantBins'][0]['bin']
+                    subjectChain = \
+                        database.getSubjectByIndex(bestSbjctInd).read
+                except KeyError:
+                    bin_ = {}
 
                 for match in bin_:
                     subjectLmStart = match['subjectLandmark'].offset

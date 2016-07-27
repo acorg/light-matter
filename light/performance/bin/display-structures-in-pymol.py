@@ -198,11 +198,13 @@ if __name__ == '__main__':
                         bestSbjctInd = subjectIndex
                 try:
                     # Make sure there's no error if there's no significant bin
-                    bin_ = analysis[bestSbjctInd]['significantBins'][0]['bin']
-                    subjectChain = \
-                        database.getSubjectByIndex(bestSbjctInd).read
+                    significantBins = analysis[bestSbjctInd]['significantBins']
                 except KeyError:
                     bin_ = {}
+                else:
+                    bin_ = significantBins[0]['bin']
+                    subjectChain = \
+                        database.getSubjectByIndex(bestSbjctInd).read
 
                 for match in bin_:
                     subjectLmStart = match['subjectLandmark'].offset

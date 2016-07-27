@@ -210,12 +210,7 @@ class PdbSubsetStatistics(object):
             if len(scannedRead.landmarks) > 0:
                 hit += 1
 
-        try:
-            fraction = hit / total
-        except ZeroDivisionError:
-            fraction = 0.0
-
-        return fraction
+        return hit / total if total else 0.0
 
     def getCorrelation(self):
         """

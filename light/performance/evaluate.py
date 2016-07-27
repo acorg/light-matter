@@ -120,6 +120,7 @@ class PdbSubsetStatistics(object):
 
         self.acAlphaHelixFilename = None
         self.acAlphaHelix310Filename = None
+        self.acAlphaHelixCombinedFilename = None
         self.acAlphaHelixPiFilename = None
         self.acExtendedStrandFilename = None
 
@@ -209,7 +210,7 @@ class PdbSubsetStatistics(object):
             if len(scannedRead.landmarks) > 0:
                 hit += 1
 
-        return hit / total
+        return hit / total if total else 0.0
 
     def getCorrelation(self):
         """

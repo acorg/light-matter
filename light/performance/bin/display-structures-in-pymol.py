@@ -7,7 +7,8 @@ A script which displays a set of given structures and their features in PyMOL.
 from __future__ import print_function
 
 import argparse
-from itertools import chain as ichain, repeat, izip
+from itertools import chain as ichain, repeat
+from six.moves import zip
 from Bio.PDB.PDBParser import PDBParser
 from operator import attrgetter
 import pymol
@@ -65,11 +66,13 @@ if __name__ == '__main__':
               '--structureName'))
 
     parser.add_argument(
-        '--params', action='append', required=True,
+        '--params', action='append',
         help=('Specify a full set of database and finder parameters (in '
               'quotes). This argument may be repeated. If less parameter '
               'sets are given than structure names, the final parameter '
-              'set will be used repeatedly as many times as needed.'))
+              'set will be used repeatedly as many times as needed. If '
+              'you need to put a space in an argument, use a "+". E.g., '
+              '--params "--landmark PDB+AlphaHelix --landmark AC+AlphaHelix"'))
 
     parser.add_argument(
         '--colorBestBin', default=False, action='store_true',
@@ -101,7 +104,7 @@ if __name__ == '__main__':
                          'match the number of structure names (%d).' %
                          (len(args.structureFiles), len(args.structureNames)))
 
-    if len(args.params) > len(args.structureNames):
+    if args.params and len(args.params) > len(args.structureNames):
         raise ValueError('You cannot specify more parameter sets (%d) than '
                          'structure names (%d).' %
                          (len(args.params), len(args.structureNames)))
@@ -116,12 +119,15 @@ if __name__ == '__main__':
         givenParams = []
         for paramsStr in args.params:
             paramsParser = argparse.ArgumentParser()
+            # Change '+' to ' ' to make it easy to specify finders that
+            # have a space in their names.
+            subArgs = [arg.replace('+', ' ') for arg in paramsStr.split()]
             FindParameters.addArgsToParser(paramsParser)
             DatabaseParameters.addArgsToParser(paramsParser)
-            paramArgs = paramsParser.parse_args(paramsStr.split())
+            paramArgs = paramsParser.parse_args(subArgs)
             dbParams = DatabaseParameters.fromArgs(paramArgs)
             findParams = FindParameters.fromArgs(paramArgs)
-            givenParams.append(dbParams, findParams)
+            givenParams.append((dbParams, findParams))
 
         if len(givenParams) < len(args.structureNames):
             # We were given fewer parameter sets than structures.  Re-use
@@ -132,15 +138,16 @@ if __name__ == '__main__':
             params = givenParams
     else:
         # The parameter settings for all structures will be the defaults.
-        params = izip(repeat(DatabaseParameters()), repeat(FindParameters()))
+        params = zip(repeat(DatabaseParameters()), repeat(FindParameters()))
 
-    first = False
+    first = True
 
     # Loop over the structures that were provided and display them. We have
-    # to use izip here as it will raise StopIteration when the shortest
+    # to use a version of zip that raises StopIteration when its shortest
     # iterator is consumed (params might have been set up in a simple way
-    # above to iterate forever).
-    for structureName, structureFile, (dbParams, findParams) in izip(
+    # above to iterate forever) so we use six.moves.zip which uses
+    # itertools.izip when running under Python 2.
+    for structureName, structureFile, (dbParams, findParams) in zip(
             args.structureNames, args.structureFiles, params):
 
         if args.printParams:
@@ -168,7 +175,7 @@ if __name__ == '__main__':
             chains.add(AAReadWithX(chain.id, chainSequence))
 
         # Load the structure into PyMOL.
-        cmd.load(args.structureFile)
+        cmd.load(structureFile)
 
         # Set the display.
         cmd.show('cartoon')
@@ -192,7 +199,7 @@ if __name__ == '__main__':
 
         structureList = ['(model %s and (%s))' % (obj, structureName)
                          for obj in cmd.get_object_list(
-                                 '(' + structureName + ')')]
+                             '(' + structureName + ')')]
         structureChainList = ['(%s and chain %s)' % (structure, chain)
                               for structure in structureList for chain in
                               cmd.get_chains(structure)]

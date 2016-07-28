@@ -56,14 +56,18 @@ if __name__ == '__main__':
     parser.add_argument(
         '--structureName', action='append', dest='structureNames',
         required=True,
-        help='The names of the structures that should be displayed')
+        help=('The name of a structure to display. Can be specified multiple '
+              'times. You can pass the same structure file multiple times '
+              '(using --structureFile) but you will need to use a different '
+              'structure name for each, otherwise the structures will be '
+              'drawn on top of each other by PyMol.'))
 
     parser.add_argument(
         '--structureFile', action='append', dest='structureFiles',
         required=True,
-        help=('The files of the structures that should be displayed in PDB '
-              'file format. Must be specified the same number of times as '
-              '--structureName'))
+        help=('The structure file (in PDB format) to display. Must be '
+              'specified the same number of times as --structureName '
+              'is given.'))
 
     parser.add_argument(
         '--params', action='append',
@@ -175,7 +179,7 @@ if __name__ == '__main__':
             chains.add(AAReadWithX(chain.id, chainSequence))
 
         # Load the structure into PyMOL.
-        cmd.load(structureFile)
+        cmd.load(structureFile, structureName)
 
         # Set the display.
         cmd.show('cartoon')
@@ -290,7 +294,7 @@ if __name__ == '__main__':
                         queryTpStart, queryTpEnd - 1, structureName, chain.id)
                     cmd.color('br9', queryTrigPoint)
 
-    # Display the structures next to each other.
+    # Display structures in a grid.
     cmd.set('grid_mode')
 
     # Display the legend.

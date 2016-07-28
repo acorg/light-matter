@@ -7,6 +7,7 @@ A script which displays a set of given structures and their features in PyMOL.
 from __future__ import print_function
 
 import argparse
+from itertools import chain as ichain, repeat, izip
 from Bio.PDB.PDBParser import PDBParser
 from operator import attrgetter
 import pymol
@@ -53,18 +54,28 @@ if __name__ == '__main__':
 
     parser.add_argument(
         '--structureName', action='append', dest='structureNames',
+        required=True,
         help='The names of the structures that should be displayed')
 
     parser.add_argument(
         '--structureFile', action='append', dest='structureFiles',
+        required=True,
         help=('The files of the structures that should be displayed in PDB '
-              'file format'))
+              'file format. Must be specified the same number of times as '
+              '--structureName'))
+
+    parser.add_argument(
+        '--params', action='append', required=True,
+        help=('Specify a full set of database and finder parameters (in '
+              'quotes). This argument may be repeated. If less parameter '
+              'sets are given than structure names, the final parameter '
+              'set will be used repeatedly as many times as needed.'))
 
     parser.add_argument(
         '--colorBestBin', default=False, action='store_true',
-        help=('If given, features in the best bin will be colored red. If '
-              'there are multiple chains, then for each chain the best bin of '
-              'the best match with any other chain will be colored.'))
+        help=('If given, features in the best bin for the best matching '
+              'chains of two structures will be colored red. Can only '
+              'be used when exactly two structures are given.'))
 
     parser.add_argument(
         '--printParams', default=False, action='store_true',
@@ -76,22 +87,24 @@ if __name__ == '__main__':
 
     parser.add_argument(
         '--showLegend', default=False, action='store_true',
-        help='If given, display a legend of which color corresponds to which '
-        'feature.')
-
-    FindParameters.addArgsToParser(parser)
-    DatabaseParameters.addArgsToParser(parser)
+        help=('If given, display a legend of which color corresponds to which '
+              'feature.'))
 
     args = parser.parse_args()
 
-    dbParams = DatabaseParameters.fromArgs(args)
-    findParams = FindParameters.fromArgs(args)
+    if args.colorBestBin and len(args.structureNames) != 2:
+        raise ValueError(
+            '--colorBestBin can only be used if 2 structures are given.')
 
-    if args.printParams:
-        print('DATABASE PARAMETERS')
-        print(dbParams.print_(margin='  '))
-        print('FIND PARAMETERS')
-        print(findParams.print_(margin='  '))
+    if len(args.structureFiles) != len(args.structureNames):
+        raise ValueError('The number of structure files given (%d) must '
+                         'match the number of structure names (%d).' %
+                         (len(args.structureFiles), len(args.structureNames)))
+
+    if len(args.params) > len(args.structureNames):
+        raise ValueError('You cannot specify more parameter sets (%d) than '
+                         'structure names (%d).' %
+                         (len(args.params), len(args.structureNames)))
 
     if args.printColors:
         print('COLORS')
@@ -99,18 +112,50 @@ if __name__ == '__main__':
             print(ALL_FEATURES[i][0], '\t', ALL_FEATURES[i][1], '\t',
                   COLORS[i])
 
-    notFirst = False
+    if args.params:
+        givenParams = []
+        for paramsStr in args.params:
+            paramsParser = argparse.ArgumentParser()
+            FindParameters.addArgsToParser(paramsParser)
+            DatabaseParameters.addArgsToParser(paramsParser)
+            paramArgs = paramsParser.parse_args(paramsStr.split())
+            dbParams = DatabaseParameters.fromArgs(paramArgs)
+            findParams = FindParameters.fromArgs(paramArgs)
+            givenParams.append(dbParams, findParams)
 
-    # Set up the database.
-    database = Database(dbParams)
-    backend = Backend()
-    backend.configure(database.dbParams)
+        if len(givenParams) < len(args.structureNames):
+            # We were given fewer parameter sets than structures.  Re-use
+            # the final given parameters for structures that don't have a
+            # correspondign set of given parameters.
+            params = ichain(givenParams, repeat(givenParams[-1]))
+        else:
+            params = givenParams
+    else:
+        # The parameter settings for all structures will be the defaults.
+        params = izip(repeat(DatabaseParameters()), repeat(FindParameters()))
 
-    # Loop over the structures that were provided and display them.
-    for i, structureName in enumerate(args.structureNames):
+    first = False
+
+    # Loop over the structures that were provided and display them. We have
+    # to use izip here as it will raise StopIteration when the shortest
+    # iterator is consumed (params might have been set up in a simple way
+    # above to iterate forever).
+    for structureName, structureFile, (dbParams, findParams) in izip(
+            args.structureNames, args.structureFiles, params):
+
+        if args.printParams:
+            print('DATABASE PARAMETERS FOR STRUCTURE %r' % structureName)
+            print(dbParams.print_(margin='  '))
+            print('FIND PARAMETERS FOR STRUCTURE %r' % structureName)
+            print(findParams.print_(margin='  '))
+
+        # Set up the database.
+        database = Database(dbParams)
+        backend = Backend()
+        backend.configure(database.dbParams)
+
         # Read the sequence out of the PDB file.
-        s = PDBParser(PERMISSIVE=1).get_structure(structureName,
-                                                  args.structureFiles[i])
+        s = PDBParser(PERMISSIVE=1).get_structure(structureName, structureFile)
         chains = Reads()
         for chain in s.get_chains():
             chainSequence = ''
@@ -123,27 +168,31 @@ if __name__ == '__main__':
             chains.add(AAReadWithX(chain.id, chainSequence))
 
         # Load the structure into PyMOL.
-        cmd.load(args.structureFiles[i])
+        cmd.load(args.structureFile)
 
         # Set the display.
         cmd.show('cartoon')
         cmd.hide('lines')
 
-        # Align all structures to the first structure that was loaded.
-        if not notFirst:
-            notFirst = structureName
+        # Remember the name of the first structure. If we are going to
+        # color the best bin, add its chains to its database. Align all
+        # subsequent structures to the first structure.
+        if first:
+            first = False
+            firstStructureName = structureName
+            firstDatabase = database
             if args.colorBestBin:
                 for chain in chains:
-                    database.addSubject(chain)
+                    firstDatabase.addSubject(chain)
         else:
-            cmd.align(notFirst, structureName)
+            cmd.align(firstStructureName, structureName)
 
         # Make sure the residues in each chain are zero-based.
         stored.first = None
 
-        structureList = ['(model %s and (%s))' % (p, structureName)
-                         for p in cmd.get_object_list(
-            '(' + structureName + ')')]
+        structureList = ['(model %s and (%s))' % (obj, structureName)
+                         for obj in cmd.get_object_list(
+                                 '(' + structureName + ')')]
         structureChainList = ['(%s and chain %s)' % (structure, chain)
                               for structure in structureList for chain in
                               cmd.get_chains(structure)]
@@ -151,14 +200,14 @@ if __name__ == '__main__':
         for structureChain in structureChainList:
             cmd.iterate('first %s and polymer and n. CA' % structureChain,
                         'stored.first=resv')
-            # reassign the residue numbers.
-            cmd.alter('%s' % structureChain,
-                      'resi=str(int(resi)-%s)' % str(int(stored.first)))
+            # Reassign the residue numbers.
+            cmd.alter(structureChain,
+                      'resi=str(int(resi)-%d)' % int(stored.first))
         cmd.rebuild()
 
         # Color the features and chains.
         for i, chain in enumerate(chains):
-            # Color each chain in a shade of grey.
+            # Color each chain.
             what = '%s & chain %s' % (structureName, chain.id)
             try:
                 color = CHAIN_COLORS[i]
@@ -179,18 +228,17 @@ if __name__ == '__main__':
                 color = FEATURE_COLORS[trigPoint.symbol]
                 start = trigPoint.offset
                 end = trigPoint.offset + trigPoint.length
-                what = 'resi %d-%d & chain %s & %s' % (start, end - 1,
-                                                       chain.id, structureName)
+                what = 'resi %d-%d & %s & chain %s' % (start, end - 1,
+                                                       structureName, chain.id)
                 cmd.color(color, what)
 
-    if args.colorBestBin:
-        if notFirst != structureName:
+        if args.colorBestBin and not first:
             for chain in chains:
-                result = database.find(chain, findParams,
-                                       storeFullAnalysis=True)
+                result = firstDatabase.find(chain, findParams,
+                                            storeFullAnalysis=True)
                 analysis = result.analysis
                 # Get the best match
-                bestScore = 0
+                bestScore = -1.0
                 bestSbjctInd = 0
                 for subjectIndex in analysis:
                     if analysis[subjectIndex]['overallScore'] > bestScore:
@@ -204,14 +252,14 @@ if __name__ == '__main__':
                 else:
                     bin_ = significantBins[0]['bin']
                     subjectChain = \
-                        database.getSubjectByIndex(bestSbjctInd).read
+                        firstDatabase.getSubjectByIndex(bestSbjctInd).read
 
                 for match in bin_:
                     subjectLmStart = match['subjectLandmark'].offset
                     subjectLmEnd = subjectLmStart + (
                         match['subjectLandmark'].length)
                     subjectLandmark = 'resi %d-%d & %s & chain %s' % (
-                        subjectLmStart, subjectLmEnd - 1, notFirst,
+                        subjectLmStart, subjectLmEnd - 1, firstStructureName,
                         subjectChain.id)
                     cmd.color('br9', subjectLandmark)
 
@@ -219,7 +267,7 @@ if __name__ == '__main__':
                     subjectTpEnd = subjectTpStart + (
                         match['subjectTrigPoint'].length)
                     subjectTrigPoint = 'resi %d-%d & %s & chain %s' % (
-                        subjectTpStart, subjectTpEnd - 1, notFirst,
+                        subjectTpStart, subjectTpEnd - 1, firstStructureName,
                         subjectChain.id)
                     cmd.color('br9', subjectTrigPoint)
 

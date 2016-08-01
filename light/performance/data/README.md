@@ -14,6 +14,12 @@ A fasta file with the query sequences to be used in the tests.
 
 `pdb_4mtp_a`: A set of 215 sequences which have structural similarity to 4MTP:A.
 
+`ha`: A set of 13 influenza haemagglutinin sequences which are structurally related.
+
+`pdb_2hla_a_against_polymerase`: A set of 22 polymerase sequences and their structures (from PDB), as used in Cerny et al., 2014, 'Evolution of Tertiary Structure of Viral RNA Dependent Polymerases.'
+
+`pdb_2hla_a_against_ha`: A set of 13 influenza haemagglutinin sequences which are structurally related.
+
 ## `subjects.fasta`
 
 A fasta file with the subject sequences to be used in the tests.
@@ -23,6 +29,12 @@ A fasta file with the subject sequences to be used in the tests.
 `pdb_2hla_a`: The 2HLA:A sequence.
 
 `pdb_4mtp_a`: The 4MTP:A sequence.
+
+`ha`: A set of 13 influenza haemagglutinin sequences which are structurally related.
+
+`pdb_2hla_a_against_polymerase`: The 2HLA:A sequence.
+
+`pdb_2hla_a_against_ha`: The 2HLA:A sequence.
 
 ## `zScores.py`
 

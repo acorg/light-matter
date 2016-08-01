@@ -1,7 +1,6 @@
 from os.path import dirname, join
 
 from .bitScores import BIT_SCORES
-from .zScores import Z_SCORES
 
 from light.performance import data
 
@@ -18,4 +17,4 @@ QUERIES = list(SSFastaReads(join(_DIR, 'queries.fasta'),
 SUBJECTS = list(SSFastaReads(join(_DIR, 'subjects.fasta'),
                              readClass=SSAAReadWithX))
 
-_ = (BIT_SCORES, Z_SCORES)  # Keep pyflakes quiet.
+_ = BIT_SCORES  # Keep pyflakes quiet.

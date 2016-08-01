@@ -4,7 +4,7 @@ import sys
 from json import dumps
 
 
-def elmToJSON(classesFile, viralInstancesFile, outFile=sys.stdout):
+def elmToJSON(classesFile, viralInstancesFile=None, outFile=sys.stdout):
     """
     Given a file with eukariotic linear motif (ELM) classes, and a file of
     viral ELM instances, this function will write out a line of JSON containing
@@ -13,16 +13,16 @@ def elmToJSON(classesFile, viralInstancesFile, outFile=sys.stdout):
     Check data/README.md for a description of how to obtain the relevant files.
 
     @param classesFile: A C{str} filename of a file containing all ELM classes.
-    @param viralInstancesFile: A C{str} filename of a file containing ELM
-        instances specific to viruses.
+    @param viralInstancesFile: If not C{None}, a C{str} filename of a file
+        containing ELM instances specific to viruses.
     @param outFile: A file pointer where the output will be written to.
     """
-    viralIdentifiers = set()
-
-    with open(viralInstancesFile) as vFp:
-        for lineCount, line in enumerate(vFp, start=1):
-            if lineCount > 6:
-                viralIdentifiers.add(line.split('\t')[2][1:-1])
+    if viralInstancesFile:
+        viralIdentifiers = set()
+        with open(viralInstancesFile) as vFp:
+            for lineCount, line in enumerate(vFp, start=1):
+                if lineCount > 6:
+                    viralIdentifiers.add(line.split('\t')[2][1:-1])
 
     with open(classesFile) as cFp:
         for lineCount, line in enumerate(cFp, start=1):
@@ -30,7 +30,14 @@ def elmToJSON(classesFile, viralInstancesFile, outFile=sys.stdout):
                 splittedLine = line.split('\t')
                 identifier = splittedLine[1][1:-1]
                 pattern = splittedLine[4][1:-1]
-                if identifier in viralIdentifiers:
+                if viralInstancesFile:
+                    if identifier in viralIdentifiers:
+                        print(dumps(
+                            {
+                                'identifier': identifier,
+                                'pattern': pattern,
+                            }, separators=(',', ':')), file=outFile)
+                else:
                     print(dumps(
                         {
                             'identifier': identifier,

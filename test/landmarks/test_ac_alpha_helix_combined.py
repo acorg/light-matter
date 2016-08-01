@@ -169,8 +169,6 @@ class TestACAlphaHelix_combined(TestCase):
                 Landmark('AC AlphaHelix_combined', 'ACAHC', 0, 5),
                 Landmark('AC AlphaHelix_combined', 'ACAHC', 1, 4),
                 Landmark('AC AlphaHelix_combined', 'ACAHC', 1, 5),
-                Landmark('AC AlphaHelix_combined', 'ACAHC', 2, 4),
-                Landmark('AC AlphaHelix_combined', 'ACAHC', 2, 5),
                 Landmark('AC AlphaHelix_combined', 'ACAHC', 2, 6),
                 Landmark('AC AlphaHelix_combined', 'ACAHC', 3, 5),
                 Landmark('AC AlphaHelix_combined', 'ACAHC', 8, 4),

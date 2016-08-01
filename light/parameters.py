@@ -330,7 +330,7 @@ class DatabaseParameters(object):
         'ac-alpha-helix-3-10-substrings-1-0.5')
     DEFAULT_AC_ALPHAHELIX_COMBINED_FILENAME = join(
         dirname(light.__file__), '..', 'data',
-        'ac-alpha-helix-combined-substrings-20-0.8')
+        'ac-alpha-helix-combined-substrings-20-0.85')
     DEFAULT_AC_ALPHAHELIX_PI_FILENAME = join(
         dirname(light.__file__), '..', 'data',
         'ac-alpha-helix-pi-substrings-1-0.5')

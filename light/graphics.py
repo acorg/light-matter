@@ -21,7 +21,7 @@ from light.performance import affinity
 from light.bin_score import ALL_BIN_SCORE_CLASSES
 from light.string import MultilineString
 from light.significance import (
-    Always, HashFraction, MaxBinHeight, MeanBinHeight)
+    Always, HashFraction, MaxBinHeight, MeanBinHeight, getHeight)
 from light.trig import ALL_TRIG_CLASSES_INCLUDING_DEV
 from light.utils import stringSpans
 
@@ -281,6 +281,7 @@ def plotHistogram(query, subject, findParams=None, readsAx=None,
         _, subjectIndex, subjectHashCount = database.addSubject(subject)
 
     result = database.find(query, findParams, storeFullAnalysis=True)
+    significanceMethod = findParams.significanceMethod
 
     try:
         histogram = result.analysis[subjectIndex]['histogram']
@@ -288,7 +289,6 @@ def plotHistogram(query, subject, findParams=None, readsAx=None,
         print('Query %r and subject %r had no hashes in common.' % (
             query.id, subject.id))
     else:
-        counts = [len(bin) for bin in histogram.bins]
         nBins = len(histogram.bins)
         centers = np.linspace(histogram.min, histogram.max, nBins,
                               endpoint=False)
@@ -301,13 +301,17 @@ def plotHistogram(query, subject, findParams=None, readsAx=None,
             readsAx.set_xlabel('Offset delta (subject - query)', fontsize=14)
             readsAx.xaxis.tick_bottom()
 
+        if significanceMethod == 'AAFraction':
+            counts = [getHeight(bin_) for bin_ in histogram.bins]
+        else:
+            counts = [len(bin) for bin in histogram.bins]
+
         for binIndex, bin_ in enumerate(histogram.bins):
             readsAx.vlines(centers[binIndex], 0.0, counts[binIndex],
                            color=customColors.get(binIndex, 'black'),
                            linewidth=2)
 
         if showSignificantBins:
-            significanceMethod = findParams.significanceMethod
             minHashCount = min(result.queryHashCount, subjectHashCount)
 
             if significanceMethod == 'Always':

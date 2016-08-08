@@ -259,14 +259,14 @@ if __name__ == '__main__':
 
             try:
                 # Make sure there's no error if there's no significant bin
-                significantBins = analysis[0]['significantBins']
+                significantBins = analysis['0']['significantBins']
             except KeyError:
                 bin_ = {}
             else:
                 bin_ = significantBins[0]['bin']
                 subjectChain = \
-                    firstDatabase.getSubjectByIndex(0).read
-            print('BIN', bin_)
+                    firstDatabase.getSubjectByIndex('0').read
+
             for match in bin_:
                 subjectLmStart = match['subjectLandmark'].offset
                 subjectLmEnd = subjectLmStart + (

@@ -9,14 +9,15 @@ from __future__ import print_function
 import argparse
 from itertools import chain as ichain, repeat
 from six.moves import zip
-from Bio.PDB.PDBParser import PDBParser
 from operator import attrgetter
+from os.path import join, dirname
 import pymol
 from pymol import cmd, stored
 
-from dark.aa import find
-from dark.reads import Reads, AAReadWithX
+from dark.reads import Reads, SSAAReadWithX
+from dark.fasta_ss import SSFastaReads
 
+import light
 from light.backend import Backend
 from light.database import Database
 from light.landmarks import ALL_LANDMARK_CLASSES_INCLUDING_DEV
@@ -170,17 +171,17 @@ if __name__ == '__main__':
         backend.configure(database.dbParams)
 
         # Read the sequence out of the PDB file.
-        s = PDBParser(PERMISSIVE=1).get_structure(structureName, structureFile)
         chains = Reads()
-        for chain in s.get_chains():
-            chainSequence = ''
-            for aa in chain.get_residues():
-                try:
-                    aa1 = find(aa.resname).abbrev1
-                except AttributeError:
-                    aa1 = 'X'
-                chainSequence += aa1
-            chains.add(AAReadWithX(chain.id, chainSequence))
+        sequenceFile = join(dirname(light.__file__),
+                            '..', 'data', 'pdb-20160303-ss.txt')
+        for record in SSFastaReads(sequenceFile, checkAlphabet=0):
+            if structureName in record.id:
+                chainName = record.id.split('_')[2]
+                chains.add(SSAAReadWithX(chainName, record.sequence,
+                                         record.structure))
+
+        assert len(chains) > 0, ('%s does not contain any sequences with id %s'
+                                 % (sequenceFile, structureName))
 
         # Load the structure into PyMOL.
         cmd.load(structureFile, structureName)
@@ -190,7 +191,6 @@ if __name__ == '__main__':
         cmd.hide('lines')
 
         for chain in chains:
-            print(chain.id)
             if chain.id == chainIdToCompare:
                 chainToCompare = chain
 
@@ -198,7 +198,6 @@ if __name__ == '__main__':
         # color the best bin, add its chains to its database. Align all
         # subsequent structures to the first structure.
         if first:
-            first = False
             firstStructureName = structureName
             firstDatabase = database
             if args.colorBestBin:
@@ -287,14 +286,19 @@ if __name__ == '__main__':
                 queryLmStart = match['queryLandmark'].offset
                 queryLmEnd = queryLmStart + match['queryLandmark'].length
                 queryLandmark = 'resi %d-%d & %s & chain %s' % (
-                    queryLmStart, queryLmEnd - 1, structureName, chain.id)
+                    queryLmStart, queryLmEnd - 1, structureName,
+                    chainToCompare.id)
                 cmd.color('br9', queryLandmark)
 
                 queryTpStart = match['queryTrigPoint'].offset
                 queryTpEnd = queryTpStart + match['queryTrigPoint'].length
                 queryTrigPoint = 'resi %d-%d & %s & chain %s' % (
-                    queryTpStart, queryTpEnd - 1, structureName, chain.id)
+                    queryTpStart, queryTpEnd - 1, structureName,
+                    chainToCompare.id)
                 cmd.color('br9', queryTrigPoint)
+
+        if first:
+            first = False
 
     # Display structures in a grid.
     cmd.set('grid_mode')

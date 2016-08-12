@@ -1,15 +1,16 @@
+import unittest
+from unittest import TestCase
 import numpy as np
 import matplotlib as mpl
 from distutils.version import LooseVersion
 import nose
 import matplotlib.pyplot as plt
 import nose.tools as nt
-import numpy.testing as npt
 
 from light.colors import rcmod
 
 
-class RCParamTester(object):
+class RCParamTester(TestCase):
 
     def flatten_list(self, orig_list):
 
@@ -24,9 +25,9 @@ class RCParamTester(object):
                 # This param causes test issues and is deprecated anyway
                 continue
             elif isinstance(v, np.ndarray):
-                npt.assert_array_equal(mpl.rcParams[k], v)
+                self.assertCountEqual(mpl.rcParams[k], v)
             else:
-                nt.assert_equal((k, mpl.rcParams[k]), (k, v))
+                self.assertEqual((k, mpl.rcParams[k]), (k, v))
 
 
 class TestAxesStyle(RCParamTester):
@@ -46,15 +47,15 @@ class TestAxesStyle(RCParamTester):
 
     def test_bad_style(self):
 
-        with nt.assert_raises(ValueError):
+        with self.assertRaises(ValueError):
             rcmod.axes_style("i_am_not_a_style")
 
     def test_rc_override(self):
 
         rc = {"axes.facecolor": "blue", "foo.notaparam": "bar"}
         out = rcmod.axes_style("darkgrid", rc)
-        nt.assert_equal(out["axes.facecolor"], "blue")
-        nt.assert_not_in("foo.notaparam", out)
+        self.assertEqual(out["axes.facecolor"], "blue")
+        self.assertNotIn("foo.notaparam", out)
 
     def test_set_style(self):
 
@@ -75,12 +76,12 @@ class TestAxesStyle(RCParamTester):
 
     def test_style_context_independence(self):
 
-        nt.assert_true(set(rcmod._style_keys) ^ set(rcmod._context_keys))
+        self.assertTrue(set(rcmod._style_keys) ^ set(rcmod._context_keys))
 
     def test_set_rc(self):
 
         rcmod.set(rc={"lines.linewidth": 4})
-        nt.assert_equal(mpl.rcParams["lines.linewidth"], 4)
+        self.assertEqual(mpl.rcParams["lines.linewidth"], 4)
         rcmod.set()
 
     def test_reset_defaults(self):
@@ -120,11 +121,11 @@ class TestPlottingContext(RCParamTester):
         _context_keys = set(rcmod._context_keys)
         for context in self.contexts:
             missing = set(rcmod.plotting_context(context)) ^ _context_keys
-            nt.assert_true(not missing)
+            self.assertTrue(not missing)
 
     def test_bad_context(self):
 
-        with nt.assert_raises(ValueError):
+        with self.assertRaises(ValueError):
             rcmod.plotting_context("i_am_not_a_context")
 
     def test_font_scale(self):
@@ -136,15 +137,15 @@ class TestPlottingContext(RCParamTester):
                      "xtick.labelsize", "ytick.labelsize"]
 
         for k in font_keys:
-            nt.assert_equal(notebook_ref[k] * 2, notebook_big[k])
+            self.assertEqual(notebook_ref[k] * 2, notebook_big[k])
 
     def test_rc_override(self):
 
         key, val = "grid.linewidth", 5
         rc = {key: val, "foo": "bar"}
         out = rcmod.plotting_context("talk", rc=rc)
-        nt.assert_equal(out[key], val)
-        nt.assert_not_in("foo", out)
+        self.assertEqual(out[key], val)
+        self.assertNotIn("foo", out)
 
     def test_set_context(self):
 
@@ -164,7 +165,7 @@ class TestPlottingContext(RCParamTester):
         self.assert_rc_params(orig_params)
 
 
-class TestFonts(object):
+class TestFonts(TestCase):
 
     def test_set_font(self):
 
@@ -174,13 +175,13 @@ class TestFonts(object):
         ax.set_xlabel("foo")
 
         try:
-            nt.assert_equal(ax.xaxis.label.get_fontname(),
-                            "Verdana")
+            self.assertEqual(ax.xaxis.label.get_fontname(),
+                             "Verdana")
         except AssertionError:
             if has_verdana():
                 raise
             else:
-                raise nose.SkipTest("Verdana font is not present")
+                raise unittest.skip("Verdana font is not present")
         finally:
             rcmod.set()
             plt.close("all")
@@ -211,13 +212,13 @@ class TestFonts(object):
         ax.set_xlabel("foo")
 
         try:
-            nt.assert_equal(ax.xaxis.label.get_fontname(),
-                            "Verdana")
+            self.assertEqual(ax.xaxis.label.get_fontname(),
+                             "Verdana")
         except AssertionError:
             if has_verdana():
                 raise
             else:
-                raise nose.SkipTest("Verdana font is not present")
+                raise unittest.skip("Verdana font is not present")
         finally:
             rcmod.set()
             plt.close("all")

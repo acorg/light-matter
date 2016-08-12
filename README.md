@@ -25,3 +25,14 @@ $ make performance-data
 ## Reducing RAM usage of the Aho Corasick based finders
 
 See [here](doc/aho-corasick.md).
+
+
+## Installing PyMOL
+
+You need pymol to run the `/light/performance/bin/display-structures-in-pymol.py` script.
+To install, run:
+
+```sh
+$ brew tap homebrew/science
+$ brew install pymol
+```

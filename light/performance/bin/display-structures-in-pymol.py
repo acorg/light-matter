@@ -195,7 +195,7 @@ if __name__ == '__main__':
                 chainToCompare = chain
                 break
             else:
-                raise ValueError('%s has no chain with name %r.' % (
+                raise ValueError('%r has no chain with name %r.' % (
                     structureName, chainToCompare))
 
         # Remember the name of the first structure. If we are going to

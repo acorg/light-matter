@@ -180,7 +180,7 @@ if __name__ == '__main__':
                 chains.add(SSAAReadWithX(chainName, record.sequence,
                                          record.structure))
 
-        assert len(chains) > 0, ('%s does not contain any sequences with id %s'
+        assert len(chains) > 0, ('%r does not contain any sequences with id %r'
                                  % (sequenceFile, structureName))
 
         # Load the structure into PyMOL.
@@ -193,6 +193,10 @@ if __name__ == '__main__':
         for chain in chains:
             if chain.id == chainIdToCompare:
                 chainToCompare = chain
+                break
+            else:
+                raise ValueError('%s has no chain with name %r.' % (
+                    structureName, chainToCompare))
 
         # Remember the name of the first structure. If we are going to
         # color the best bin, add its chains to its database. Align all

@@ -9,14 +9,15 @@ from __future__ import print_function
 import argparse
 from itertools import chain as ichain, repeat
 from six.moves import zip
-from Bio.PDB.PDBParser import PDBParser
 from operator import attrgetter
+from os.path import join, dirname
 import pymol
 from pymol import cmd, stored
 
-from dark.aa import find
-from dark.reads import Reads, AAReadWithX
+from dark.reads import Reads, SSAAReadWithX
+from dark.fasta_ss import SSFastaReads
 
+import light
 from light.backend import Backend
 from light.database import Database
 from light.landmarks import ALL_LANDMARK_CLASSES_INCLUDING_DEV
@@ -60,7 +61,9 @@ if __name__ == '__main__':
               'times. You can pass the same structure file multiple times '
               '(using --structureFile) but you will need to use a different '
               'structure name for each, otherwise the structures will be '
-              'drawn on top of each other by PyMol.'))
+              'drawn on top of each other by PyMol. The structureName must be '
+              'in the form of XXXX:Y, where X is the PDB identifier and Y is '
+              'the chain that should be compared.'))
 
     parser.add_argument(
         '--structureFile', action='append', dest='structureFiles',
@@ -151,8 +154,10 @@ if __name__ == '__main__':
     # iterator is consumed (params might have been set up in a simple way
     # above to iterate forever) so we use six.moves.zip which uses
     # itertools.izip when running under Python 2.
-    for structureName, structureFile, (dbParams, findParams) in zip(
+    for name, structureFile, (dbParams, findParams) in zip(
             args.structureNames, args.structureFiles, params):
+
+        structureName, chainIdToCompare = name.split(':')
 
         if args.printParams:
             print('DATABASE PARAMETERS FOR STRUCTURE %r' % structureName)
@@ -166,17 +171,17 @@ if __name__ == '__main__':
         backend.configure(database.dbParams)
 
         # Read the sequence out of the PDB file.
-        s = PDBParser(PERMISSIVE=1).get_structure(structureName, structureFile)
         chains = Reads()
-        for chain in s.get_chains():
-            chainSequence = ''
-            for aa in chain.get_residues():
-                try:
-                    aa1 = find(aa.resname).abbrev1
-                except AttributeError:
-                    aa1 = 'X'
-                chainSequence += aa1
-            chains.add(AAReadWithX(chain.id, chainSequence))
+        sequenceFile = join(dirname(light.__file__),
+                            '..', 'data', 'pdb-20160303-ss.txt')
+        for record in SSFastaReads(sequenceFile, checkAlphabet=0):
+            if structureName in record.id:
+                chainName = record.id.split('_')[2]
+                chains.add(SSAAReadWithX(chainName, record.sequence,
+                                         record.structure))
+
+        assert len(chains) > 0, ('%r does not contain any sequences with id %r'
+                                 % (sequenceFile, structureName))
 
         # Load the structure into PyMOL.
         cmd.load(structureFile, structureName)
@@ -185,16 +190,22 @@ if __name__ == '__main__':
         cmd.show('cartoon')
         cmd.hide('lines')
 
+        for chain in chains:
+            if chain.id == chainIdToCompare:
+                chainToCompare = chain
+                break
+            else:
+                raise ValueError('%r has no chain with name %r.' % (
+                    structureName, chainToCompare))
+
         # Remember the name of the first structure. If we are going to
         # color the best bin, add its chains to its database. Align all
         # subsequent structures to the first structure.
         if first:
-            first = False
             firstStructureName = structureName
             firstDatabase = database
             if args.colorBestBin:
-                for chain in chains:
-                    firstDatabase.addSubject(chain)
+                firstDatabase.addSubject(chainToCompare)
         else:
             cmd.align(firstStructureName, structureName)
 
@@ -226,6 +237,7 @@ if __name__ == '__main__':
                 color = 'white'
             cmd.color(color, what)
 
+            # Color the features.
             scannedQuery = backend.scan(chain)
             for landmark in scannedQuery.landmarks:
                 color = FEATURE_COLORS[landmark.symbol]
@@ -244,55 +256,53 @@ if __name__ == '__main__':
                 cmd.color(color, what)
 
         if args.colorBestBin and not first:
-            for chain in chains:
-                result = firstDatabase.find(chain, findParams,
-                                            storeFullAnalysis=True)
-                analysis = result.analysis
-                # Get the best match
-                bestScore = -1.0
-                bestSbjctInd = 0
-                for subjectIndex in analysis:
-                    if analysis[subjectIndex]['overallScore'] > bestScore:
-                        bestScore = analysis[subjectIndex]['overallScore']
-                        bestSbjctInd = subjectIndex
-                try:
-                    # Make sure there's no error if there's no significant bin
-                    significantBins = analysis[bestSbjctInd]['significantBins']
-                except KeyError:
-                    bin_ = {}
-                else:
-                    bin_ = significantBins[0]['bin']
-                    subjectChain = \
-                        firstDatabase.getSubjectByIndex(bestSbjctInd).read
+            result = firstDatabase.find(chainToCompare, findParams,
+                                        storeFullAnalysis=True)
+            analysis = result.analysis
 
-                for match in bin_:
-                    subjectLmStart = match['subjectLandmark'].offset
-                    subjectLmEnd = subjectLmStart + (
-                        match['subjectLandmark'].length)
-                    subjectLandmark = 'resi %d-%d & %s & chain %s' % (
-                        subjectLmStart, subjectLmEnd - 1, firstStructureName,
-                        subjectChain.id)
-                    cmd.color('br9', subjectLandmark)
+            try:
+                # Make sure there's no error if there's no significant bin
+                significantBins = analysis['0']['significantBins']
+            except KeyError:
+                bin_ = {}
+            else:
+                bin_ = significantBins[0]['bin']
+                subjectChain = \
+                    firstDatabase.getSubjectByIndex('0').read
 
-                    subjectTpStart = match['subjectTrigPoint'].offset
-                    subjectTpEnd = subjectTpStart + (
-                        match['subjectTrigPoint'].length)
-                    subjectTrigPoint = 'resi %d-%d & %s & chain %s' % (
-                        subjectTpStart, subjectTpEnd - 1, firstStructureName,
-                        subjectChain.id)
-                    cmd.color('br9', subjectTrigPoint)
+            for match in bin_:
+                subjectLmStart = match['subjectLandmark'].offset
+                subjectLmEnd = subjectLmStart + (
+                    match['subjectLandmark'].length)
+                subjectLandmark = 'resi %d-%d & %s & chain %s' % (
+                    subjectLmStart, subjectLmEnd - 1, firstStructureName,
+                    subjectChain.id)
+                cmd.color('br9', subjectLandmark)
 
-                    queryLmStart = match['queryLandmark'].offset
-                    queryLmEnd = queryLmStart + match['queryLandmark'].length
-                    queryLandmark = 'resi %d-%d & %s & chain %s' % (
-                        queryLmStart, queryLmEnd - 1, structureName, chain.id)
-                    cmd.color('br9', queryLandmark)
+                subjectTpStart = match['subjectTrigPoint'].offset
+                subjectTpEnd = subjectTpStart + (
+                    match['subjectTrigPoint'].length)
+                subjectTrigPoint = 'resi %d-%d & %s & chain %s' % (
+                    subjectTpStart, subjectTpEnd - 1, firstStructureName,
+                    subjectChain.id)
+                cmd.color('br9', subjectTrigPoint)
 
-                    queryTpStart = match['queryTrigPoint'].offset
-                    queryTpEnd = queryTpStart + match['queryTrigPoint'].length
-                    queryTrigPoint = 'resi %d-%d & %s & chain %s' % (
-                        queryTpStart, queryTpEnd - 1, structureName, chain.id)
-                    cmd.color('br9', queryTrigPoint)
+                queryLmStart = match['queryLandmark'].offset
+                queryLmEnd = queryLmStart + match['queryLandmark'].length
+                queryLandmark = 'resi %d-%d & %s & chain %s' % (
+                    queryLmStart, queryLmEnd - 1, structureName,
+                    chainToCompare.id)
+                cmd.color('br9', queryLandmark)
+
+                queryTpStart = match['queryTrigPoint'].offset
+                queryTpEnd = queryTpStart + match['queryTrigPoint'].length
+                queryTrigPoint = 'resi %d-%d & %s & chain %s' % (
+                    queryTpStart, queryTpEnd - 1, structureName,
+                    chainToCompare.id)
+                cmd.color('br9', queryTrigPoint)
+
+        if first:
+            first = False
 
     # Display structures in a grid.
     cmd.set('grid_mode')

@@ -114,7 +114,6 @@ Z_SCORES = {
     'pdb_5l3q_c': {'pdb_4ph0_a': 2.2},
     'pdb_4pgr_a': {'pdb_4ph0_a': 2.2},
     'pdb_1or7_a': {'pdb_4ph0_a': 2.1},
-    'pdb_3j7y_h': {'pdb_4ph0_a': 2.1},
     'pdb_1zu5_b': {'pdb_4ph0_a': 2.1},
     'pdb_1jfj_a': {'pdb_4ph0_a': 2.1},
     'pdb_2j28_9': {'pdb_4ph0_a': 2.1},

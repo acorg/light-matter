@@ -14,7 +14,8 @@ from light.subject import Subject
 from light.bin_score import (
     NoneScore, MinHashesScore, FeatureMatchingScore, FeatureAAScore,
     histogramBinFeatures, featureInRange, getHashFeatures,
-    weightedHistogramBinFeatures, getWeightedOffsets, WeightedFeatureAAScore)
+    weightedHistogramBinFeatures, getWeightedOffsets, WeightedFeatureAAScore,
+    FeatureAALengthScore)
 from light.histogram import Histogram
 from light.landmarks import AlphaHelix, AminoAcids as AminoAcidsLm
 from light.trig import Peaks, AminoAcids
@@ -3337,5 +3338,875 @@ class TestWeightedFeatureAAScore(TestCase):
             '  Query normalizer: 0.8000 (20 / 25)\n'
             '  Subject normalizer: 1.0000 (20 / 20)\n'
             '  Score: 1.0000')
+        self.assertEqual(expected, str(preExisting))
+        preExisting.outdent()
+
+
+class TestFeatureAALengthScore(TestCase):
+    """
+    Tests for the light.bin_score.FeatureAALengthScore class.
+    """
+
+    def testEmptyBin(self):
+        """
+        A bin containing no elements must have a score of 0.0 if the query and
+        subject both have no features.
+        """
+        self.maxDiff = None
+        histogram = Histogram()
+        histogram.finalize()
+        dbParams = DatabaseParameters(landmarks=[], trigPoints=[])
+        query = AARead('id1', 'A')
+        subject = Subject(AARead('id2', 'A'))
+        faas = FeatureAALengthScore(histogram, query, subject, dbParams)
+        score, analysis = faas.calculateScore(0)
+        self.assertEqual(0.0, score)
+        self.assertEqual(
+            {
+                'denominatorQuery': 1,
+                'denominatorSubject': 1,
+                'matchedOffsetCount': 0,
+                'matchedQueryOffsetCount': 0,
+                'matchedRegionScore': 0.0,
+                'matchedRegionSize': 0,
+                'matchedSubjectOffsetCount': 0,
+                'maxQueryOffset': None,
+                'maxSubjectOffset': None,
+                'minQueryOffset': None,
+                'minSubjectOffset': None,
+                'normaliserQuery': 0.0,
+                'normaliserSubject': 0.0,
+                'score': score,
+                'scoreClass': FeatureAALengthScore,
+                'totalOffsetCount': 0,
+            },
+            analysis)
+
+    def testEmptyBinQueryHasOneFeature(self):
+        """
+        A bin containing no pairs must have a score of zero, even if the query
+        has a feature (but no pairs). There is no match region, so that part
+        of the score is zero which causes the overall score to be zero.
+        """
+        self.maxDiff = None
+        histogram = Histogram(1)
+        histogram.finalize()
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix], trigPoints=[])
+        query = AARead('id', 'FRRRFRRRF')
+        subject = Subject(AARead('id2', 'A'))
+        faas = FeatureAALengthScore(histogram, query, subject, dbParams)
+        score, analysis = faas.calculateScore(0)
+        self.assertEqual(0.0, score)
+        self.assertEqual(
+            {
+                'denominatorQuery': 9,
+                'denominatorSubject': 1,
+                'matchedOffsetCount': 0,
+                'matchedQueryOffsetCount': 0,
+                'matchedRegionScore': 0.0,
+                'matchedRegionSize': 0,
+                'matchedSubjectOffsetCount': 0,
+                'maxQueryOffset': None,
+                'maxSubjectOffset': None,
+                'minQueryOffset': None,
+                'minSubjectOffset': None,
+                'normaliserQuery': 0.0,
+                'normaliserSubject': 0.0,
+                'score': score,
+                'scoreClass': FeatureAALengthScore,
+                'totalOffsetCount': 0,
+            },
+            analysis)
+
+    def testEmptyBinQueryAndSubjectHaveOneFeature(self):
+        """
+        A bin containing no pairs must have a score of zero, when the query
+        and subject both have one feature (but no pairs). There is no match
+        region, so that part of the score is zero which causes the overall
+        score to be zero.
+        """
+        self.maxDiff = None
+        histogram = Histogram(1)
+        histogram.finalize()
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix], trigPoints=[])
+        query = AARead('id', 'FRRRFRRRF')
+        subject = Subject(AARead('id2', 'AAAAAAAAAAAAAAFRRRFRRRF'))
+        faas = FeatureAALengthScore(histogram, query, subject, dbParams)
+        score, analysis = faas.calculateScore(0)
+        self.assertEqual(0.0, score)
+        self.assertEqual(
+            {
+                'denominatorQuery': 9,
+                'denominatorSubject': 23,
+                'matchedOffsetCount': 0,
+                'matchedQueryOffsetCount': 0,
+                'matchedRegionScore': 0.0,
+                'matchedRegionSize': 0,
+                'matchedSubjectOffsetCount': 0,
+                'maxQueryOffset': None,
+                'maxSubjectOffset': None,
+                'minQueryOffset': None,
+                'minSubjectOffset': None,
+                'normaliserQuery': 0.0,
+                'normaliserSubject': 0.0,
+                'score': score,
+                'scoreClass': FeatureAALengthScore,
+                'totalOffsetCount': 0,
+            },
+            analysis)
+
+    def testOnePairInBinSpanningMatchedRegion(self):
+        """
+        A bin containing one pair must have a score of 1.0 if the query and
+        subject have no additional (non-matching) pairs and the matched region
+        spans the entire length of the subject.
+        """
+        self.maxDiff = None
+        queryLandmark = Landmark('AminoAcidsLm', 'N', 2, 1)
+        queryTrigPoint = TrigPoint('AminoAcids', 'M', 5)
+        subjectLandmark = Landmark('AminoAcidsLm', 'N', 2, 1)
+        subjectTrigPoint = TrigPoint('AminoAcids', 'M', 5)
+
+        histogram = Histogram(1)
+        histogram.add(44, {
+            'queryLandmark': queryLandmark,
+            'queryTrigPoint': queryTrigPoint,
+            'subjectLandmark': subjectLandmark,
+            'subjectTrigPoint': subjectTrigPoint,
+        })
+        histogram.finalize()
+        dbParams = DatabaseParameters(landmarks=[], trigPoints=[])
+        query = AARead('id1', 'AACAAWAAAA')
+        subject = Subject(AARead('id2', 'CAAW'))
+        faas = FeatureAALengthScore(histogram, query, subject, dbParams)
+        score, analysis = faas.calculateScore(0)
+        self.assertEqual(1.0, score)
+        self.assertEqual(
+            {
+                'denominatorQuery': 10,
+                'denominatorSubject': 4,
+                'matchedOffsetCount': 4,
+                'matchedQueryOffsetCount': 2,
+                'matchedRegionScore': 1.0,
+                'matchedRegionSize': 4,
+                'matchedSubjectOffsetCount': 2,
+                'maxQueryOffset': 5,
+                'maxSubjectOffset': 5,
+                'minQueryOffset': 2,
+                'minSubjectOffset': 2,
+                'normaliserQuery': 0.4,
+                'normaliserSubject': 1.0,
+                'score': score,
+                'scoreClass': FeatureAALengthScore,
+                'totalOffsetCount': 4,
+            },
+            analysis)
+
+    def testOnePairInBin(self):
+        """
+        A bin containing one pair must have the right score if the query and
+        subject have no additional (non-matching) pairs and the matched region
+        doesn't span the entire length of the subject.
+        """
+        self.maxDiff = None
+        queryLandmark = Landmark('AminoAcidsLm', 'N', 2, 1)
+        queryTrigPoint = TrigPoint('AminoAcids', 'M', 5)
+        subjectLandmark = Landmark('AminoAcidsLm', 'N', 2, 1)
+        subjectTrigPoint = TrigPoint('AminoAcids', 'M', 5)
+
+        histogram = Histogram(1)
+        histogram.add(44, {
+            'queryLandmark': queryLandmark,
+            'queryTrigPoint': queryTrigPoint,
+            'subjectLandmark': subjectLandmark,
+            'subjectTrigPoint': subjectTrigPoint,
+        })
+        histogram.finalize()
+        dbParams = DatabaseParameters(landmarks=[], trigPoints=[])
+        query = AARead('id1', 'AACAAWAAAA')
+        subject = Subject(AARead('id2', 'CAAWAAA'))
+        faas = FeatureAALengthScore(histogram, query, subject, dbParams)
+        score, analysis = faas.calculateScore(0)
+        mrs = 4 / 4
+        ln = 4 / 7
+        self.assertEqual(mrs * ln, score)
+        self.assertEqual(
+            {
+                'denominatorQuery': 10,
+                'denominatorSubject': 7,
+                'matchedOffsetCount': 4,
+                'matchedQueryOffsetCount': 2,
+                'matchedRegionScore': 1.0,
+                'matchedRegionSize': 4,
+                'matchedSubjectOffsetCount': 2,
+                'maxQueryOffset': 5,
+                'maxSubjectOffset': 5,
+                'minQueryOffset': 2,
+                'minSubjectOffset': 2,
+                'normaliserQuery': 0.4,
+                'normaliserSubject': 4 / 7,
+                'score': score,
+                'scoreClass': FeatureAALengthScore,
+                'totalOffsetCount': 4,
+            },
+            analysis)
+
+    def testOnePairInBinOccurringInTwoPlacesSpanningMatchedRegion(self):
+        """
+        A bin containing one pair that occurs in two places must have a score
+        of 1.0 if the query and subject have no additional (non-matching)
+        pairs and the matched region spans the entire subject.
+        """
+        self.maxDiff = None
+        queryLandmark1 = Landmark('AminoAcidsLm', 'N', 2, 1)
+        queryTrigPoint1 = TrigPoint('AminoAcids', 'M', 5)
+        subjectLandmark1 = Landmark('AminoAcidsLm', 'N', 2, 1)
+        subjectTrigPoint1 = TrigPoint('AminoAcids', 'M', 5)
+
+        queryLandmark2 = Landmark('AminoAcidsLm', 'N', 0, 1)
+        queryTrigPoint2 = TrigPoint('AminoAcids', 'M', 3)
+        subjectLandmark2 = Landmark('AminoAcidsLm', 'N', 0, 1)
+        subjectTrigPoint2 = TrigPoint('AminoAcids', 'M', 3)
+
+        histogram = Histogram(1)
+        histogram.add(44, {
+            'queryLandmark': queryLandmark1,
+            'queryTrigPoint': queryTrigPoint1,
+            'subjectLandmark': subjectLandmark1,
+            'subjectTrigPoint': subjectTrigPoint1,
+        })
+        histogram.add(44, {
+            'queryLandmark': queryLandmark2,
+            'queryTrigPoint': queryTrigPoint2,
+            'subjectLandmark': subjectLandmark2,
+            'subjectTrigPoint': subjectTrigPoint2,
+        })
+        histogram.finalize()
+        dbParams = DatabaseParameters(landmarks=[], trigPoints=[])
+        query = AARead('id1', 'AAAAAAAAA')
+        subject = Subject(AARead('id2', 'AAAAAA'))
+        faas = FeatureAALengthScore(histogram, query, subject, dbParams)
+        score, analysis = faas.calculateScore(0)
+        self.assertEqual(1.0, score)
+        self.assertEqual(
+            {
+                'denominatorQuery': 9,
+                'denominatorSubject': 6,
+                'matchedOffsetCount': 8,
+                'matchedQueryOffsetCount': 4,
+                'matchedRegionScore': 1.0,
+                'matchedRegionSize': 6,
+                'matchedSubjectOffsetCount': 4,
+                'maxQueryOffset': 5,
+                'maxSubjectOffset': 5,
+                'minQueryOffset': 0,
+                'minSubjectOffset': 0,
+                'normaliserQuery': 6 / 9,
+                'normaliserSubject': 1.0,
+                'score': score,
+                'scoreClass': FeatureAALengthScore,
+                'totalOffsetCount': 8,
+            },
+            analysis)
+
+    def testOnePairInBinOccurringInTwoPlaces(self):
+        """
+        A bin containing one pair that occurs in two places must have the right
+        score if the query and subject have no additional (non-matching)
+        pairs and the matched region doesn't span the entire subject.
+        """
+        self.maxDiff = None
+        queryLandmark1 = Landmark('AminoAcidsLm', 'N', 2, 1)
+        queryTrigPoint1 = TrigPoint('AminoAcids', 'M', 5)
+        subjectLandmark1 = Landmark('AminoAcidsLm', 'N', 2, 1)
+        subjectTrigPoint1 = TrigPoint('AminoAcids', 'M', 5)
+
+        queryLandmark2 = Landmark('AminoAcidsLm', 'N', 0, 1)
+        queryTrigPoint2 = TrigPoint('AminoAcids', 'M', 3)
+        subjectLandmark2 = Landmark('AminoAcidsLm', 'N', 0, 1)
+        subjectTrigPoint2 = TrigPoint('AminoAcids', 'M', 3)
+
+        histogram = Histogram(1)
+        histogram.add(44, {
+            'queryLandmark': queryLandmark1,
+            'queryTrigPoint': queryTrigPoint1,
+            'subjectLandmark': subjectLandmark1,
+            'subjectTrigPoint': subjectTrigPoint1,
+        })
+        histogram.add(44, {
+            'queryLandmark': queryLandmark2,
+            'queryTrigPoint': queryTrigPoint2,
+            'subjectLandmark': subjectLandmark2,
+            'subjectTrigPoint': subjectTrigPoint2,
+        })
+        histogram.finalize()
+        dbParams = DatabaseParameters(landmarks=[], trigPoints=[])
+        query = AARead('id1', 'AAAAAAAAA')
+        subject = Subject(AARead('id2', 'AAAAAAA'))
+        faas = FeatureAALengthScore(histogram, query, subject, dbParams)
+        score, analysis = faas.calculateScore(0)
+        mrs = 8 / 8
+        ln = 6 / 7
+        self.assertEqual(mrs * ln, score)
+        self.assertEqual(
+            {
+                'denominatorQuery': 9,
+                'denominatorSubject': 7,
+                'matchedOffsetCount': 8,
+                'matchedQueryOffsetCount': 4,
+                'matchedRegionScore': 1.0,
+                'matchedRegionSize': 6,
+                'matchedSubjectOffsetCount': 4,
+                'maxQueryOffset': 5,
+                'maxSubjectOffset': 5,
+                'minQueryOffset': 0,
+                'minSubjectOffset': 0,
+                'normaliserQuery': 6 / 9,
+                'normaliserSubject': 6 / 7,
+                'score': score,
+                'scoreClass': FeatureAALengthScore,
+                'totalOffsetCount': 8,
+            },
+            analysis)
+
+    def testOnePairInBinOccurringInTwoPlacesOneFeatureInMatchedRegion(self):
+        """
+        A bin containing one pair that occurs in two places must have the right
+        score if the query has an additional non-matching feature in the
+        matched region and the matched region doesn't span the entire subject.
+        """
+        self.maxDiff = None
+        queryLandmark1 = Landmark('AminoAcidsLm', 'N', 2, 1)
+        queryTrigPoint1 = TrigPoint('AminoAcids', 'M', 5)
+        subjectLandmark1 = Landmark('AminoAcidsLm', 'N', 2, 1)
+        subjectTrigPoint1 = TrigPoint('AminoAcids', 'M', 5)
+
+        queryLandmark2 = Landmark('AminoAcidsLm', 'N', 0, 1)
+        queryTrigPoint2 = TrigPoint('AminoAcids', 'M', 3)
+        subjectLandmark2 = Landmark('AminoAcidsLm', 'N', 0, 1)
+        subjectTrigPoint2 = TrigPoint('AminoAcids', 'M', 3)
+
+        histogram = Histogram(1)
+        histogram.add(44, {
+            'queryLandmark': queryLandmark1,
+            'queryTrigPoint': queryTrigPoint1,
+            'subjectLandmark': subjectLandmark1,
+            'subjectTrigPoint': subjectTrigPoint1,
+        })
+        histogram.add(44, {
+            'queryLandmark': queryLandmark2,
+            'queryTrigPoint': queryTrigPoint2,
+            'subjectLandmark': subjectLandmark2,
+            'subjectTrigPoint': subjectTrigPoint2,
+        })
+        histogram.finalize()
+        dbParams = DatabaseParameters(landmarks=[AminoAcidsLm], trigPoints=[])
+        query = AARead('id1', 'AAAACAAAA')
+        subject = Subject(AARead('id2', 'AAAAAAA'))
+        faas = FeatureAALengthScore(histogram, query, subject, dbParams)
+        score, analysis = faas.calculateScore(0)
+        mrs = 8 / 8
+        ln = 6 / 7
+        self.assertEqual(mrs * ln, score)
+        self.assertEqual(
+            {
+                'denominatorQuery': 9,
+                'denominatorSubject': 7,
+                'matchedOffsetCount': 8,
+                'matchedQueryOffsetCount': 4,
+                'matchedRegionScore': 1.0,
+                'matchedRegionSize': 6,
+                'matchedSubjectOffsetCount': 4,
+                'maxQueryOffset': 5,
+                'maxSubjectOffset': 5,
+                'minQueryOffset': 0,
+                'minSubjectOffset': 0,
+                'normaliserQuery': 6 / 9,
+                'normaliserSubject': 6 / 7,
+                'score': score,
+                'scoreClass': FeatureAALengthScore,
+                'totalOffsetCount': 8,
+            },
+            analysis)
+
+    def testOnePairInBinOccurringInTwoPlacesOnePairInMatchedRegion(self):
+        """
+        A bin containing one pair that occurs in two places must have the right
+        score if the query has an additional non-matching pair in the matched
+        region and the matched region doesn't span the entire subject.
+        """
+        self.maxDiff = None
+        queryLandmark1 = Landmark('AminoAcidsLm', 'N', 2, 1)
+        queryTrigPoint1 = TrigPoint('AminoAcids', 'M', 5)
+        subjectLandmark1 = Landmark('AminoAcidsLm', 'N', 2, 1)
+        subjectTrigPoint1 = TrigPoint('AminoAcids', 'M', 5)
+
+        queryLandmark2 = Landmark('AminoAcidsLm', 'N', 0, 1)
+        queryTrigPoint2 = TrigPoint('AminoAcids', 'M', 3)
+        subjectLandmark2 = Landmark('AminoAcidsLm', 'N', 0, 1)
+        subjectTrigPoint2 = TrigPoint('AminoAcids', 'M', 3)
+
+        histogram = Histogram(1)
+        histogram.add(44, {
+            'queryLandmark': queryLandmark1,
+            'queryTrigPoint': queryTrigPoint1,
+            'subjectLandmark': subjectLandmark1,
+            'subjectTrigPoint': subjectTrigPoint1,
+        })
+        histogram.add(44, {
+            'queryLandmark': queryLandmark2,
+            'queryTrigPoint': queryTrigPoint2,
+            'subjectLandmark': subjectLandmark2,
+            'subjectTrigPoint': subjectTrigPoint2,
+        })
+        histogram.finalize()
+        dbParams = DatabaseParameters(landmarks=[AminoAcidsLm], trigPoints=[])
+        query = AARead('id1', 'ACAACAAAA')
+        subject = Subject(AARead('id2', 'AAAAAAA'))
+        faas = FeatureAALengthScore(histogram, query, subject, dbParams)
+        score, analysis = faas.calculateScore(0)
+        mrs = 8 / 10
+        ln = 6 / 7
+        self.assertEqual(mrs * ln, score)
+        self.assertEqual(
+            {
+                'denominatorQuery': 9,
+                'denominatorSubject': 7,
+                'matchedOffsetCount': 8,
+                'matchedQueryOffsetCount': 4,
+                'matchedRegionScore': 0.8,
+                'matchedRegionSize': 6,
+                'matchedSubjectOffsetCount': 4,
+                'maxQueryOffset': 5,
+                'maxSubjectOffset': 5,
+                'minQueryOffset': 0,
+                'minSubjectOffset': 0,
+                'normaliserQuery': 6 / 9,
+                'normaliserSubject': 6 / 7,
+                'score': score,
+                'scoreClass': FeatureAALengthScore,
+                'totalOffsetCount': 10,
+            },
+            analysis)
+
+    def testOnePairInBinQueryHasOneUnmatchedPairInsideMatch(self):
+        """
+        A bin containing one pair where the landmark and trig point do not
+        overlap must have the correct score if the query has an additional
+        non-matching pair that is inside the match area.
+        """
+        self.maxDiff = None
+        queryLandmark = Landmark('AlphaHelix', 'A', 0, 20)
+        queryTrigPoint = TrigPoint('Peaks', 'P', 50)
+        subjectLandmark = Landmark('AlphaHelix', 'A', 0, 20)
+        subjectTrigPoint = TrigPoint('Peaks', 'P', 50)
+        histogram = Histogram(1)
+        histogram.add(44, {
+            'queryLandmark': queryLandmark,
+            'queryTrigPoint': queryTrigPoint,
+            'subjectLandmark': subjectLandmark,
+            'subjectTrigPoint': subjectTrigPoint,
+        })
+        histogram.finalize()
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[])
+        query = AARead('id', 20 * 'A' + 'FRRRFRRRFAAC' + 20 * 'A')
+        subject = Subject(AARead('id2', 60 * 'A'))
+        faas = FeatureAALengthScore(histogram, query, subject, dbParams)
+        score, analysis = faas.calculateScore(0)
+        self.assertEqual((42 / 52) * (51 / 52), score)
+        self.assertEqual(
+            {
+                'denominatorQuery': 52,
+                'denominatorSubject': 60,
+                'matchedOffsetCount': 42,
+                'matchedQueryOffsetCount': 21,
+                'matchedRegionScore': 42 / 52,
+                'matchedRegionSize': 51,
+                'matchedSubjectOffsetCount': 21,
+                'maxQueryOffset': 50,
+                'maxSubjectOffset': 50,
+                'minQueryOffset': 0,
+                'minSubjectOffset': 0,
+                'normaliserQuery': 51 / 52,
+                'normaliserSubject': 51 / 60,
+                'score': score,
+                'scoreClass': FeatureAALengthScore,
+                'totalOffsetCount': 52,
+            },
+            analysis)
+
+    def testOnePairInBinQueryHasOneUnmatchedPairExactlySpanningMatch(self):
+        """
+        A bin containing one pair must have a the correct score if the query
+        has an additional pair that exactly spans the match area but the
+        additional pairs' offsets match those of the match (and so do not
+        affect the score).
+        """
+        self.maxDiff = None
+        queryLandmark = Landmark('AlphaHelix', 'A', 0, 9)
+        queryTrigPoint = TrigPoint('Peaks', 'P', 13)
+        subjectLandmark = Landmark('AlphaHelix', 'A', 0, 9)
+        subjectTrigPoint = TrigPoint('Peaks', 'P', 13)
+        histogram = Histogram(1)
+        histogram.add(44, {
+            'queryLandmark': queryLandmark,
+            'queryTrigPoint': queryTrigPoint,
+            'subjectLandmark': subjectLandmark,
+            'subjectTrigPoint': subjectTrigPoint,
+        })
+        histogram.finalize()
+        dbParams = DatabaseParameters(landmarks=[AlphaHelix, AminoAcidsLm],
+                                      trigPoints=[])
+        query = AARead('id', 'FRRRFRRRFAAAAC')
+        subject = Subject(AARead('id2', 'AAAAAAAAAAAAAA'))
+        faas = FeatureAALengthScore(histogram, query, subject, dbParams)
+        score, analysis = faas.calculateScore(0)
+        self.assertEqual((9 + 9) / (9 + 9), score)
+        self.assertEqual(
+            {
+                'denominatorQuery': 14,
+                'denominatorSubject': 14,
+                'matchedOffsetCount': 20,
+                'matchedQueryOffsetCount': 10,
+                'matchedRegionScore': 1.0,
+                'matchedRegionSize': 14,
+                'matchedSubjectOffsetCount': 10,
+                'maxQueryOffset': 13,
+                'maxSubjectOffset': 13,
+                'minQueryOffset': 0,
+                'minSubjectOffset': 0,
+                'normaliserQuery': 1.0,
+                'normaliserSubject': 1.0,
+                'score': score,
+                'scoreClass': FeatureAALengthScore,
+                'totalOffsetCount': 20,
+            },
+            analysis)
+
+    def testOnePairInBinQueryHasOneUnmatchedPairExceedingMatch(self):
+        """
+        A bin containing two pairs must have the right score if the query has
+        an additional pair that exceeds the match area on both sides (because
+        the subject is used for the score normalisation by length, the score
+        is not affected).
+        """
+        self.maxDiff = None
+        queryLandmark1 = Landmark('AminoAcidsLm', 'N', 3, 1)
+        queryTrigPoint1 = TrigPoint('AminoAcids', 'M', 6)
+        subjectLandmark1 = Landmark('AminoAcidsLm', 'N', 3, 1)
+        subjectTrigPoint1 = TrigPoint('AminoAcids', 'M', 6)
+
+        queryLandmark2 = Landmark('AminoAcidsLm', 'N', 1, 1)
+        queryTrigPoint2 = TrigPoint('AminoAcids', 'M', 4)
+        subjectLandmark2 = Landmark('AminoAcidsLm', 'N', 1, 1)
+        subjectTrigPoint2 = TrigPoint('AminoAcids', 'M', 4)
+
+        histogram = Histogram(1)
+        histogram.add(44, {
+            'queryLandmark': queryLandmark1,
+            'queryTrigPoint': queryTrigPoint1,
+            'subjectLandmark': subjectLandmark1,
+            'subjectTrigPoint': subjectTrigPoint1,
+        })
+        histogram.add(44, {
+            'queryLandmark': queryLandmark2,
+            'queryTrigPoint': queryTrigPoint2,
+            'subjectLandmark': subjectLandmark2,
+            'subjectTrigPoint': subjectTrigPoint2,
+        })
+        histogram.finalize()
+        dbParams = DatabaseParameters(landmarks=[AminoAcidsLm], trigPoints=[])
+        query = AARead('id1', 'CAAAAAACA')
+        subject = Subject(AARead('id2', 'AAAAAAA'))
+        faas = FeatureAALengthScore(histogram, query, subject, dbParams)
+        score, analysis = faas.calculateScore(0)
+        mrs = 8 / 8
+        ln = 6 / 7
+        self.assertEqual(mrs * ln, score)
+        self.assertEqual(
+            {
+                'denominatorQuery': 9,
+                'denominatorSubject': 7,
+                'matchedOffsetCount': 8,
+                'matchedQueryOffsetCount': 4,
+                'matchedRegionScore': 1.0,
+                'matchedRegionSize': 6,
+                'matchedSubjectOffsetCount': 4,
+                'maxQueryOffset': 6,
+                'maxSubjectOffset': 6,
+                'minQueryOffset': 1,
+                'minSubjectOffset': 1,
+                'normaliserQuery': 6 / 9,
+                'normaliserSubject': 6 / 7,
+                'score': score,
+                'scoreClass': FeatureAALengthScore,
+                'totalOffsetCount': 8,
+            },
+            analysis)
+
+    def testTwoPairs(self):
+        """
+        A bin containing two pairs must have the correct score if the query
+        and subject both have an additional feature inside their match areas.
+        """
+        self.maxDiff = None
+        queryLandmark1 = Landmark('AminoAcidsLm', 'N', 2, 1)
+        queryTrigPoint1 = TrigPoint('AminoAcids', 'M', 5)
+        subjectLandmark1 = Landmark('AminoAcidsLm', 'N', 2, 1)
+        subjectTrigPoint1 = TrigPoint('AminoAcids', 'M', 5)
+
+        queryLandmark2 = Landmark('AminoAcidsLm', 'N', 12, 1)
+        queryTrigPoint2 = TrigPoint('AminoAcids', 'M', 15)
+        subjectLandmark2 = Landmark('AminoAcidsLm', 'N', 12, 1)
+        subjectTrigPoint2 = TrigPoint('AminoAcids', 'M', 15)
+
+        histogram = Histogram(1)
+        histogram.add(44, {
+            'queryLandmark': queryLandmark1,
+            'queryTrigPoint': queryTrigPoint1,
+            'subjectLandmark': subjectLandmark1,
+            'subjectTrigPoint': subjectTrigPoint1,
+        })
+        histogram.add(44, {
+            'queryLandmark': queryLandmark2,
+            'queryTrigPoint': queryTrigPoint2,
+            'subjectLandmark': subjectLandmark2,
+            'subjectTrigPoint': subjectTrigPoint2,
+        })
+        histogram.finalize()
+        dbParams = DatabaseParameters(landmarks=[AminoAcidsLm],
+                                      trigPoints=[])
+        query = AARead('id', 'AACAAWAAACAACAAWAAAA')
+        subject = Subject(AARead('id2', 'AACAAWAACAAACAAWAAAAAAAAAAAAAA'))
+        faas = FeatureAALengthScore(histogram, query, subject, dbParams)
+        score, analysis = faas.calculateScore(0)
+        self.assertEqual((8 / 10) * (14 / 20), score)
+        self.assertEqual(
+            {
+                'denominatorQuery': 20,
+                'denominatorSubject': 30,
+                'matchedOffsetCount': 8,
+                'matchedQueryOffsetCount': 4,
+                'matchedRegionScore': 0.8,
+                'matchedRegionSize': 14,
+                'matchedSubjectOffsetCount': 4,
+                'maxQueryOffset': 15,
+                'maxSubjectOffset': 15,
+                'minQueryOffset': 2,
+                'minSubjectOffset': 2,
+                'normaliserQuery': 14 / 20,
+                'normaliserSubject': 14 / 30,
+                'score': score,
+                'scoreClass': FeatureAALengthScore,
+                'totalOffsetCount': 10,
+            },
+            analysis)
+
+    def testCompareEqualSequencesScore(self):
+        """
+        If a sequence is compared to itself, the score isn't necessarily 1.0.
+        """
+        pichninde = AARead('pichninde', 'RLKFGLSYKEQVGGNRELYVGDLNTKLTTRLIEDYS'
+                                        'ESLMQNMRYTCLNNEKEFERALLDMKSVVRQSGLAV'
+                                        'SMDHSKWGPHMSPVIFAALLKGLEFNLKDGSEVPNA'
+                                        'AIVNILLWHIHKMVEVPFNVVEAYMKGFLKRGLGMM'
+                                        'DKGGCTIAEEFMFGYFEKGKVPSHISSVLDMGQGIL'
+                                        'HNTSDLYGLITEQFINYALELCYGVRFISYTSSDDE'
+                                        'IMLSLNEAFKFKDRDELNVDLVLDCMEFHYFLSDKL'
+                                        'NKFVSPKTVVGTFASEFKSRFFIWSQEVPLLTKFVA'
+                                        'AALH')
+
+        db = DatabaseSpecifier().getDatabaseFromKeywords(
+            landmarks=[
+                'AlphaHelix', 'AlphaHelix_3_10', 'AlphaHelix_pi',
+                'AminoAcidsLm', 'BetaStrand', 'BetaTurn', 'Prosite'],
+            trigPoints=['AminoAcids', 'Peaks', 'Troughs'],
+            distanceBase=1.01, limitPerLandmark=50, minDistance=1,
+            maxDistance=100)
+        _, subjectIndex, _ = db.addSubject(pichninde)
+
+        findParams = FindParameters(significanceFraction=0.01,
+                                    binScoreMethod='FeatureAALengthScore')
+        result = db.find(pichninde, findParams, storeFullAnalysis=True)
+        self.assertEqual((292 / 292) * (290 / 292),
+                         result.analysis[subjectIndex]['bestBinScore'])
+
+        scoreAnalysis = result.analysis[
+            subjectIndex]['significantBins'][0]['scoreAnalysis']
+        self.maxDiff = None
+        self.assertEqual(
+            {
+                'denominatorQuery': 292,
+                'denominatorSubject': 292,
+                'matchedOffsetCount': 420,
+                'matchedQueryOffsetCount': 210,
+                'matchedRegionScore': 1.0,
+                'matchedRegionSize': 290,
+                'matchedSubjectOffsetCount': 210,
+                'maxQueryOffset': 290,
+                'maxSubjectOffset': 290,
+                'minQueryOffset': 1,
+                'minSubjectOffset': 1,
+                'normaliserQuery': 290 / 292,
+                'normaliserSubject': 290 / 292,
+                'score': ((292 / 292) * (290 / 292)),
+                'scoreClass': FeatureAALengthScore,
+                'totalOffsetCount': 420,
+            },
+            scoreAnalysis)
+
+    def testScoresMustBeSymmetric(self):
+        """
+        When comparing two sequences, the scores must be the same, no matter
+        which one is used as the query or subject.
+        """
+        golv = AARead('GOLV', 'RVDIFKKNQHGGLREIYVLDLASRIVQLCLEEISRAVCQELPIEMM'
+                              'MHPELKLKKPQEHMYKAAISPESYKSNVSSSNDAKVWNQGHHVAKF'
+                              'AQFLCRLLSPEWHGLIVNGLKLWTNKKIALPDGVMNILSRANTPLF'
+                              'RNSIHQAVHDSYKGITPMRWLRPGETFMRIESGMMQGILHYTSSLF'
+                              'HASLLMMRDSLWRSYSEQLGVKSITTDLVSSDDSSRMTDIFYRDSK'
+                              'NFKRGKIFARADHMAIEPLSRCFGIWMSPKSTYCCNGIMEFNSEYF'
+                              'FRASLYRPTLKWSYACLG')
+
+        akav = AARead('AKAV', 'VFTYFNKGQKTAKDREIFVGEFEAKMCLYLVERISKERCKLNPDEM'
+                              'ISEPGDGKLKKLEDMAEYEIRYTANTLKSMKDKALQEFSKFADDFN'
+                              'FKPHSTKIEINADMSKWSAQDVLFKYFWLFALDPALYKPEKERILY'
+                              'FLCNYMDKVLVIPDDVMTSILDQRVKREKDIIYEMTNGLKQNWVSI'
+                              'KRNWLQGNLNYTSSYLHSCCMNVYKDIIKNVATLLEGDVLVNSMVH'
+                              'SDDNHTSITMIQDKFPDDIIIEYCIKLFEKICLSFGNQANMKKTYV'
+                              'TNFIKEFVSLFNIYGEPFSVYGRFLLTAVG')
+
+        findParams = FindParameters(significanceFraction=0.01,
+                                    binScoreMethod='FeatureAALengthScore')
+
+        kwds = dict(landmarks=['Prosite'], trigPoints=['Peaks'],
+                    distanceBase=1, limitPerLandmark=40, minDistance=1,
+                    maxDistance=10000)
+
+        db1 = DatabaseSpecifier().getDatabaseFromKeywords(**kwds)
+        _, subjectIndex1, _ = db1.addSubject(golv)
+        result1 = db1.find(akav, findParams, storeFullAnalysis=True)
+
+        db2 = DatabaseSpecifier().getDatabaseFromKeywords(**kwds)
+        _, subjectIndex2, _ = db2.addSubject(akav)
+        result2 = db2.find(golv, findParams, storeFullAnalysis=True)
+
+        self.assertEqual(result1.analysis[subjectIndex1]['bestBinScore'],
+                         result2.analysis[subjectIndex2]['bestBinScore'])
+
+    def testPrintAnalysis(self):
+        """
+        The analysis of a score calculation must print correctly, whether
+        we print it using the class name explicitly or the score class that's
+        given in the analysis.
+        """
+        self.maxDiff = None
+        queryLandmark1 = Landmark('AminoAcidsLm', 'N', 2, 1)
+        queryTrigPoint1 = TrigPoint('AminoAcids', 'M', 5)
+        subjectLandmark1 = Landmark('AminoAcidsLm', 'N', 2, 1)
+        subjectTrigPoint1 = TrigPoint('AminoAcids', 'M', 5)
+
+        queryLandmark2 = Landmark('AminoAcidsLm', 'N', 12, 1)
+        queryTrigPoint2 = TrigPoint('AminoAcids', 'M', 15)
+        subjectLandmark2 = Landmark('AminoAcidsLm', 'N', 12, 1)
+        subjectTrigPoint2 = TrigPoint('AminoAcids', 'M', 15)
+
+        histogram = Histogram(1)
+        histogram.add(44, {
+            'queryLandmark': queryLandmark1,
+            'queryTrigPoint': queryTrigPoint1,
+            'subjectLandmark': subjectLandmark1,
+            'subjectTrigPoint': subjectTrigPoint1,
+        })
+        histogram.add(44, {
+            'queryLandmark': queryLandmark2,
+            'queryTrigPoint': queryTrigPoint2,
+            'subjectLandmark': subjectLandmark2,
+            'subjectTrigPoint': subjectTrigPoint2,
+        })
+        histogram.finalize()
+        dbParams = DatabaseParameters(landmarks=[AminoAcidsLm],
+                                      trigPoints=[])
+        query = AARead('id', 'AACAAWAAACAACAAWAAAA')
+        subject = Subject(AARead('id2', 'AACAAWAACAAACAAWAAAAAAAAAAAAAA'))
+        faas = FeatureAALengthScore(histogram, query, subject, dbParams)
+        score, analysis = faas.calculateScore(0)
+        self.assertEqual(0.8 * 0.7, score)
+
+        expected = (
+            'Score method: FeatureAALengthScore\n'
+            'Matched offset range in query: 2 to 15\n'
+            'Matched offset range in subject: 2 to 15\n'
+            'Total (query+subject) AA offsets in matched hashes: 8\n'
+            'Subject AA offsets in matched hashes: 4\n'
+            'Query AA offsets in matched hashes: 4\n'
+            'Total (query+subject) AA offsets in hashes in matched '
+            'region: 10\n'
+            'Matched region score 0.8000 (8 / 10)\n'
+            'Query normalizer: 0.7000 (14 / 20)\n'
+            'Subject normalizer: 0.4667 (14 / 30)\n'
+            'Score: 0.5600')
+        self.assertEqual(expected,
+                         FeatureAALengthScore.printAnalysis(analysis))
+        self.assertEqual(expected,
+                         analysis['scoreClass'].printAnalysis(analysis))
+
+    def testPrintAnalysisWithPassedResult(self):
+        """
+        The analysis of a score calculation must print correctly when we
+        pass a pre-existing C{MultilineString} instance.
+        """
+        self.maxDiff = None
+        queryLandmark1 = Landmark('AminoAcidsLm', 'N', 2, 1)
+        queryTrigPoint1 = TrigPoint('AminoAcids', 'M', 5)
+        subjectLandmark1 = Landmark('AminoAcidsLm', 'N', 2, 1)
+        subjectTrigPoint1 = TrigPoint('AminoAcids', 'M', 5)
+
+        queryLandmark2 = Landmark('AminoAcidsLm', 'N', 12, 1)
+        queryTrigPoint2 = TrigPoint('AminoAcids', 'M', 15)
+        subjectLandmark2 = Landmark('AminoAcidsLm', 'N', 12, 1)
+        subjectTrigPoint2 = TrigPoint('AminoAcids', 'M', 15)
+
+        histogram = Histogram(1)
+        histogram.add(44, {
+            'queryLandmark': queryLandmark1,
+            'queryTrigPoint': queryTrigPoint1,
+            'subjectLandmark': subjectLandmark1,
+            'subjectTrigPoint': subjectTrigPoint1,
+        })
+        histogram.add(44, {
+            'queryLandmark': queryLandmark2,
+            'queryTrigPoint': queryTrigPoint2,
+            'subjectLandmark': subjectLandmark2,
+            'subjectTrigPoint': subjectTrigPoint2,
+        })
+        histogram.finalize()
+        dbParams = DatabaseParameters(landmarks=[AminoAcidsLm],
+                                      trigPoints=[])
+        query = AARead('id', 'AACAAWAAACAACAAWAAAA')
+        subject = Subject(AARead('id2', 'AACAAWAACAAACAAWAAAAAAAAAAAAAA'))
+        faas = FeatureAALengthScore(histogram, query, subject, dbParams)
+        score, analysis = faas.calculateScore(0)
+        self.assertEqual(0.8 * 0.7, score)
+        preExisting = MultilineString()
+        preExisting.append('Hello:')
+        preExisting.indent()
+        FeatureAALengthScore.printAnalysis(analysis, result=preExisting)
+
+        expected = (
+            'Hello:\n'
+            '  Score method: FeatureAALengthScore\n'
+            '  Matched offset range in query: 2 to 15\n'
+            '  Matched offset range in subject: 2 to 15\n'
+            '  Total (query+subject) AA offsets in matched hashes: 8\n'
+            '  Subject AA offsets in matched hashes: 4\n'
+            '  Query AA offsets in matched hashes: 4\n'
+            '  Total (query+subject) AA offsets in hashes in matched '
+            'region: 10\n'
+            '  Matched region score 0.8000 (8 / 10)\n'
+            '  Query normalizer: 0.7000 (14 / 20)\n'
+            '  Subject normalizer: 0.4667 (14 / 30)\n'
+            '  Score: 0.5600')
         self.assertEqual(expected, str(preExisting))
         preExisting.outdent()

@@ -832,7 +832,7 @@ class FeatureAALengthScore(object):
         same score as a long match. To account for this we multiply the MRS
         with a length normaliser (LN). The LN is the quotient of all AA
         locations in the matched region divided by the total length of the
-        subject or the query, whichever of the two is bigger.
+        subject or the query, whichever of the two is smaller.
 
         @param binIndex: The C{int} index of the bin to examine.
         @return: A 2-tuple, containing the C{float} score of the bin and a

@@ -781,5 +781,303 @@ class WeightedFeatureAAScore(object):
         if not returnNone:
             return str(result)
 
+
+class FourScore(object):
+    """
+    Calculates the score for histogram bins based on the count of amino acids
+    present in the regions of the query and subject that had a significant
+    alignment (i.e., caused a histogram bin to be considered significant).
+
+    @param histogram: A C{light.histogram} instance.
+    @param query: A C{dark.reads.AARead} instance.
+    @param subject: A C{light.subject.Subject} instance (a subclass of
+        C{dark.reads.AARead}).
+    @param dbParams: A C{DatabaseParameters} instance.
+    """
+    def __init__(self, histogram, query, subject, dbParams):
+        self._histogram = histogram
+        self.queryLen = len(query)
+        self.subjectLen = len(subject)
+
+        from light.backend import Backend
+        backend = Backend()
+        backend.configure(dbParams)
+
+        scannedQuery = backend.scan(query)
+        allQueryHashes = backend.getHashes(scannedQuery)
+        self._allQueryFeatures = getHashFeatures(allQueryHashes)
+
+        scannedSubject = backend.scan(subject.read)
+        allSubjectHashes = backend.getHashes(scannedSubject)
+        self._allSubjectFeatures = getHashFeatures(allSubjectHashes)
+
+    def calculateScore(self, binIndex):
+        """
+        Calculates the score for a given histogram bin.
+
+        There are four different categories of amino acids that need to be
+        scored: (1) AA's in structures in the matched region (MR), (2) AA's in
+        structures outside the MR, (3) AA's not in structures in the MR and
+        (4) AA's not in structures outside the MR.
+        They are scored the following way:
+        (1) Feature Matched Region Score (FMRS): Numerator: number of AA's in
+        features that that match between the subject and the query.
+        Denominator: number of all AA's in features which in the matched region
+        of the query and subject.
+        (2) Feature Length Normaliser (FLN): Numerator: Number of all AA's in
+        features which in the matched region of the query or the subject.
+        Denominator: Number of all amino acids in features in the query or the
+        subject. The FLN is calculated for both the query and the subject
+        individually, and the larger fraction is used to calculate the score.
+        (3) Non-Feature Matched Region Score (NMRS): Numerator: Number of AA's
+        not in features inside the matched region in the query and the subject.
+        Denominator: 2 * the length of the matched region.
+        (4) Non-Feature Length Normaliser (NLN): Numerator: Number of AA's not
+        in features outside the matched region in the query or the subject.
+        Denominator: Number of AA's outside the matched region in the query or
+        the subject. The NLN is calculated for both the query and the subject
+        individually, and the larger fraction is used to calculate the score.
+
+        @param binIndex: The C{int} index of the bin to examine.
+        @return: A 2-tuple, containing the C{float} score of the bin and a
+            C{dict} with the analysis leading to the score.
+        """
+        # Get the features and their offsets which match in subject and query.
+        matchedQueryFeatures, matchedQueryOffsets = histogramBinFeatures(
+            self._histogram[binIndex], 'query')
+
+        matchedSubjectFeatures, matchedSubjectOffsets = histogramBinFeatures(
+            self._histogram[binIndex], 'subject')
+
+        # Get the extreme offsets in the matched region of query and subject.
+        minQueryOffset = minWithDefault(matchedQueryOffsets, default=None)
+        maxQueryOffset = maxWithDefault(matchedQueryOffsets, default=None)
+        minSubjectOffset = minWithDefault(matchedSubjectOffsets, default=None)
+        maxSubjectOffset = maxWithDefault(matchedSubjectOffsets, default=None)
+
+        # Calculate the length of the matched region.
+        try:
+            matchedRegionLength = maxQueryOffset - minQueryOffset
+        except TypeError:
+            matchedRegionLength = 0
+
+        # Get all features and their offsets which are present in the subject
+        # and the query within the matched region.
+        unmatchedQueryOffsets = set()
+        for feature in filter(
+                lambda f: featureInRange(f, minQueryOffset, maxQueryOffset),
+                self._allQueryFeatures - matchedQueryFeatures):
+            unmatchedQueryOffsets.update(feature.coveredOffsets())
+        # The unmatched offsets shouldn't contain any offsets that were
+        # matched. This can occur if an unmatched feature overlaps with a
+        # matched feature.
+        unmatchedQueryOffsets -= matchedQueryOffsets
+
+        unmatchedSubjectOffsets = set()
+        for feature in filter(
+                lambda f: featureInRange(f, minSubjectOffset,
+                                         maxSubjectOffset),
+                self._allSubjectFeatures - matchedSubjectFeatures):
+            unmatchedSubjectOffsets.update(feature.coveredOffsets())
+        # The unmatched offsets shouldn't contain any offsets that were
+        # matched. This can occur if an unmatched feature overlaps with a
+        # matched feature.
+        unmatchedSubjectOffsets -= matchedSubjectOffsets
+
+        matchedOffsetCount = (
+            len(matchedQueryOffsets) + len(matchedSubjectOffsets))
+
+        totalOffsetCount = matchedOffsetCount + (
+            len(unmatchedQueryOffsets) + len(unmatchedSubjectOffsets))
+
+        # Calculate the Feature Matched Region Score (1).
+        try:
+            matchedRegionScore = matchedOffsetCount / totalOffsetCount
+        except ZeroDivisionError:
+            matchedRegionScore = 0.0
+
+        # The calculation of the Feature Length Normaliser (2) consists of
+        # three parts: the numerator is the matchedOffsetCount + either the
+        # unmatchedQueryOffsets or the unmatchedSubjectOffsets. The denominator
+        # is the numerator + the length of hashes in either subject or query
+        # which are outside the matched region. The sequence with less covered
+        # indices is used to do the normalisation.
+        offsetsNotInMatchQuery = set()
+        for feature in filterfalse(
+                lambda f: featureInRange(f, minQueryOffset,
+                                         maxQueryOffset),
+                self._allQueryFeatures - matchedQueryFeatures):
+            offsetsNotInMatchQuery.update(feature.coveredOffsets())
+        offsetsNotInMatchQuery -= matchedQueryOffsets
+        numeratorQuery = (len(matchedQueryOffsets) +
+                          len(unmatchedQueryOffsets))
+        denominatorQuery = numeratorQuery + len(offsetsNotInMatchQuery)
+
+        offsetsNotInMatchSubject = set()
+        for feature in filterfalse(
+                lambda f: featureInRange(f, minSubjectOffset,
+                                         maxSubjectOffset),
+                self._allSubjectFeatures - matchedSubjectFeatures):
+            offsetsNotInMatchSubject.update(feature.coveredOffsets())
+        offsetsNotInMatchSubject -= matchedSubjectOffsets
+        numeratorSubject = (len(matchedSubjectOffsets) +
+                            len(unmatchedSubjectOffsets))
+        denominatorSubject = numeratorSubject + len(offsetsNotInMatchSubject)
+
+        # Calculate the Feature Length Normaliser.
+        try:
+            normaliserQuery = numeratorQuery / denominatorQuery
+        except ZeroDivisionError:
+            normaliserQuery = 1.0
+
+        try:
+            normaliserSubject = numeratorSubject / denominatorSubject
+        except ZeroDivisionError:
+            normaliserSubject = 1.0
+
+        featureLengthNormaliser = max(normaliserQuery, normaliserSubject)
+
+        # The Non-Feature Matched Region Score (3) is calculated by dividing
+        # the number of AA's not in features inside the matched region in the
+        # query and the subject by 2 * the length of the matched region.
+        aaNotInFeaturesInMRQuery = matchedRegionLength - numeratorQuery
+        aaNotInFeaturesInMRSubject = matchedRegionLength - numeratorSubject
+
+        try:
+            nonFeatureMatchedRegionScore = ((aaNotInFeaturesInMRQuery +
+                                             aaNotInFeaturesInMRSubject) /
+                                            (2 * matchedRegionLength))
+        except ZeroDivisionError:
+            nonFeatureMatchedRegionScore = 0.0
+
+        # Non-Feature Length Normaliser (4): The number of AA's not in features
+        # outside the matched region in the query or the subject divided by the
+        # number of AA's outside the matched region in the query or
+        # the subject. The NLN is calculated for both the query and the subject
+        # individually, and the larger fraction is used to calculate the score.
+        aaNotInMRQuery = self.queryLen - matchedRegionLength
+        aaNotInMRSubject = self.subjectLen - matchedRegionLength
+
+        aaNotInMRNotInFeaturesQuery = (aaNotInMRQuery -
+                                       len(offsetsNotInMatchQuery))
+        aaNotInMRNotInFeaturesSubject = (aaNotInMRSubject -
+                                         len(offsetsNotInMatchSubject))
+
+        try:
+            nlnQuery = aaNotInMRNotInFeaturesQuery / aaNotInMRQuery
+        except ZeroDivisionError:
+            nlnQuery = 0.0
+
+        try:
+            nlnSubject = aaNotInMRNotInFeaturesSubject / aaNotInMRSubject
+        except ZeroDivisionError:
+            nlnSubject = 0.0
+
+        nonFeatureLengthNormaliser = max(nlnQuery, nlnSubject)
+
+        # Calculate the final score.
+        score = (matchedRegionScore * featureLengthNormaliser *
+                 nonFeatureMatchedRegionScore * nonFeatureLengthNormaliser)
+
+        analysis = {
+            'denominatorQuery': denominatorQuery,
+            'denominatorSubject': denominatorSubject,
+            'matchedOffsetCount': matchedOffsetCount,
+            'matchedSubjectOffsetCount': len(matchedSubjectOffsets),
+            'matchedQueryOffsetCount': len(matchedQueryOffsets),
+            'matchedRegionScore': matchedRegionScore,
+            'maxQueryOffset': maxQueryOffset,
+            'maxSubjectOffset': maxSubjectOffset,
+            'minQueryOffset': minQueryOffset,
+            'minSubjectOffset': minSubjectOffset,
+            'numeratorQuery': numeratorQuery,
+            'numeratorSubject': numeratorSubject,
+            'normaliserQuery': normaliserQuery,
+            'normaliserSubject': normaliserSubject,
+            'score': score,
+            'scoreClass': self.__class__,
+            'totalOffsetCount': totalOffsetCount,
+            'matchedRegionLength': matchedRegionLength,
+            'featureLengthNormaliser': featureLengthNormaliser,
+            'aaNotInFeaturesInMRQuery': aaNotInFeaturesInMRQuery,
+            'aaNotInFeaturesInMRSubject': aaNotInFeaturesInMRSubject,
+            'nonFeatureMatchedRegionScore': nonFeatureMatchedRegionScore,
+            'aaNotInMRQuery': aaNotInMRQuery,
+            'aaNotInMRNotInFeaturesQuery': aaNotInMRNotInFeaturesQuery,
+            'aaNotInMRSubject': aaNotInMRSubject,
+            'aaNotInMRNotInFeaturesSubject': aaNotInMRNotInFeaturesSubject,
+            'nlnQuery': nlnQuery,
+            'nlnSubject': nlnSubject,
+            'queryLen': self.queryLen,
+            'subjectLen': self.subjectLen,
+        }
+
+        return score, analysis
+
+    @staticmethod
+    def printAnalysis(analysis, margin='', result=None):
+        """
+        Convert an analysis to a nicely formatted string.
+
+        @param analysis: A C{dict} with information about the score and its
+            calculation.
+        @param margin: A C{str} that should be inserted at the start of each
+            line of output.
+        @param result: A C{MultilineString} instance, or C{None} if a new
+            C{MultilineString} should be created.
+        @return: If C{result} was C{None}, return a C{str} human-readable
+            version of the last analysis, else C{None}.
+        """
+        if result is None:
+            result = MultilineString(margin=margin)
+            returnNone = False
+        else:
+            returnNone = True
+
+        result.extend([
+            'Score method: %s' % analysis['scoreClass'].__name__,
+            ('Matched offset range in query: %(minQueryOffset)d to '
+             '%(maxQueryOffset)d' % analysis),
+            ('Matched offset range in subject: %(minSubjectOffset)d to '
+             '%(maxSubjectOffset)d' % analysis),
+            'Length of matched region: %(matchedRegionLength)d' % analysis,
+            'Query length: %(queryLen)d' % analysis,
+            'Subject length: %(subjectLen)d' % analysis,
+            ('Total (query+subject) AA offsets in matched hashes: '
+             '%(matchedOffsetCount)d' % analysis),
+            ('Subject AA offsets in matched hashes: '
+             '%(matchedSubjectOffsetCount)d' % analysis),
+            ('Query AA offsets in matched hashes: '
+             '%(matchedQueryOffsetCount)d' % analysis),
+            ('Total (query+subject) AA offsets in hashes in matched region: '
+             '%(totalOffsetCount)d' % analysis),
+            ('Matched region score %(matchedRegionScore).4f '
+             '(%(matchedOffsetCount)d / %(totalOffsetCount)d)' % analysis),
+            ('Feature length normaliser, query: %(normaliserQuery).4f '
+             '(%(numeratorQuery)d / %(denominatorQuery)d)' % analysis),
+            ('Feature length normaliser: subject: %(normaliserSubject).4f '
+             '(%(numeratorSubject)d / %(denominatorSubject)d)' % analysis),
+            ('Feature length normaliser: %(featureLengthNormaliser)d'
+             % analysis),
+            ('Query AA offsets not in features in matched region: '
+             '%(aaNotInFeaturesInMRQuery)d' % analysis),
+            ('Subject AA offsets not in features in matched region: '
+             '%(aaNotInFeaturesInMRSubject)d' % analysis),
+            ('Non-feature matched region score: '
+             '%(nonFeatureMatchedRegionScore)d ((%(aaNotInFeaturesInMRQuery)d '
+             '+ %(aaNotInFeaturesInMRSubject)d) / 2 * %(matchedRegionLength)d'
+             % analysis),
+            ('Non-feature length normaliser, query: %(nlnQuery)d '
+             '%(aaNotInMRNotInFeaturesQuery)d / %(aaNotInMRQuery)d' %
+             analysis),
+            ('Non-feature length normaliser, subject: %(nlnSubject)d '
+             '%(aaNotInMRNotInFeaturesSubject)d / %(aaNotInMRSubject)d'
+             % analysis),
+            'Score: %(score).4f' % analysis,
+        ])
+
+        if returnNone is not None:
+            return str(result)
+
 ALL_BIN_SCORE_CLASSES = (NoneScore, MinHashesScore, FeatureMatchingScore,
-                         FeatureAAScore, WeightedFeatureAAScore)
+                         FeatureAAScore, WeightedFeatureAAScore, FourScore)

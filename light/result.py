@@ -10,7 +10,7 @@ from operator import itemgetter
 from light.backend import Backend
 from light.bin_score import (
     NoneScore, MinHashesScore, FeatureMatchingScore, FeatureAAScore,
-    WeightedFeatureAAScore)
+    WeightedFeatureAAScore, FourScore)
 from light.distance import scaleLinear
 from light.histogram import Histogram
 from light.overall_score import (
@@ -143,6 +143,9 @@ class Result(object):
                 scorer = WeightedFeatureAAScore(
                     histogram, query, subject, connector.dbParams,
                     findParams.weights)
+            elif binScoreMethod == 'FourScore':
+                scorer = FourScore(
+                    histogram, query, subject, connector.dbParams)
             else:
                 raise ValueError('Unknown score method %r' % binScoreMethod)
 

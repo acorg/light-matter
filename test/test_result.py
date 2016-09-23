@@ -62,6 +62,32 @@ class TestResult(TestCase):
             self, ValueError, error, Result, read, database._connector,
             matches, hashCount, findParams)
 
+    def testUnknownBinScoreMethod(self):
+        """
+        The Result class must raise ValueError if passed an unknown
+        bin score method.
+        """
+        read = AARead('read', 'AGTARFSDDD')
+        dbParams = DatabaseParameters()
+        database = Database(dbParams)
+        database.addSubject(AARead('subject', 'AAA'))
+        matches = {
+            '0': [
+                {
+                    'queryLandmark': Landmark('AlphaHelix', 'A', 0, 9),
+                    'queryTrigPoint': TrigPoint('Peaks', 'P', 1),
+                    'subjectLandmark': Landmark('AlphaHelix', 'A', 0, 1),
+                    'subjectTrigPoint': TrigPoint('Peaks', 'P', 1),
+                },
+            ],
+        }
+        hashCount = 1
+        error = "^Unknown bin score method 'xxx'$"
+        findParams = FindParameters(binScoreMethod='xxx')
+        six.assertRaisesRegex(
+            self, ValueError, error, Result, read, database._connector,
+            matches, hashCount, findParams)
+
     def testAddOneMatch(self):
         """
         Passing information in which one match is present should result in

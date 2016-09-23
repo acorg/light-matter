@@ -1,7 +1,15 @@
 import re
 
+from dark.reads import AARead
+
+from light.bin_score import (
+    NoneScore, MinHashesScore, FeatureMatchingScore, FeatureAAScore,
+    WeightedFeatureAAScore)
+from light.database import Database
 from light.features import Landmark, TrigPoint
+from light.histogram import Histogram
 from light.landmarks import findLandmark
+from light.parameters import DatabaseParameters, FindParameters
 from light.trig import findTrigPoint
 
 _NONWHITE_REGEXP = re.compile('\S+')
@@ -12,16 +20,18 @@ class _QueryOrSubject(object):
     Hold information about a query or subject found in a template.
 
     @param templateList: A C{list} of C{str}s with the lines from the template.
+        Each line has been stripped of whitespace on its right.
     """
     def __init__(self, templateList):
-        # We add some intermediate values to self so that they can be tested.
+        # Some of the intermediate values computed below are added to self
+        # so that their values can be tested.
         self.landmarks = set()
         self.trigPoints = set()
         self.indentLength, self.relevantLines = self.extractRelevantLines(
             templateList)
         self.pipe1, self.pipe2 = self.findPipes()
         self.noPipes = [line.replace('|', '') for line in self.relevantLines]
-        self.sequence = self.noPipes[0][self.indentLength:]
+        self.read = AARead(self.TYPE, self.noPipes[0][self.indentLength:])
         self.nonPairFeatures = list(self.extractNonPairFeatures())
 
         # Extract and check all unpaired features and remember the names of the
@@ -151,7 +161,7 @@ class _QueryOrSubject(object):
                 offset = match.start()
                 length = match.end() - offset
                 sequence = featureStr[offset:offset + length]
-                if sequence != self.sequence[offset:offset + length]:
+                if sequence != self.read.sequence[offset:offset + length]:
                     raise ValueError(
                         '%s feature sequence %r found in %s template (offset '
                         '%d, length %d) does not match the full sequence for '
@@ -185,7 +195,7 @@ class _QueryOrSubject(object):
         for line in self.noPipes[1:]:
             if line.find(',') == -1:
                 # This line contains non-paired features (it has just one
-                # feature name - implied by the lack of commas). Ignore it
+                # feature name - implied by the lack of a comma). Ignore it
                 # as it will be processed in extractNonPairFeatures.
                 continue
 
@@ -230,7 +240,7 @@ class _QueryOrSubject(object):
                 offset = match.start()
                 length = match.end() - offset
                 sequence = featureStr[offset:offset + length]
-                if sequence != self.sequence[offset:offset + length]:
+                if sequence != self.read.sequence[offset:offset + length]:
                     if first:
                         raise ValueError(
                             '%s feature sequence %r found in %s template '
@@ -251,8 +261,8 @@ class _QueryOrSubject(object):
                                                offset, length)
                 else:
                     if landmark2:
-                        secondFeature = Landmark(landmark.NAME,
-                                                 landmark.SYMBOL, offset,
+                        secondFeature = Landmark(landmark2.NAME,
+                                                 landmark2.SYMBOL, offset,
                                                  length)
                     else:
                         secondFeature = TrigPoint(trigPoint.NAME,
@@ -276,11 +286,39 @@ class Template(object):
     it.
 
     @param template: A C{str} template picture of the match.
+    @raise ValueError: If the query and subject do not have the same number of
+        paired features.
     """
     def __init__(self, template):
         self.template = self.templateToList(template)
         self.query = Query(self.template)
         self.subject = Subject(self.template)
+
+        if len(self.query.pairedFeatures) != len(self.subject.pairedFeatures):
+            raise ValueError(
+                'The query and subject do not have the same number of paired '
+                'features (%d != %d)' % (len(self.query.pairedFeatures),
+                                         len(self.subject.pairedFeatures)))
+
+        # Union the landmark and trig point names from the query and subject.
+        self.landmarks = self.query.landmarks | self.subject.landmarks
+        self.trigPoints = self.query.trigPoints | self.subject.trigPoints
+
+        self.histogram = Histogram(1)
+
+        for queryPair, subjectPair in zip(self.query.pairedFeatures,
+                                          self.subject.pairedFeatures):
+            _, queryLandmark, _, queryTrigPoint = queryPair
+            _, subjectLandmark, _, subjectTrigPoint = subjectPair
+
+            self.histogram.add(0, {
+                'queryLandmark': queryLandmark,
+                'queryTrigPoint': queryTrigPoint,
+                'subjectLandmark': subjectLandmark,
+                'subjectTrigPoint': subjectTrigPoint,
+            })
+
+        self.histogram.finalize()
 
     @staticmethod
     def templateToList(template):
@@ -296,3 +334,70 @@ class Template(object):
             if whitespace.match(line) is None:
                 result.append(line.rstrip())
         return result
+
+    def calculateScore(self, dbParams=None, findParams=None):
+        """
+        Using a given scoring method, calculate the score of the alignment
+        between the query and subject in the template.
+
+        @param findParams: An instance of C{light.parameters.FindParameters} or
+            C{None} to use default find parameters.
+        @raises ValueError: If C{dbParams} is passed and the landmarks and
+            trig points it specifies do not include all the landmarks and trig
+            points named in the template. Of if the C{binScoreMethod} in
+            C{findParams} is unknown.
+        @return: A 2-tuple, being the result of calling the C{calculateScore}
+            method of the C{binScoreMethod} class. The tuple contains a
+            C{float} score of the bin and a C{dict} with the analysis leading
+            to the score (see light/bin_score.py).
+        """
+        findParams = findParams or FindParameters()
+        if dbParams is None:
+            dbParams = DatabaseParameters(landmarks=self.landmarks,
+                                          trigPoints=self.trigPoints)
+        else:
+            missing = self.landmarks - set(dbParams.landmarkFinderNames())
+            if missing:
+                raise ValueError(
+                    'The template mentions landmark finders (%s) that are '
+                    'not present in the passed DatabaseParameters instance' %
+                    ', '.join(sorted(missing)))
+
+            missing = self.trigPoints - set(dbParams.trigPointFinderNames())
+            if missing:
+                raise ValueError(
+                    'The template mentions trig point finders (%s) that are '
+                    'not present in the passed DatabaseParameters instance' %
+                    ', '.join(sorted(missing)))
+
+        database = Database(dbParams=dbParams)
+        _, subjectIndex, subjectHashCount = database.addSubject(
+            self.subject.read)
+        dbSubject = database.getSubjectByIndex(subjectIndex)
+
+        binScoreMethod = findParams.binScoreMethod
+        if binScoreMethod == 'NoneScore':
+            scorer = NoneScore()
+        elif binScoreMethod == 'MinHashesScore':
+            be = database._connector._backend
+            queryHashCount = 0
+            scannedQuery = be.scan(self.query.read)
+            for hashInfo in be.getHashes(scannedQuery).values():
+                queryHashCount += len(hashInfo)
+            scorer = MinHashesScore(self.histogram,
+                                    min(queryHashCount, subjectHashCount))
+        elif binScoreMethod == 'FeatureMatchingScore':
+            scorer = FeatureMatchingScore(
+                self.histogram, self.query.read, dbSubject, dbParams,
+                findParams)
+        elif binScoreMethod == 'FeatureAAScore':
+            scorer = FeatureAAScore(
+                self.histogram, self.query.read, dbSubject, dbParams)
+        elif binScoreMethod == 'WeightedFeatureAAScore':
+            scorer = WeightedFeatureAAScore(
+                self.histogram, self.query.read, dbSubject, dbParams,
+                findParams.weights)
+        else:
+            raise ValueError('Unknown bin score method %r' % binScoreMethod)
+
+        return scorer.calculateScore(0)

@@ -3344,57 +3344,43 @@ class TestWeightedFeatureAAScore(TestCase):
         preExisting.outdent()
 
 
-class TestFourScore(TestCase):
+class TestFeatureAAScoreWithTemplate(TestCase):
     """
-    Tests for the light.bin_score.FourScore class.
+    Tests for the light.bin_score.FeatureAAScore class using a template.
     """
 
-    def xx_testEmptyBin(self):
+    def testEmptyBin(self):
         """
         A bin containing no elements must have a score of 0.0 if the query and
         subject both have no features.
         """
         template = """
+            Subject                    ------|---|--
+            Query                       ---|---|---
+        """
 
-    Subject                            FRRRFRRRF-W------|FRRRFRRRFW---RIKR-W-W--W---|--
-    AlphaHelix                         FRRRFRRRF        |FRRRFRRRF                  |
-    AminoAcids                                   W      |         W        W W      |
-    EukaryoticLinearMotif, AminoAcids                   |             RIKR      W   |
-    AlphaHelix, EukaryoticLinearMotif                   |FRRRFRRRF    RIKR          |
-
-
-    Query                                           S-TM---|NGRSFRRRFRRRFTW-T-S-|FRRRFRRRFS-
-    Peaks                                           S      |   S              S |         S
-    IndividualPeaks                                   T    |             T  T   |
-    IndividualTroughs                                  M   |                    |
-    AlphaHelix                                             |                    |FRRRFRRRF
-    AlphaHelix, AminoAcids                                 |    FRRRFRRRF W     |
-    EukaryoticLinearMotif, AminoAcids                      |NGR           W     |
-
-"""
         template = Template(template)
-        score, analysis = template.calculateScore()
+        findParams = FindParameters(binScoreMethod='FeatureAAScore')
+        score, analysis = template.calculateScore(findParams=findParams)
         self.assertEqual(0.0, score)
         self.assertEqual(
             {
-                'denominatorQuery': 20,
-                'denominatorSubject': 24,
-                'matchedOffsetCount': 20.0,
-                'matchedQueryOffsetCount': 10,
-                'weightedMatchedSubjectOffsetCount': 10.0,
-                'weightedMatchedQueryOffsetCount': 10.0,
-                'matchedRegionScore': 20 / 44,
-                'matchedSubjectOffsetCount': 10,
-                'maxQueryOffset': 60,
-                'maxSubjectOffset': 60,
-                'minQueryOffset': 2,
-                'minSubjectOffset': 2,
-                'numeratorQuery': 20,
-                'numeratorSubject': 24,
+                'denominatorQuery': 0,
+                'denominatorSubject': 0,
+                'matchedOffsetCount': 0,
+                'matchedQueryOffsetCount': 0,
+                'matchedRegionScore': 0.0,
+                'matchedSubjectOffsetCount': 0,
+                'maxQueryOffset': None,
+                'maxSubjectOffset': None,
+                'minQueryOffset': None,
+                'minSubjectOffset': None,
+                'numeratorQuery': 0,
+                'numeratorSubject': 0,
                 'normaliserQuery': 1.0,
                 'normaliserSubject': 1.0,
                 'score': score,
-                'scoreClass': WeightedFeatureAAScore,
-                'totalOffsetCount': 44.0,
+                'scoreClass': FeatureAAScore,
+                'totalOffsetCount': 0,
             },
             analysis)

@@ -5,6 +5,11 @@ from unittest import TestCase
 
 from .binScoreTemplate import Template, Query, Subject
 
+from light.features import Landmark, TrigPoint
+from light.landmarks import AlphaHelix, EukaryoticLinearMotif
+from light.parameters import DatabaseParameters, FindParameters
+from light.trig import AminoAcids
+
 
 # If you edit the following sample template in any way, tests below will
 # probably break.
@@ -208,7 +213,7 @@ class TestQuery(TestQueryOrSubjectMixin, TestCase):
         """
         match = Template(SAMPLE_TEMPLATE)
         self.assertEqual('S-TM---NGRSFRRRFRRRFTW-T-S-FRRRFRRRFS-',
-                         match.query.sequence)
+                         match.query.read.sequence)
 
     def testLandmarks(self):
         """
@@ -348,7 +353,7 @@ class TestSubject(TestQueryOrSubjectMixin, TestCase):
         """
         match = Template(SAMPLE_TEMPLATE)
         self.assertEqual('FRRRFRRRF-W------FRRRFRRRFW---RIKR-W-W--W-----',
-                         match.subject.sequence)
+                         match.subject.read.sequence)
 
     def testLandmarks(self):
         """
@@ -400,8 +405,120 @@ class TestBinScoreTemplate(TestCase):
     Tests for the binScoreTemplate.py (in this directory) Template class.
     """
 
-    def testXXX(self):
+    def testUnequalPairedFeatureCount(self):
+        """
+        If the query and subject do not have the same number of paired
+        features, Template must raise a ValueError.
+        """
+        template = """
+            Subject                            ----|FRRRFRRRFW---RIKR-W-W--W-|
+            EukaryoticLinearMotif, AminoAcids      |             RIKR      W |
+
+            Query                              S-TM---|NGRSFRRRFRRRFTW-T-S-|
         """
 
+        error = ('^The query and subject do not have the same number of '
+                 'paired features \(0 != 1\)$')
+        six.assertRaisesRegex(self, ValueError, error, Template, template)
+
+    def testLandmarks(self):
         """
-        pass
+        The Template class must have the correct set of landmark names.
+        """
+        match = Template(SAMPLE_TEMPLATE)
+        self.assertEqual(set(['AlphaHelix', 'EukaryoticLinearMotif']),
+                         match.landmarks)
+
+    def testTrigPoints(self):
+        """
+        The Template class must have the correct set of trig point names.
+        """
+        match = Template(SAMPLE_TEMPLATE)
+        self.assertEqual(set(['Peaks', 'IndividualTroughs', 'IndividualPeaks',
+                              'AminoAcids']),
+                         match.trigPoints)
+
+    def testHistogramWithOneBin(self):
+        """
+        The Template class must build a histogram with one bin.
+        """
+        match = Template(SAMPLE_TEMPLATE)
+        self.assertEqual(1, match.histogram.nBins)
+
+    def testHistogram(self):
+        """
+        The Template class histogram must have a bin containing the correct
+        query/subject pairs.
+        """
+        match = Template(SAMPLE_TEMPLATE)
+        self.assertEqual(
+            [
+                {
+                    'queryLandmark': Landmark(AlphaHelix.NAME,
+                                              AlphaHelix.SYMBOL,
+                                              offset=11, length=9),
+                    'queryTrigPoint': TrigPoint(AminoAcids.NAME,
+                                                AminoAcids.SYMBOL,
+                                                offset=21),
+                    'subjectLandmark': Landmark(EukaryoticLinearMotif.NAME,
+                                                EukaryoticLinearMotif.SYMBOL,
+                                                offset=30, length=4),
+                    'subjectTrigPoint': TrigPoint(AminoAcids.NAME,
+                                                  AminoAcids.SYMBOL,
+                                                  offset=40),
+                },
+                {
+                    'queryLandmark': Landmark(EukaryoticLinearMotif.NAME,
+                                              EukaryoticLinearMotif.SYMBOL,
+                                              offset=7, length=3),
+                    'queryTrigPoint': TrigPoint(AminoAcids.NAME,
+                                                AminoAcids.SYMBOL, offset=21),
+                    'subjectLandmark': Landmark(AlphaHelix.NAME,
+                                                AlphaHelix.SYMBOL,
+                                                offset=17, length=9),
+                    'subjectTrigPoint': Landmark(EukaryoticLinearMotif.NAME,
+                                                 EukaryoticLinearMotif.SYMBOL,
+                                                 offset=30, length=4)
+                },
+            ],
+            match.histogram[0])
+
+    def testPassDatabaseParamsThatMissLandmarksInTheTemplate(self):
+        """
+        If a DatabaseParameters is passed and it doesn't include all the
+        landmark finders mentioned in the template, the Template
+        calculateScore method must raise a ValueError.
+        """
+        dbParams = DatabaseParameters(landmarks=[], trigPoints=[])
+        error = ('^The template mentions landmark finders \(AlphaHelix, '
+                 'EukaryoticLinearMotif\) that are not present in the passed '
+                 'DatabaseParameters instance$')
+        match = Template(SAMPLE_TEMPLATE)
+        six.assertRaisesRegex(self, ValueError, error, match.calculateScore,
+                              dbParams=dbParams)
+
+    def testPassDatabaseParamsThatMissTrigPointsInTheTemplate(self):
+        """
+        If a DatabaseParameters is passed and it doesn't include all the trig
+        point finders mentioned in the template, the Template calculateScore
+        method  must raise a ValueError.
+        """
+        dbParams = DatabaseParameters(
+            landmarks=['AlphaHelix', 'EukaryoticLinearMotif'], trigPoints=[])
+        error = ('^The template mentions trig point finders \(AminoAcids, '
+                 'IndividualPeaks, IndividualTroughs, Peaks\) that are not '
+                 'present in the passed DatabaseParameters instance$')
+        match = Template(SAMPLE_TEMPLATE)
+        six.assertRaisesRegex(self, ValueError, error, match.calculateScore,
+                              dbParams=dbParams)
+
+    def testPassUnknownBinScoreMethod(self):
+        """
+        If a FindParameters is passed and its bin score method is unknown,
+        the Template calculateScore method must raise a ValueError.
+        """
+        findParams = FindParameters(binScoreMethod='unknown')
+        error = ("^Unknown bin score method 'unknown'$")
+        match = Template(SAMPLE_TEMPLATE)
+        six.assertRaisesRegex(self, ValueError, error, match.calculateScore,
+                              findParams=findParams)

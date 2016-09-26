@@ -19,6 +19,9 @@ from light.histogram import Histogram
 from light.landmarks import AlphaHelix, AminoAcids as AminoAcidsLm
 from light.trig import Peaks, AminoAcids
 
+from .binScoreTemplate import Template
+
+
 DEFAULT_WEIGHTS = {
     'AlphaHelix': 1,
     'AlphaHelix_3_10': 1,
@@ -3339,3 +3342,45 @@ class TestWeightedFeatureAAScore(TestCase):
             '  Score: 1.0000')
         self.assertEqual(expected, str(preExisting))
         preExisting.outdent()
+
+
+class TestFeatureAAScoreWithTemplate(TestCase):
+    """
+    Tests for the light.bin_score.FeatureAAScore class using a template.
+    """
+
+    def testEmptyBin(self):
+        """
+        A bin containing no elements must have a score of 0.0 if the query and
+        subject both have no features.
+        """
+        template = """
+            Subject                    ------|---|--
+            Query                       ---|---|---
+        """
+
+        template = Template(template)
+        findParams = FindParameters(binScoreMethod='FeatureAAScore')
+        score, analysis = template.calculateScore(findParams=findParams)
+        self.assertEqual(0.0, score)
+        self.assertEqual(
+            {
+                'denominatorQuery': 0,
+                'denominatorSubject': 0,
+                'matchedOffsetCount': 0,
+                'matchedQueryOffsetCount': 0,
+                'matchedRegionScore': 0.0,
+                'matchedSubjectOffsetCount': 0,
+                'maxQueryOffset': None,
+                'maxSubjectOffset': None,
+                'minQueryOffset': None,
+                'minSubjectOffset': None,
+                'numeratorQuery': 0,
+                'numeratorSubject': 0,
+                'normaliserQuery': 1.0,
+                'normaliserSubject': 1.0,
+                'score': score,
+                'scoreClass': FeatureAAScore,
+                'totalOffsetCount': 0,
+            },
+            analysis)

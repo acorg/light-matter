@@ -144,7 +144,8 @@ class Result(object):
                     histogram, query, subject, connector.dbParams,
                     findParams.weights)
             else:
-                raise ValueError('Unknown score method %r' % binScoreMethod)
+                raise ValueError('Unknown bin score method %r' %
+                                 binScoreMethod)
 
             # Find bins with a significant number of elements and score them.
             significantBins = []

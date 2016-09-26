@@ -14,11 +14,13 @@ from light.subject import Subject
 from light.bin_score import (
     NoneScore, MinHashesScore, FeatureMatchingScore, FeatureAAScore,
     histogramBinFeatures, featureInRange, getHashFeatures,
-    weightedHistogramBinFeatures, getWeightedOffsets, WeightedFeatureAAScore,
-    FourScore)
+    weightedHistogramBinFeatures, getWeightedOffsets, WeightedFeatureAAScore)
 from light.histogram import Histogram
 from light.landmarks import AlphaHelix, AminoAcids as AminoAcidsLm
 from light.trig import Peaks, AminoAcids
+
+from .binScoreTemplate import Template
+
 
 DEFAULT_WEIGHTS = {
     'AlphaHelix': 1,
@@ -3342,9 +3344,9 @@ class TestWeightedFeatureAAScore(TestCase):
         preExisting.outdent()
 
 
-class TestFourScore(TestCase):
+class TestFeatureAAScoreWithTemplate(TestCase):
     """
-    Tests for the light.bin_score.FourScore class.
+    Tests for the light.bin_score.FeatureAAScore class using a template.
     """
 
     def testEmptyBin(self):
@@ -3352,46 +3354,33 @@ class TestFourScore(TestCase):
         A bin containing no elements must have a score of 0.0 if the query and
         subject both have no features.
         """
-        self.maxDiff = None
-        histogram = Histogram()
-        histogram.finalize()
-        dbParams = DatabaseParameters(landmarks=[], trigPoints=[])
-        query = AARead('id1', 'A')
-        subject = Subject(AARead('id2', 'A'))
-        faas = FourScore(histogram, query, subject, dbParams)
-        score, analysis = faas.calculateScore(0)
+        template = """
+            Subject                    ------|---|--
+            Query                       ---|---|---
+        """
+
+        template = Template(template)
+        findParams = FindParameters(binScoreMethod='FeatureAAScore')
+        score, analysis = template.calculateScore(findParams=findParams)
         self.assertEqual(0.0, score)
         self.assertEqual(
             {
-                'aaNotInFeaturesInMRQuery': 0,
-                'aaNotInFeaturesInMRSubject': 0,
-                'aaNotInMRNotInFeaturesQuery': 1,
-                'aaNotInMRNotInFeaturesSubject': 1,
-                'aaNotInMRQuery': 1,
-                'aaNotInMRSubject': 1,
                 'denominatorQuery': 0,
                 'denominatorSubject': 0,
-                'featureLengthNormaliser': 1.0,
                 'matchedOffsetCount': 0,
                 'matchedQueryOffsetCount': 0,
-                'matchedRegionLength': 0,
                 'matchedRegionScore': 0.0,
                 'matchedSubjectOffsetCount': 0,
                 'maxQueryOffset': None,
                 'maxSubjectOffset': None,
                 'minQueryOffset': None,
                 'minSubjectOffset': None,
-                'nlnQuery': 1.0,
-                'nlnSubject': 1.0,
-                'nonFeatureMatchedRegionScore': 0.0,
-                'normaliserQuery': 1.0,
-                'normaliserSubject': 1.0,
                 'numeratorQuery': 0,
                 'numeratorSubject': 0,
-                'queryLen': 1,
-                'score': 0.0,
-                'scoreClass': FourScore,
-                'subjectLen': 1,
+                'normaliserQuery': 1.0,
+                'normaliserSubject': 1.0,
+                'score': score,
+                'scoreClass': FeatureAAScore,
                 'totalOffsetCount': 0,
             },
             analysis)

@@ -147,7 +147,8 @@ class Result(object):
                 scorer = FourScore(
                     histogram, query, subject, connector.dbParams)
             else:
-                raise ValueError('Unknown score method %r' % binScoreMethod)
+                raise ValueError('Unknown bin score method %r' %
+                                 binScoreMethod)
 
             # Find bins with a significant number of elements and score them.
             significantBins = []

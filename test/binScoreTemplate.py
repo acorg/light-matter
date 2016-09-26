@@ -156,8 +156,6 @@ class _QueryOrSubject(object):
                                      'template' % (featureName, self.TYPE))
 
             for match in _NONWHITE_REGEXP.finditer(featureStr):
-                # print('Found %s match %d to %d in %r' % (
-                #     featureName, match.start(), match.end(), line))
                 offset = match.start()
                 length = match.end() - offset
                 sequence = featureStr[offset:offset + length]
@@ -234,9 +232,6 @@ class _QueryOrSubject(object):
                         'More than two features found in matched region pair '
                         'line in %s template. Line was %r' % (self.TYPE, line))
                 first = count == 0
-                # print('Found %s/%s match %d to %d in %r' % (
-                #     landmarkName, secondFeatureName, match.start(),
-                #     match.end(), line))
                 offset = match.start()
                 length = match.end() - offset
                 sequence = featureStr[offset:offset + length]

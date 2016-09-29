@@ -219,8 +219,7 @@ class FeatureMatchingScore(object):
 
     @param histogram: A C{light.histogram} instance.
     @param query: A C{dark.reads.AARead} instance.
-    @param subject: A C{light.subject.Subject} instance (a subclass of
-        C{dark.reads.AARead}).
+    @param subject: A C{light.subject.Subject} instance.
     @param dbParams: A C{DatabaseParameters} instance.
     @param findParams: An instance of C{light.parameters.FindParameters} or
         C{None} to use default find parameters.
@@ -336,8 +335,7 @@ class FeatureAAScore(object):
 
     @param histogram: A C{light.histogram} instance.
     @param query: A C{dark.reads.AARead} instance.
-    @param subject: A C{light.subject.Subject} instance (a subclass of
-        C{dark.reads.AARead}).
+    @param subject: A C{light.subject.Subject} instance.
     @param dbParams: A C{DatabaseParameters} instance.
     """
     def __init__(self, histogram, query, subject, dbParams):
@@ -553,8 +551,7 @@ class WeightedFeatureAAScore(object):
 
     @param histogram: A C{light.histogram} instance.
     @param query: A C{dark.reads.AARead} instance.
-    @param subject: A C{light.subject.Subject} instance (a subclass of
-        C{dark.reads.AARead}).
+    @param subject: A C{light.subject.Subject} instance.
     @param dbParams: A C{DatabaseParameters} instance.
     @param weights: If not C{None}, a C{dict} of weights to be given to each
         feature.
@@ -790,14 +787,13 @@ class FourScore(object):
 
     @param histogram: A C{light.histogram} instance.
     @param query: A C{dark.reads.AARead} instance.
-    @param subject: A C{light.subject.Subject} instance (a subclass of
-        C{dark.reads.AARead}).
+    @param subject: A C{light.subject.Subject} instance.
     @param dbParams: A C{DatabaseParameters} instance.
     """
     def __init__(self, histogram, query, subject, dbParams):
         self._histogram = histogram
-        self.queryLen = len(query)
-        self.subjectLen = len(subject)
+        self._queryLen = len(query)
+        self._subjectLen = len(subject)
 
         from light.backend import Backend
         backend = Backend()
@@ -815,28 +811,55 @@ class FourScore(object):
         """
         Calculates the score for a given histogram bin.
 
-        There are four different categories of amino acids that need to be
-        scored: (1) AA's in structures in the matched region (MR), (2) AA's in
-        structures outside the MR, (3) AA's not in structures in the MR and
-        (4) AA's not in structures outside the MR.
-        They are scored the following way:
+        There are five different categories of amino acids that could be
+        scored:
+
+                 |  AA in features which    |        AA not in features
+                 |  are:                    |
+                 |..........................|
+                 |  part of    : not part   |
+                 |  match      : of match   |
+        ---------|--------------------------|-------------------------------
+        AA in    |             :            |
+        matched  |    (1)      :     (2)    |               (4)
+        region   |             :            |
+        ---------|--------------------------|-------------------------------
+        AA not in|                          |
+        matched  |            (3)           |               (5)
+        region   |                          |
+
+        (1) AA's in features which are part of the match, inside the matched
+            region.
+        (2) AA's in features which are not part of the match, but which are
+            inside the matched region.
+        (3) AA's in features outside the matched region.
+        (4) AA's not in features but which are inside the matched region.
+        (5) AA's not in features which are outside the matched region.
+
+        Here, we consider (1), (3), (4) and (5) for the score, and we score
+        them in the following way:
         (1) Feature Matched Region Score (FMRS): Numerator: number of AA's in
-        features that that match between the subject and the query.
-        Denominator: number of all AA's in features which in the matched region
-        of the query and subject.
-        (2) Feature Length Normaliser (FLN): Numerator: Number of all AA's in
-        features which in the matched region of the query or the subject.
-        Denominator: Number of all amino acids in features in the query or the
-        subject. The FLN is calculated for both the query and the subject
-        individually, and the larger fraction is used to calculate the score.
-        (3) Non-Feature Matched Region Score (NMRS): Numerator: Number of AA's
-        not in features inside the matched region in the query and the subject.
-        Denominator: 2 * the length of the matched region.
-        (4) Non-Feature Length Normaliser (NLN): Numerator: Number of AA's not
-        in features outside the matched region in the query or the subject.
-        Denominator: Number of AA's outside the matched region in the query or
-        the subject. The NLN is calculated for both the query and the subject
-        individually, and the larger fraction is used to calculate the score.
+            pairs of features that are in the given histogram bin (and
+            therefore by definition in the match and matched region) between
+            the subject and the query. Denominator: number of AA's in features
+            which are in the matched region of the query and subject (this
+            includes AA's which are in features, which are not part of the
+            match).
+        (3) Feature Length Normaliser (FLN): Numerator: Number of AA's in
+            features which are in the matched region of the query or the
+            subject. Denominator: Number of AA's in features in the query or
+            the subject. The FLN is calculated for both the query and the
+            subject individually, and the larger fraction is used to calculate
+            the score.
+        (4) Non-Feature Matched Region Score (NMRS): Numerator: Number of AA's
+            not in features inside the matched region in the query and the
+            subject. Denominator: 2 * the length of the matched region.
+        (5) Non-Feature Length Normaliser (NLN): Numerator: Number of AA's not
+            in features outside the matched region in the query or the subject.
+            Denominator: Number of AA's outside the matched region in the query
+            or the subject. The NLN is calculated for both the query and the
+            subject individually, and the larger fraction is used to calculate
+            the score.
 
         @param binIndex: The C{int} index of the bin to examine.
         @return: A 2-tuple, containing the C{float} score of the bin and a
@@ -855,23 +878,25 @@ class FourScore(object):
         minSubjectOffset = minWithDefault(matchedSubjectOffsets, default=None)
         maxSubjectOffset = maxWithDefault(matchedSubjectOffsets, default=None)
 
-        # Calculate the length of the matched region.
+        # Calculate the length of the matched region for the query and the
+        # subject.
         try:
-            matchedRegionLength = maxQueryOffset - minQueryOffset
+            queryMatchedRegionLength = maxQueryOffset - minQueryOffset
         except TypeError:
-            matchedRegionLength = 0
+            queryMatchedRegionLength = 0
 
-        # Get all features and their offsets which are present in the subject
-        # and the query within the matched region.
+        try:
+            subjectMatchedRegionLength = maxSubjectOffset - minSubjectOffset
+        except TypeError:
+            subjectMatchedRegionLength = 0
+
+        # Get all features in the query and the subject which are inside the
+        # matched region, but not part of the match, as well as their offsets.
         unmatchedQueryOffsets = set()
         for feature in filter(
                 lambda f: featureInRange(f, minQueryOffset, maxQueryOffset),
                 self._allQueryFeatures - matchedQueryFeatures):
             unmatchedQueryOffsets.update(feature.coveredOffsets())
-        # The unmatched offsets shouldn't contain any offsets that were
-        # matched. This can occur if an unmatched feature overlaps with a
-        # matched feature.
-        unmatchedQueryOffsets -= matchedQueryOffsets
 
         unmatchedSubjectOffsets = set()
         for feature in filter(
@@ -879,27 +904,30 @@ class FourScore(object):
                                          maxSubjectOffset),
                 self._allSubjectFeatures - matchedSubjectFeatures):
             unmatchedSubjectOffsets.update(feature.coveredOffsets())
+
         # The unmatched offsets shouldn't contain any offsets that were
         # matched. This can occur if an unmatched feature overlaps with a
         # matched feature.
+        unmatchedQueryOffsets -= matchedQueryOffsets
         unmatchedSubjectOffsets -= matchedSubjectOffsets
 
         matchedOffsetCount = (
             len(matchedQueryOffsets) + len(matchedSubjectOffsets))
 
-        totalOffsetCount = matchedOffsetCount + (
+        matchedAndUnmatchedOffsetCount = matchedOffsetCount + (
             len(unmatchedQueryOffsets) + len(unmatchedSubjectOffsets))
 
         # Calculate the Feature Matched Region Score (1).
         try:
-            matchedRegionScore = matchedOffsetCount / totalOffsetCount
+            matchedRegionScore = (
+                matchedOffsetCount / matchedAndUnmatchedOffsetCount)
         except ZeroDivisionError:
             matchedRegionScore = 0.0
 
-        # The calculation of the Feature Length Normaliser (2) consists of
+        # The calculation of the Feature Length Normaliser (3) consists of
         # three parts: the numerator is the matchedOffsetCount + either the
         # unmatchedQueryOffsets or the unmatchedSubjectOffsets. The denominator
-        # is the numerator + the length of hashes in either subject or query
+        # is the numerator + the length of pairs in either subject or query
         # which are outside the matched region. The sequence with less covered
         # indices is used to do the normalisation.
         offsetsNotInMatchQuery = set()
@@ -909,9 +937,10 @@ class FourScore(object):
                 self._allQueryFeatures - matchedQueryFeatures):
             offsetsNotInMatchQuery.update(feature.coveredOffsets())
         offsetsNotInMatchQuery -= matchedQueryOffsets
-        numeratorQuery = (len(matchedQueryOffsets) +
-                          len(unmatchedQueryOffsets))
-        denominatorQuery = numeratorQuery + len(offsetsNotInMatchQuery)
+        matchedAndUnmatchedQryOffsets = (len(matchedQueryOffsets) +
+                                         len(unmatchedQueryOffsets))
+        allQryFeatureOffsets = matchedAndUnmatchedQryOffsets + len(
+            offsetsNotInMatchQuery)
 
         offsetsNotInMatchSubject = set()
         for feature in filterfalse(
@@ -920,56 +949,62 @@ class FourScore(object):
                 self._allSubjectFeatures - matchedSubjectFeatures):
             offsetsNotInMatchSubject.update(feature.coveredOffsets())
         offsetsNotInMatchSubject -= matchedSubjectOffsets
-        numeratorSubject = (len(matchedSubjectOffsets) +
-                            len(unmatchedSubjectOffsets))
-        denominatorSubject = numeratorSubject + len(offsetsNotInMatchSubject)
+        matchedAndUnmatchedSbjctOffsets = (len(matchedSubjectOffsets) +
+                                           len(unmatchedSubjectOffsets))
+        allSbjctFeatureOffsets = (matchedAndUnmatchedSbjctOffsets +
+                                  len(offsetsNotInMatchSubject))
 
         # Calculate the Feature Length Normaliser.
         try:
-            normaliserQuery = numeratorQuery / denominatorQuery
+            normaliserQuery = (matchedAndUnmatchedQryOffsets /
+                               allQryFeatureOffsets)
         except ZeroDivisionError:
             normaliserQuery = 1.0
 
         try:
-            normaliserSubject = numeratorSubject / denominatorSubject
+            normaliserSubject = (matchedAndUnmatchedSbjctOffsets /
+                                 allSbjctFeatureOffsets)
         except ZeroDivisionError:
             normaliserSubject = 1.0
 
         featureLengthNormaliser = max(normaliserQuery, normaliserSubject)
 
-        # The Non-Feature Matched Region Score (3) is calculated by dividing
+        # The Non-Feature Matched Region Score (4) is calculated by dividing
         # the number of AA's not in features inside the matched region in the
         # query and the subject by 2 * the length of the matched region.
-        aaNotInFeaturesInMRQuery = matchedRegionLength - numeratorQuery
-        aaNotInFeaturesInMRSubject = matchedRegionLength - numeratorSubject
+        aaNotInFeaturesInMRQuery = (queryMatchedRegionLength -
+                                    matchedAndUnmatchedQryOffsets)
+        aaNotInFeaturesInMRSubject = (subjectMatchedRegionLength -
+                                      matchedAndUnmatchedSbjctOffsets)
 
         try:
             nonFeatureMatchedRegionScore = ((aaNotInFeaturesInMRQuery +
                                              aaNotInFeaturesInMRSubject) /
-                                            (2 * matchedRegionLength))
+                                            (queryMatchedRegionLength +
+                                             subjectMatchedRegionLength))
         except ZeroDivisionError:
             nonFeatureMatchedRegionScore = 0.0
 
-        # Non-Feature Length Normaliser (4): The number of AA's not in features
+        # Non-Feature Length Normaliser (5): The number of AA's not in features
         # outside the matched region in the query or the subject divided by the
-        # number of AA's outside the matched region in the query or
-        # the subject. The NLN is calculated for both the query and the subject
+        # number of AA's outside the matched region in the query or the
+        # subject. The NLN is calculated for both the query and the subject
         # individually, and the larger fraction is used to calculate the score.
-        aaNotInMRQuery = self.queryLen - matchedRegionLength
-        aaNotInMRSubject = self.subjectLen - matchedRegionLength
+        qryOutsideMRLength = self._queryLen - queryMatchedRegionLength
+        sbjctOutsideMRLength = self._subjectLen - subjectMatchedRegionLength
 
-        aaNotInMRNotInFeaturesQuery = (aaNotInMRQuery -
+        aaNotInMRNotInFeaturesQuery = (qryOutsideMRLength -
                                        len(offsetsNotInMatchQuery))
-        aaNotInMRNotInFeaturesSubject = (aaNotInMRSubject -
+        aaNotInMRNotInFeaturesSubject = (sbjctOutsideMRLength -
                                          len(offsetsNotInMatchSubject))
 
         try:
-            nlnQuery = aaNotInMRNotInFeaturesQuery / aaNotInMRQuery
+            nlnQuery = aaNotInMRNotInFeaturesQuery / qryOutsideMRLength
         except ZeroDivisionError:
             nlnQuery = 0.0
 
         try:
-            nlnSubject = aaNotInMRNotInFeaturesSubject / aaNotInMRSubject
+            nlnSubject = aaNotInMRNotInFeaturesSubject / sbjctOutsideMRLength
         except ZeroDivisionError:
             nlnSubject = 0.0
 
@@ -980,8 +1015,8 @@ class FourScore(object):
                  nonFeatureMatchedRegionScore * nonFeatureLengthNormaliser)
 
         analysis = {
-            'denominatorQuery': denominatorQuery,
-            'denominatorSubject': denominatorSubject,
+            'allQryFeatureOffsets': allQryFeatureOffsets,
+            'allSbjctFeatureOffsets': allSbjctFeatureOffsets,
             'matchedOffsetCount': matchedOffsetCount,
             'matchedSubjectOffsetCount': len(matchedSubjectOffsets),
             'matchedQueryOffsetCount': len(matchedQueryOffsets),
@@ -990,26 +1025,27 @@ class FourScore(object):
             'maxSubjectOffset': maxSubjectOffset,
             'minQueryOffset': minQueryOffset,
             'minSubjectOffset': minSubjectOffset,
-            'numeratorQuery': numeratorQuery,
-            'numeratorSubject': numeratorSubject,
+            'matchedAndUnmatchedQryOffsets': matchedAndUnmatchedQryOffsets,
+            'matchedAndUnmatchedSbjctOffsets': matchedAndUnmatchedSbjctOffsets,
             'normaliserQuery': normaliserQuery,
             'normaliserSubject': normaliserSubject,
             'score': score,
             'scoreClass': self.__class__,
-            'totalOffsetCount': totalOffsetCount,
-            'matchedRegionLength': matchedRegionLength,
+            'matchedAndUnmatchedOffsetCount': matchedAndUnmatchedOffsetCount,
+            'queryMatchedRegionLength': queryMatchedRegionLength,
+            'subjectMatchedRegionLength': subjectMatchedRegionLength,
             'featureLengthNormaliser': featureLengthNormaliser,
             'aaNotInFeaturesInMRQuery': aaNotInFeaturesInMRQuery,
             'aaNotInFeaturesInMRSubject': aaNotInFeaturesInMRSubject,
             'nonFeatureMatchedRegionScore': nonFeatureMatchedRegionScore,
-            'aaNotInMRQuery': aaNotInMRQuery,
+            'qryOutsideMRLength': qryOutsideMRLength,
             'aaNotInMRNotInFeaturesQuery': aaNotInMRNotInFeaturesQuery,
-            'aaNotInMRSubject': aaNotInMRSubject,
+            'sbjctOutsideMRLength': sbjctOutsideMRLength,
             'aaNotInMRNotInFeaturesSubject': aaNotInMRNotInFeaturesSubject,
             'nlnQuery': nlnQuery,
             'nlnSubject': nlnSubject,
-            'queryLen': self.queryLen,
-            'subjectLen': self.subjectLen,
+            'queryLen': self._queryLen,
+            'subjectLen': self._subjectLen,
         }
 
         return score, analysis
@@ -1040,17 +1076,20 @@ class FourScore(object):
              '%(maxQueryOffset)d' % analysis),
             ('Matched offset range in subject: %(minSubjectOffset)d to '
              '%(maxSubjectOffset)d' % analysis),
-            'Length of matched region: %(matchedRegionLength)d' % analysis,
+            ('Length of query matched region: %(queryMatchedRegionLength)d' % (
+             analysis)),
+            ('Length of subject matched region: '
+             '%(subjectMatchedRegionLength)d' % analysis),
             'Query length: %(queryLen)d' % analysis,
             'Subject length: %(subjectLen)d' % analysis,
-            ('Total (query+subject) AA offsets in matched hashes: '
+            ('Total (query+subject) AA offsets in matched pairs: '
              '%(matchedOffsetCount)d' % analysis),
-            ('Subject AA offsets in matched hashes: '
+            ('Subject AA offsets in matched pairs: '
              '%(matchedSubjectOffsetCount)d' % analysis),
-            ('Query AA offsets in matched hashes: '
+            ('Query AA offsets in matched pairs: '
              '%(matchedQueryOffsetCount)d' % analysis),
-            ('Total (query+subject) AA offsets in hashes in matched region: '
-             '%(totalOffsetCount)d' % analysis),
+            ('Total (query+subject) AA offsets in pairs in matched region: '
+             '%(matchedAndUnmatchedOffsetCount)d' % analysis),
             ('Matched region score %(matchedRegionScore).4f '
              '(%(matchedOffsetCount)d / %(totalOffsetCount)d)' % analysis),
             ('Feature length normaliser, query: %(normaliserQuery).4f '
@@ -1068,10 +1107,10 @@ class FourScore(object):
              '+ %(aaNotInFeaturesInMRSubject)d) / 2 * %(matchedRegionLength)d'
              % analysis),
             ('Non-feature length normaliser, query: %(nlnQuery)d '
-             '%(aaNotInMRNotInFeaturesQuery)d / %(aaNotInMRQuery)d' %
+             '%(aaNotInMRNotInFeaturesQuery)d / %(qryOutsideMRLength)d' %
              analysis),
             ('Non-feature length normaliser, subject: %(nlnSubject)d '
-             '%(aaNotInMRNotInFeaturesSubject)d / %(aaNotInMRSubject)d'
+             '%(aaNotInMRNotInFeaturesSubject)d / %(sbjctOutsideMRLength)d'
              % analysis),
             'Score: %(score).4f' % analysis,
         ])

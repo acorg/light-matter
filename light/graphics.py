@@ -21,7 +21,7 @@ from light.performance import affinity
 from light.bin_score import ALL_BIN_SCORE_CLASSES
 from light.string import MultilineString
 from light.significance import (
-    Always, HashFraction, MaxBinHeight, MeanBinHeight, getHeight)
+    Always, HashFraction, MaxBinHeight, MeanBinHeight, getHeight, AAFraction)
 from light.trig import ALL_TRIG_CLASSES_INCLUDING_DEV
 from light.utils import stringSpans
 
@@ -299,6 +299,10 @@ def plotHistogram(query, subject, findParams=None, readsAx=None,
             readsAx = fig.add_subplot(111)
             readsAx.set_title(title, fontsize=30)
             readsAx.set_xlabel('Offset delta (subject - query)', fontsize=14)
+            if significanceMethod == 'AAFraction':
+                readsAx.set_ylabel('Number of amino acids', fontsize=14)
+            else:
+                readsAx.set_ylabel('Number of pairs', fontsize=14)
             readsAx.xaxis.tick_bottom()
 
         if significanceMethod == 'AAFraction':
@@ -325,15 +329,27 @@ def plotHistogram(query, subject, findParams=None, readsAx=None,
                 significance = MeanBinHeight(histogram, query,
                                              result.connector)
             elif significanceMethod == 'AAFraction':
-                significance = MeanBinHeight(histogram, query,
-                                             result.connector)
+                be = Backend()
+                be.configure(database.dbParams)
+                subjectFeatureAACount = len(
+                    be.scan(subject).coveredIndices())
+                queryFeatureAACount = len(
+                    be.scan(query).coveredIndices())
+                featureAACount = subjectFeatureAACount + queryFeatureAACount
+                significance = AAFraction(histogram, featureAACount,
+                                          findParams.significanceFraction)
             else:
                 raise ValueError('Unknown significance method %r' %
                                  significanceMethod)
 
+            if significanceMethod == 'AAFraction':
+                getCount = getHeight
+            else:
+                getCount = len
+
             for binIndex, bin_ in enumerate(histogram.bins):
                 if significance.isSignificant(binIndex):
-                    readsAx.vlines(centers[binIndex], 0.0, len(bin_),
+                    readsAx.vlines(centers[binIndex], 0.0, getCount(bin_),
                                    color=customColors.get(binIndex, 'red'),
                                    linewidth=2)
 

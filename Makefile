@@ -30,6 +30,8 @@ pep8:
             -path ./light/performance/data/pdb_4ph0_a/bitScores.py -prune -o \
             -path ./light/performance/data/pdb_2hla_a_against_polymerase/bitScores.py -prune -o \
             -path ./light/performance/data/pdb_2hla_a_against_ha/bitScores.py -prune -o \
+            -path ./test/test_bin_score.py -prune -o \
+            -path ./test/test_binScoreTemplate.py -prune -o \
             -name '*.py' -print0 | $(XARGS) -0 pep8 --ignore=E402
 	pep8 --ignore=E201,E241,E501 \
             light/performance/data/ha/zScores.py \
@@ -45,6 +47,9 @@ pep8:
             light/performance/data/pdb_4ph0_a/bitScores.py \
             light/performance/data/pdb_2hla_a_against_polymerase/bitScores.py \
             light/performance/data/pdb_2hla_a_against_ha/bitScores.py
+	pep8 --ignore=E501 \
+            test/test_bin_score.py \
+            test/test_binScoreTemplate.py
 
 pyflakes:
 	$(FIND) . -path ./light/colors/six.py -prune -o -name '*.py' -print0 | $(XARGS) -0 pyflakes 2>&1 | bin/check-pyflakes-output.sh

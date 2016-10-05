@@ -15,3 +15,5 @@ light/performance/data/pdb_2hla_a/bitScores.py
 light/performance/data/pdb_4mtp_a/bitScores.py
 light/performance/data/polymerase/bitScores.py
 light/performance/data/pdb_4ph0_a/bitScores.py
+light/performance/data/pdb_2hla_a_against_ha/bitScores.py
+light/performance/data/pdb_2hla_a_against_polymerase/bitScores.py

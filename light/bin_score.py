@@ -860,8 +860,8 @@ class FeatureAALengthScore(object):
             queryMatchedRegionLength = 0
 
         try:
-            subjectMatchedRegionLength = (maxSubjectOffset - minSubjectOffset
-                                          + 1)
+            subjectMatchedRegionLength = (maxSubjectOffset - minSubjectOffset +
+                                          1)
         except TypeError:
             subjectMatchedRegionLength = 0
 

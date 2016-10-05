@@ -852,6 +852,19 @@ class FeatureAALengthScore(object):
         minSubjectOffset = minWithDefault(matchedSubjectOffsets, default=None)
         maxSubjectOffset = maxWithDefault(matchedSubjectOffsets, default=None)
 
+        # Calculate the length of the matched region for the query and the
+        # subject.
+        try:
+            queryMatchedRegionLength = maxQueryOffset - minQueryOffset + 1
+        except TypeError:
+            queryMatchedRegionLength = 0
+
+        try:
+            subjectMatchedRegionLength = (maxSubjectOffset - minSubjectOffset
+                                          + 1)
+        except TypeError:
+            subjectMatchedRegionLength = 0
+
         # Get all features and their offsets which are present in the subject
         # and the query within the matched region. These will be used to
         # calculate the denominator.
@@ -887,15 +900,12 @@ class FeatureAALengthScore(object):
             matchedRegionScore = 0.0
 
         # The length normaliser is a quotient. The numerator is the number of
-        # AA in the matched region. The denominator is the length of the
-        # subject or the query, whichever one is smaller.
+        # AA in the matched region for the query and the subject. The
+        # denominator is the length of the subject or the query, whichever one
+        # is smaller.
 
-        if maxQueryOffset:
-            numerator = maxQueryOffset - minQueryOffset + 1
-        else:
-            numerator = 0
-
-        lengthNormaliser = numerator / min(self.queryLen, self.subjectLen)
+        lengthNormaliser = max(queryMatchedRegionLength / self.queryLen,
+                               subjectMatchedRegionLength / self.subjectLen)
 
         score = matchedRegionScore * lengthNormaliser
 
@@ -910,9 +920,10 @@ class FeatureAALengthScore(object):
             'maxSubjectOffset': maxSubjectOffset,
             'minQueryOffset': minQueryOffset,
             'minSubjectOffset': minSubjectOffset,
-            'matchedRegionSize': numerator,
-            'normaliserQuery': numerator / self.queryLen,
-            'normaliserSubject': numerator / self.subjectLen,
+            'queryMatchedRegionSize': queryMatchedRegionLength,
+            'subjectMatchedRegionSize': subjectMatchedRegionLength,
+            'normaliserQuery': queryMatchedRegionLength / self.queryLen,
+            'normaliserSubject': subjectMatchedRegionLength / self.subjectLen,
             'score': score,
             'scoreClass': self.__class__,
             'totalOffsetCount': totalOffsetCount,
@@ -956,10 +967,11 @@ class FeatureAALengthScore(object):
              '%(totalOffsetCount)d' % analysis),
             ('Matched region score %(matchedRegionScore).4f '
              '(%(matchedOffsetCount)d / %(totalOffsetCount)d)' % analysis),
-            ('Query normalizer: %(normaliserQuery).4f (%(matchedRegionSize)d '
-             '/ %(denominatorQuery)d)' % analysis),
+            ('Query normalizer: %(normaliserQuery).4f ('
+             '%(queryMatchedRegionSize)d / %(denominatorQuery)d)' % analysis),
             ('Subject normalizer: %(normaliserSubject).4f '
-             '(%(matchedRegionSize)d / %(denominatorSubject)d)' % analysis),
+             '(%(subjectMatchedRegionSize)d / %(denominatorSubject)d)' %
+             analysis),
             'Score: %(score).4f' % analysis,
         ])
 

@@ -803,8 +803,8 @@ class FeatureAALengthScore(object):
     """
     def __init__(self, histogram, query, subject, dbParams):
         self._histogram = histogram
-        self.queryLen = len(query)
-        self.subjectLen = len(subject)
+        self._queryLen = len(query)
+        self._subjectLen = len(subject)
 
         from light.backend import Backend
         backend = Backend()
@@ -899,19 +899,20 @@ class FeatureAALengthScore(object):
         except ZeroDivisionError:
             matchedRegionScore = 0.0
 
-        # The length normaliser is a quotient. The numerator is the number of
-        # AA in the matched region for the query and the subject. The
-        # denominator is the length of the subject or the query, whichever one
-        # is smaller.
+        # The length normaliser is a quotient which is calculated separately
+        # for the query and the subject. The numerator is the number of AA's in
+        # the matched region. The denominator is the length of the subject or
+        # the query. The quotient which is bigger is then used to do the length
+        # normalisation.
 
-        lengthNormaliser = max(queryMatchedRegionLength / self.queryLen,
-                               subjectMatchedRegionLength / self.subjectLen)
+        lengthNormaliser = max(queryMatchedRegionLength / self._queryLen,
+                               subjectMatchedRegionLength / self._subjectLen)
 
         score = matchedRegionScore * lengthNormaliser
 
         analysis = {
-            'denominatorQuery': self.queryLen,
-            'denominatorSubject': self.subjectLen,
+            'denominatorQuery': self._queryLen,
+            'denominatorSubject': self._subjectLen,
             'matchedOffsetCount': matchedOffsetCount,
             'matchedSubjectOffsetCount': len(matchedSubjectOffsets),
             'matchedQueryOffsetCount': len(matchedQueryOffsets),
@@ -922,8 +923,8 @@ class FeatureAALengthScore(object):
             'minSubjectOffset': minSubjectOffset,
             'queryMatchedRegionSize': queryMatchedRegionLength,
             'subjectMatchedRegionSize': subjectMatchedRegionLength,
-            'normaliserQuery': queryMatchedRegionLength / self.queryLen,
-            'normaliserSubject': subjectMatchedRegionLength / self.subjectLen,
+            'normaliserQuery': queryMatchedRegionLength / self._queryLen,
+            'normaliserSubject': subjectMatchedRegionLength / self._subjectLen,
             'score': score,
             'scoreClass': self.__class__,
             'totalOffsetCount': totalOffsetCount,

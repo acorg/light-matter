@@ -278,7 +278,6 @@ if __name__ == '__main__':
             except KeyError:
                 bin_ = {}
             else:
-                print('hhooo')
                 bin_ = significantBins[0]['bin']
                 subjectChain = \
                     firstDatabase.getSubjectByIndex('0').read

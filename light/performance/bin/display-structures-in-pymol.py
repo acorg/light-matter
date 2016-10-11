@@ -158,6 +158,7 @@ if __name__ == '__main__':
             args.structureNames, args.structureFiles, params):
 
         structureName, chainIdToCompare = name.split(':')
+        chainIdToCompare = chainIdToCompare.lower()
 
         if args.printParams:
             print('DATABASE PARAMETERS FOR STRUCTURE %r' % structureName)
@@ -176,7 +177,7 @@ if __name__ == '__main__':
                             '..', 'data', 'pdb-20160303-ss.txt')
         for record in SSFastaReads(sequenceFile, checkAlphabet=0):
             if structureName in record.id:
-                chainName = record.id.split('_')[2]
+                chainName = record.id.split('_')[2].lower()
                 chains.add(SSAAReadWithX(chainName, record.sequence,
                                          record.structure))
 
@@ -190,24 +191,29 @@ if __name__ == '__main__':
         cmd.show('cartoon')
         cmd.hide('lines')
 
+        # Keep a record of the chain that should be compared.
         for chain in chains:
             if chain.id == chainIdToCompare:
                 chainToCompare = chain
                 break
-            else:
-                raise ValueError('%r has no chain with name %r.' % (
-                    structureName, chainToCompare))
+        if not chainToCompare:
+            raise ValueError('%r has no chain with name %r.' % (
+                structureName, chainIdToCompare))
 
         # Remember the name of the first structure. If we are going to
         # color the best bin, add its chains to its database. Align all
         # subsequent structures to the first structure.
         if first:
             firstStructureName = structureName
+            firstChainToCompare = chainToCompare
             firstDatabase = database
             if args.colorBestBin:
                 firstDatabase.addSubject(chainToCompare)
         else:
-            cmd.align(firstStructureName, structureName)
+            cmd.align('%s & chain %s' % (firstStructureName,
+                                         firstChainToCompare.id.upper()),
+                      '%s & chain %s' % (structureName,
+                                         chainToCompare.id.upper()))
 
         # Make sure the residues in each chain are zero-based.
         stored.first = None
@@ -229,31 +235,37 @@ if __name__ == '__main__':
 
         # Color the features and chains.
         for i, chain in enumerate(chains):
-            # Color each chain.
-            what = '%s & chain %s' % (structureName, chain.id)
-            try:
-                color = CHAIN_COLORS[i]
-            except IndexError:
-                color = 'white'
-            cmd.color(color, what)
-
-            # Color the features.
-            scannedQuery = backend.scan(chain)
-            for landmark in scannedQuery.landmarks:
-                color = FEATURE_COLORS[landmark.symbol]
-                start = landmark.offset
-                end = landmark.offset + landmark.length
-                what = 'resi %d-%d & %s & chain %s' % (start, end - 1,
-                                                       structureName, chain.id)
+            if chain.id == chainToCompare.id:
+                # Color each chain.
+                what = '%s & chain %s' % (structureName, chain.id)
+                try:
+                    color = CHAIN_COLORS[i]
+                except IndexError:
+                    color = 'white'
                 cmd.color(color, what)
 
-            for trigPoint in scannedQuery.trigPoints:
-                color = FEATURE_COLORS[trigPoint.symbol]
-                start = trigPoint.offset
-                end = trigPoint.offset + trigPoint.length
-                what = 'resi %d-%d & %s & chain %s' % (start, end - 1,
-                                                       structureName, chain.id)
-                cmd.color(color, what)
+                # Color the features.
+                scannedQuery = backend.scan(chain)
+                for landmark in scannedQuery.landmarks:
+                    color = FEATURE_COLORS[landmark.symbol]
+                    start = landmark.offset
+                    end = landmark.offset + landmark.length
+                    what = 'resi %d-%d & %s & chain %s' % (start, end - 1,
+                                                           structureName,
+                                                           chain.id)
+                    cmd.color(color, what)
+
+                for trigPoint in scannedQuery.trigPoints:
+                    color = FEATURE_COLORS[trigPoint.symbol]
+                    start = trigPoint.offset
+                    end = trigPoint.offset + trigPoint.length
+                    what = 'resi %d-%d & %s & chain %s' % (start, end - 1,
+                                                           structureName,
+                                                           chain.id)
+                    cmd.color(color, what)
+            else:
+                what = '%s & chain %s' % (structureName, chain.id)
+                cmd.color('black', what)
 
         if args.colorBestBin and not first:
             result = firstDatabase.find(chainToCompare, findParams,

@@ -25,6 +25,8 @@ from light.parameters import DatabaseParameters, FindParameters
 from light.trig import ALL_TRIG_CLASSES_INCLUDING_DEV
 from light.performance.pymolgraphics import makeLegend
 
+from pymol.cgo import VERTEX, END, LINES, COLOR, BEGIN
+
 pymol.finish_launching()
 
 
@@ -88,6 +90,11 @@ if __name__ == '__main__':
               'be used when exactly two structures are given.'))
 
     parser.add_argument(
+        '--showPairs', default=False, action='store_true',
+        help=('If given, lines will be drawn between matching features in the '
+              'best bin. Can only be used together with colorBestBin.'))
+
+    parser.add_argument(
         '--printParams', default=False, action='store_true',
         help='If given, print the values of all parameters used.')
 
@@ -149,6 +156,12 @@ if __name__ == '__main__':
 
     first = True
 
+    if (len(args.structureNames) == 2 and args.colorBestBin is True and
+            args.showPairs is True):
+        setGridMode = False
+    else:
+        setGridMode = True
+
     # Loop over the structures that were provided and display them. We have
     # to use a version of zip that raises StopIteration when its shortest
     # iterator is consumed (params might have been set up in a simple way
@@ -171,7 +184,7 @@ if __name__ == '__main__':
         backend = Backend()
         backend.configure(database.dbParams)
 
-        # Read the sequence out of the PDB file.
+        # Read the sequence out of the PDB ss.txt file.
         chains = Reads()
         sequenceFile = join(dirname(light.__file__),
                             '..', 'data', 'pdb-20160303-ss.txt')
@@ -183,6 +196,9 @@ if __name__ == '__main__':
 
         assert len(chains) > 0, ('%r does not contain any sequences with id %r'
                                  % (sequenceFile, structureName))
+        if first:
+            firstStructureName = structureName + '1'
+            structureName += '1'
 
         # Load the structure into PyMOL.
         cmd.load(structureFile, structureName)
@@ -204,7 +220,6 @@ if __name__ == '__main__':
         # color the best bin, add its chains to its database. Align all
         # subsequent structures to the first structure.
         if first:
-            firstStructureName = structureName
             firstChainToCompare = chainToCompare
             firstDatabase = database
             if args.colorBestBin:
@@ -231,6 +246,16 @@ if __name__ == '__main__':
             # Reassign the residue numbers.
             cmd.alter(structureChain,
                       'resi=str(int(resi)-%d)' % int(stored.first))
+
+        # Alter the coordinates if necessary.
+        if first:
+            shift = 100
+        else:
+            shift = -100
+        if not setGridMode:
+            print('altering', structureName, shift)
+            cmd.alter_state(1, structureName, 'x+=%d' % shift)
+
         cmd.rebuild()
 
         # Color the features and chains.
@@ -264,7 +289,7 @@ if __name__ == '__main__':
                                                            chain.id)
                     cmd.color(color, what)
             else:
-                what = '%s & chain %s' % (structureName, chain.id)
+                what = '%s & chain %s' % (structureName, chain.id.upper())
                 cmd.color('black', what)
 
         if args.colorBestBin and not first:
@@ -281,7 +306,10 @@ if __name__ == '__main__':
                 bin_ = significantBins[0]['bin']
                 subjectChain = \
                     firstDatabase.getSubjectByIndex('0').read
-
+            print(len(bin_))
+            cgo = [
+                BEGIN, LINES,
+                COLOR, 0.8, 0.8, 0.8]
             for match in bin_:
                 subjectLmStart = match['subjectLandmark'].offset
                 subjectLmEnd = subjectLmStart + (
@@ -290,6 +318,10 @@ if __name__ == '__main__':
                     subjectLmStart, subjectLmEnd - 1, firstStructureName,
                     subjectChain.id)
                 cmd.color('br9', subjectLandmark)
+                slmxyz = cmd.get_model(
+                    'n. CA & resi %d, & %s & chain %s' % (
+                        subjectLmStart, firstStructureName, subjectChain.id),
+                    1).get_coord_list()
 
                 subjectTpStart = match['subjectTrigPoint'].offset
                 subjectTpEnd = subjectTpStart + (
@@ -298,6 +330,10 @@ if __name__ == '__main__':
                     subjectTpStart, subjectTpEnd - 1, firstStructureName,
                     subjectChain.id)
                 cmd.color('br9', subjectTrigPoint)
+                stpxyz = cmd.get_model(
+                    'n. CA & resi %d, & %s & chain %s' % (
+                        subjectTpStart, firstStructureName, subjectChain.id),
+                    1).get_coord_list()
 
                 queryLmStart = match['queryLandmark'].offset
                 queryLmEnd = queryLmStart + match['queryLandmark'].length
@@ -305,6 +341,10 @@ if __name__ == '__main__':
                     queryLmStart, queryLmEnd - 1, structureName,
                     chainToCompare.id)
                 cmd.color('br9', queryLandmark)
+                qlmxyz = cmd.get_model(
+                    'n. CA & resi %d, & %s & chain %s' % (
+                        queryLmStart, structureName,
+                        chainToCompare.id), 1).get_coord_list()
 
                 queryTpStart = match['queryTrigPoint'].offset
                 queryTpEnd = queryTpStart + match['queryTrigPoint'].length
@@ -312,12 +352,37 @@ if __name__ == '__main__':
                     queryTpStart, queryTpEnd - 1, structureName,
                     chainToCompare.id)
                 cmd.color('br9', queryTrigPoint)
+                qtpxyz = cmd.get_model(
+                    'n. CA & resi %d, & %s & chain %s' % (
+                        queryTpStart, structureName,
+                        chainToCompare.id), 1).get_coord_list()
+
+                try:
+                    cgo.extend([VERTEX, slmxyz[0][0], slmxyz[0][1],
+                                slmxyz[0][2],
+                                VERTEX, qlmxyz[0][0], qlmxyz[0][1],
+                                qlmxyz[0][2]])
+                except IndexError:
+                    continue
+
+                try:
+                    cgo.extend([VERTEX, stpxyz[0][0], stpxyz[0][1],
+                                stpxyz[0][2],
+                                VERTEX, qtpxyz[0][0], qtpxyz[0][1],
+                                qtpxyz[0][2]])
+                except IndexError:
+                    continue
 
         if first:
             first = False
 
+    if not setGridMode:
+        cgo.append(END)
+        cmd.load_cgo(cgo, 'pairs')
+
     # Display structures in a grid.
-    cmd.set('grid_mode')
+    if setGridMode:
+        cmd.set('grid_mode')
 
     # Display the legend.
     if args.showLegend:
@@ -327,3 +392,5 @@ if __name__ == '__main__':
 
     # Display the sequences.
     cmd.set('seq_view')
+
+    print('Done')

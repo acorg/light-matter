@@ -6,6 +6,7 @@ biopython==1.65
 crossbar[all]
 dark-matter>=1.0.32
 discover==0.4.0
+gor4>=1.0.1
 matplotlib==1.4.3
 mock==1.0.1
 #

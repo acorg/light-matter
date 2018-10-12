@@ -424,8 +424,8 @@ def plotEvaluationTpr(x, y, names, structureType):
 
     ax.set_ylim(0.0, 1.05)
     ax.set_xlim(-0.5, len(names) - 0.5)
-    ax.set_ylabel('Total TPR', fontsize=15)
-    ax.set_title('%s: total TPR' % structureType, fontsize=20)
+    ax.set_ylabel('Precision', fontsize=15)
+    ax.set_title('%s: Precision' % structureType, fontsize=20)
 
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)

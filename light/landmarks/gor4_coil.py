@@ -2,6 +2,8 @@ from light.distance import scaleLog
 from light.features import Landmark
 from light.finder import Finder
 
+from light.gor4 import predictions
+
 
 class GOR4Coil(Finder):
     """
@@ -23,10 +25,10 @@ class GOR4Coil(Finder):
         @param read: An instance of C{dark.reads.AARead}.
         @return: A generator that yields C{Landmark} instances.
         """
-        predictions = read.gor4()['predictions']
+        preds = predictions(read.sequence)
         featureLengthBase = self._dbParams.featureLengthBase
         length = 0
-        for offset, prediction in enumerate(predictions):
+        for offset, prediction in enumerate(preds):
             if prediction == 'C':
                 if length:
                     # We're already in a string of C's. Keep counting.

@@ -2,7 +2,7 @@ from light.distance import scaleLog
 from light.features import Landmark
 from light.finder import Finder
 
-from gor4 import GOR4
+from light.gor4 import predictions
 
 
 class GOR4BetaStrand(Finder):
@@ -25,11 +25,10 @@ class GOR4BetaStrand(Finder):
         @param read: An instance of C{dark.reads.AARead}.
         @return: A generator that yields C{Landmark} instances.
         """
-        gor4 = GOR4()
-        predictions = gor4.predict(read.sequence)
+        preds = predictions(read.sequence)
         featureLengthBase = self._dbParams.featureLengthBase
         length = 0
-        for offset, prediction in enumerate(predictions['predictions']):
+        for offset, prediction in enumerate(preds):
             if prediction == 'E':
                 if length:
                     # We're already in a string of E's. Keep counting.

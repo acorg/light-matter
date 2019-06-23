@@ -1,4 +1,4 @@
-.PHONY: check, tcheck, pep8, pyflakes, lint, wc, clean, update-prosite, perf
+.PHONY: check, tcheck, pyflakes, lint, wc, clean, update-prosite, perf
 
 # If you are on OS X, you'll need the GNU version of find. If you're using
 # brew, run brew install findutils (which installs gfind in /usr/local/bin).
@@ -16,7 +16,7 @@ tcheck: light/_distance.so
 light/_distance.so: src/distance.py
 	python setup.py build_ext -i
 
-pep8:
+pycodestyle:
 	$(FIND) . -path ./light/colors -prune -o \
             -path ./light/performance/data/polymerase/zScores.py -prune -o \
             -path ./light/performance/data/polymerase/bitScores.py -prune -o \
@@ -32,14 +32,14 @@ pep8:
             -path ./light/performance/data/pdb_2hla_a_against_ha/bitScores.py -prune -o \
             -path ./test/test_bin_score.py -prune -o \
             -path ./test/test_binScoreTemplate.py -prune -o \
-            -name '*.py' -print0 | $(XARGS) -0 pep8 --ignore=E402
-	pep8 --ignore=E201,E241,E501 \
+            -name '*.py' -print0 | $(XARGS) -0 pycodestyle --ignore=E402
+	pycodestyle --ignore=E201,E241,E501 \
             light/performance/data/ha/zScores.py \
             light/performance/data/polymerase/zScores.py \
             light/performance/data/pdb_2hla_a/zScores.py \
             light/performance/data/pdb_4mtp_a/zScores.py \
             light/performance/data/pdb_4ph0_a/zScores.py
-	pep8 --ignore=E121 \
+	pycodestyle --ignore=E121 \
             light/performance/data/ha/bitScores.py \
             light/performance/data/polymerase/bitScores.py \
             light/performance/data/pdb_2hla_a/bitScores.py \
@@ -47,14 +47,14 @@ pep8:
             light/performance/data/pdb_4ph0_a/bitScores.py \
             light/performance/data/pdb_2hla_a_against_polymerase/bitScores.py \
             light/performance/data/pdb_2hla_a_against_ha/bitScores.py
-	pep8 --ignore=E501 \
+	pycodestyle --ignore=E501 \
             test/test_bin_score.py \
             test/test_binScoreTemplate.py
 
 pyflakes:
 	$(FIND) . -path ./light/colors/six.py -prune -o -name '*.py' -print0 | $(XARGS) -0 pyflakes 2>&1 | bin/check-pyflakes-output.sh
 
-lint: pep8 pyflakes
+lint: pycodestyle
 
 wc:
 	$(FIND) . -path ./light/colors -prune -o -path ./test/colors -prune -o -name '*.py' -print0 | $(XARGS) -0 wc -l

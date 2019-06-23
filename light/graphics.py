@@ -21,7 +21,7 @@ from light.performance import affinity
 from light.bin_score import ALL_BIN_SCORE_CLASSES
 from light.string import MultilineString
 from light.significance import (
-    Always, HashFraction, MaxBinHeight, MeanBinHeight, getHeight)
+    AAFraction, Always, HashFraction, MaxBinHeight, MeanBinHeight, getHeight)
 from light.trig import ALL_TRIG_CLASSES_INCLUDING_DEV
 from light.utils import stringSpans
 
@@ -325,8 +325,13 @@ def plotHistogram(query, subject, findParams=None, readsAx=None,
                 significance = MeanBinHeight(histogram, query,
                                              result.connector)
             elif significanceMethod == 'AAFraction':
-                significance = MeanBinHeight(histogram, query,
-                                             result.connector)
+                be = Backend()
+                be.configure(result.connector.dbParams)
+                queryAACount = len(be.scan(query).coveredIndices())
+                featureAACount = (queryAACount +
+                                  len(be.scan(subject.read).coveredIndices()))
+                significance = AAFraction(histogram, featureAACount,
+                                          findParams.significanceFraction)
             else:
                 raise ValueError('Unknown significance method %r' %
                                  significanceMethod)
@@ -1826,7 +1831,8 @@ def alignmentGraphMultipleQueries(queries, subject, findParams=None,
         figure.suptitle(title, fontsize=20)
 
     if createFigure and showFigure:
-            plt.show()
+        plt.show()
+
     return {
         'minX': minX,
         'maxX': maxX,

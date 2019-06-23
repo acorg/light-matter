@@ -338,12 +338,9 @@ def plotHistogram(query, subject, findParams=None, readsAx=None,
 
             for binIndex, bin_ in enumerate(histogram.bins):
                 if significance.isSignificant(binIndex):
-                    readsAx.vlines(
-                        centers[binIndex], 0.0,
-                        (counts[binIndex] if significanceMethod == 'AAFraction'
-                         else len(bin_)),
-                        color=customColors.get(binIndex, 'red'),
-                        linewidth=2)
+                    readsAx.vlines(centers[binIndex], 0.0, counts[binIndex],
+                                   color=customColors.get(binIndex, 'red'),
+                                   linewidth=2)
 
         mean = np.mean(counts)
         if showMean:

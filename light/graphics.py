@@ -338,7 +338,7 @@ def plotHistogram(query, subject, findParams=None, readsAx=None,
 
             for binIndex, bin_ in enumerate(histogram.bins):
                 if significance.isSignificant(binIndex):
-                    readsAx.vlines(centers[binIndex], 0.0, len(bin_),
+                    readsAx.vlines(centers[binIndex], 0.0, counts[binIndex],
                                    color=customColors.get(binIndex, 'red'),
                                    linewidth=2)
 

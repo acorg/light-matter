@@ -329,7 +329,7 @@ def plotHistogram(query, subject, findParams=None, readsAx=None,
                 be.configure(result.connector.dbParams)
                 queryAACount = len(be.scan(query).coveredIndices())
                 featureAACount = (queryAACount +
-                                  len(be.scan(subject.read).coveredIndices()))
+                                  len(be.scan(subject).coveredIndices()))
                 significance = AAFraction(histogram, featureAACount,
                                           findParams.significanceFraction)
             else:
